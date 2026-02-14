@@ -9,6 +9,7 @@
   --accent-glow: rgba(245, 158, 11, 0.35);
   --success: #22c55e;
   --muted: #4b5563;
+  --panel-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 * {
@@ -305,6 +306,37 @@ h1 {
   color: var(--accent);
 }
 
+.stat-value--hero {
+  font-size: 1.75rem;
+  color: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-card--coins {
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.08);
+}
+
+.production-live {
+  display: inline-block;
+  color: var(--success);
+  font-size: 0.5rem;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+  animation: production-pulse 1.5s ease-in-out infinite;
+}
+
+.stat-card--live .production-live {
+  opacity: 1;
+}
+
+@keyframes production-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
 .stat-breakdown {
   font-size: 0.7rem;
   color: var(--text-dim);
@@ -364,12 +396,14 @@ h1 {
   background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(34, 197, 94, 0.1) 100%);
 }
 
-.prestige-section {
+.prestige-section,
+.quest-section {
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
+  box-shadow: var(--panel-shadow);
 }
 
 .prestige-section h2 {
@@ -421,20 +455,32 @@ h1 {
   outline-offset: 2px;
 }
 
-.quest-section {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
 .quest-section h2 {
   font-family: 'Orbitron', sans-serif;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text);
   margin: 0 0 0.5rem 0;
+}
+
+.quest-progress-wrap {
+  height: 6px;
+  background: var(--bg-card);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.quest-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #fbbf24);
+  border-radius: 3px;
+  transition: width 0.35s ease;
+}
+
+.quest-section--complete .quest-progress-bar {
+  background: var(--success);
 }
 
 .quest-progress {
@@ -646,7 +692,7 @@ h1 {
   padding: 0;
   text-align: center;
   margin-bottom: 1.5rem;
-  transition: box-shadow 0.25s ease, border-color 0.2s ease;
+  transition: box-shadow 0.25s ease, border-color 0.2s ease, transform 0.1s ease;
   overflow: hidden;
   min-height: 320px;
   cursor: pointer;
@@ -674,6 +720,24 @@ h1 {
 .float-coin--active {
   opacity: 1;
   transform: translate(-50%, -50%) translateY(-28px);
+}
+
+.float-reward {
+  position: fixed;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--success);
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0;
+  transform: translate(-50%, 0);
+  transition: opacity 0.25s ease, transform 0.9s ease;
+}
+
+.float-reward--active {
+  opacity: 1;
+  transform: translate(-50%, -48px);
 }
 
 .mine-zone-visual {
@@ -710,6 +774,11 @@ h1 {
 
 .mine-zone:hover {
   animation: none;
+}
+
+.mine-zone--active {
+  transform: scale(0.99);
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .mine-zone:focus-within {
@@ -755,31 +824,43 @@ h1 {
 }
 
 .planet-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
 
-.planet-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.planet-slot {
-  font-size: 0.85rem;
-  color: var(--text-dim);
+.planet-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.4rem 0.75rem;
-  min-width: 7rem;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.planet-slot strong {
+.planet-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.planet-card-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.planet-card-slots {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.planet-slot-value {
   color: var(--accent);
+  font-weight: 600;
 }
 
 .add-slot-btn {
@@ -924,6 +1005,32 @@ h1 {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 24px var(--accent-glow);
 }
 
+.upgrade-recommended {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--success);
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.4rem;
+  background: rgba(34, 197, 94, 0.15);
+  border-radius: 4px;
+}
+
+.upgrade-card--recommended {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.upgrade-card--just-bought {
+  animation: upgrade-flash 0.7s ease;
+}
+
+@keyframes upgrade-flash {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  40% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.2); }
+  100% { box-shadow: none; }
+}
+
 .upgrade-card[data-tier="1"] { border-left-color: #22c55e; }
 .upgrade-card[data-tier="2"] { border-left-color: #16a34a; }
 .upgrade-card[data-tier="3"] { border-left-color: #0ea5e9; }
@@ -1062,4 +1169,27 @@ h1 {
   font-size: 0.75rem;
   color: var(--text-dim);
   margin-left: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-card--bump,
+  .upgrade-card--just-bought,
+  .float-coin,
+  .float-reward,
+  .production-live {
+    animation: none !important;
+  }
+
+  .mine-zone {
+    animation: none !important;
+  }
+
+  .stat-card,
+  .upgrade-card,
+  .mine-zone,
+  .upgrade-btn,
+  .float-coin,
+  .float-reward {
+    transition-duration: 0.01ms !important;
+  }
 }

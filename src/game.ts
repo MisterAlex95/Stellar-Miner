@@ -149,13 +149,31 @@ function claimQuest(): void {
   if (!session || !questState.quest) return;
   const p = getQuestProgress();
   if (!p?.done) return;
-  session.player.addCoins(Math.floor(questState.quest.reward));
+  const reward = Math.floor(questState.quest.reward);
+  session.player.addCoins(reward);
   questState.quest = generateQuest();
   saveQuestState();
   saveSession();
   updateStats();
   renderUpgradeList();
   renderQuestSection();
+  const claimBtn = document.getElementById('quest-claim');
+  if (claimBtn) showFloatingReward(reward, claimBtn);
+}
+
+function showFloatingReward(amount: number, anchor: HTMLElement): void {
+  const el = document.createElement('span');
+  el.className = 'float-reward';
+  el.textContent = `+${formatNumber(amount, settings.compactNumbers)} ⬡`;
+  const rect = anchor.getBoundingClientRect();
+  el.style.left = `${rect.left + rect.width / 2}px`;
+  el.style.top = `${rect.top + rect.height / 2}px`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('float-reward--active'));
+  setTimeout(() => {
+    el.classList.remove('float-reward--active');
+    setTimeout(() => el.remove(), 400);
+  }, 1200);
 }
 
 function renderQuestSection(): void {
@@ -174,6 +192,12 @@ function renderQuestSection(): void {
   if (!q || !p) return;
 
   container.classList.toggle('quest-section--complete', p.done);
+  const progressBar = document.getElementById('quest-progress-bar');
+  if (progressBar) {
+    const pct = p.target > 0 ? Math.min(100, (p.current / p.target) * 100) : 0;
+    progressBar.style.width = `${pct}%`;
+    progressBar.setAttribute('aria-valuenow', String(Math.round(pct)));
+  }
   if (progressEl) {
     progressEl.textContent = p.done
       ? `${q.description} ✓`
@@ -243,6 +267,11 @@ function updateStats() {
     setTimeout(() => coinsCard.classList.remove('stat-card--bump'), 400);
   }
   lastCoinsForBump = player.coins.value;
+
+  const productionCard = document.getElementById('production-stat-card');
+  const productionLive = document.getElementById('production-live');
+  if (productionCard) productionCard.classList.toggle('stat-card--live', effectiveRate > 0);
+  if (productionLive) productionLive.textContent = effectiveRate > 0 ? '●' : '';
   const breakdownEl = document.getElementById('production-breakdown');
   if (breakdownEl) {
     const base = player.productionRate.value;
@@ -320,14 +349,15 @@ function renderUpgradeList() {
         ? `<label class="upgrade-planet-label" for="planet-${def.id}">To</label><select class="upgrade-planet-select" id="planet-${def.id}" data-upgrade-id="${def.id}" aria-label="Assign to planet">${planetOptions}</select>`
         : '';
 
+      const isRecommended = canBuy && !player.upgrades.some((u) => u.id === def.id);
       const card = document.createElement('div');
-      card.className = 'upgrade-card' + (canBuy ? ' upgrade-card--affordable' : '');
+      card.className = 'upgrade-card' + (canBuy ? ' upgrade-card--affordable' : '') + (isRecommended ? ' upgrade-card--recommended' : '');
       card.setAttribute('data-tier', String(def.tier));
       card.innerHTML = `
         <div class="upgrade-info">
           <div class="upgrade-header">
             <span class="upgrade-tier" aria-label="Tier ${def.tier}">T${def.tier}</span>
-            <div class="upgrade-name">${def.name}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}</div>
+            <div class="upgrade-name">${def.name}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}${isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : ''}</div>
           </div>
           <div class="upgrade-description">${def.description}</div>
           <div class="upgrade-effect">+${formatNumber(def.coinsPerSecond, settings.compactNumbers)} /s each</div>
@@ -367,9 +397,10 @@ function updateUpgradeListInPlace() {
     const maxCount = getMaxBuyCount(id);
     const maxLabel = maxCount > 1 ? `Max (${maxCount})` : 'Max';
 
+    const isRecommended = canBuy && !player.upgrades.some((u) => u.id === id);
     const nameEl = card.querySelector('.upgrade-name');
     if (nameEl) {
-      nameEl.innerHTML = def.name + (owned > 0 ? `<span class="count-badge">×${owned}</span>` : '');
+      nameEl.innerHTML = def.name + (owned > 0 ? `<span class="count-badge">×${owned}</span>` : '') + (isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : '');
     }
     const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
     if (select) {
@@ -395,12 +426,23 @@ function updateUpgradeListInPlace() {
       maxBtn.toggleAttribute('disabled', maxCount <= 0);
     }
     card.classList.toggle('upgrade-card--affordable', canBuy);
+    card.classList.toggle('upgrade-card--recommended', isRecommended);
   });
 }
 
 function render() {
   updateStats();
   renderUpgradeList();
+}
+
+function flashUpgradeCard(upgradeId: string): void {
+  const listEl = document.getElementById('upgrade-list');
+  if (!listEl) return;
+  const card = listEl.querySelector(`.upgrade-card .upgrade-btn--buy[data-upgrade-id="${upgradeId}"]`)?.closest('.upgrade-card');
+  if (card instanceof HTMLElement) {
+    card.classList.add('upgrade-card--just-bought');
+    setTimeout(() => card.classList.remove('upgrade-card--just-bought'), 700);
+  }
 }
 
 /** How many of this upgrade can be bought with current coins and free slots. */
@@ -428,6 +470,7 @@ function handleUpgradeBuy(upgradeId: string, planetId?: string) {
   saveSession();
   updateStats();
   renderUpgradeList();
+  flashUpgradeCard(upgradeId);
   renderQuestSection();
 }
 
@@ -489,9 +532,10 @@ function renderPlanetList() {
     .map((p) => {
       const addSlotCost = planetService.getAddSlotCost(p);
       const canAddSlot = planetService.canAddSlot(player, p);
-      return `<div class="planet-row" data-planet-id="${p.id}" title="${p.usedSlots}/${p.maxUpgrades} slots${player.planets.length > 1 ? ' • +' + (player.planets.length - 1) * 5 + '% prod from planets' : ''}">
-        <span class="planet-slot">${p.name}: <strong>${p.usedSlots}/${p.maxUpgrades}</strong></span>
-        <button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'} title="Add one upgrade slot">+1 slot (${formatNumber(addSlotCost, settings.compactNumbers)} ⬡)</button>
+      return `<div class="planet-card" data-planet-id="${p.id}" title="${p.usedSlots}/${p.maxUpgrades} slots${player.planets.length > 1 ? ' • +' + (player.planets.length - 1) * 5 + '% prod from planets' : ''}">
+        <div class="planet-card-name">${p.name}</div>
+        <div class="planet-card-slots"><span class="planet-slot-value">${p.usedSlots}/${p.maxUpgrades}</span> slots</div>
+        <button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'} title="Add one upgrade slot">+1 slot · ${formatNumber(addSlotCost, settings.compactNumbers)} ⬡</button>
       </div>`;
     })
     .join('');
@@ -761,25 +805,28 @@ function mount() {
       </div>
     </div>
     <section class="stats">
-      <div class="stat-card" id="coins-stat-card">
+      <div class="stat-card stat-card--coins" id="coins-stat-card">
         <div class="stat-label">Coins</div>
-        <div class="stat-value" id="coins-value">0</div>
+        <div class="stat-value stat-value--hero" id="coins-value">0</div>
       </div>
-      <div class="stat-card stat-card--production" title="Base × planets × prestige × events">
-        <div class="stat-label">Production</div>
+      <div class="stat-card stat-card--production" id="production-stat-card" title="Base × planets × prestige × events">
+        <div class="stat-label">Production <span class="production-live" id="production-live" aria-hidden="true"></span></div>
         <div class="stat-value" id="production-value">0/s</div>
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
         <div class="active-events" id="active-events" aria-live="polite"></div>
       </div>
     </section>
     <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
-    <section class="mine-zone" id="mine-zone" title="Click to mine">
+    <section class="mine-zone" id="mine-zone" title="Click or press Space to mine">
       <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
       <div class="mine-zone-visual" id="mine-zone-visual"></div>
-      <p class="mine-zone-hint" aria-hidden="true">Click to mine</p>
+      <p class="mine-zone-hint" aria-hidden="true">Click or press Space to mine</p>
     </section>
     <section class="quest-section" id="quest-section">
       <h2>Quest</h2>
+      <div class="quest-progress-wrap">
+        <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
       <p class="quest-progress" id="quest-progress"></p>
       <button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button>
     </section>
@@ -840,7 +887,18 @@ function mount() {
   const mineZone = document.getElementById('mine-zone');
   if (mineZone) {
     mineZone.addEventListener('click', (e: Event) => handleMineClick(e as MouseEvent));
+    mineZone.addEventListener('mousedown', () => mineZone.classList.add('mine-zone--active'));
+    mineZone.addEventListener('mouseup', () => mineZone.classList.remove('mine-zone--active'));
+    mineZone.addEventListener('mouseleave', () => mineZone.classList.remove('mine-zone--active'));
   }
+
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.code !== 'Space') return;
+    const target = e.target as HTMLElement;
+    if (target?.closest('input, select, textarea, [role="dialog"]')) return;
+    e.preventDefault();
+    handleMineClick();
+  });
 
   const buyPlanetBtn = document.getElementById('buy-planet-btn');
   if (buyPlanetBtn) {
