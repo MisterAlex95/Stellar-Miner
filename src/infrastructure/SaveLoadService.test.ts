@@ -8,6 +8,7 @@ import { Coins } from '../domain/value-objects/Coins.js';
 import { ProductionRate } from '../domain/value-objects/ProductionRate.js';
 import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
+import { Planet } from '../domain/entities/Planet.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 
 describe('SaveLoadService', () => {
@@ -68,9 +69,8 @@ describe('SaveLoadService', () => {
   it('round-trip save and load restores session', async () => {
     const player = Player.create('p1');
     player.addCoins(500);
-    player.addUpgrade(
-      new Upgrade('drill', 'Drill', 200, new UpgradeEffect(5))
-    );
+    const upgrade = new Upgrade('drill', 'Drill', 200, new UpgradeEffect(5));
+    player.planets[0].addUpgrade(upgrade);
     player.setProductionRate(player.productionRate.add(5));
     const evt = new GameEvent('e1', 'Event 1', new EventEffect(2, 5000));
     const session = new GameSession('session-1', player, [evt]);
@@ -86,17 +86,20 @@ describe('SaveLoadService', () => {
     expect(loaded!.player.productionRate.value).toBe(5);
     expect(loaded!.player.upgrades).toHaveLength(1);
     expect(loaded!.player.upgrades[0].id).toBe('drill');
+    expect(loaded!.player.planets).toHaveLength(1);
+    expect(loaded!.player.planets[0].upgrades).toHaveLength(1);
     expect(loaded!.activeEvents).toHaveLength(1);
     expect(loaded!.activeEvents[0].id).toBe('e1');
   });
 
   it('round-trip save and load restores session with artifacts', async () => {
     const artifact = new Artifact('crystal', 'Lucky Crystal', { bonus: 2 }, true);
+    const firstPlanet = Planet.create('planet-1', 'Planet 1');
     const player = new Player(
       'p1',
       new Coins(100),
       new ProductionRate(0),
-      [],
+      [firstPlanet],
       [artifact],
       0,
       0

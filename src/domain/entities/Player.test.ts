@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Player } from './Player.js';
+import { Planet } from './Planet.js';
 import { Coins } from '../value-objects/Coins.js';
 import { ProductionRate } from '../value-objects/ProductionRate.js';
 import { Upgrade } from './Upgrade.js';
@@ -13,6 +14,8 @@ describe('Player', () => {
     expect(p.coins.value).toBe(0);
     expect(p.productionRate.value).toBe(0);
     expect(p.upgrades).toEqual([]);
+    expect(p.planets).toHaveLength(1);
+    expect(p.planets[0].name).toBe('Planet 1');
     expect(p.artifacts).toEqual([]);
     expect(p.prestigeLevel).toBe(0);
     expect(p.totalCoinsEver).toBe(0);
@@ -45,42 +48,53 @@ describe('Player', () => {
     expect(p.productionRate.value).toBe(5);
   });
 
-  it('addUpgrade pushes upgrade to list', () => {
+  it('addUpgrade on planet pushes upgrade to list', () => {
     const p = Player.create('player-1');
     const u = new Upgrade('drill', 'Drill', 100, new UpgradeEffect(5));
-    p.addUpgrade(u);
+    p.planets[0].addUpgrade(u);
     expect(p.upgrades).toHaveLength(1);
     expect(p.upgrades[0].id).toBe('drill');
-    p.addUpgrade(u);
+    p.planets[0].addUpgrade(new Upgrade('drill2', 'Drill 2', 100, new UpgradeEffect(5)));
     expect(p.upgrades).toHaveLength(2);
   });
 
-  it('constructor copies upgrades array', () => {
-    const upgrades = [new Upgrade('a', 'A', 1, new UpgradeEffect(1))];
-    const p = new Player(
-      'id',
-      new Coins(0),
-      new ProductionRate(0),
-      upgrades,
-      [],
-      0,
-      0
-    );
-    expect(p.upgrades).toHaveLength(1);
-    upgrades.push(new Upgrade('b', 'B', 2, new UpgradeEffect(2)));
-    expect(p.upgrades).toHaveLength(1);
+  it('getPlanetWithFreeSlot returns planet with free slot', () => {
+    const p = Player.create('player-1');
+    expect(p.getPlanetWithFreeSlot()).toBe(p.planets[0]);
+    for (let i = 0; i < 5; i++) {
+      p.planets[0].addUpgrade(new Upgrade(`u${i}`, `U${i}`, 1, new UpgradeEffect(0)));
+    }
+    expect(p.getPlanetWithFreeSlot()).toBeNull();
   });
 
-  it('constructor uses empty upgrades when given null or undefined', () => {
+  it('constructor copies planets array', () => {
+    const planet = new Planet('p1', 'Planet 1', 5, [new Upgrade('a', 'A', 1, new UpgradeEffect(1))]);
+    const planets = [planet];
     const p = new Player(
       'id',
       new Coins(0),
       new ProductionRate(0),
-      undefined as unknown as Upgrade[],
+      planets,
       [],
       0,
       0
     );
+    expect(p.upgrades).toHaveLength(1);
+    planets.push(new Planet('p2', 'Planet 2', 5, []));
+    expect(p.planets).toHaveLength(1);
+  });
+
+  it('constructor uses empty planets when given null or undefined', () => {
+    const p = new Player(
+      'id',
+      new Coins(0),
+      new ProductionRate(0),
+      undefined as unknown as Planet[],
+      [],
+      0,
+      0
+    );
+    expect(p.planets).toEqual([]);
     expect(p.upgrades).toEqual([]);
   });
 });

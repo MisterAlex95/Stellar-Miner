@@ -1,5 +1,6 @@
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
+import { Planet } from '../domain/entities/Planet.js';
 import { Upgrade } from '../domain/entities/Upgrade.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
 import { Artifact } from '../domain/entities/Artifact.js';
@@ -11,13 +12,19 @@ import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
 
 const STORAGE_KEY = 'stellar-miner-session';
 
+type SavedUpgrade = { id: string; name: string; cost: number; effect: { coinsPerSecond: number } };
+type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[] };
+
 type SavedSession = {
   id: string;
   player: {
     id: string;
     coins: number;
     productionRate: number;
-    upgrades: Array<{ id: string; name: string; cost: number; effect: { coinsPerSecond: number } }>;
+    /** New format: planets with upgrades. */
+    planets?: SavedPlanet[];
+    /** Legacy: flat upgrades (migrated to one planet on load). */
+    upgrades?: SavedUpgrade[];
     artifacts: Array<{ id: string; name: string; effect: unknown; isActive: boolean }>;
     prestigeLevel: number;
     totalCoinsEver: number;
@@ -42,6 +49,12 @@ export class SaveLoadService implements ISaveLoadService {
     return this.deserialize(data);
   }
 
+  clearProgress(): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+
   private serialize(session: GameSession): SavedSession {
     return {
       id: session.id,
@@ -49,11 +62,16 @@ export class SaveLoadService implements ISaveLoadService {
         id: session.player.id,
         coins: session.player.coins.value,
         productionRate: session.player.productionRate.value,
-        upgrades: session.player.upgrades.map((u) => ({
-          id: u.id,
-          name: u.name,
-          cost: u.cost,
-          effect: { coinsPerSecond: u.effect.coinsPerSecond },
+        planets: session.player.planets.map((p) => ({
+          id: p.id,
+          name: p.name,
+          maxUpgrades: p.maxUpgrades,
+          upgrades: p.upgrades.map((u) => ({
+            id: u.id,
+            name: u.name,
+            cost: u.cost,
+            effect: { coinsPerSecond: u.effect.coinsPerSecond },
+          })),
         })),
         artifacts: session.player.artifacts.map((a) => ({
           id: a.id,
@@ -73,9 +91,27 @@ export class SaveLoadService implements ISaveLoadService {
   }
 
   private deserialize(data: SavedSession): GameSession {
-    const upgrades = data.player.upgrades.map(
-      (u) => new Upgrade(u.id, u.name, u.cost, new UpgradeEffect(u.effect.coinsPerSecond))
-    );
+    let planets: Planet[];
+    if (data.player.planets && data.player.planets.length > 0) {
+      planets = data.player.planets.map((p) => {
+        const planet = new Planet(
+          p.id,
+          p.name,
+          p.maxUpgrades,
+          p.upgrades.map(
+            (u) => new Upgrade(u.id, u.name, u.cost, new UpgradeEffect(u.effect.coinsPerSecond))
+          )
+        );
+        return planet;
+      });
+    } else {
+      // Migration: old save had flat upgrades → put them on one planet
+      const upgrades = (data.player.upgrades ?? []).map(
+        (u) => new Upgrade(u.id, u.name, u.cost, new UpgradeEffect(u.effect.coinsPerSecond))
+      );
+      const first = new Planet('planet-1', 'Planet 1', 5, upgrades);
+      planets = [first];
+    }
     const artifacts = data.player.artifacts.map(
       (a) => new Artifact(a.id, a.name, a.effect, a.isActive)
     );
@@ -83,7 +119,7 @@ export class SaveLoadService implements ISaveLoadService {
       data.player.id,
       new Coins(data.player.coins),
       new ProductionRate(data.player.productionRate),
-      upgrades,
+      planets,
       artifacts,
       data.player.prestigeLevel,
       data.player.totalCoinsEver

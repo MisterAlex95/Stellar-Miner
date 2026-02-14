@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { UpgradeService } from './UpgradeService.js';
 import { Player } from '../entities/Player.js';
+import { Planet } from '../entities/Planet.js';
 import { Upgrade } from '../entities/Upgrade.js';
 import { UpgradeEffect } from '../value-objects/UpgradeEffect.js';
 
@@ -50,5 +51,21 @@ describe('UpgradeService', () => {
     expect(player.coins.value).toBe(0);
     expect(player.upgrades).toHaveLength(2);
     expect(player.productionRate.value).toBe(10);
+  });
+
+  it('purchaseUpgrade returns null when no planet has free slot', () => {
+    const player = Player.create('p1');
+    for (let i = 0; i < 5; i++) {
+      player.planets[0].addUpgrade(new Upgrade('x', 'X', 0, new UpgradeEffect(0)));
+    }
+    player.addCoins(200);
+    const upgrade = new Upgrade('drill', 'Drill', 200, new UpgradeEffect(5));
+    const service = new UpgradeService();
+
+    const event = service.purchaseUpgrade(player, upgrade);
+
+    expect(event).toBeNull();
+    expect(player.coins.value).toBe(200);
+    expect(player.upgrades).toHaveLength(5);
   });
 });
