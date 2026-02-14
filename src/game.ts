@@ -66,19 +66,46 @@ let settings: Settings = loadSettings();
 const QUEST_STORAGE_KEY = 'stellar-miner-quest';
 const MILESTONES_STORAGE_KEY = 'stellar-miner-milestones';
 
-const COMBO_WINDOW_MS = 2000;
+const COMBO_WINDOW_MS = 2500;
 const COMBO_MIN_CLICKS = 5;
 const COMBO_MULT_PER_LEVEL = 0.1;
-const COMBO_MAX_MULT = 1.5;
+const COMBO_MAX_MULT = 1.6;
+
+const COMBO_NAMES: { minMult: number; name: string }[] = [
+  { minMult: 1.6, name: 'Mega' },
+  { minMult: 1.5, name: 'Legendary' },
+  { minMult: 1.4, name: 'Unstoppable' },
+  { minMult: 1.3, name: 'On fire' },
+  { minMult: 1.2, name: 'Hot' },
+  { minMult: 1.1, name: 'Combo' },
+];
+
+function getComboName(mult: number): string {
+  for (const t of COMBO_NAMES) {
+    if (mult >= t.minMult) return t.name;
+  }
+  return 'Combo';
+}
 const LUCKY_CLICK_CHANCE = 0.04;
 const LUCKY_MIN = 5;
 const LUCKY_MAX = 22;
+const SUPER_LUCKY_CHANCE = 0.006;
+const SUPER_LUCKY_MIN = 40;
+const SUPER_LUCKY_MAX = 85;
 
 const MILESTONES = [100, 500, 1000, 5000, 10000, 25000, 50000, 100000, 500000, 1000000];
 
 let clickTimestamps: number[] = [];
+let sessionClickCount = 0;
+let sessionCoinsFromClicks = 0;
 
-type QuestType = 'coins' | 'production' | 'upgrade';
+const QUEST_STREAK_KEY = 'stellar-miner-quest-streak';
+const QUEST_LAST_CLAIM_KEY = 'stellar-miner-quest-last-claim';
+const QUEST_STREAK_WINDOW_MS = 5 * 60 * 1000;
+const QUEST_STREAK_BONUS_PER_LEVEL = 0.15;
+const QUEST_STREAK_MAX = 3;
+
+type QuestType = 'coins' | 'production' | 'upgrade' | 'astronauts';
 
 type Quest = {
   type: QuestType;
@@ -113,34 +140,44 @@ function saveQuestState(): void {
 
 function generateQuest(): Quest {
   const roll = Math.random();
-  if (roll < 0.4) {
+  if (roll < 0.35) {
     const targets = [100, 500, 1000, 5000, 10000];
     const target = targets[Math.floor(Math.random() * targets.length)];
     return {
       type: 'coins',
       target,
-      reward: Math.floor(target * 0.3) + 20,
+      reward: Math.floor(target * 0.35) + 25,
       description: `Reach ${target.toLocaleString()} coins`,
     };
   }
-  if (roll < 0.7) {
+  if (roll < 0.6) {
     const targets = [5, 10, 25, 50, 100];
     const target = targets[Math.floor(Math.random() * targets.length)];
     return {
       type: 'production',
       target,
-      reward: target * 2 + 30,
+      reward: target * 2 + 40,
       description: `Reach ${target}/s production`,
     };
   }
-  const def = UPGRADE_CATALOG[Math.floor(Math.random() * Math.min(5, UPGRADE_CATALOG.length))];
-  const n = Math.floor(Math.random() * 2) + 1;
+  if (roll < 0.8) {
+    const def = UPGRADE_CATALOG[Math.floor(Math.random() * Math.min(5, UPGRADE_CATALOG.length))];
+    const n = Math.floor(Math.random() * 2) + 1;
+    return {
+      type: 'upgrade',
+      target: n,
+      targetId: def.id,
+      reward: Math.floor(def.cost * 0.25) + 60,
+      description: `Own ${n}× ${def.name}`,
+    };
+  }
+  const targets = [1, 2, 3, 5, 8];
+  const target = targets[Math.floor(Math.random() * targets.length)];
   return {
-    type: 'upgrade',
-    target: n,
-    targetId: def.id,
-    reward: def.cost * 0.2 + 50,
-    description: `Own ${n}× ${def.name}`,
+    type: 'astronauts',
+    target,
+    reward: 80 + target * 25,
+    description: `Have ${target} astronaut${target > 1 ? 's' : ''}`,
   };
 }
 
@@ -152,6 +189,7 @@ function getQuestProgress(): { current: number; target: number; done: boolean } 
   else if (q.type === 'production') current = session.player.effectiveProductionRate;
   else if (q.type === 'upgrade' && q.targetId)
     current = session.player.upgrades.filter((u) => u.id === q.targetId).length;
+  else if (q.type === 'astronauts') current = session.player.astronautCount + getAssignedAstronauts();
   return { current, target: q.target, done: current >= q.target };
 }
 
@@ -160,13 +198,41 @@ function checkQuestProgress(): void {
   if (p?.done) renderQuestSection();
 }
 
+function getQuestStreak(): number {
+  if (typeof localStorage === 'undefined') return 0;
+  try {
+    return parseInt(localStorage.getItem(QUEST_STREAK_KEY) ?? '0', 10) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function getQuestLastClaimAt(): number {
+  if (typeof localStorage === 'undefined') return 0;
+  try {
+    return parseInt(localStorage.getItem(QUEST_LAST_CLAIM_KEY) ?? '0', 10) || 0;
+  } catch {
+    return 0;
+  }
+}
+
 function claimQuest(): void {
   if (!session || !questState.quest) return;
   const p = getQuestProgress();
   if (!p?.done) return;
-  const reward = Math.floor(questState.quest.reward);
+  const now = Date.now();
+  const lastClaim = getQuestLastClaimAt();
+  const streak =
+    now - lastClaim <= QUEST_STREAK_WINDOW_MS ? Math.min(QUEST_STREAK_MAX, getQuestStreak() + 1) : 1;
+  const baseReward = questState.quest.reward;
+  const bonusMult = 1 + (streak - 1) * QUEST_STREAK_BONUS_PER_LEVEL;
+  const reward = Math.floor(baseReward * bonusMult);
   session.player.addCoins(reward);
   questState.quest = generateQuest();
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(QUEST_LAST_CLAIM_KEY, String(now));
+    localStorage.setItem(QUEST_STREAK_KEY, String(streak));
+  }
   saveQuestState();
   saveSession();
   updateStats();
@@ -174,6 +240,22 @@ function claimQuest(): void {
   renderQuestSection();
   const claimBtn = document.getElementById('quest-claim');
   if (claimBtn) showFloatingReward(reward, claimBtn);
+  if (streak > 1) showQuestStreakToast(streak, bonusMult);
+}
+
+function showQuestStreakToast(streak: number, mult: number): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--streak';
+  el.setAttribute('role', 'status');
+  el.textContent = `Quest streak ×${streak}! +${Math.round((mult - 1) * 100)}% reward`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 2500);
 }
 
 function showFloatingReward(amount: number, anchor: HTMLElement): void {
@@ -219,8 +301,20 @@ function renderQuestSection(): void {
       : `${q.description}: ${formatNumber(p.current, false)} / ${formatNumber(p.target, false)}`;
   }
   if (claimBtn) {
-    claimBtn.textContent = p.done ? `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡` : 'Claim';
+    const streak = getQuestStreak();
+    const nextBonus = streak < QUEST_STREAK_MAX ? ` (streak +${Math.round(QUEST_STREAK_BONUS_PER_LEVEL * 100)}%)` : '';
+    claimBtn.textContent = p.done ? `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡${nextBonus}` : 'Claim';
     claimBtn.toggleAttribute('disabled', !p.done);
+  }
+  const streakHint = document.getElementById('quest-streak-hint');
+  if (streakHint) {
+    const streak = getQuestStreak();
+    const lastClaim = getQuestLastClaimAt();
+    const withinWindow = Date.now() - lastClaim <= QUEST_STREAK_WINDOW_MS;
+    if (streak > 0 && withinWindow) streakHint.textContent = `Streak ×${streak} · claim next within 5 min to keep it`;
+    else if (streak > 0) streakHint.textContent = 'Streak expired. Claim a quest to start a new streak.';
+    else streakHint.textContent = '';
+    streakHint.style.display = streak > 0 ? 'block' : 'none';
   }
 }
 const saveLoad = new SaveLoadService();
@@ -302,6 +396,15 @@ function updateStats() {
     breakdownEl.textContent = parts.length > 0 ? parts.join(' · ') : '';
     breakdownEl.style.display = parts.length > 0 ? '' : 'none';
   }
+  const sessionEl = document.getElementById('session-stats');
+  if (sessionEl) {
+    if (sessionClickCount > 0 || sessionCoinsFromClicks > 0) {
+      sessionEl.textContent = `Session: ${sessionClickCount} clicks · ${formatNumber(sessionCoinsFromClicks, settings.compactNumbers)} ⬡ from clicks`;
+      sessionEl.style.display = 'block';
+    } else {
+      sessionEl.style.display = 'none';
+    }
+  }
   renderPrestigeSection();
   renderCrewSection();
 
@@ -322,6 +425,46 @@ function updateStats() {
         .join('');
     }
   }
+  const nextEventEl = document.getElementById('next-event-countdown');
+  if (nextEventEl) {
+    const now = Date.now();
+    const active = activeEventInstances.filter((a) => a.endsAt > now);
+    if (active.length > 0) {
+      nextEventEl.textContent = '';
+      nextEventEl.style.display = 'none';
+    } else {
+      const secs = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      nextEventEl.textContent = m > 0 ? `Next event in ${m}:${s.toString().padStart(2, '0')}` : `Next event in ${secs}s`;
+      nextEventEl.style.display = 'block';
+    }
+  }
+}
+
+/** Astronauts "assigned" to owned upgrades (spent when buying). Used for display only. */
+function getAssignedAstronauts(): number {
+  if (!session) return 0;
+  let assigned = 0;
+  for (const def of UPGRADE_CATALOG) {
+    const count = session.player.upgrades.filter((u) => u.id === def.id).length;
+    assigned += count * def.requiredAstronauts;
+  }
+  return assigned;
+}
+
+/** Base production from one planet (sum of its upgrades' coins/s). */
+function getPlanetBaseProduction(planet: { upgrades: { effect: { coinsPerSecond: number } }[] }): number {
+  return planet.upgrades.reduce((s, u) => s + u.effect.coinsPerSecond, 0);
+}
+
+/** Effective production from one planet (share of total with global bonuses). */
+function getPlanetEffectiveProduction(planet: { upgrades: { effect: { coinsPerSecond: number } }[] }): number {
+  if (!session) return 0;
+  const totalBase = session.player.productionRate.value;
+  if (totalBase <= 0) return 0;
+  const planetBase = getPlanetBaseProduction(planet);
+  return (planetBase / totalBase) * session.player.effectiveProductionRate;
 }
 
 const UPGRADE_GROUPS: { label: string; minTier: number; maxTier: number }[] = [
@@ -397,7 +540,7 @@ function renderUpgradeList() {
             <div class="upgrade-name">${def.name}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}${crewBadge}${isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : ''}</div>
           </div>
           <div class="upgrade-description">${def.description}</div>
-          <div class="upgrade-effect">+${formatNumber(def.coinsPerSecond, settings.compactNumbers)} /s each</div>
+          <div class="upgrade-effect">+${formatNumber(def.coinsPerSecond, settings.compactNumbers)} /s each${owned > 0 ? ` · Total: +${formatNumber(owned * def.coinsPerSecond, settings.compactNumbers)}/s` : ''}</div>
         </div>
         <span class="upgrade-cost">${costLine}</span>
         <div class="upgrade-actions">
@@ -587,9 +730,12 @@ function renderPlanetList() {
     .map((p) => {
       const addSlotCost = planetService.getAddSlotCost(p);
       const canAddSlot = planetService.canAddSlot(player, p);
+      const planetProd = getPlanetEffectiveProduction(p);
+      const prodLine = planetProd > 0 ? `<div class="planet-card-production">${formatNumber(planetProd, settings.compactNumbers)}/s</div>` : '';
       return `<div class="planet-card" data-planet-id="${p.id}" title="${p.usedSlots}/${p.maxUpgrades} slots${player.planets.length > 1 ? ' • +' + (player.planets.length - 1) * 5 + '% prod from planets' : ''}">
         <div class="planet-card-name">${p.name}</div>
         <div class="planet-card-slots"><span class="planet-slot-value">${p.usedSlots}/${p.maxUpgrades}</span> slots</div>
+        ${prodLine}
         <button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'} title="Add one upgrade slot">+1 slot · ${formatNumber(addSlotCost, settings.compactNumbers)} ⬡</button>
       </div>`;
     })
@@ -633,21 +779,28 @@ function renderCrewSection(): void {
   const canHire = player.coins.gte(cost);
   hireBtn.textContent = `Hire astronaut · ${formatNumber(cost, settings.compactNumbers)} ⬡`;
   hireBtn.toggleAttribute('disabled', !canHire);
+  const assigned = getAssignedAstronauts();
+  const free = player.astronautCount;
   if (crewCountEl) {
-    crewCountEl.textContent =
-      player.astronautCount === 0
-        ? 'No crew yet'
-        : `${player.astronautCount} astronaut${player.astronautCount > 1 ? 's' : ''} · +${player.astronautCount * 2}% production`;
+    if (free === 0 && assigned === 0) {
+      crewCountEl.textContent = 'No crew yet';
+    } else if (free === 0) {
+      crewCountEl.textContent = `${assigned} on equipment · 0 free (hire more for +% production)`;
+    } else if (assigned > 0) {
+      crewCountEl.textContent = `${free} free · +${free * 2}% production | ${assigned} on equipment`;
+    } else {
+      crewCountEl.textContent = `${free} astronaut${free > 1 ? 's' : ''} · +${free * 2}% production`;
+    }
   }
   if (crewOperatesEl) {
     const totalUpgrades = player.upgrades.length;
     const nextUnlock = UPGRADE_CATALOG.find((d) => d.requiredAstronauts > player.astronautCount);
-    if (player.astronautCount === 0) {
+    if (player.astronautCount === 0 && assigned === 0) {
       crewOperatesEl.textContent = 'Hire crew to buy tier 2+ upgrades (each costs coins + astronauts).';
     } else if (nextUnlock) {
-      crewOperatesEl.textContent = `${player.astronautCount} astronaut${player.astronautCount !== 1 ? 's' : ''} available. Next: ${nextUnlock.name} costs ${nextUnlock.requiredAstronauts} crew.`;
+      crewOperatesEl.textContent = `${free} available. Next: ${nextUnlock.name} costs ${nextUnlock.requiredAstronauts} crew.`;
     } else {
-      crewOperatesEl.textContent = `${player.astronautCount} astronaut${player.astronautCount !== 1 ? 's' : ''} available. All upgrades purchasable if you have enough crew.`;
+      crewOperatesEl.textContent = totalUpgrades > 0 ? `${totalUpgrades} upgrade${totalUpgrades !== 1 ? 's' : ''} operated by crew.` : `${free} available.`;
     }
   }
 }
@@ -800,21 +953,36 @@ function showOfflineToast(coins: number): void {
   }, 5000);
 }
 
-function showFloatingCoin(amount: number, clientX: number, clientY: number, options?: { lucky?: boolean; comboMult?: number }): void {
+function showSuperLuckyToast(coins: number): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--super-lucky';
+  el.setAttribute('role', 'status');
+  el.textContent = `★ LUCKY! +${formatNumber(coins, false)} ⬡`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 2800);
+}
+
+function showFloatingCoin(amount: number, clientX: number, clientY: number, options?: { lucky?: boolean; superLucky?: boolean; comboMult?: number }): void {
   const zone = document.getElementById('mine-zone');
   const floats = document.getElementById('mine-zone-floats');
   if (!zone || !floats) return;
   const rect = zone.getBoundingClientRect();
   const el = document.createElement('span');
-  el.className = 'float-coin' + (options?.lucky ? ' float-coin--lucky' : '');
-  el.textContent = `+${amount}`;
+  el.className = 'float-coin' + (options?.superLucky ? ' float-coin--super-lucky' : options?.lucky ? ' float-coin--lucky' : '');
+  el.textContent = options?.superLucky ? `★ +${amount}` : `+${amount}`;
   el.style.left = `${clientX - rect.left}px`;
   el.style.top = `${clientY - rect.top}px`;
   floats.appendChild(el);
   if (options?.comboMult && options.comboMult > 1) {
     const comboEl = document.createElement('span');
     comboEl.className = 'float-coin-combo';
-    comboEl.textContent = `Combo ×${options.comboMult.toFixed(1)}`;
+    comboEl.textContent = `${getComboName(options.comboMult)} ×${options.comboMult.toFixed(1)}`;
     comboEl.style.left = `${clientX - rect.left}px`;
     comboEl.style.top = `${clientY - rect.top - 12}px`;
     floats.appendChild(comboEl);
@@ -889,9 +1057,12 @@ function updateComboIndicator(): void {
   const el = document.getElementById('combo-indicator');
   if (!el) return;
   if (mult > 1) {
-    el.textContent = `×${mult.toFixed(1)}`;
+    const name = getComboName(mult);
+    el.textContent = `${name} ×${mult.toFixed(1)}`;
+    el.setAttribute('data-combo-tier', name.toLowerCase().replace(/\s+/g, '-'));
     el.classList.add('combo-indicator--active');
   } else {
+    el.removeAttribute('data-combo-tier');
     el.classList.remove('combo-indicator--active');
   }
 }
@@ -909,15 +1080,21 @@ function handleMineClick(e?: MouseEvent) {
       ? Math.min(COMBO_MAX_MULT, 1 + (comboCount - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL)
       : 1;
 
-  const isLucky = Math.random() < LUCKY_CLICK_CHANCE;
-  const baseCoins = isLucky ? LUCKY_MIN + Math.floor(Math.random() * (LUCKY_MAX - LUCKY_MIN + 1)) : 1;
+  const superLucky = Math.random() < SUPER_LUCKY_CHANCE;
+  const isLucky = !superLucky && Math.random() < LUCKY_CLICK_CHANCE;
+  let baseCoins = 1;
+  if (superLucky) baseCoins = SUPER_LUCKY_MIN + Math.floor(Math.random() * (SUPER_LUCKY_MAX - SUPER_LUCKY_MIN + 1));
+  else if (isLucky) baseCoins = LUCKY_MIN + Math.floor(Math.random() * (LUCKY_MAX - LUCKY_MIN + 1));
   const coins = Math.max(1, Math.round(baseCoins * comboMult));
 
   session.player.addCoins(coins);
+  sessionClickCount++;
+  sessionCoinsFromClicks += coins;
 
   const clientX = e?.clientX ?? 0;
   const clientY = e?.clientY ?? 0;
-  if (e) showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, comboMult: comboMult > 1 ? comboMult : undefined });
+  if (e) showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, comboMult: comboMult > 1 ? comboMult : undefined });
+  if (superLucky) showSuperLuckyToast(coins);
   mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY);
   updateComboIndicator();
   checkAndShowMilestones();
@@ -942,11 +1119,30 @@ function handlePrestige(): void {
   questState.quest = generateQuest();
   saveQuestState();
   saveSession();
+  sessionClickCount = 0;
+  sessionCoinsFromClicks = 0;
+  if ([2, 5, 10, 20].includes(newPlayer.prestigeLevel)) showPrestigeMilestoneToast(newPlayer.prestigeLevel);
   updateStats();
   renderUpgradeList();
   renderPlanetList();
   renderPrestigeSection();
+  renderCrewSection();
   renderQuestSection();
+}
+
+function showPrestigeMilestoneToast(level: number): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--prestige-milestone';
+  el.setAttribute('role', 'status');
+  el.textContent = `Prestige level ${level}! +${level * 5}% production forever`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
 }
 
 function mount() {
@@ -1012,7 +1208,9 @@ function mount() {
         <div class="stat-label">Production <span class="production-live" id="production-live" aria-hidden="true"></span></div>
         <div class="stat-value" id="production-value">0/s</div>
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
+        <div class="session-stats" id="session-stats" aria-live="polite"></div>
         <div class="active-events" id="active-events" aria-live="polite"></div>
+        <div class="next-event-countdown" id="next-event-countdown" aria-live="polite"></div>
       </div>
     </section>
     <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
@@ -1028,6 +1226,7 @@ function mount() {
         <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
       <p class="quest-progress" id="quest-progress"></p>
+      <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
       <button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button>
     </section>
     <section class="prestige-section">
