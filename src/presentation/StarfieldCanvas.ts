@@ -60,7 +60,53 @@ function resize(): void {
 
 export type StarfieldSettings = { starfieldSpeed?: number };
 
-export function startStarfield(getSettings?: () => StarfieldSettings): { update: (dt: number) => void; draw: () => void; resize: () => void } {
+export type EventContext = { activeEventIds: string[] };
+
+function getEventSpeedMult(ids: string[]): number {
+  let mult = 1;
+  if (ids.includes('meteor-storm')) mult *= 1.4;
+  if (ids.includes('void-bonus')) mult *= 0.8;
+  if (ids.includes('solar-flare')) mult *= 1.15;
+  return mult;
+}
+
+function getEventTwinkleMult(ids: string[]): number {
+  if (ids.includes('lucky-strike')) return 1.5;
+  return 1;
+}
+
+function getEventColors(ids: string[], baseAccent: string, baseDim: string): [string, string, string] {
+  let c0 = baseDim;
+  let c1 = baseDim;
+  let c2 = baseAccent;
+  if (ids.includes('meteor-storm')) {
+    c0 = '#6b2d2d';
+    c1 = '#9a3a3a';
+    c2 = '#ea580c';
+  } else if (ids.includes('solar-flare')) {
+    c0 = '#a8a29e';
+    c1 = '#fbbf24';
+    c2 = '#fef3c7';
+  } else if (ids.includes('rich-vein')) {
+    c0 = '#78716c';
+    c1 = '#d4a574';
+    c2 = '#fcd34d';
+  } else if (ids.includes('void-bonus')) {
+    c0 = '#312e81';
+    c1 = '#4c1d95';
+    c2 = '#7c3aed';
+  } else if (ids.includes('lucky-strike')) {
+    c0 = baseDim;
+    c1 = '#fde047';
+    c2 = '#fef9c3';
+  }
+  return [c0, c1, c2];
+}
+
+export function startStarfield(
+  getSettings?: () => StarfieldSettings,
+  getEventContext?: () => EventContext
+): { update: (dt: number) => void; draw: () => void; resize: () => void } {
   canvas = document.createElement('canvas');
   canvas.id = 'starfield-canvas';
   canvas.setAttribute('aria-hidden', 'true');
@@ -78,11 +124,15 @@ export function startStarfield(getSettings?: () => StarfieldSettings): { update:
     update(dt: number) {
       const w = width || window.innerWidth;
       const h = height || window.innerHeight;
-      const mult = speedMult();
+      const baseMult = speedMult();
+      const eventIds = getEventContext?.()?.activeEventIds ?? [];
+      const eventSpeed = getEventSpeedMult(eventIds);
+      const mult = baseMult * eventSpeed;
       for (const star of stars) {
         star.y += star.speed * mult * dt;
         star.x += star.driftSpeed * mult * dt;
-        star.phase += dt * (2 + star.layer);
+        const twinkleRate = getEventTwinkleMult(eventIds);
+        star.phase += dt * (2 + star.layer) * twinkleRate;
         if (star.y > h) {
           star.y = 0;
           star.x = Math.random() * w;
@@ -101,10 +151,12 @@ export function startStarfield(getSettings?: () => StarfieldSettings): { update:
       ctx.clearRect(0, 0, w, h);
       const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#f59e0b';
       const textDim = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim() || '#8b909a';
-      const colors = [textDim, textDim, accent];
+      const eventIds = getEventContext?.()?.activeEventIds ?? [];
+      const colors = getEventColors(eventIds, accent, textDim);
       for (const star of stars) {
         const color = colors[star.layer] ?? textDim;
-        const twinkle = 0.72 + 0.28 * Math.sin(star.phase);
+        const twinkleMult = getEventTwinkleMult(eventIds);
+        const twinkle = 0.72 + 0.28 * Math.sin(star.phase) * twinkleMult;
         ctx.fillStyle = color;
         ctx.globalAlpha = star.opacity * twinkle;
         const size = star.size * (0.9 + 0.1 * Math.sin(star.phase * 1.3));

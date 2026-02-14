@@ -36,7 +36,10 @@ let solarSystems: SolarSystemView[] = [];
 let orbitTime = 0;
 
 export type MineZoneSettings = { showOrbitLines?: boolean; clickParticles?: boolean };
+export type EventContext = { activeEventIds: string[] };
+
 let getMineZoneSettings: (() => MineZoneSettings) | null = null;
+let getMineZoneEventContext: (() => EventContext) | null = null;
 
 const SURFACE_IDS = [
   'mining-robot', 'drill-mk1', 'drill-mk2', 'asteroid-rig',
@@ -546,7 +549,33 @@ function drawSpatialSystem(): void {
   }
 }
 
-export function createMineZoneCanvas(container: HTMLElement, getSettings?: () => MineZoneSettings): {
+/** Event-based tint overlay on the mine zone. */
+function getEventOverlayStyle(ids: string[]): string | null {
+  if (ids.length === 0) return null;
+  const id = ids[0];
+  if (id === 'meteor-storm') return 'rgba(234, 88, 12, 0.12)';
+  if (id === 'solar-flare') return 'rgba(251, 191, 36, 0.15)';
+  if (id === 'rich-vein') return 'rgba(252, 211, 77, 0.12)';
+  if (id === 'void-bonus') return 'rgba(124, 58, 237, 0.18)';
+  if (id === 'lucky-strike') return 'rgba(254, 249, 195, 0.1)';
+  return null;
+}
+
+/** Pulsing intensity for overlay (0..1) for a subtle animation. */
+function getEventOverlayPulse(time: number, ids: string[]): number {
+  if (ids.includes('solar-flare') || ids.includes('lucky-strike')) {
+    return 0.7 + 0.3 * Math.sin(time * 3);
+  }
+  return 1;
+}
+
+let eventOverlayTime = 0;
+
+export function createMineZoneCanvas(
+  container: HTMLElement,
+  getSettings?: () => MineZoneSettings,
+  getEventContext?: () => EventContext
+): {
   update: (dt: number) => void;
   draw: () => void;
   onMineClick: (clientX?: number, clientY?: number) => void;
@@ -554,6 +583,7 @@ export function createMineZoneCanvas(container: HTMLElement, getSettings?: () =>
   resize: () => void;
 } {
   getMineZoneSettings = getSettings ?? null;
+  getMineZoneEventContext = getEventContext ?? null;
   canvas = document.createElement('canvas');
   canvas.className = 'mine-zone-canvas';
   canvas.setAttribute('aria-label', 'Spatial system view: solar systems and planets');
@@ -580,6 +610,7 @@ export function createMineZoneCanvas(container: HTMLElement, getSettings?: () =>
   return {
     update(dt: number) {
       orbitTime += dt * 0.35;
+      eventOverlayTime += dt;
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
@@ -606,6 +637,23 @@ export function createMineZoneCanvas(container: HTMLElement, getSettings?: () =>
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+
+      const eventIds = getMineZoneEventContext?.()?.activeEventIds ?? [];
+      const overlayStyle = getEventOverlayStyle(eventIds);
+      if (overlayStyle && ctx) {
+        const pulse = getEventOverlayPulse(eventOverlayTime, eventIds);
+        const match = overlayStyle.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
+        if (match) {
+          const r = match[1];
+          const g = match[2];
+          const b = match[3];
+          const a = (parseFloat(match[4] ?? '0.15') * pulse).toFixed(2);
+          ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+        } else {
+          ctx.fillStyle = overlayStyle;
+        }
+        ctx.fillRect(0, 0, width, height);
+      }
     },
     onMineClick(clientX?: number, clientY?: number) {
       if (getMineZoneSettings?.()?.clickParticles === false) return;

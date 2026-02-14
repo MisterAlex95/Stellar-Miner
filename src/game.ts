@@ -60,6 +60,126 @@ let activeEventInstances: ActiveEventInstance[] = [];
 let nextEventAt = 0;
 let gameStartTime = 0;
 let settings: Settings = loadSettings();
+
+const QUEST_STORAGE_KEY = 'stellar-miner-quest';
+
+type QuestType = 'coins' | 'production' | 'upgrade';
+
+type Quest = {
+  type: QuestType;
+  target: number;
+  targetId?: string; // upgrade id for type 'upgrade'
+  reward: number;
+  description: string;
+};
+
+type QuestState = { quest: Quest | null };
+
+let questState: QuestState = loadQuestState();
+
+function loadQuestState(): QuestState {
+  if (typeof localStorage === 'undefined') return { quest: null };
+  try {
+    const raw = localStorage.getItem(QUEST_STORAGE_KEY);
+    if (!raw) return { quest: null };
+    const data = JSON.parse(raw) as QuestState;
+    return data.quest ? { quest: data.quest } : { quest: null };
+  } catch {
+    return { quest: null };
+  }
+}
+
+function saveQuestState(): void {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(QUEST_STORAGE_KEY, JSON.stringify(questState));
+  }
+}
+
+function generateQuest(): Quest {
+  const roll = Math.random();
+  if (roll < 0.4) {
+    const targets = [100, 500, 1000, 5000, 10000];
+    const target = targets[Math.floor(Math.random() * targets.length)];
+    return {
+      type: 'coins',
+      target,
+      reward: Math.floor(target * 0.3) + 20,
+      description: `Reach ${target.toLocaleString()} coins`,
+    };
+  }
+  if (roll < 0.7) {
+    const targets = [5, 10, 25, 50, 100];
+    const target = targets[Math.floor(Math.random() * targets.length)];
+    return {
+      type: 'production',
+      target,
+      reward: target * 2 + 30,
+      description: `Reach ${target}/s production`,
+    };
+  }
+  const def = UPGRADE_CATALOG[Math.floor(Math.random() * Math.min(5, UPGRADE_CATALOG.length))];
+  const n = Math.floor(Math.random() * 2) + 1;
+  return {
+    type: 'upgrade',
+    target: n,
+    targetId: def.id,
+    reward: def.cost * 0.2 + 50,
+    description: `Own ${n}× ${def.name}`,
+  };
+}
+
+function getQuestProgress(): { current: number; target: number; done: boolean } | null {
+  if (!session || !questState.quest) return null;
+  const q = questState.quest;
+  let current = 0;
+  if (q.type === 'coins') current = session.player.coins.value;
+  else if (q.type === 'production') current = session.player.effectiveProductionRate;
+  else if (q.type === 'upgrade' && q.targetId)
+    current = session.player.upgrades.filter((u) => u.id === q.targetId).length;
+  return { current, target: q.target, done: current >= q.target };
+}
+
+function checkQuestProgress(): void {
+  const p = getQuestProgress();
+  if (p?.done) renderQuestSection();
+}
+
+function claimQuest(): void {
+  if (!session || !questState.quest) return;
+  const p = getQuestProgress();
+  if (!p?.done) return;
+  session.player.addCoins(Math.floor(questState.quest.reward));
+  questState.quest = generateQuest();
+  saveQuestState();
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderQuestSection();
+}
+
+function renderQuestSection(): void {
+  const container = document.getElementById('quest-section');
+  const progressEl = document.getElementById('quest-progress');
+  const claimBtn = document.getElementById('quest-claim');
+  if (!container) return;
+
+  if (!questState.quest) {
+    questState.quest = generateQuest();
+    saveQuestState();
+  }
+
+  const q = questState.quest;
+  const p = getQuestProgress();
+  if (!q || !p) return;
+
+  if (progressEl) {
+    progressEl.textContent = `${q.description}: ${formatNumber(p.current, false)} / ${formatNumber(p.target, false)}`;
+  }
+  if (claimBtn) {
+    claimBtn.textContent = `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡`;
+    claimBtn.toggleAttribute('disabled', !p.done);
+  }
+}
 const saveLoad = new SaveLoadService();
 const upgradeService = new UpgradeService();
 const planetService = new PlanetService();
@@ -68,6 +188,14 @@ let mineZoneCanvasApi: ReturnType<typeof createMineZoneCanvas> | null = null;
 
 function getSettings(): Settings {
   return settings;
+}
+
+/** Active event ids for canvas effects (read by Starfield and MineZone). */
+function getEventContext(): { activeEventIds: string[] } {
+  const now = Date.now();
+  return {
+    activeEventIds: activeEventInstances.filter((a) => a.endsAt > now).map((a) => a.event.id),
+  };
 }
 
 async function getOrCreateSession(): Promise<GameSession> {
@@ -289,6 +417,7 @@ function handleUpgradeBuy(upgradeId: string, planetId?: string) {
   saveSession();
   updateStats();
   renderUpgradeList();
+  renderQuestSection();
 }
 
 /** Buy as many as possible (limited by coins and free slots). Uses selected planet first, then others. */
@@ -310,6 +439,7 @@ function handleUpgradeBuyMax(upgradeId: string, planetId?: string) {
     saveSession();
     updateStats();
     renderUpgradeList();
+    renderQuestSection();
   }
   renderPlanetList();
 }
@@ -473,6 +603,7 @@ function applySettingsToUI() {
 function handleResetProgress() {
   if (!confirm('Reset all progress? Coins, planets and upgrades will be lost. This cannot be undone.')) return;
   saveLoad.clearProgress();
+  if (typeof localStorage !== 'undefined') localStorage.removeItem(QUEST_STORAGE_KEY);
   closeSettings();
   location.reload();
 }
@@ -498,13 +629,48 @@ function showEventToast(gameEvent: GameEvent): void {
   }, 4000);
 }
 
+function showOfflineToast(coins: number): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--offline';
+  el.setAttribute('role', 'status');
+  el.textContent = `Welcome back! +${formatNumber(coins, false)} coins while you were away.`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 5000);
+}
+
+function showFloatingCoin(amount: number, clientX: number, clientY: number): void {
+  const zone = document.getElementById('mine-zone');
+  const floats = document.getElementById('mine-zone-floats');
+  if (!zone || !floats) return;
+  const rect = zone.getBoundingClientRect();
+  const el = document.createElement('span');
+  el.className = 'float-coin';
+  el.textContent = `+${amount}`;
+  el.style.left = `${clientX - rect.left}px`;
+  el.style.top = `${clientY - rect.top}px`;
+  floats.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('float-coin--active'));
+  setTimeout(() => {
+    el.classList.remove('float-coin--active');
+    setTimeout(() => el.remove(), 350);
+  }, 650);
+}
+
 function handleMineClick(e?: MouseEvent) {
   if (!session) return;
   session.player.addCoins(1);
+  if (e) showFloatingCoin(1, e.clientX, e.clientY);
   mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY);
   saveSession();
   updateStats();
   renderUpgradeList();
+  if (questState.quest) checkQuestProgress();
 }
 
 function handlePrestige(): void {
@@ -519,11 +685,14 @@ function handlePrestige(): void {
   const newPlayer = Player.createAfterPrestige(session.player);
   session = new GameSession(session.id, newPlayer, []);
   activeEventInstances = [];
+  questState.quest = generateQuest();
+  saveQuestState();
   saveSession();
   updateStats();
   renderUpgradeList();
   renderPlanetList();
   renderPrestigeSection();
+  renderQuestSection();
 }
 
 function mount() {
@@ -594,8 +763,14 @@ function mount() {
     </section>
     <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
     <section class="mine-zone" id="mine-zone" title="Click to mine">
+      <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
       <div class="mine-zone-visual" id="mine-zone-visual"></div>
       <p class="mine-zone-hint" aria-hidden="true">Click to mine</p>
+    </section>
+    <section class="quest-section" id="quest-section">
+      <h2>Quest</h2>
+      <p class="quest-progress" id="quest-progress"></p>
+      <button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button>
     </section>
     <section class="prestige-section">
       <h2>Prestige</h2>
@@ -618,7 +793,7 @@ function mount() {
 
   const mineZoneVisual = document.getElementById('mine-zone-visual');
   if (mineZoneVisual) {
-    mineZoneCanvasApi = createMineZoneCanvas(mineZoneVisual, getSettings);
+    mineZoneCanvasApi = createMineZoneCanvas(mineZoneVisual, getSettings, getEventContext);
   }
 
   const settingsBtn = document.getElementById('settings-btn');
@@ -665,6 +840,10 @@ function mount() {
   if (prestigeBtn) prestigeBtn.addEventListener('click', handlePrestige);
 
   renderPrestigeSection();
+  renderQuestSection();
+
+  const claimBtn = document.getElementById('quest-claim');
+  if (claimBtn) claimBtn.addEventListener('click', claimQuest);
 
   if (!document.getElementById('debug-panel')) {
     const debugPanel = document.createElement('div');
@@ -749,6 +928,8 @@ function gameLoop(now: number) {
     session.player.addCoins(rate * dt);
     updateStats();
     updateUpgradeListInPlace();
+    const p = getQuestProgress();
+    if (p?.done) renderQuestSection();
   }
   const planetViews = session.player.planets.map((p) => {
     const upgradeCounts: Record<string, number> = {};
@@ -779,13 +960,15 @@ function gameLoop(now: number) {
 
 async function init() {
   session = await getOrCreateSession();
+  const offlineCoins = saveLoad.getLastOfflineCoins();
   gameStartTime = Date.now();
   nextEventAt = gameStartTime + MIN_EVENT_DELAY_MS;
-  starfieldApi = startStarfield(getSettings);
+  starfieldApi = startStarfield(getSettings, getEventContext);
   mount();
   updateStats();
   renderUpgradeList();
   renderPlanetList();
+  if (offlineCoins > 0) showOfflineToast(offlineCoins);
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
   setInterval(saveSession, SAVE_INTERVAL_MS);

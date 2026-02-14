@@ -12,6 +12,9 @@ import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
 import { getPlanetName } from '../domain/constants.js';
 
 const STORAGE_KEY = 'stellar-miner-session';
+const LAST_SAVE_KEY = 'stellar-miner-last-save';
+const MIN_OFFLINE_MS = 60_000; // 1 min before offline progress counts
+const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000; // cap 24h
 
 type SavedUpgrade = { id: string; name: string; cost: number; effect: { coinsPerSecond: number } };
 type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[] };
@@ -35,10 +38,19 @@ type SavedSession = {
 
 /** Infrastructure: persist game session to localStorage. */
 export class SaveLoadService implements ISaveLoadService {
+  private lastOfflineCoinsApplied = 0;
+
+  getLastOfflineCoins(): number {
+    const n = this.lastOfflineCoinsApplied;
+    this.lastOfflineCoinsApplied = 0;
+    return n;
+  }
+
   async save(session: GameSession): Promise<void> {
     const payload = this.serialize(session);
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(LAST_SAVE_KEY, String(Date.now()));
     }
   }
 
@@ -47,12 +59,25 @@ export class SaveLoadService implements ISaveLoadService {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw) as SavedSession;
-    return this.deserialize(data);
+    const session = this.deserialize(data);
+    const lastSaveRaw = localStorage.getItem(LAST_SAVE_KEY);
+    if (lastSaveRaw) {
+      const lastSave = parseInt(lastSaveRaw, 10);
+      const elapsed = Date.now() - lastSave;
+      if (elapsed >= MIN_OFFLINE_MS && session.player.productionRate.value > 0) {
+        const cappedMs = Math.min(elapsed, MAX_OFFLINE_MS);
+        const offlineCoins = (cappedMs / 1000) * session.player.effectiveProductionRate;
+        session.player.addCoins(offlineCoins);
+        this.lastOfflineCoinsApplied = offlineCoins;
+      }
+    }
+    return session;
   }
 
   clearProgress(): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(LAST_SAVE_KEY);
     }
   }
 
