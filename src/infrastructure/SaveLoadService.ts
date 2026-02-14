@@ -32,6 +32,7 @@ type SavedSession = {
     artifacts: Array<{ id: string; name: string; effect: unknown; isActive: boolean }>;
     prestigeLevel: number;
     totalCoinsEver: number;
+    astronautCount?: number;
   };
   activeEvents: Array<{ id: string; name: string; effect: { multiplier: number; durationMs: number } }>;
 };
@@ -107,6 +108,7 @@ export class SaveLoadService implements ISaveLoadService {
         })),
         prestigeLevel: session.player.prestigeLevel,
         totalCoinsEver: session.player.totalCoinsEver,
+        astronautCount: session.player.astronautCount,
       },
       activeEvents: session.activeEvents.map((e) => ({
         id: e.id,
@@ -148,7 +150,8 @@ export class SaveLoadService implements ISaveLoadService {
       planets,
       artifacts,
       data.player.prestigeLevel,
-      data.player.totalCoinsEver
+      data.player.totalCoinsEver,
+      data.player.astronautCount ?? 0
     );
     const activeEvents = data.activeEvents.map(
       (e) => new GameEvent(e.id, e.name, new EventEffect(e.effect.multiplier, e.effect.durationMs))

@@ -8,6 +8,9 @@ import {
   getAddSlotCost,
   PLANET_NAMES,
   getPlanetName,
+  ASTRONAUT_BASE_COST,
+  ASTRONAUT_PRODUCTION_BONUS,
+  getAstronautCost,
 } from './constants.js';
 
 describe('constants', () => {
@@ -62,5 +65,16 @@ describe('constants', () => {
   it('getPlanetName falls back to Planet N when index >= length', () => {
     expect(getPlanetName(PLANET_NAMES.length)).toBe(`Planet ${PLANET_NAMES.length + 1}`);
     expect(getPlanetName(99)).toBe('Planet 100');
+  });
+
+  it('ASTRONAUT_BASE_COST and getAstronautCost scale with count', () => {
+    expect(ASTRONAUT_BASE_COST).toBe(75);
+    expect(getAstronautCost(0)).toBe(75);
+    expect(getAstronautCost(1)).toBe(Math.floor(75 * Math.pow(1.12, 1)));
+    expect(getAstronautCost(5)).toBe(Math.floor(75 * Math.pow(1.12, 5)));
+  });
+
+  it('ASTRONAUT_PRODUCTION_BONUS is 0.02', () => {
+    expect(ASTRONAUT_PRODUCTION_BONUS).toBe(0.02);
   });
 });

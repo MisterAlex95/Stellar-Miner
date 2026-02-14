@@ -117,12 +117,14 @@ body {
   }
 
   .quest-section h2,
-  .prestige-section h2 {
+  .prestige-section h2,
+  .crew-section h2 {
     font-size: 0.85rem;
   }
 
   .quest-claim-btn,
-  .prestige-btn {
+  .prestige-btn,
+  .hire-astronaut-btn {
     padding: 0.5rem 0.8rem;
     font-size: 0.8rem;
     min-height: 44px;
@@ -611,7 +613,14 @@ h1 {
   background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(34, 197, 94, 0.1) 100%);
 }
 
+.event-toast--milestone {
+  border-color: #fde047;
+  background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(253, 224, 71, 0.12) 100%);
+  color: #fef9c3;
+}
+
 .prestige-section,
+.crew-section,
 .quest-section {
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -666,6 +675,62 @@ h1 {
 }
 
 .prestige-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.crew-section h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.35rem 0;
+}
+
+.crew-hint {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.35;
+}
+
+.crew-count {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+
+.crew-operates {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 0.6rem;
+  line-height: 1.3;
+}
+
+.hire-astronaut-btn {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.hire-astronaut-btn:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.hire-astronaut-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hire-astronaut-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -784,6 +849,7 @@ h1 {
 /* Button active state (press feedback) */
 .settings-btn:active,
 .prestige-btn:active:not(:disabled),
+.hire-astronaut-btn:active:not(:disabled),
 .buy-planet-btn:active:not(:disabled),
 .add-slot-btn:active:not(:disabled) {
   transform: scale(0.98);
@@ -935,6 +1001,50 @@ h1 {
 .float-coin--active {
   opacity: 1;
   transform: translate(-50%, -50%) translateY(-28px);
+}
+
+.float-coin--lucky {
+  color: #fde047;
+  text-shadow: 0 0 12px rgba(253, 224, 71, 0.6);
+  font-size: 1.4rem;
+}
+
+.float-coin-combo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.6s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.float-coin-combo.float-coin--active {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(-42px);
+}
+
+.combo-indicator {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.combo-indicator--active {
+  opacity: 1;
+  transform: translateX(-50%) scale(1.05);
 }
 
 .float-reward {
@@ -1236,6 +1346,26 @@ h1 {
   border-color: rgba(34, 197, 94, 0.35);
 }
 
+.upgrade-crew-req {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-left: 0.4rem;
+  padding: 0.12rem 0.35rem;
+  background: rgba(245, 158, 11, 0.15);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.upgrade-card--needs-crew {
+  opacity: 0.85;
+}
+
+.upgrade-card--needs-crew .upgrade-crew-req {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+}
+
 .upgrade-card--just-bought {
   animation: upgrade-flash 0.7s ease;
 }
@@ -1390,7 +1520,9 @@ h1 {
   .stat-card--bump,
   .upgrade-card--just-bought,
   .float-coin,
+  .float-coin-combo,
   .float-reward,
+  .combo-indicator,
   .production-live {
     animation: none !important;
   }

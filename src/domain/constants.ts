@@ -33,3 +33,13 @@ export const PLANET_NAMES = [
 export function getPlanetName(index: number): string {
   return PLANET_NAMES[index] ?? `Planet ${index + 1}`;
 }
+
+/** Crew: astronauts. Production bonus per astronaut (e.g. 0.02 = +2% each). */
+export const ASTRONAUT_PRODUCTION_BONUS = 0.02;
+
+/** Base cost to hire the first astronaut. Each additional costs more. */
+export const ASTRONAUT_BASE_COST = 75;
+
+export function getAstronautCost(currentCount: number): number {
+  return Math.floor(ASTRONAUT_BASE_COST * Math.pow(1.12, currentCount));
+}

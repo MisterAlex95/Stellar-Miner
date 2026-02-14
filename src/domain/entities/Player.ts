@@ -3,9 +3,9 @@ import { ProductionRate } from '../value-objects/ProductionRate.js';
 import type { Upgrade } from './Upgrade.js';
 import type { Artifact } from './Artifact.js';
 import { Planet } from './Planet.js';
-import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, getPlanetName } from '../constants.js';
+import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, ASTRONAUT_PRODUCTION_BONUS, getPlanetName } from '../constants.js';
 
-/** Aggregate root: player and their progression. Holds planets (expandable slots + production bonus), artifacts, coins. */
+/** Aggregate root: player and their progression. Holds planets, crew (astronauts), artifacts, coins. */
 export class Player {
   /** Mutable array of planets. Each planet has upgrade slots (expandable) and contributes to production bonus. */
   public readonly planets: Planet[];
@@ -17,7 +17,8 @@ export class Player {
     planets: Planet[],
     public readonly artifacts: Artifact[],
     public readonly prestigeLevel: number,
-    public readonly totalCoinsEver: number
+    public readonly totalCoinsEver: number,
+    public readonly astronautCount: number = 0
   ) {
     this.planets = planets ? [...planets] : [];
   }
@@ -29,6 +30,7 @@ export class Player {
 
   addCoins(amount: number): void {
     this.coins = this.coins.add(amount);
+    (this as { totalCoinsEver: number }).totalCoinsEver += amount;
   }
 
   spendCoins(amount: number): void {
@@ -53,14 +55,31 @@ export class Player {
     return this.planets.filter((p) => p.hasFreeSlot());
   }
 
-  /** Production rate from upgrades × planet bonus (+5% per extra planet) × prestige (+5% per level). */
+  /** Production rate from upgrades × planet bonus × prestige × crew (astronauts +2% each). */
   get effectiveProductionRate(): number {
     const planetBonus = 1 + (this.planets.length - 1) * PLANET_PRODUCTION_BONUS;
     const prestigeBonus = 1 + this.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL;
-    return this.productionRate.value * planetBonus * prestigeBonus;
+    const crewBonus = 1 + this.astronautCount * ASTRONAUT_PRODUCTION_BONUS;
+    return this.productionRate.value * planetBonus * prestigeBonus * crewBonus;
   }
 
-  /** Returns a fresh player after prestige: one empty planet, 0 coins, prestige level +1. */
+  /** Hire one astronaut if the player can afford the cost. Returns true if hired. */
+  hireAstronaut(cost: number): boolean {
+    if (!this.coins.gte(cost)) return false;
+    this.spendCoins(cost);
+    (this as { astronautCount: number }).astronautCount++;
+    return true;
+  }
+
+  /** Spend astronauts (e.g. to assign to an upgrade). Returns true if enough crew. */
+  spendAstronauts(count: number): boolean {
+    if (count <= 0) return true;
+    if (this.astronautCount < count) return false;
+    (this as { astronautCount: number }).astronautCount -= count;
+    return true;
+  }
+
+  /** Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, prestige level +1. */
   static createAfterPrestige(oldPlayer: Player): Player {
     return new Player(
       oldPlayer.id,
@@ -69,7 +88,8 @@ export class Player {
       [Planet.create('planet-1', getPlanetName(0))],
       [],
       oldPlayer.prestigeLevel + 1,
-      oldPlayer.totalCoinsEver
+      oldPlayer.totalCoinsEver,
+      0
     );
   }
 
@@ -81,6 +101,7 @@ export class Player {
       new ProductionRate(0),
       [firstPlanet],
       [],
+      0,
       0,
       0
     );

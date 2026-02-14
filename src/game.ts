@@ -11,7 +11,7 @@ import { SaveLoadService } from './infrastructure/SaveLoadService.js';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
 import { createMineZoneCanvas } from './presentation/MineZoneCanvas.js';
 import { loadSettings, saveSettings, type Settings } from './settings.js';
-import { PRESTIGE_COIN_THRESHOLD } from './domain/constants.js';
+import { PRESTIGE_COIN_THRESHOLD, getAstronautCost } from './domain/constants.js';
 
 const SAVE_INTERVAL_MS = 3000;
 const EVENT_INTERVAL_MS = 90_000; // trigger a random event every 90s
@@ -24,20 +24,22 @@ type UpgradeDef = {
   cost: number;
   coinsPerSecond: number;
   tier: number;
+  /** Min astronauts required to purchase this upgrade. Higher tiers need more crew to operate. */
+  requiredAstronauts: number;
 };
 
-/** Upgrades: first at 100 (≈100 clicks), then ×5 per tier. Efficiency 50 coins per 1/s. Stretched so the clicker lasts. */
+/** Upgrades: first at 100 (≈100 clicks), then ×5 per tier. T2+ require crew to operate. */
 const UPGRADE_CATALOG: UpgradeDef[] = [
-  { id: 'mining-robot', name: 'Mining Robot', description: 'Basic autonomous miner. Your first step into the belt.', cost: 100, coinsPerSecond: 2, tier: 1 },
-  { id: 'drill-mk1', name: 'Drill Mk.I', description: 'Improved extraction head. Cuts through surface rock in seconds.', cost: 500, coinsPerSecond: 10, tier: 2 },
-  { id: 'drill-mk2', name: 'Drill Mk.II', description: 'Heavy-duty surface drill. Built for long shifts in the void.', cost: 2500, coinsPerSecond: 50, tier: 3 },
-  { id: 'asteroid-rig', name: 'Asteroid Rig', description: 'Full mining platform. Drills, crushes, and sorts in one unit.', cost: 12500, coinsPerSecond: 250, tier: 4 },
-  { id: 'orbital-station', name: 'Orbital Station', description: 'Refinery and logistics hub. The heart of your operation.', cost: 62500, coinsPerSecond: 1250, tier: 5 },
-  { id: 'deep-core-drill', name: 'Deep Core Drill', description: 'Penetrates dense ore layers. Reaches what others can\'t.', cost: 312500, coinsPerSecond: 6250, tier: 6 },
-  { id: 'stellar-harvester', name: 'Stellar Harvester', description: 'Harvests rare minerals at scale. Feeds the entire sector.', cost: 1562500, coinsPerSecond: 31250, tier: 7 },
-  { id: 'quantum-extractor', name: 'Quantum Extractor', description: 'Maximum efficiency extraction. Near-instant ore processing.', cost: 7812500, coinsPerSecond: 156250, tier: 8 },
-  { id: 'void-crusher', name: 'Void Crusher', description: 'Pulverizes asteroid cores. Built for the endgame.', cost: 39062500, coinsPerSecond: 781250, tier: 9 },
-  { id: 'nexus-collector', name: 'Nexus Collector', description: 'Harvests from multiple dimensions. The ultimate upgrade.', cost: 195312500, coinsPerSecond: 3906250, tier: 10 },
+  { id: 'mining-robot', name: 'Mining Robot', description: 'Basic autonomous miner. Your first step into the belt.', cost: 100, coinsPerSecond: 2, tier: 1, requiredAstronauts: 0 },
+  { id: 'drill-mk1', name: 'Drill Mk.I', description: 'Improved extraction head. Needs an operator. Cuts through surface rock in seconds.', cost: 500, coinsPerSecond: 10, tier: 2, requiredAstronauts: 1 },
+  { id: 'drill-mk2', name: 'Drill Mk.II', description: 'Heavy-duty surface drill. Built for long shifts in the void. Requires trained crew.', cost: 2500, coinsPerSecond: 50, tier: 3, requiredAstronauts: 2 },
+  { id: 'asteroid-rig', name: 'Asteroid Rig', description: 'Full mining platform. Drills, crushes, and sorts in one unit. Needs a team.', cost: 12500, coinsPerSecond: 250, tier: 4, requiredAstronauts: 2 },
+  { id: 'orbital-station', name: 'Orbital Station', description: 'Refinery and logistics hub. The heart of your operation. Crew-intensive.', cost: 62500, coinsPerSecond: 1250, tier: 5, requiredAstronauts: 3 },
+  { id: 'deep-core-drill', name: 'Deep Core Drill', description: 'Penetrates dense ore layers. Reaches what others can\'t. Requires specialist crew.', cost: 312500, coinsPerSecond: 6250, tier: 6, requiredAstronauts: 3 },
+  { id: 'stellar-harvester', name: 'Stellar Harvester', description: 'Harvests rare minerals at scale. Feeds the entire sector.', cost: 1562500, coinsPerSecond: 31250, tier: 7, requiredAstronauts: 4 },
+  { id: 'quantum-extractor', name: 'Quantum Extractor', description: 'Maximum efficiency extraction. Near-instant ore processing. Needs expert crew.', cost: 7812500, coinsPerSecond: 156250, tier: 8, requiredAstronauts: 4 },
+  { id: 'void-crusher', name: 'Void Crusher', description: 'Pulverizes asteroid cores. Built for the endgame.', cost: 39062500, coinsPerSecond: 781250, tier: 9, requiredAstronauts: 5 },
+  { id: 'nexus-collector', name: 'Nexus Collector', description: 'Harvests from multiple dimensions. The ultimate upgrade. Full crew required.', cost: 195312500, coinsPerSecond: 3906250, tier: 10, requiredAstronauts: 5 },
 ];
 
 function createUpgrade(def: UpgradeDef): Upgrade {
@@ -62,6 +64,19 @@ let gameStartTime = 0;
 let settings: Settings = loadSettings();
 
 const QUEST_STORAGE_KEY = 'stellar-miner-quest';
+const MILESTONES_STORAGE_KEY = 'stellar-miner-milestones';
+
+const COMBO_WINDOW_MS = 2000;
+const COMBO_MIN_CLICKS = 5;
+const COMBO_MULT_PER_LEVEL = 0.1;
+const COMBO_MAX_MULT = 1.5;
+const LUCKY_CLICK_CHANCE = 0.04;
+const LUCKY_MIN = 5;
+const LUCKY_MAX = 22;
+
+const MILESTONES = [100, 500, 1000, 5000, 10000, 25000, 50000, 100000, 500000, 1000000];
+
+let clickTimestamps: number[] = [];
 
 type QuestType = 'coins' | 'production' | 'upgrade';
 
@@ -277,15 +292,18 @@ function updateStats() {
     const base = player.productionRate.value;
     const planetBonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
     const prestigeBonus = player.prestigeLevel > 0 ? player.prestigeLevel * 5 : 0;
+    const crewBonus = player.astronautCount > 0 ? player.astronautCount * 2 : 0;
     const parts: string[] = [];
     if (base > 0) parts.push(`Base ${formatNumber(base, settings.compactNumbers)}/s`);
     if (planetBonus > 0) parts.push(`+${planetBonus}% planets`);
     if (prestigeBonus > 0) parts.push(`+${prestigeBonus}% prestige`);
+    if (crewBonus > 0) parts.push(`+${crewBonus}% crew`);
     if (eventMult > 1) parts.push(`×${eventMult.toFixed(1)} event`);
     breakdownEl.textContent = parts.length > 0 ? parts.join(' · ') : '';
     breakdownEl.style.display = parts.length > 0 ? '' : 'none';
   }
   renderPrestigeSection();
+  renderCrewSection();
 
   const activeEl = document.getElementById('active-events');
   if (activeEl) {
@@ -336,11 +354,26 @@ function renderUpgradeList() {
     for (const def of groupDefs) {
       const owned = player.upgrades.filter((u) => u.id === def.id).length;
       const upgrade = createUpgrade(def);
+      const hasCrew = player.astronautCount >= def.requiredAstronauts;
       const canAfford = player.coins.gte(upgrade.cost);
-      const canBuy = canAfford && hasFreeSlot;
+      const canBuy = canAfford && hasFreeSlot && hasCrew;
       const buyLabel = owned > 0 ? `+1` : `Buy`;
       const maxCount = getMaxBuyCount(def.id);
       const maxLabel = maxCount > 1 ? `Max (${maxCount})` : `Max`;
+
+      let buyTitle = '';
+      if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Costs ${formatNumber(def.cost, settings.compactNumbers)} ⬡ + ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
+      else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
+
+      const crewBadge =
+        def.requiredAstronauts > 0
+          ? `<span class="upgrade-crew-req" title="Cost in astronauts (spent when you buy)">${def.requiredAstronauts} crew</span>`
+          : '';
+
+      const costLine =
+        def.requiredAstronauts > 0
+          ? `${formatNumber(def.cost, settings.compactNumbers)} ⬡ + ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}`
+          : `${formatNumber(def.cost, settings.compactNumbers)} ⬡`;
 
       const planetOptions = choosePlanet
         ? planetsWithSlot.map((p) => `<option value="${p.id}">${p.name}</option>`).join('')
@@ -351,23 +384,27 @@ function renderUpgradeList() {
 
       const isRecommended = canBuy && !player.upgrades.some((u) => u.id === def.id);
       const card = document.createElement('div');
-      card.className = 'upgrade-card' + (canBuy ? ' upgrade-card--affordable' : '') + (isRecommended ? ' upgrade-card--recommended' : '');
+      card.className =
+        'upgrade-card' +
+        (canBuy ? ' upgrade-card--affordable' : '') +
+        (isRecommended ? ' upgrade-card--recommended' : '') +
+        (!hasCrew && def.requiredAstronauts > 0 ? ' upgrade-card--needs-crew' : '');
       card.setAttribute('data-tier', String(def.tier));
       card.innerHTML = `
         <div class="upgrade-info">
           <div class="upgrade-header">
             <span class="upgrade-tier" aria-label="Tier ${def.tier}">T${def.tier}</span>
-            <div class="upgrade-name">${def.name}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}${isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : ''}</div>
+            <div class="upgrade-name">${def.name}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}${crewBadge}${isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : ''}</div>
           </div>
           <div class="upgrade-description">${def.description}</div>
           <div class="upgrade-effect">+${formatNumber(def.coinsPerSecond, settings.compactNumbers)} /s each</div>
         </div>
-        <span class="upgrade-cost">${formatNumber(def.cost, settings.compactNumbers)} ⬡</span>
+        <span class="upgrade-cost">${costLine}</span>
         <div class="upgrade-actions">
           ${planetSelectHtml}
           <div class="upgrade-buttons">
-            <button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" title="${!hasFreeSlot ? 'No free slot. Add a slot to a planet or buy a new planet!' : ''}" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>
-            <button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" title="Buy as many as you can afford with current slots" ${maxCount > 0 ? '' : 'disabled'}>${maxLabel}</button>
+            <button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" title="${buyTitle}" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>
+            <button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" title="Buy as many as you can afford with current slots" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button>
           </div>
         </div>
       `;
@@ -391,16 +428,22 @@ function updateUpgradeListInPlace() {
     const def = UPGRADE_CATALOG.find((d) => d.id === id);
     if (!def) return;
     const owned = player.upgrades.filter((u) => u.id === id).length;
+    const hasCrew = player.astronautCount >= def.requiredAstronauts;
     const canAfford = player.coins.gte(def.cost);
-    const canBuy = canAfford && hasFreeSlot;
+    const canBuy = canAfford && hasFreeSlot && hasCrew;
     const buyLabel = owned > 0 ? '+1' : 'Buy';
     const maxCount = getMaxBuyCount(id);
     const maxLabel = maxCount > 1 ? `Max (${maxCount})` : 'Max';
 
+    let buyTitle = '';
+    if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Costs ${formatNumber(def.cost, settings.compactNumbers)} ⬡ + ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
+    else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
+
     const isRecommended = canBuy && !player.upgrades.some((u) => u.id === id);
+    const crewBadge = def.requiredAstronauts > 0 ? `<span class="upgrade-crew-req" title="Cost in astronauts (spent when you buy)">${def.requiredAstronauts} crew</span>` : '';
     const nameEl = card.querySelector('.upgrade-name');
     if (nameEl) {
-      nameEl.innerHTML = def.name + (owned > 0 ? `<span class="count-badge">×${owned}</span>` : '') + (isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : '');
+      nameEl.innerHTML = def.name + (owned > 0 ? `<span class="count-badge">×${owned}</span>` : '') + crewBadge + (isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : '');
     }
     const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
     if (select) {
@@ -418,15 +461,16 @@ function updateUpgradeListInPlace() {
     if (buyBtn) {
       buyBtn.textContent = buyLabel;
       buyBtn.toggleAttribute('disabled', !canBuy);
-      buyBtn.setAttribute('title', !hasFreeSlot ? 'No free slot. Add a slot to a planet or buy a new planet!' : '');
+      buyBtn.setAttribute('title', buyTitle);
     }
     const maxBtn = card.querySelector('.upgrade-btn--max');
     if (maxBtn) {
       maxBtn.textContent = maxLabel;
-      maxBtn.toggleAttribute('disabled', maxCount <= 0);
+      maxBtn.toggleAttribute('disabled', maxCount <= 0 || !hasCrew);
     }
     card.classList.toggle('upgrade-card--affordable', canBuy);
     card.classList.toggle('upgrade-card--recommended', isRecommended);
+    card.classList.toggle('upgrade-card--needs-crew', !hasCrew && def.requiredAstronauts > 0);
   });
 }
 
@@ -445,7 +489,7 @@ function flashUpgradeCard(upgradeId: string): void {
   }
 }
 
-/** How many of this upgrade can be bought with current coins and free slots. */
+/** How many of this upgrade can be bought with current coins, free slots, and astronauts. */
 function getMaxBuyCount(upgradeId: string): number {
   if (!session) return 0;
   const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
@@ -454,7 +498,8 @@ function getMaxBuyCount(upgradeId: string): number {
   const freeSlots = player.planets.reduce((s, p) => s + p.freeSlots, 0);
   if (freeSlots <= 0 || !player.coins.gte(def.cost)) return 0;
   const byCoins = Math.floor(player.coins.value / def.cost);
-  return Math.min(byCoins, freeSlots);
+  const byAstronauts = def.requiredAstronauts === 0 ? freeSlots : Math.floor(player.astronautCount / def.requiredAstronauts);
+  return Math.min(byCoins, freeSlots, byAstronauts);
 }
 
 function handleUpgradeBuy(upgradeId: string, planetId?: string) {
@@ -466,25 +511,33 @@ function handleUpgradeBuy(upgradeId: string, planetId?: string) {
   const targetPlanet = planetId ? player.planets.find((p) => p.id === planetId) : undefined;
   if (!player.coins.gte(upgrade.cost) || !player.getPlanetWithFreeSlot()) return;
   if (planetId && !targetPlanet?.hasFreeSlot()) return;
+  if (player.astronautCount < def.requiredAstronauts) return;
+  if (!player.spendAstronauts(def.requiredAstronauts)) return;
   upgradeService.purchaseUpgrade(player, upgrade, targetPlanet ?? null);
   saveSession();
   updateStats();
   renderUpgradeList();
+  renderCrewSection();
+  renderPlanetList();
   flashUpgradeCard(upgradeId);
   renderQuestSection();
 }
 
-/** Buy as many as possible (limited by coins and free slots). Uses selected planet first, then others. */
+/** Buy as many as possible (limited by coins, free slots, and astronauts). */
 function handleUpgradeBuyMax(upgradeId: string, planetId?: string) {
   if (!session) return;
   const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
   if (!def) return;
   const player = session.player;
   let bought = 0;
-  while (player.coins.gte(def.cost)) {
+  while (
+    player.coins.gte(def.cost) &&
+    player.astronautCount >= def.requiredAstronauts
+  ) {
     let target = planetId ? player.planets.find((p) => p.id === planetId) : null;
     if (!target?.hasFreeSlot()) target = player.getPlanetWithFreeSlot();
     if (!target) break;
+    if (!player.spendAstronauts(def.requiredAstronauts)) break;
     const upgrade = createUpgrade(def);
     upgradeService.purchaseUpgrade(player, upgrade, target);
     bought++;
@@ -493,6 +546,8 @@ function handleUpgradeBuyMax(upgradeId: string, planetId?: string) {
     saveSession();
     updateStats();
     renderUpgradeList();
+    renderCrewSection();
+    renderPlanetList();
     renderQuestSection();
   }
   renderPlanetList();
@@ -564,6 +619,49 @@ function renderPrestigeSection(): void {
       ? `Prestige level ${player.prestigeLevel} (+${player.prestigeLevel * 5}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`
       : `Reach ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to unlock Prestige.`;
   btnEl.toggleAttribute('disabled', !canPrestige);
+}
+
+function renderCrewSection(): void {
+  if (!session) return;
+  const player = session.player;
+  const listEl = document.getElementById('crew-section');
+  const hireBtn = document.getElementById('hire-astronaut-btn');
+  const crewCountEl = document.getElementById('crew-count');
+  const crewOperatesEl = document.getElementById('crew-operates');
+  if (!listEl || !hireBtn) return;
+  const cost = getAstronautCost(player.astronautCount);
+  const canHire = player.coins.gte(cost);
+  hireBtn.textContent = `Hire astronaut · ${formatNumber(cost, settings.compactNumbers)} ⬡`;
+  hireBtn.toggleAttribute('disabled', !canHire);
+  if (crewCountEl) {
+    crewCountEl.textContent =
+      player.astronautCount === 0
+        ? 'No crew yet'
+        : `${player.astronautCount} astronaut${player.astronautCount > 1 ? 's' : ''} · +${player.astronautCount * 2}% production`;
+  }
+  if (crewOperatesEl) {
+    const totalUpgrades = player.upgrades.length;
+    const nextUnlock = UPGRADE_CATALOG.find((d) => d.requiredAstronauts > player.astronautCount);
+    if (player.astronautCount === 0) {
+      crewOperatesEl.textContent = 'Hire crew to buy tier 2+ upgrades (each costs coins + astronauts).';
+    } else if (nextUnlock) {
+      crewOperatesEl.textContent = `${player.astronautCount} astronaut${player.astronautCount !== 1 ? 's' : ''} available. Next: ${nextUnlock.name} costs ${nextUnlock.requiredAstronauts} crew.`;
+    } else {
+      crewOperatesEl.textContent = `${player.astronautCount} astronaut${player.astronautCount !== 1 ? 's' : ''} available. All upgrades purchasable if you have enough crew.`;
+    }
+  }
+}
+
+function handleHireAstronaut(): void {
+  if (!session) return;
+  const player = session.player;
+  const cost = getAstronautCost(player.astronautCount);
+  if (!player.hireAstronaut(cost)) return;
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderPlanetList();
+  renderCrewSection();
 }
 
 function openDebugMenu(): void {
@@ -658,7 +756,10 @@ function applySettingsToUI() {
 function handleResetProgress() {
   if (!confirm('Reset all progress? Coins, planets and upgrades will be lost. This cannot be undone.')) return;
   saveLoad.clearProgress();
-  if (typeof localStorage !== 'undefined') localStorage.removeItem(QUEST_STORAGE_KEY);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem(QUEST_STORAGE_KEY);
+    localStorage.removeItem(MILESTONES_STORAGE_KEY);
+  }
   closeSettings();
   location.reload();
 }
@@ -699,17 +800,30 @@ function showOfflineToast(coins: number): void {
   }, 5000);
 }
 
-function showFloatingCoin(amount: number, clientX: number, clientY: number): void {
+function showFloatingCoin(amount: number, clientX: number, clientY: number, options?: { lucky?: boolean; comboMult?: number }): void {
   const zone = document.getElementById('mine-zone');
   const floats = document.getElementById('mine-zone-floats');
   if (!zone || !floats) return;
   const rect = zone.getBoundingClientRect();
   const el = document.createElement('span');
-  el.className = 'float-coin';
+  el.className = 'float-coin' + (options?.lucky ? ' float-coin--lucky' : '');
   el.textContent = `+${amount}`;
   el.style.left = `${clientX - rect.left}px`;
   el.style.top = `${clientY - rect.top}px`;
   floats.appendChild(el);
+  if (options?.comboMult && options.comboMult > 1) {
+    const comboEl = document.createElement('span');
+    comboEl.className = 'float-coin-combo';
+    comboEl.textContent = `Combo ×${options.comboMult.toFixed(1)}`;
+    comboEl.style.left = `${clientX - rect.left}px`;
+    comboEl.style.top = `${clientY - rect.top - 12}px`;
+    floats.appendChild(comboEl);
+    requestAnimationFrame(() => comboEl.classList.add('float-coin--active'));
+    setTimeout(() => {
+      comboEl.classList.remove('float-coin--active');
+      setTimeout(() => comboEl.remove(), 350);
+    }, 800);
+  }
   requestAnimationFrame(() => el.classList.add('float-coin--active'));
   setTimeout(() => {
     el.classList.remove('float-coin--active');
@@ -717,11 +831,96 @@ function showFloatingCoin(amount: number, clientX: number, clientY: number): voi
   }, 650);
 }
 
+function getReachedMilestones(): number[] {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(MILESTONES_STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as number[];
+  } catch {
+    return [];
+  }
+}
+
+function markMilestoneReached(value: number): void {
+  const reached = getReachedMilestones();
+  if (reached.includes(value)) return;
+  reached.push(value);
+  reached.sort((a, b) => a - b);
+  if (typeof localStorage !== 'undefined') localStorage.setItem(MILESTONES_STORAGE_KEY, JSON.stringify(reached));
+}
+
+function checkAndShowMilestones(): void {
+  if (!session) return;
+  const total = session.player.totalCoinsEver;
+  const reached = getReachedMilestones();
+  for (const m of MILESTONES) {
+    if (total >= m && !reached.includes(m)) {
+      markMilestoneReached(m);
+      showMilestoneToast(m);
+      break;
+    }
+  }
+}
+
+function showMilestoneToast(coins: number): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--milestone';
+  el.setAttribute('role', 'status');
+  el.textContent = `Milestone: ${formatNumber(coins, false)} total coins earned!`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
+function updateComboIndicator(): void {
+  const now = Date.now();
+  const recent = clickTimestamps.filter((t) => t > now - COMBO_WINDOW_MS);
+  const comboCount = recent.length;
+  const mult =
+    comboCount >= COMBO_MIN_CLICKS
+      ? Math.min(COMBO_MAX_MULT, 1 + (comboCount - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL)
+      : 0;
+  const el = document.getElementById('combo-indicator');
+  if (!el) return;
+  if (mult > 1) {
+    el.textContent = `×${mult.toFixed(1)}`;
+    el.classList.add('combo-indicator--active');
+  } else {
+    el.classList.remove('combo-indicator--active');
+  }
+}
+
 function handleMineClick(e?: MouseEvent) {
   if (!session) return;
-  session.player.addCoins(1);
-  if (e) showFloatingCoin(1, e.clientX, e.clientY);
+
+  const now = Date.now();
+  clickTimestamps = clickTimestamps.filter((t) => t > now - COMBO_WINDOW_MS);
+  clickTimestamps.push(now);
+
+  const comboCount = clickTimestamps.length;
+  const comboMult =
+    comboCount >= COMBO_MIN_CLICKS
+      ? Math.min(COMBO_MAX_MULT, 1 + (comboCount - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL)
+      : 1;
+
+  const isLucky = Math.random() < LUCKY_CLICK_CHANCE;
+  const baseCoins = isLucky ? LUCKY_MIN + Math.floor(Math.random() * (LUCKY_MAX - LUCKY_MIN + 1)) : 1;
+  const coins = Math.max(1, Math.round(baseCoins * comboMult));
+
+  session.player.addCoins(coins);
+
+  const clientX = e?.clientX ?? 0;
+  const clientY = e?.clientY ?? 0;
+  if (e) showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, comboMult: comboMult > 1 ? comboMult : undefined });
   mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY);
+  updateComboIndicator();
+  checkAndShowMilestones();
   saveSession();
   updateStats();
   renderUpgradeList();
@@ -821,6 +1020,7 @@ function mount() {
       <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
       <div class="mine-zone-visual" id="mine-zone-visual"></div>
       <p class="mine-zone-hint" aria-hidden="true">Click or press Space to mine</p>
+      <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
     </section>
     <section class="quest-section" id="quest-section">
       <h2>Quest</h2>
@@ -835,6 +1035,13 @@ function mount() {
       <p class="prestige-hint">Reset coins and planets to gain +5% production per prestige level forever.</p>
       <div class="prestige-status" id="prestige-status"></div>
       <button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button>
+    </section>
+    <section class="crew-section" id="crew-section">
+      <h2>Crew</h2>
+      <p class="crew-hint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
+      <div class="crew-count" id="crew-count">No crew yet</div>
+      <div class="crew-operates" id="crew-operates"></div>
+      <button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button>
     </section>
     <section class="planets-section">
       <h2>Planets</h2>
@@ -908,7 +1115,11 @@ function mount() {
   const prestigeBtn = document.getElementById('prestige-btn');
   if (prestigeBtn) prestigeBtn.addEventListener('click', handlePrestige);
 
+  const hireAstronautBtn = document.getElementById('hire-astronaut-btn');
+  if (hireAstronautBtn) hireAstronautBtn.addEventListener('click', handleHireAstronaut);
+
   renderPrestigeSection();
+  renderCrewSection();
   renderQuestSection();
 
   const claimBtn = document.getElementById('quest-claim');
@@ -1018,6 +1229,8 @@ function gameLoop(now: number) {
   mineZoneCanvasApi?.setPlanets(planetViews);
   mineZoneCanvasApi?.update(dt);
   mineZoneCanvasApi?.draw();
+
+  updateComboIndicator();
 
   const debugPanel = document.getElementById('debug-panel');
   if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) {
