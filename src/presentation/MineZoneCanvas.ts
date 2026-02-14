@@ -255,8 +255,8 @@ function drawSolarSystem(
 
     if (showOrbits) {
       ctx.strokeStyle = getThemeColor('--border', '#2a2f3d');
-      ctx.globalAlpha = 0.28;
-      ctx.lineWidth = 0.6;
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(systemCenterX, systemCenterY, orbitR, 0, Math.PI * 2);
       ctx.stroke();
@@ -287,7 +287,7 @@ function drawSpatialSystem(): void {
     const py = cy + Math.sin(angle) * orbitR;
     if (getMineZoneSettings?.()?.showOrbitLines !== false) {
       ctx.strokeStyle = getThemeColor('--border', '#2a2f3d');
-      ctx.globalAlpha = 0.3;
+      ctx.globalAlpha = 0.45;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);

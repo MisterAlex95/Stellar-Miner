@@ -44,6 +44,12 @@ body {
   padding: 1.5rem;
 }
 
+@media (min-width: 900px) {
+  #app {
+    max-width: 640px;
+  }
+}
+
 header {
   margin-bottom: 2rem;
 }
@@ -80,6 +86,11 @@ header {
   color: var(--accent);
   border-color: var(--accent);
   background: var(--bg-card);
+}
+
+.settings-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .settings-overlay {
@@ -148,6 +159,11 @@ header {
   background: var(--bg-card);
 }
 
+.settings-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .settings-body {
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -175,6 +191,11 @@ header {
   background: var(--bg-card);
   color: var(--text);
   cursor: pointer;
+}
+
+.settings-option select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .settings-toggle {
@@ -215,6 +236,11 @@ header {
   background: rgba(220, 38, 38, 0.15);
   color: #f87171;
   border-color: #dc2626;
+}
+
+.reset-btn:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
 }
 
 h1 {
@@ -270,36 +296,10 @@ h1 {
   padding: 0;
   text-align: center;
   margin-bottom: 1.5rem;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.25s ease, border-color 0.2s ease;
   overflow: hidden;
   min-height: 320px;
-}
-
-.mine-action {
-  text-align: center;
-  margin-bottom: 0.75rem;
-}
-
-.mine-btn {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--bg-dark);
-  background: var(--accent);
-  border: none;
-  border-radius: 12px;
-  padding: 1rem 2rem;
   cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.2s ease;
-}
-
-.mine-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 24px var(--accent-glow);
-}
-
-.mine-btn:active {
-  transform: scale(0.98);
 }
 
 .mine-zone-visual {
@@ -322,6 +322,29 @@ h1 {
 
 .mine-zone:hover {
   box-shadow: 0 0 32px var(--accent-glow);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.mine-zone:focus-within {
+  box-shadow: 0 0 24px var(--accent-glow);
+}
+
+.mine-zone-hint {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.mine-zone:hover .mine-zone-hint {
+  opacity: 1;
+  color: var(--text);
 }
 
 .planets-section {
@@ -380,6 +403,11 @@ h1 {
   background: var(--accent);
   color: var(--bg-dark);
   border-color: var(--accent);
+}
+
+.buy-planet-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .buy-planet-btn:disabled {
@@ -459,6 +487,11 @@ h1 {
   background: var(--accent);
   color: var(--bg-dark);
   border-color: var(--accent);
+}
+
+.upgrade-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .upgrade-btn:disabled {

@@ -282,11 +282,9 @@ function mount() {
         <div class="stat-value" id="production-value">0/s</div>
       </div>
     </section>
-    <div class="mine-action">
-      <button type="button" class="mine-btn" id="mine-btn">MINE</button>
-    </div>
-    <section class="mine-zone" id="mine-zone">
+    <section class="mine-zone" id="mine-zone" title="Click to mine">
       <div class="mine-zone-visual" id="mine-zone-visual"></div>
+      <p class="mine-zone-hint" aria-hidden="true">Click to mine</p>
     </section>
     <section class="planets-section">
       <h2>Planets</h2>
@@ -336,9 +334,9 @@ function mount() {
   const resetBtn = document.getElementById('settings-reset-btn');
   if (resetBtn) resetBtn.addEventListener('click', handleResetProgress);
 
-  const mineBtn = document.getElementById('mine-btn');
-  if (mineBtn) {
-    mineBtn.addEventListener('click', (e: Event) => handleMineClick(e as MouseEvent));
+  const mineZone = document.getElementById('mine-zone');
+  if (mineZone) {
+    mineZone.addEventListener('click', (e: Event) => handleMineClick(e as MouseEvent));
   }
 
   const buyPlanetBtn = document.getElementById('buy-planet-btn');
