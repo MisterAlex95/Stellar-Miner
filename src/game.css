@@ -16,9 +16,21 @@
   box-sizing: border-box;
 }
 
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-dark);
   color: var(--text);
   font-family: 'Exo 2', sans-serif;
@@ -27,6 +39,7 @@ body {
     radial-gradient(ellipse 80% 50% at 50% -20%, var(--accent-glow), transparent),
     radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.06), transparent),
     radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.04), transparent);
+  overflow-x: hidden;
 }
 
 #starfield-canvas {
@@ -43,11 +56,213 @@ body {
   max-width: 560px;
   margin: 0 auto;
   padding: 1.5rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }
 
-@media (min-width: 900px) {
+/* Smartwatch & very small (≤360px) */
+@media (max-width: 360px) {
+  #app {
+    padding: 0.5rem;
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+  }
+
+  header .header-row h1 {
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+  }
+
+  .subtitle {
+    font-size: 0.7rem;
+  }
+
+  .settings-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .stat-value--hero {
+    font-size: 1.4rem;
+  }
+
+  .mine-zone {
+    min-height: 180px;
+    margin-bottom: 0.75rem;
+  }
+
+  .mine-zone-hint {
+    font-size: 0.65rem;
+  }
+
+  .quest-section,
+  .prestige-section {
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .quest-section h2,
+  .prestige-section h2 {
+    font-size: 0.85rem;
+  }
+
+  .quest-claim-btn,
+  .prestige-btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    min-height: 44px;
+  }
+
+  .planet-list {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .planet-card {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .buy-planet-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .upgrade-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .upgrade-cost {
+    order: -1;
+    text-align: left;
+  }
+
+  .upgrade-actions {
+    flex-wrap: wrap;
+  }
+
+  .upgrade-btn {
+    min-height: 44px;
+    flex: 1;
+  }
+
+  .upgrade-group-header {
+    font-size: 0.65rem;
+  }
+
+  .upgrade-list {
+    max-height: 45vh;
+  }
+
+  .event-toast {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .float-coin {
+    font-size: 1rem;
+  }
+
+  .debug-panel {
+    left: 0.5rem;
+    right: 0.5rem;
+    top: auto;
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* Smartphone (361px–767px) */
+@media (min-width: 361px) and (max-width: 767px) {
+  #app {
+    padding: 1rem;
+  }
+
+  header {
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-value--hero {
+    font-size: 1.6rem;
+  }
+
+  .mine-zone {
+    min-height: 260px;
+  }
+
+  .quest-claim-btn,
+  .prestige-btn,
+  .add-slot-btn,
+  .buy-planet-btn {
+    min-height: 44px;
+  }
+
+  .upgrade-btn {
+    min-height: 44px;
+  }
+
+  .planet-list {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .debug-panel {
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+  }
+}
+
+/* Tablet (768px–1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  #app {
+    max-width: 720px;
+    padding: 1.5rem 2rem;
+  }
+
+  .stats {
+    gap: 1.25rem;
+  }
+
+  .stat-card {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .mine-zone {
+    min-height: 340px;
+  }
+
+  .planet-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .upgrade-list {
+    max-height: 50vh;
+  }
+}
+
+/* Desktop (1024px+) */
+@media (min-width: 1024px) {
   #app {
     max-width: 640px;
+    padding: 2rem;
   }
 }
 
@@ -745,7 +960,7 @@ h1 {
   inset: 0;
   width: 100%;
   height: 100%;
-  min-height: 320px;
+  min-height: inherit;
   border-radius: 16px;
   pointer-events: none;
 }
@@ -754,7 +969,7 @@ h1 {
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 320px;
+  min-height: 100%;
   border-radius: 16px;
 }
 
