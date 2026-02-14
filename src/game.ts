@@ -76,6 +76,7 @@ type Quest = {
 type QuestState = { quest: Quest | null };
 
 let questState: QuestState = loadQuestState();
+let lastCoinsForBump = 0;
 
 function loadQuestState(): QuestState {
   if (typeof localStorage === 'undefined') return { quest: null };
@@ -172,11 +173,14 @@ function renderQuestSection(): void {
   const p = getQuestProgress();
   if (!q || !p) return;
 
+  container.classList.toggle('quest-section--complete', p.done);
   if (progressEl) {
-    progressEl.textContent = `${q.description}: ${formatNumber(p.current, false)} / ${formatNumber(p.target, false)}`;
+    progressEl.textContent = p.done
+      ? `${q.description} ✓`
+      : `${q.description}: ${formatNumber(p.current, false)} / ${formatNumber(p.target, false)}`;
   }
   if (claimBtn) {
-    claimBtn.textContent = `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡`;
+    claimBtn.textContent = p.done ? `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡` : 'Claim';
     claimBtn.toggleAttribute('disabled', !p.done);
   }
 }
@@ -231,8 +235,14 @@ function updateStats() {
   const effectiveRate = player.effectiveProductionRate * eventMult;
   const coinsEl = document.getElementById('coins-value');
   const rateEl = document.getElementById('production-value');
+  const coinsCard = document.getElementById('coins-stat-card');
   if (coinsEl) coinsEl.textContent = formatNumber(player.coins.value, settings.compactNumbers);
   if (rateEl) rateEl.textContent = formatNumber(effectiveRate, settings.compactNumbers) + '/s';
+  if (coinsCard && player.coins.value > lastCoinsForBump) {
+    coinsCard.classList.add('stat-card--bump');
+    setTimeout(() => coinsCard.classList.remove('stat-card--bump'), 400);
+  }
+  lastCoinsForBump = player.coins.value;
   const breakdownEl = document.getElementById('production-breakdown');
   if (breakdownEl) {
     const base = player.productionRate.value;
@@ -311,7 +321,7 @@ function renderUpgradeList() {
         : '';
 
       const card = document.createElement('div');
-      card.className = 'upgrade-card';
+      card.className = 'upgrade-card' + (canBuy ? ' upgrade-card--affordable' : '');
       card.setAttribute('data-tier', String(def.tier));
       card.innerHTML = `
         <div class="upgrade-info">
@@ -384,6 +394,7 @@ function updateUpgradeListInPlace() {
       maxBtn.textContent = maxLabel;
       maxBtn.toggleAttribute('disabled', maxCount <= 0);
     }
+    card.classList.toggle('upgrade-card--affordable', canBuy);
   });
 }
 
@@ -750,7 +761,7 @@ function mount() {
       </div>
     </div>
     <section class="stats">
-      <div class="stat-card">
+      <div class="stat-card" id="coins-stat-card">
         <div class="stat-label">Coins</div>
         <div class="stat-value" id="coins-value">0</div>
       </div>

@@ -271,6 +271,23 @@ h1 {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem 1.25rem;
+  transition: box-shadow 0.25s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: rgba(245, 158, 11, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card--bump {
+  animation: stat-bump 0.4s ease;
+}
+
+@keyframes stat-bump {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.02); }
+  50% { transform: scale(0.99); }
+  100% { transform: scale(1); }
 }
 
 .stat-label {
@@ -340,6 +357,11 @@ h1 {
 .event-toast--visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.event-toast--offline {
+  border-color: var(--success);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(34, 197, 94, 0.1) 100%);
 }
 
 .prestige-section {
@@ -441,6 +463,69 @@ h1 {
 .quest-claim-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.quest-claim-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.quest-section--complete {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(34, 197, 94, 0.06) 100%);
+}
+
+.quest-section--complete .quest-progress {
+  color: var(--success);
+}
+
+.quest-section--complete .quest-claim-btn:not(:disabled) {
+  border-color: var(--success);
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--success);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.25);
+}
+
+.quest-section--complete .quest-claim-btn:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.3);
+}
+
+/* Section headers: accent underline */
+.planets-section h2,
+.upgrades-section h2,
+.prestige-section h2,
+.quest-section h2 {
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+
+.planets-section h2::after,
+.upgrades-section h2::after,
+.prestige-section h2::after,
+.quest-section h2::after {
+  content: '';
+  display: block;
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 3rem;
+  height: 2px;
+  background: var(--accent);
+}
+
+.planets-section h2,
+.upgrades-section h2,
+.prestige-section h2,
+.quest-section h2 {
+  position: relative;
+}
+
+/* Button active state (press feedback) */
+.settings-btn:active,
+.prestige-btn:active:not(:disabled),
+.buy-planet-btn:active:not(:disabled),
+.add-slot-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 /* Debug menu */
@@ -614,6 +699,19 @@ h1 {
   border-color: rgba(245, 158, 11, 0.25);
 }
 
+.mine-zone {
+  animation: mine-zone-pulse 3s ease-in-out infinite;
+}
+
+@keyframes mine-zone-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 20px 0 rgba(245, 158, 11, 0.08); }
+}
+
+.mine-zone:hover {
+  animation: none;
+}
+
 .mine-zone:focus-within {
   box-shadow: 0 0 24px var(--accent-glow);
 }
@@ -758,6 +856,26 @@ h1 {
   gap: 0.5rem;
   max-height: 55vh;
   overflow-y: auto;
+  scroll-behavior: smooth;
+  padding-right: 0.25rem;
+}
+
+.upgrade-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.upgrade-list::-webkit-scrollbar-track {
+  background: var(--bg-card);
+  border-radius: 3px;
+}
+
+.upgrade-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.upgrade-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
 }
 
 .upgrade-group-header {
@@ -789,6 +907,21 @@ h1 {
   justify-content: space-between;
   gap: 1rem;
   flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.upgrade-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.upgrade-card--affordable {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.15);
+}
+
+.upgrade-card--affordable:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 24px var(--accent-glow);
 }
 
 .upgrade-card[data-tier="1"] { border-left-color: #22c55e; }
@@ -902,7 +1035,7 @@ h1 {
   background: var(--bg-panel);
   color: var(--text);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 
 .upgrade-btn:hover:not(:disabled) {
@@ -919,6 +1052,10 @@ h1 {
 .upgrade-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.upgrade-btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .count-badge {
