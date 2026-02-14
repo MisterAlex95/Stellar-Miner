@@ -1,7 +1,9 @@
 import './game.css';
 import { Player } from './domain/entities/Player.js';
 import { Upgrade } from './domain/entities/Upgrade.js';
+import { GameEvent } from './domain/entities/GameEvent.js';
 import { UpgradeEffect } from './domain/value-objects/UpgradeEffect.js';
+import { EventEffect } from './domain/value-objects/EventEffect.js';
 import { GameSession } from './domain/aggregates/GameSession.js';
 import { UpgradeService } from './domain/services/UpgradeService.js';
 import { PlanetService } from './domain/services/PlanetService.js';
@@ -9,8 +11,11 @@ import { SaveLoadService } from './infrastructure/SaveLoadService.js';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
 import { createMineZoneCanvas } from './presentation/MineZoneCanvas.js';
 import { loadSettings, saveSettings, type Settings } from './settings.js';
+import { PRESTIGE_COIN_THRESHOLD } from './domain/constants.js';
 
 const SAVE_INTERVAL_MS = 3000;
+const EVENT_INTERVAL_MS = 90_000; // trigger a random event every 90s
+const MIN_EVENT_DELAY_MS = 45_000; // first event at least 45s in
 
 type UpgradeDef = {
   id: string;
@@ -39,7 +44,21 @@ function createUpgrade(def: UpgradeDef): Upgrade {
   return new Upgrade(def.id, def.name, def.cost, new UpgradeEffect(def.coinsPerSecond));
 }
 
+/** Random events: production multiplier for a duration. */
+const EVENT_CATALOG: GameEvent[] = [
+  new GameEvent('meteor-storm', 'Meteor Storm', new EventEffect(2, 30_000)),
+  new GameEvent('solar-flare', 'Solar Flare', new EventEffect(1.5, 45_000)),
+  new GameEvent('rich-vein', 'Rich Vein', new EventEffect(2.5, 20_000)),
+  new GameEvent('void-bonus', 'Void Bonus', new EventEffect(1.25, 60_000)),
+  new GameEvent('lucky-strike', 'Lucky Strike', new EventEffect(3, 15_000)),
+];
+
+type ActiveEventInstance = { event: GameEvent; endsAt: number };
+
 let session: GameSession;
+let activeEventInstances: ActiveEventInstance[] = [];
+let nextEventAt = 0;
+let gameStartTime = 0;
 let settings: Settings = loadSettings();
 const saveLoad = new SaveLoadService();
 const upgradeService = new UpgradeService();
@@ -67,25 +86,55 @@ function formatNumber(n: number, compact: boolean = true): string {
   return Math.floor(n).toLocaleString();
 }
 
+/** Combined multiplier from all active (non-expired) events. */
+function getEventMultiplier(): number {
+  const now = Date.now();
+  activeEventInstances = activeEventInstances.filter((a) => a.endsAt > now);
+  let mult = 1;
+  for (const a of activeEventInstances) mult *= a.event.effect.multiplier;
+  return mult;
+}
+
 /** Only update coins and production display (no list rebuild). */
 function updateStats() {
   if (!session) return;
   const player = session.player;
+  const eventMult = getEventMultiplier();
+  const effectiveRate = player.effectiveProductionRate * eventMult;
   const coinsEl = document.getElementById('coins-value');
   const rateEl = document.getElementById('production-value');
   if (coinsEl) coinsEl.textContent = formatNumber(player.coins.value, settings.compactNumbers);
-  if (rateEl) rateEl.textContent = formatNumber(player.effectiveProductionRate, settings.compactNumbers) + '/s';
+  if (rateEl) rateEl.textContent = formatNumber(effectiveRate, settings.compactNumbers) + '/s';
   const breakdownEl = document.getElementById('production-breakdown');
   if (breakdownEl) {
     const base = player.productionRate.value;
-    const bonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
-    if (base > 0 || bonus > 0) {
-      breakdownEl.textContent = bonus > 0
-        ? `Base ${formatNumber(base, settings.compactNumbers)}/s + ${bonus}% (${player.planets.length} planets)`
-        : `Base ${formatNumber(base, settings.compactNumbers)}/s`;
-      breakdownEl.style.display = '';
+    const planetBonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
+    const prestigeBonus = player.prestigeLevel > 0 ? player.prestigeLevel * 5 : 0;
+    const parts: string[] = [];
+    if (base > 0) parts.push(`Base ${formatNumber(base, settings.compactNumbers)}/s`);
+    if (planetBonus > 0) parts.push(`+${planetBonus}% planets`);
+    if (prestigeBonus > 0) parts.push(`+${prestigeBonus}% prestige`);
+    if (eventMult > 1) parts.push(`×${eventMult.toFixed(1)} event`);
+    breakdownEl.textContent = parts.length > 0 ? parts.join(' · ') : '';
+    breakdownEl.style.display = parts.length > 0 ? '' : 'none';
+  }
+  renderPrestigeSection();
+
+  const activeEl = document.getElementById('active-events');
+  if (activeEl) {
+    const now = Date.now();
+    const active = activeEventInstances.filter((a) => a.endsAt > now);
+    if (active.length === 0) {
+      activeEl.innerHTML = '';
+      activeEl.style.display = 'none';
     } else {
-      breakdownEl.style.display = 'none';
+      activeEl.style.display = 'block';
+      activeEl.innerHTML = active
+        .map(
+          (a) =>
+            `<span class="event-badge" title="${a.event.name}: ×${a.event.effect.multiplier} production">${a.event.name} (${Math.ceil((a.endsAt - now) / 1000)}s)</span>`
+        )
+        .join('');
     }
   }
 }
@@ -318,6 +367,83 @@ function renderPlanetList() {
   }
 }
 
+function renderPrestigeSection(): void {
+  if (!session) return;
+  const player = session.player;
+  const statusEl = document.getElementById('prestige-status');
+  const btnEl = document.getElementById('prestige-btn');
+  if (!statusEl || !btnEl) return;
+  const canPrestige = player.coins.gte(PRESTIGE_COIN_THRESHOLD);
+  statusEl.textContent =
+    player.prestigeLevel > 0
+      ? `Prestige level ${player.prestigeLevel} (+${player.prestigeLevel * 5}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`
+      : `Reach ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to unlock Prestige.`;
+  btnEl.toggleAttribute('disabled', !canPrestige);
+}
+
+function openDebugMenu(): void {
+  const panel = document.getElementById('debug-panel');
+  if (panel) {
+    panel.classList.remove('debug-panel--closed');
+    panel.setAttribute('aria-hidden', 'false');
+    updateDebugPanel();
+  }
+}
+
+function closeDebugMenu(): void {
+  const panel = document.getElementById('debug-panel');
+  if (panel) {
+    panel.classList.add('debug-panel--closed');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function toggleDebugMenu(): void {
+  const panel = document.getElementById('debug-panel');
+  if (!panel) return;
+  const isClosed = panel.classList.contains('debug-panel--closed');
+  if (isClosed) openDebugMenu();
+  else closeDebugMenu();
+}
+
+function updateDebugPanel(): void {
+  const statsEl = document.getElementById('debug-stats');
+  if (!statsEl || !session) return;
+
+  const player = session.player;
+  const eventMult = getEventMultiplier();
+  const effectiveRate = player.effectiveProductionRate * eventMult;
+  const now = Date.now();
+  const nextEventIn = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
+  const activeCount = activeEventInstances.filter((a) => a.endsAt > now).length;
+
+  statsEl.innerHTML = `
+    <div class="debug-row"><span>Coins (raw)</span><span>${player.coins.value.toLocaleString()}</span></div>
+    <div class="debug-row"><span>Production (base)</span><span>${player.productionRate.value}/s</span></div>
+    <div class="debug-row"><span>Production (effective)</span><span>${effectiveRate.toFixed(1)}/s</span></div>
+    <div class="debug-row"><span>Event mult</span><span>×${eventMult.toFixed(2)}</span></div>
+    <div class="debug-row"><span>Prestige level</span><span>${player.prestigeLevel}</span></div>
+    <div class="debug-row"><span>Planets</span><span>${player.planets.length}</span></div>
+    <div class="debug-row"><span>Upgrades total</span><span>${player.upgrades.length}</span></div>
+    <div class="debug-row"><span>Next event in</span><span>${nextEventIn}s</span></div>
+    <div class="debug-row"><span>Active events</span><span>${activeCount}</span></div>
+  `;
+}
+
+function handleDebugAction(action: string): void {
+  if (!session) return;
+  if (action === 'coins-1k') session.player.addCoins(1000);
+  else if (action === 'coins-50k') session.player.addCoins(50_000);
+  else if (action === 'trigger-event') triggerRandomEvent();
+  else if (action === 'clear-events') activeEventInstances = [];
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderPlanetList();
+  renderPrestigeSection();
+  updateDebugPanel();
+}
+
 function saveSession() {
   saveLoad.save(session);
 }
@@ -351,6 +477,27 @@ function handleResetProgress() {
   location.reload();
 }
 
+function triggerRandomEvent(): void {
+  const event = EVENT_CATALOG[Math.floor(Math.random() * EVENT_CATALOG.length)];
+  activeEventInstances.push({ event, endsAt: Date.now() + event.effect.durationMs });
+  showEventToast(event);
+}
+
+function showEventToast(gameEvent: GameEvent): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast';
+  el.setAttribute('role', 'status');
+  el.textContent = `${gameEvent.name}: ×${gameEvent.effect.multiplier} production for ${gameEvent.effect.durationMs / 1000}s`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 4000);
+}
+
 function handleMineClick(e?: MouseEvent) {
   if (!session) return;
   session.player.addCoins(1);
@@ -358,6 +505,25 @@ function handleMineClick(e?: MouseEvent) {
   saveSession();
   updateStats();
   renderUpgradeList();
+}
+
+function handlePrestige(): void {
+  if (!session) return;
+  if (!session.player.coins.gte(PRESTIGE_COIN_THRESHOLD)) return;
+  if (
+    !confirm(
+      `Prestige? You'll reset to 0 coins and 1 planet but keep Prestige level ${session.player.prestigeLevel + 1} (+${(session.player.prestigeLevel + 1) * 5}% production forever).`
+    )
+  )
+    return;
+  const newPlayer = Player.createAfterPrestige(session.player);
+  session = new GameSession(session.id, newPlayer, []);
+  activeEventInstances = [];
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderPlanetList();
+  renderPrestigeSection();
 }
 
 function mount() {
@@ -419,15 +585,23 @@ function mount() {
         <div class="stat-label">Coins</div>
         <div class="stat-value" id="coins-value">0</div>
       </div>
-      <div class="stat-card stat-card--production" title="Base rate from upgrades × (1 + 5% per extra planet)">
+      <div class="stat-card stat-card--production" title="Base × planets × prestige × events">
         <div class="stat-label">Production</div>
         <div class="stat-value" id="production-value">0/s</div>
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
+        <div class="active-events" id="active-events" aria-live="polite"></div>
       </div>
     </section>
+    <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
     <section class="mine-zone" id="mine-zone" title="Click to mine">
       <div class="mine-zone-visual" id="mine-zone-visual"></div>
       <p class="mine-zone-hint" aria-hidden="true">Click to mine</p>
+    </section>
+    <section class="prestige-section">
+      <h2>Prestige</h2>
+      <p class="prestige-hint">Reset coins and planets to gain +5% production per prestige level forever.</p>
+      <div class="prestige-status" id="prestige-status"></div>
+      <button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button>
     </section>
     <section class="planets-section">
       <h2>Planets</h2>
@@ -487,6 +661,50 @@ function mount() {
     buyPlanetBtn.addEventListener('click', handleBuyNewPlanet);
   }
 
+  const prestigeBtn = document.getElementById('prestige-btn');
+  if (prestigeBtn) prestigeBtn.addEventListener('click', handlePrestige);
+
+  renderPrestigeSection();
+
+  if (!document.getElementById('debug-panel')) {
+    const debugPanel = document.createElement('div');
+    debugPanel.id = 'debug-panel';
+    debugPanel.className = 'debug-panel debug-panel--closed';
+    debugPanel.setAttribute('aria-hidden', 'true');
+    debugPanel.innerHTML = `
+      <div class="debug-panel-header">
+        <span>Debug</span>
+        <button type="button" class="debug-close" id="debug-close" aria-label="Close debug">×</button>
+      </div>
+      <div class="debug-panel-body">
+        <div class="debug-section" id="debug-stats"></div>
+        <div class="debug-section">
+          <div class="debug-actions">
+            <button type="button" class="debug-btn" data-debug="coins-1k">+1K coins</button>
+            <button type="button" class="debug-btn" data-debug="coins-50k">+50K coins</button>
+            <button type="button" class="debug-btn" data-debug="trigger-event">Trigger event</button>
+            <button type="button" class="debug-btn" data-debug="clear-events">Clear events</button>
+          </div>
+        </div>
+      </div>
+      <p class="debug-hint">F3 to toggle</p>
+    `;
+    document.body.appendChild(debugPanel);
+    document.getElementById('debug-close')?.addEventListener('click', closeDebugMenu);
+    debugPanel.querySelectorAll('.debug-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const action = (btn as HTMLElement).getAttribute('data-debug');
+        if (action) handleDebugAction(action);
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F3') {
+        e.preventDefault();
+        toggleDebugMenu();
+      }
+    });
+  }
+
   const upgradeList = document.getElementById('upgrade-list');
   if (upgradeList) {
     upgradeList.addEventListener('click', (e: Event) => {
@@ -518,7 +736,15 @@ function gameLoop(now: number) {
   }
   const dt = (now - lastTime) / 1000;
   lastTime = now;
-  const rate = session.player.effectiveProductionRate;
+
+  const nowMs = Date.now();
+  if (nowMs >= nextEventAt) {
+    triggerRandomEvent();
+    nextEventAt = nowMs + EVENT_INTERVAL_MS;
+  }
+
+  const eventMult = getEventMultiplier();
+  const rate = session.player.effectiveProductionRate * eventMult;
   if (rate > 0) {
     session.player.addCoins(rate * dt);
     updateStats();
@@ -542,11 +768,19 @@ function gameLoop(now: number) {
   mineZoneCanvasApi?.setPlanets(planetViews);
   mineZoneCanvasApi?.update(dt);
   mineZoneCanvasApi?.draw();
+
+  const debugPanel = document.getElementById('debug-panel');
+  if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) {
+    updateDebugPanel();
+  }
+
   requestAnimationFrame(gameLoop);
 }
 
 async function init() {
   session = await getOrCreateSession();
+  gameStartTime = Date.now();
+  nextEventAt = gameStartTime + MIN_EVENT_DELAY_MS;
   starfieldApi = startStarfield(getSettings);
   mount();
   updateStats();

@@ -4,13 +4,14 @@ import { Player } from '../entities/Player.js';
 import { Planet } from '../entities/Planet.js';
 import { Coins } from '../value-objects/Coins.js';
 import { ProductionRate } from '../value-objects/ProductionRate.js';
+import type { PrestigeActivated } from '../events/PrestigeActivated.js';
 
 describe('PrestigeService', () => {
   it('activatePrestige returns event with new prestige level', () => {
     const player = Player.create('p1');
     const service = new PrestigeService();
 
-    const event = service.activatePrestige(player);
+    const event = service.activatePrestige(player) as PrestigeActivated;
 
     expect(event).toEqual({
       type: 'PrestigeActivated',
@@ -31,7 +32,7 @@ describe('PrestigeService', () => {
     );
     const service = new PrestigeService();
 
-    const event = service.activatePrestige(player);
+    const event = service.activatePrestige(player) as PrestigeActivated;
 
     expect(event.newPrestigeLevel).toBe(3);
   });

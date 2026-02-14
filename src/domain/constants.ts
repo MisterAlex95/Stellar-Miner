@@ -8,6 +8,12 @@ export function getNewPlanetCost(planetCount: number): number {
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */
 export const PLANET_PRODUCTION_BONUS = 0.05;
 
+/** Production bonus per prestige level (e.g. 0.05 = +5% per level). Applied after planet bonus. */
+export const PRESTIGE_BONUS_PER_LEVEL = 0.05;
+
+/** Coins required to unlock the Prestige button. Resets run; keeps prestige level. */
+export const PRESTIGE_COIN_THRESHOLD = 50_000;
+
 /** Base slot count (from Planet.UPGRADES_PER_PLANET) for "first expansion" discount. */
 const DEFAULT_BASE_SLOTS = 6;
 

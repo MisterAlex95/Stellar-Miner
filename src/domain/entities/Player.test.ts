@@ -135,4 +135,31 @@ describe('Player', () => {
     p.addPlanet(Planet.create('planet-3', 'Dust Haven'));
     expect(p.effectiveProductionRate).toBeCloseTo(110, 10);
   });
+
+  it('effectiveProductionRate applies prestige bonus', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(100),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      2,
+      0
+    );
+    expect(p.effectiveProductionRate).toBe(100 * (1 + 2 * 0.05));
+  });
+
+  it('createAfterPrestige resets to one empty planet and increments prestige', () => {
+    const p = Player.create('p1');
+    p.addCoins(500);
+    p.setProductionRate(new ProductionRate(10));
+    p.planets[0].addUpgrade(new Upgrade('u', 'U', 1, new UpgradeEffect(1)));
+    const after = Player.createAfterPrestige(p);
+    expect(after.coins.value).toBe(0);
+    expect(after.productionRate.value).toBe(0);
+    expect(after.planets).toHaveLength(1);
+    expect(after.planets[0].upgrades).toHaveLength(0);
+    expect(after.prestigeLevel).toBe(1);
+    expect(after.totalCoinsEver).toBe(p.totalCoinsEver);
+  });
 });

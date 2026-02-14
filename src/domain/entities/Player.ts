@@ -3,7 +3,7 @@ import { ProductionRate } from '../value-objects/ProductionRate.js';
 import type { Upgrade } from './Upgrade.js';
 import type { Artifact } from './Artifact.js';
 import { Planet } from './Planet.js';
-import { PLANET_PRODUCTION_BONUS, getPlanetName } from '../constants.js';
+import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, getPlanetName } from '../constants.js';
 
 /** Aggregate root: player and their progression. Holds planets (expandable slots + production bonus), artifacts, coins. */
 export class Player {
@@ -53,10 +53,24 @@ export class Player {
     return this.planets.filter((p) => p.hasFreeSlot());
   }
 
-  /** Production rate from upgrades, multiplied by planet bonus (+5% per extra planet). */
+  /** Production rate from upgrades × planet bonus (+5% per extra planet) × prestige (+5% per level). */
   get effectiveProductionRate(): number {
-    const bonus = 1 + (this.planets.length - 1) * PLANET_PRODUCTION_BONUS;
-    return this.productionRate.value * bonus;
+    const planetBonus = 1 + (this.planets.length - 1) * PLANET_PRODUCTION_BONUS;
+    const prestigeBonus = 1 + this.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL;
+    return this.productionRate.value * planetBonus * prestigeBonus;
+  }
+
+  /** Returns a fresh player after prestige: one empty planet, 0 coins, prestige level +1. */
+  static createAfterPrestige(oldPlayer: Player): Player {
+    return new Player(
+      oldPlayer.id,
+      new Coins(0),
+      new ProductionRate(0),
+      [Planet.create('planet-1', getPlanetName(0))],
+      [],
+      oldPlayer.prestigeLevel + 1,
+      oldPlayer.totalCoinsEver
+    );
   }
 
   static create(id: string): Player {

@@ -3,6 +3,8 @@ import {
   NEW_PLANET_BASE_COST,
   getNewPlanetCost,
   PLANET_PRODUCTION_BONUS,
+  PRESTIGE_BONUS_PER_LEVEL,
+  PRESTIGE_COIN_THRESHOLD,
   getAddSlotCost,
   PLANET_NAMES,
   getPlanetName,
@@ -21,6 +23,14 @@ describe('constants', () => {
 
   it('PLANET_PRODUCTION_BONUS is 0.05', () => {
     expect(PLANET_PRODUCTION_BONUS).toBe(0.05);
+  });
+
+  it('PRESTIGE_BONUS_PER_LEVEL is 0.05', () => {
+    expect(PRESTIGE_BONUS_PER_LEVEL).toBe(0.05);
+  });
+
+  it('PRESTIGE_COIN_THRESHOLD is 50_000', () => {
+    expect(PRESTIGE_COIN_THRESHOLD).toBe(50_000);
   });
 
   it('getAddSlotCost gives first expansion discount when at base slots (6)', () => {
