@@ -23,6 +23,7 @@ export default defineConfig({
         'src/main.ts',
         'src/game.ts',
         'src/domain/services/ISaveLoadService.ts',
+        'src/presentation/**',
       ],
     },
   },

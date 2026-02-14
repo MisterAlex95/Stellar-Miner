@@ -38,18 +38,34 @@ let orbitTime = 0;
 export type MineZoneSettings = { showOrbitLines?: boolean; clickParticles?: boolean };
 let getMineZoneSettings: (() => MineZoneSettings) | null = null;
 
-const SURFACE_IDS = ['mining-robot', 'drill-mk1', 'drill-mk2', 'asteroid-rig'];
+const SURFACE_IDS = [
+  'mining-robot', 'drill-mk1', 'drill-mk2', 'asteroid-rig',
+  'orbital-station', 'deep-core-drill', 'stellar-harvester', 'quantum-extractor',
+  'void-crusher', 'nexus-collector',
+];
 const SURFACE_COLORS: Record<string, string> = {
   'mining-robot': '#f59e0b',
   'drill-mk1': '#22c55e',
   'drill-mk2': '#3b82f6',
   'asteroid-rig': '#a78bfa',
+  'orbital-station': '#06b6d4',
+  'deep-core-drill': '#ec4899',
+  'stellar-harvester': '#eab308',
+  'quantum-extractor': '#8b5cf6',
+  'void-crusher': '#7c3aed',
+  'nexus-collector': '#4f46e5',
 };
 const SURFACE_SIZES: Record<string, number> = {
   'mining-robot': 2.5,
   'drill-mk1': 3,
   'drill-mk2': 3.5,
   'asteroid-rig': 4,
+  'orbital-station': 4.5,
+  'deep-core-drill': 5,
+  'stellar-harvester': 5.5,
+  'quantum-extractor': 6,
+  'void-crusher': 6.5,
+  'nexus-collector': 7,
 };
 
 function getThemeColor(name: string, fallback: string): string {
@@ -97,6 +113,93 @@ function hash(s: string): number {
   return Math.abs(h);
 }
 
+/** Seeded RNG (0..1) for procedural texture. Same seed = same sequence. */
+function createSeededRng(seed: string): () => number {
+  let state = hash(seed);
+  return () => {
+    state = (state * 1103515245 + 12345) >>> 0;
+    return state / 0xffff_ffff;
+  };
+}
+
+/** Deterministic value at integer lattice (0..1). */
+function valueAt(seed: number, ix: number, iy: number): number {
+  const n = (ix * 73856093) ^ (iy * 19349663) ^ seed;
+  return ((n >>> 0) % 65536) / 65535;
+}
+
+/** Smoothstep for interpolation. */
+function smoothstep(t: number): number {
+  return t * t * (3 - 2 * t);
+}
+
+/** 2D value noise (0..1), seeded. Scale controls feature size. */
+function valueNoise2D(seed: number, x: number, y: number, scale: number): number {
+  const sx = x * scale;
+  const sy = y * scale;
+  const ix = Math.floor(sx);
+  const iy = Math.floor(sy);
+  const fx = sx - ix;
+  const fy = sy - iy;
+  const u = smoothstep(fx);
+  const v = smoothstep(fy);
+  const v00 = valueAt(seed, ix, iy);
+  const v10 = valueAt(seed, ix + 1, iy);
+  const v01 = valueAt(seed, ix, iy + 1);
+  const v11 = valueAt(seed, ix + 1, iy + 1);
+  const a = v00 * (1 - u) + v10 * u;
+  const b = v01 * (1 - u) + v11 * u;
+  return a * (1 - v) + b * v;
+}
+
+/** FBM-style: multiple octaves for richer, more random-looking variation. */
+function fbmNoise(
+  seed: number,
+  x: number,
+  y: number,
+  scale: number,
+  octaves: number = 4,
+  lacunarity: number = 2.1,
+  persistence: number = 0.55
+): number {
+  let value = 0;
+  let amplitude = 1;
+  let freq = 1;
+  let maxVal = 0;
+  for (let o = 0; o < octaves; o++) {
+    value += valueNoise2D(seed + o * 7919, x, y, scale * freq) * amplitude;
+    maxVal += amplitude;
+    amplitude *= persistence;
+    freq *= lacunarity;
+  }
+  return Math.max(0, Math.min(1, value / maxVal));
+}
+
+/** Gradient stop: position 0-100, hex color. */
+type GradientStop = { position: number; color: string };
+
+function sampleGradient(stops: GradientStop[], t: number): string {
+  const p = Math.max(0, Math.min(100, t));
+  let i = 0;
+  while (i < stops.length - 1 && stops[i + 1].position < p) i++;
+  if (i >= stops.length - 1) return stops[stops.length - 1].color;
+  const a = stops[i];
+  const b = stops[i + 1];
+  const range = b.position - a.position;
+  const f = range <= 0 ? 1 : (p - a.position) / range;
+  const smooth = smoothstep(f);
+  const parseHex = (hex: string) => {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+  };
+  const [r1, g1, b1] = parseHex(a.color);
+  const [r2, g2, b2] = parseHex(b.color);
+  const r = Math.round(r1 + (r2 - r1) * smooth);
+  const g = Math.round(g1 + (g2 - g1) * smooth);
+  const bl = Math.round(b1 + (b2 - b1) * smooth);
+  return `rgb(${r},${g},${bl})`;
+}
+
 /** Star types: yellow, orange, red dwarf, white/blue. */
 const STAR_TYPES = [
   { core: '#fff8e7', mid: '#f59e0b', outer: '#b45309', inner: '#f59e0b' },
@@ -127,7 +230,45 @@ function drawStar(sx: number, sy: number, radius: number, systemIndex: number): 
   ctx.globalAlpha = 1;
 }
 
-/** Planet types: rocky, desert, ice, volcanic, gas (striped). */
+/** Planet types with base colors (for shading) and gradient regions (noise → biomes, bevy_generative-style). */
+const PLANET_GRADIENTS: Record<string, GradientStop[]> = {
+  rocky: [
+    { position: 0, color: '#44403c' },
+    { position: 25, color: '#57534e' },
+    { position: 50, color: '#78716c' },
+    { position: 75, color: '#a8a29e' },
+    { position: 100, color: '#d6d3d1' },
+  ],
+  desert: [
+    { position: 0, color: '#78716c' },
+    { position: 30, color: '#a8a29e' },
+    { position: 60, color: '#d6d3d1' },
+    { position: 85, color: '#e7e5e4' },
+    { position: 100, color: '#fafaf9' },
+  ],
+  ice: [
+    { position: 0, color: '#0c4a6e' },
+    { position: 25, color: '#0ea5e9' },
+    { position: 50, color: '#7dd3fc' },
+    { position: 75, color: '#bae6fd' },
+    { position: 100, color: '#e0f2fe' },
+  ],
+  volcanic: [
+    { position: 0, color: '#450a0a' },
+    { position: 25, color: '#7f1d1d' },
+    { position: 50, color: '#dc2626' },
+    { position: 75, color: '#f87171' },
+    { position: 100, color: '#fecaca' },
+  ],
+  gas: [
+    { position: 0, color: '#713f12' },
+    { position: 25, color: '#a16207' },
+    { position: 50, color: '#eab308' },
+    { position: 75, color: '#fde047' },
+    { position: 100, color: '#fef9c3' },
+  ],
+};
+
 const PLANET_TYPES = [
   { light: '#78716c', mid: '#57534e', dark: '#44403c', name: 'rocky' },
   { light: '#d6d3d1', mid: '#a8a29e', dark: '#78716c', name: 'desert' },
@@ -136,9 +277,101 @@ const PLANET_TYPES = [
   { light: '#fde047', mid: '#eab308', dark: '#a16207', name: 'gas' },
 ];
 
-function getPlanetType(view: PlanetView, planetIndex: number): (typeof PLANET_TYPES)[0] {
+type PlanetType = (typeof PLANET_TYPES)[0];
+
+function getPlanetType(view: PlanetView, planetIndex: number): PlanetType {
   const idx = (hash(view.id) + planetIndex) % PLANET_TYPES.length;
   return PLANET_TYPES[idx];
+}
+
+const TEXTURE_SIZE = 128;
+const textureCache = new Map<string, HTMLCanvasElement>();
+const NOISE_SCALE_MIN = 0.022;
+const NOISE_SCALE_RANGE = 0.058;
+
+/** Per-planet random-ish params (deterministic from id) for more variation. */
+function getPlanetNoiseParams(planetId: string, pType: PlanetType) {
+  const h = hash(planetId + pType.name);
+  const h2 = hash(planetId + pType.name + 'x');
+  const h3 = hash(planetId + pType.name + 'y');
+  const h4 = hash(planetId + pType.name + 'remap');
+  return {
+    scale: NOISE_SCALE_MIN + (h % 1000) / 1000 * NOISE_SCALE_RANGE,
+    offsetX: (h2 % 20000) - 10000,
+    offsetY: (h3 % 20000) - 10000,
+    remapPower: 0.6 + (h4 % 41) / 100,
+    octaves: 3 + (h % 3),
+    lacunarity: 1.9 + (h2 % 25) / 100,
+    persistence: 0.45 + (h3 % 25) / 100,
+    mixSeed: h + 99999,
+    mixAmount: 0.15 + (h4 % 20) / 100,
+  };
+}
+
+function getPlanetTexture(planetId: string, pType: PlanetType): HTMLCanvasElement {
+  const key = `${planetId}-${pType.name}`;
+  let tex = textureCache.get(key);
+  if (tex) return tex;
+  tex = createPlanetTexture(planetId, pType);
+  textureCache.set(key, tex);
+  return tex;
+}
+
+/** Generative planet texture: noise → gradient, with per-planet variation. */
+function createPlanetTexture(planetId: string, pType: PlanetType): HTMLCanvasElement {
+  const size = TEXTURE_SIZE;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const c = canvas.getContext('2d')!;
+  const seed = hash(planetId + pType.name);
+  const params = getPlanetNoiseParams(planetId, pType);
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxR = size / 2 - 0.5;
+  const gradient = PLANET_GRADIENTS[pType.name] ?? PLANET_GRADIENTS.rocky;
+
+  const imageData = c.createImageData(size, size);
+  const data = imageData.data;
+
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      const dx = (px - cx) / maxR;
+      const dy = (py - cy) / maxR;
+      const d2 = dx * dx + dy * dy;
+      if (d2 > 1) {
+        data[(py * size + px) * 4 + 3] = 0;
+        continue;
+      }
+      const nx = px + params.offsetX;
+      const ny = py + params.offsetY;
+      let noiseVal = fbmNoise(
+        seed,
+        nx,
+        ny,
+        params.scale,
+        params.octaves,
+        params.lacunarity,
+        params.persistence
+      );
+      const mixNoise = valueNoise2D(params.mixSeed, nx * 0.07, ny * 0.07, params.scale * 1.7);
+      noiseVal = noiseVal * (1 - params.mixAmount) + mixNoise * params.mixAmount;
+      let t = Math.pow(Math.max(0, Math.min(1, noiseVal)), params.remapPower) * 100;
+      const colorStr = sampleGradient(gradient, t);
+      const match = colorStr.match(/rgb\((\d+),(\d+),(\d+)\)/);
+      const r = match ? parseInt(match[1], 10) : 128;
+      const g = match ? parseInt(match[2], 10) : 128;
+      const b = match ? parseInt(match[3], 10) : 128;
+      const i = (py * size + px) * 4;
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+      data[i + 3] = 255;
+    }
+  }
+
+  c.putImageData(imageData, 0, 0);
+  return canvas;
 }
 
 /** Scale factor 0.85–1.15 from id. */
@@ -160,21 +393,15 @@ function drawOnePlanet(
   const pType = getPlanetType(view, planetIndex);
   const scale = planetSizeScale(view);
   const r = planetRadius * scale;
-  const grd = ctx.createRadialGradient(
-    cx - r * 0.4,
-    cy - r * 0.4,
-    0,
-    cx,
-    cy,
-    r * 1.2
-  );
-  grd.addColorStop(0, pType.light);
-  grd.addColorStop(0.45, pType.mid);
-  grd.addColorStop(1, pType.dark);
-  ctx.fillStyle = grd;
+
+  const texture = getPlanetTexture(view.id, pType);
+  ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.clip();
+  ctx.drawImage(texture, cx - r, cy - r, r * 2, r * 2);
+  ctx.restore();
+
   ctx.strokeStyle = border;
   ctx.lineWidth = 1;
   ctx.stroke();

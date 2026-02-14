@@ -3,10 +3,11 @@ import { ProductionRate } from '../value-objects/ProductionRate.js';
 import type { Upgrade } from './Upgrade.js';
 import type { Artifact } from './Artifact.js';
 import { Planet } from './Planet.js';
+import { PLANET_PRODUCTION_BONUS, getPlanetName } from '../constants.js';
 
-/** Aggregate root: player and their progression. Holds planets (each with limited upgrades), artifacts, coins. */
+/** Aggregate root: player and their progression. Holds planets (expandable slots + production bonus), artifacts, coins. */
 export class Player {
-  /** Mutable array of planets. Each planet has limited upgrade slots. */
+  /** Mutable array of planets. Each planet has upgrade slots (expandable) and contributes to production bonus. */
   public readonly planets: Planet[];
 
   constructor(
@@ -47,8 +48,19 @@ export class Player {
     return this.planets.find((p) => p.hasFreeSlot()) ?? null;
   }
 
+  /** All planets that have at least one free upgrade slot (for UI choice). */
+  getPlanetsWithFreeSlot(): Planet[] {
+    return this.planets.filter((p) => p.hasFreeSlot());
+  }
+
+  /** Production rate from upgrades, multiplied by planet bonus (+5% per extra planet). */
+  get effectiveProductionRate(): number {
+    const bonus = 1 + (this.planets.length - 1) * PLANET_PRODUCTION_BONUS;
+    return this.productionRate.value * bonus;
+  }
+
   static create(id: string): Player {
-    const firstPlanet = Planet.create('planet-1', 'Planet 1');
+    const firstPlanet = Planet.create('planet-1', getPlanetName(0));
     return new Player(
       id,
       new Coins(0),

@@ -21,6 +21,9 @@ describe('SaveLoadService', () => {
       setItem: (key: string, value: string) => {
         storage[key] = value;
       },
+      removeItem: (key: string) => {
+        delete storage[key];
+      },
     });
   });
 
@@ -115,5 +118,72 @@ describe('SaveLoadService', () => {
     expect(loaded!.player.artifacts[0].id).toBe('crystal');
     expect(loaded!.player.artifacts[0].name).toBe('Lucky Crystal');
     expect(loaded!.player.artifacts[0].isActive).toBe(true);
+  });
+
+  it('clearProgress removes session from localStorage', async () => {
+    const player = Player.create('p1');
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    await service.save(session);
+    expect(storage['stellar-miner-session']).toBeDefined();
+
+    service.clearProgress();
+    expect(storage['stellar-miner-session']).toBeUndefined();
+
+    const loaded = await service.load();
+    expect(loaded).toBeNull();
+  });
+
+  it('load migrates legacy save (upgrades array, no planets) to planets', async () => {
+    const legacy = {
+      id: 'session-1',
+      player: {
+        id: 'p1',
+        coins: 100,
+        productionRate: 5,
+        upgrades: [
+          { id: 'drill', name: 'Drill', cost: 100, effect: { coinsPerSecond: 5 } },
+        ],
+        artifacts: [],
+        prestigeLevel: 0,
+        totalCoinsEver: 100,
+      },
+      activeEvents: [],
+    };
+    storage['stellar-miner-session'] = JSON.stringify(legacy);
+    const service = new SaveLoadService();
+
+    const loaded = await service.load();
+
+    expect(loaded).not.toBeNull();
+    expect(loaded!.player.planets).toHaveLength(1);
+    expect(loaded!.player.planets[0].id).toBe('planet-1');
+    expect(loaded!.player.planets[0].upgrades).toHaveLength(1);
+    expect(loaded!.player.planets[0].upgrades[0].id).toBe('drill');
+    expect(loaded!.player.coins.value).toBe(100);
+    expect(loaded!.player.productionRate.value).toBe(5);
+  });
+
+  it('load migrates legacy save with no upgrades key (empty array fallback)', async () => {
+    const legacy = {
+      id: 'session-1',
+      player: {
+        id: 'p1',
+        coins: 0,
+        productionRate: 0,
+        artifacts: [],
+        prestigeLevel: 0,
+        totalCoinsEver: 0,
+      },
+      activeEvents: [],
+    };
+    storage['stellar-miner-session'] = JSON.stringify(legacy);
+    const service = new SaveLoadService();
+
+    const loaded = await service.load();
+
+    expect(loaded).not.toBeNull();
+    expect(loaded!.player.planets).toHaveLength(1);
+    expect(loaded!.player.planets[0].upgrades).toHaveLength(0);
   });
 });

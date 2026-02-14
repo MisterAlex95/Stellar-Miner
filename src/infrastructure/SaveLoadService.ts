@@ -9,6 +9,7 @@ import { ProductionRate } from '../domain/value-objects/ProductionRate.js';
 import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
+import { getPlanetName } from '../domain/constants.js';
 
 const STORAGE_KEY = 'stellar-miner-session';
 
@@ -109,7 +110,7 @@ export class SaveLoadService implements ISaveLoadService {
       const upgrades = (data.player.upgrades ?? []).map(
         (u) => new Upgrade(u.id, u.name, u.cost, new UpgradeEffect(u.effect.coinsPerSecond))
       );
-      const first = new Planet('planet-1', 'Planet 1', 5, upgrades);
+      const first = new Planet('planet-1', getPlanetName(0), 6, upgrades);
       planets = [first];
     }
     const artifacts = data.player.artifacts.map(

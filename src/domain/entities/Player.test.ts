@@ -15,7 +15,7 @@ describe('Player', () => {
     expect(p.productionRate.value).toBe(0);
     expect(p.upgrades).toEqual([]);
     expect(p.planets).toHaveLength(1);
-    expect(p.planets[0].name).toBe('Planet 1');
+    expect(p.planets[0].name).toBe('Titan');
     expect(p.artifacts).toEqual([]);
     expect(p.prestigeLevel).toBe(0);
     expect(p.totalCoinsEver).toBe(0);
@@ -61,14 +61,15 @@ describe('Player', () => {
   it('getPlanetWithFreeSlot returns planet with free slot', () => {
     const p = Player.create('player-1');
     expect(p.getPlanetWithFreeSlot()).toBe(p.planets[0]);
-    for (let i = 0; i < 5; i++) {
+    const slots = p.planets[0].maxUpgrades;
+    for (let i = 0; i < slots; i++) {
       p.planets[0].addUpgrade(new Upgrade(`u${i}`, `U${i}`, 1, new UpgradeEffect(0)));
     }
     expect(p.getPlanetWithFreeSlot()).toBeNull();
   });
 
   it('constructor copies planets array', () => {
-    const planet = new Planet('p1', 'Planet 1', 5, [new Upgrade('a', 'A', 1, new UpgradeEffect(1))]);
+    const planet = new Planet('p1', 'Planet 1', 6, [new Upgrade('a', 'A', 1, new UpgradeEffect(1))]);
     const planets = [planet];
     const p = new Player(
       'id',
@@ -96,5 +97,42 @@ describe('Player', () => {
     );
     expect(p.planets).toEqual([]);
     expect(p.upgrades).toEqual([]);
+  });
+
+  it('addPlanet appends planet', () => {
+    const p = Player.create('p1');
+    const second = Planet.create('planet-2', 'Nova Prime');
+    expect(p.planets).toHaveLength(1);
+    p.addPlanet(second);
+    expect(p.planets).toHaveLength(2);
+    expect(p.planets[1]).toBe(second);
+  });
+
+  it('getPlanetsWithFreeSlot returns all planets with free slot', () => {
+    const p = Player.create('p1');
+    p.addPlanet(Planet.create('planet-2', 'Nova Prime', 4));
+    const withSlots = p.getPlanetsWithFreeSlot();
+    expect(withSlots).toHaveLength(2);
+    expect(withSlots).toContain(p.planets[0]);
+    expect(withSlots).toContain(p.planets[1]);
+  });
+
+  it('getPlanetsWithFreeSlot returns empty when no planet has free slot', () => {
+    const p = Player.create('p1');
+    const slots = p.planets[0].maxUpgrades;
+    for (let i = 0; i < slots; i++) {
+      p.planets[0].addUpgrade(new Upgrade(`u${i}`, `U${i}`, 1, new UpgradeEffect(0)));
+    }
+    expect(p.getPlanetsWithFreeSlot()).toEqual([]);
+  });
+
+  it('effectiveProductionRate applies planet bonus for multiple planets', () => {
+    const p = Player.create('p1');
+    p.setProductionRate(new ProductionRate(100));
+    expect(p.effectiveProductionRate).toBe(100);
+    p.addPlanet(Planet.create('planet-2', 'Nova Prime'));
+    expect(p.effectiveProductionRate).toBe(105);
+    p.addPlanet(Planet.create('planet-3', 'Dust Haven'));
+    expect(p.effectiveProductionRate).toBeCloseTo(110, 10);
   });
 });

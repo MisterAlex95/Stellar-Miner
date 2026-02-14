@@ -12,14 +12,27 @@ import { loadSettings, saveSettings, type Settings } from './settings.js';
 
 const SAVE_INTERVAL_MS = 3000;
 
-type UpgradeDef = { id: string; name: string; cost: number; coinsPerSecond: number };
+type UpgradeDef = {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  coinsPerSecond: number;
+  tier: number;
+};
 
+/** Upgrades: first at 100 (≈100 clicks), then ×5 per tier. Efficiency 50 coins per 1/s. Stretched so the clicker lasts. */
 const UPGRADE_CATALOG: UpgradeDef[] = [
-  { id: 'mining-robot', name: 'Mining Robot', cost: 50, coinsPerSecond: 1 },
-  { id: 'drill-mk1', name: 'Drill Mk.I', cost: 200, coinsPerSecond: 5 },
-  { id: 'drill-mk2', name: 'Drill Mk.II', cost: 1000, coinsPerSecond: 20 },
-  { id: 'asteroid-rig', name: 'Asteroid Rig', cost: 5000, coinsPerSecond: 100 },
-  { id: 'orbital-station', name: 'Orbital Station', cost: 25000, coinsPerSecond: 500 },
+  { id: 'mining-robot', name: 'Mining Robot', description: 'Basic autonomous miner. Your first step into the belt.', cost: 100, coinsPerSecond: 2, tier: 1 },
+  { id: 'drill-mk1', name: 'Drill Mk.I', description: 'Improved extraction head. Cuts through surface rock in seconds.', cost: 500, coinsPerSecond: 10, tier: 2 },
+  { id: 'drill-mk2', name: 'Drill Mk.II', description: 'Heavy-duty surface drill. Built for long shifts in the void.', cost: 2500, coinsPerSecond: 50, tier: 3 },
+  { id: 'asteroid-rig', name: 'Asteroid Rig', description: 'Full mining platform. Drills, crushes, and sorts in one unit.', cost: 12500, coinsPerSecond: 250, tier: 4 },
+  { id: 'orbital-station', name: 'Orbital Station', description: 'Refinery and logistics hub. The heart of your operation.', cost: 62500, coinsPerSecond: 1250, tier: 5 },
+  { id: 'deep-core-drill', name: 'Deep Core Drill', description: 'Penetrates dense ore layers. Reaches what others can\'t.', cost: 312500, coinsPerSecond: 6250, tier: 6 },
+  { id: 'stellar-harvester', name: 'Stellar Harvester', description: 'Harvests rare minerals at scale. Feeds the entire sector.', cost: 1562500, coinsPerSecond: 31250, tier: 7 },
+  { id: 'quantum-extractor', name: 'Quantum Extractor', description: 'Maximum efficiency extraction. Near-instant ore processing.', cost: 7812500, coinsPerSecond: 156250, tier: 8 },
+  { id: 'void-crusher', name: 'Void Crusher', description: 'Pulverizes asteroid cores. Built for the endgame.', cost: 39062500, coinsPerSecond: 781250, tier: 9 },
+  { id: 'nexus-collector', name: 'Nexus Collector', description: 'Harvests from multiple dimensions. The ultimate upgrade.', cost: 195312500, coinsPerSecond: 3906250, tier: 10 },
 ];
 
 function createUpgrade(def: UpgradeDef): Upgrade {
@@ -42,7 +55,7 @@ async function getOrCreateSession(): Promise<GameSession> {
   const loaded = await saveLoad.load();
   if (loaded) return loaded;
   const player = Player.create('player-1');
-  player.addCoins(10);
+  player.addCoins(0);
   return new GameSession('session-1', player);
 }
 
@@ -61,8 +74,27 @@ function updateStats() {
   const coinsEl = document.getElementById('coins-value');
   const rateEl = document.getElementById('production-value');
   if (coinsEl) coinsEl.textContent = formatNumber(player.coins.value, settings.compactNumbers);
-  if (rateEl) rateEl.textContent = formatNumber(player.productionRate.value, settings.compactNumbers) + '/s';
+  if (rateEl) rateEl.textContent = formatNumber(player.effectiveProductionRate, settings.compactNumbers) + '/s';
+  const breakdownEl = document.getElementById('production-breakdown');
+  if (breakdownEl) {
+    const base = player.productionRate.value;
+    const bonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
+    if (base > 0 || bonus > 0) {
+      breakdownEl.textContent = bonus > 0
+        ? `Base ${formatNumber(base, settings.compactNumbers)}/s + ${bonus}% (${player.planets.length} planets)`
+        : `Base ${formatNumber(base, settings.compactNumbers)}/s`;
+      breakdownEl.style.display = '';
+    } else {
+      breakdownEl.style.display = 'none';
+    }
+  }
 }
+
+const UPGRADE_GROUPS: { label: string; minTier: number; maxTier: number }[] = [
+  { label: 'Early', minTier: 1, maxTier: 3 },
+  { label: 'Mid', minTier: 4, maxTier: 6 },
+  { label: 'Late', minTier: 7, maxTier: 10 },
+];
 
 /** Rebuild the upgrade list from scratch (init, after purchase, after mine). */
 function renderUpgradeList() {
@@ -72,25 +104,58 @@ function renderUpgradeList() {
   if (!listEl) return;
   listEl.innerHTML = '';
 
-  const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
-  for (const def of UPGRADE_CATALOG) {
-    const owned = player.upgrades.filter((u) => u.id === def.id).length;
-    const upgrade = createUpgrade(def);
-    const canAfford = player.coins.gte(upgrade.cost);
-    const canBuy = canAfford && hasFreeSlot;
-    const buyLabel = owned > 0 ? `Buy (+1)` : `Buy`;
+  const planetsWithSlot = player.getPlanetsWithFreeSlot();
+  const hasFreeSlot = planetsWithSlot.length > 0;
+  const choosePlanet = planetsWithSlot.length > 1;
 
-    const card = document.createElement('div');
-    card.className = 'upgrade-card';
-    card.innerHTML = `
-      <div class="upgrade-info">
-        <div class="upgrade-name">${def.name}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}</div>
-        <div class="upgrade-effect">+${formatNumber(def.coinsPerSecond, settings.compactNumbers)} /s each</div>
-      </div>
-      <span class="upgrade-cost">${formatNumber(def.cost, settings.compactNumbers)} ⬡</span>
-      <button class="upgrade-btn" type="button" data-upgrade-id="${def.id}" title="${!hasFreeSlot ? 'No free slot on any planet. Buy a new planet!' : ''}" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>
-    `;
-    listEl.appendChild(card);
+  for (const group of UPGRADE_GROUPS) {
+    const groupDefs = UPGRADE_CATALOG.filter((d) => d.tier >= group.minTier && d.tier <= group.maxTier);
+    if (groupDefs.length === 0) continue;
+
+    const header = document.createElement('div');
+    header.className = 'upgrade-group-header';
+    header.textContent = group.label;
+    listEl.appendChild(header);
+
+    for (const def of groupDefs) {
+      const owned = player.upgrades.filter((u) => u.id === def.id).length;
+      const upgrade = createUpgrade(def);
+      const canAfford = player.coins.gte(upgrade.cost);
+      const canBuy = canAfford && hasFreeSlot;
+      const buyLabel = owned > 0 ? `+1` : `Buy`;
+      const maxCount = getMaxBuyCount(def.id);
+      const maxLabel = maxCount > 1 ? `Max (${maxCount})` : `Max`;
+
+      const planetOptions = choosePlanet
+        ? planetsWithSlot.map((p) => `<option value="${p.id}">${p.name}</option>`).join('')
+        : '';
+      const planetSelectHtml = choosePlanet
+        ? `<label class="upgrade-planet-label" for="planet-${def.id}">To</label><select class="upgrade-planet-select" id="planet-${def.id}" data-upgrade-id="${def.id}" aria-label="Assign to planet">${planetOptions}</select>`
+        : '';
+
+      const card = document.createElement('div');
+      card.className = 'upgrade-card';
+      card.setAttribute('data-tier', String(def.tier));
+      card.innerHTML = `
+        <div class="upgrade-info">
+          <div class="upgrade-header">
+            <span class="upgrade-tier" aria-label="Tier ${def.tier}">T${def.tier}</span>
+            <div class="upgrade-name">${def.name}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}</div>
+          </div>
+          <div class="upgrade-description">${def.description}</div>
+          <div class="upgrade-effect">+${formatNumber(def.coinsPerSecond, settings.compactNumbers)} /s each</div>
+        </div>
+        <span class="upgrade-cost">${formatNumber(def.cost, settings.compactNumbers)} ⬡</span>
+        <div class="upgrade-actions">
+          ${planetSelectHtml}
+          <div class="upgrade-buttons">
+            <button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" title="${!hasFreeSlot ? 'No free slot. Add a slot to a planet or buy a new planet!' : ''}" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>
+            <button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" title="Buy as many as you can afford with current slots" ${maxCount > 0 ? '' : 'disabled'}>${maxLabel}</button>
+          </div>
+        </div>
+      `;
+      listEl.appendChild(card);
+    }
   }
 }
 
@@ -103,24 +168,44 @@ function updateUpgradeListInPlace() {
 
   const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
   listEl.querySelectorAll('.upgrade-card').forEach((card) => {
-    const btn = card.querySelector('.upgrade-btn');
-    const id = btn?.getAttribute('data-upgrade-id');
+    const buyBtn = card.querySelector('.upgrade-btn--buy');
+    const id = buyBtn?.getAttribute('data-upgrade-id');
     if (!id) return;
     const def = UPGRADE_CATALOG.find((d) => d.id === id);
     if (!def) return;
     const owned = player.upgrades.filter((u) => u.id === id).length;
     const canAfford = player.coins.gte(def.cost);
     const canBuy = canAfford && hasFreeSlot;
-    const buyLabel = owned > 0 ? 'Buy (+1)' : 'Buy';
+    const buyLabel = owned > 0 ? '+1' : 'Buy';
+    const maxCount = getMaxBuyCount(id);
+    const maxLabel = maxCount > 1 ? `Max (${maxCount})` : 'Max';
 
     const nameEl = card.querySelector('.upgrade-name');
     if (nameEl) {
       nameEl.innerHTML = def.name + (owned > 0 ? `<span class="count-badge">×${owned}</span>` : '');
     }
-    if (btn) {
-      btn.textContent = buyLabel;
-      btn.toggleAttribute('disabled', !canBuy);
-      btn.setAttribute('title', !hasFreeSlot ? 'No free slot on any planet. Buy a new planet!' : '');
+    const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
+    if (select) {
+      const planetsWithSlot = player.getPlanetsWithFreeSlot();
+      if (planetsWithSlot.length !== select.options.length) {
+        updateStats();
+        renderUpgradeList();
+        return;
+      }
+      const selectedId = select.options[select.selectedIndex]?.value;
+      if (selectedId && !planetsWithSlot.some((p) => p.id === selectedId)) {
+        select.value = planetsWithSlot[0]?.id ?? '';
+      }
+    }
+    if (buyBtn) {
+      buyBtn.textContent = buyLabel;
+      buyBtn.toggleAttribute('disabled', !canBuy);
+      buyBtn.setAttribute('title', !hasFreeSlot ? 'No free slot. Add a slot to a planet or buy a new planet!' : '');
+    }
+    const maxBtn = card.querySelector('.upgrade-btn--max');
+    if (maxBtn) {
+      maxBtn.textContent = maxLabel;
+      maxBtn.toggleAttribute('disabled', maxCount <= 0);
     }
   });
 }
@@ -130,17 +215,53 @@ function render() {
   renderUpgradeList();
 }
 
-function handleUpgradeBuy(upgradeId: string) {
+/** How many of this upgrade can be bought with current coins and free slots. */
+function getMaxBuyCount(upgradeId: string): number {
+  if (!session) return 0;
+  const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
+  if (!def) return 0;
+  const player = session.player;
+  const freeSlots = player.planets.reduce((s, p) => s + p.freeSlots, 0);
+  if (freeSlots <= 0 || !player.coins.gte(def.cost)) return 0;
+  const byCoins = Math.floor(player.coins.value / def.cost);
+  return Math.min(byCoins, freeSlots);
+}
+
+function handleUpgradeBuy(upgradeId: string, planetId?: string) {
   if (!session) return;
   const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
   if (!def) return;
   const player = session.player;
   const upgrade = createUpgrade(def);
+  const targetPlanet = planetId ? player.planets.find((p) => p.id === planetId) : undefined;
   if (!player.coins.gte(upgrade.cost) || !player.getPlanetWithFreeSlot()) return;
-  upgradeService.purchaseUpgrade(player, upgrade);
+  if (planetId && !targetPlanet?.hasFreeSlot()) return;
+  upgradeService.purchaseUpgrade(player, upgrade, targetPlanet ?? null);
   saveSession();
   updateStats();
   renderUpgradeList();
+}
+
+/** Buy as many as possible (limited by coins and free slots). Uses selected planet first, then others. */
+function handleUpgradeBuyMax(upgradeId: string, planetId?: string) {
+  if (!session) return;
+  const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
+  if (!def) return;
+  const player = session.player;
+  let bought = 0;
+  while (player.coins.gte(def.cost)) {
+    let target = planetId ? player.planets.find((p) => p.id === planetId) : null;
+    if (!target?.hasFreeSlot()) target = player.getPlanetWithFreeSlot();
+    if (!target) break;
+    const upgrade = createUpgrade(def);
+    upgradeService.purchaseUpgrade(player, upgrade, target);
+    bought++;
+  }
+  if (bought > 0) {
+    saveSession();
+    updateStats();
+    renderUpgradeList();
+  }
   renderPlanetList();
 }
 
@@ -155,7 +276,18 @@ function handleBuyNewPlanet() {
   renderPlanetList();
 }
 
-/** Refresh the planet list DOM (slots + buy button). */
+function handleAddSlot(planetId: string) {
+  if (!session) return;
+  const planet = session.player.planets.find((p) => p.id === planetId);
+  if (!planet || !planetService.canAddSlot(session.player, planet)) return;
+  planetService.addSlot(session.player, planet);
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderPlanetList();
+}
+
+/** Refresh the planet list DOM (slots + add-slot + buy planet). */
 function renderPlanetList() {
   if (!session) return;
   const listEl = document.getElementById('planet-list');
@@ -164,11 +296,21 @@ function renderPlanetList() {
   const cost = planetService.getNewPlanetCost(player);
   const canBuyPlanet = planetService.canBuyNewPlanet(player);
   listEl.innerHTML = player.planets
-    .map(
-      (p) =>
-        `<div class="planet-slot" title="${p.usedSlots}/${p.maxUpgrades} upgrades">${p.name}: <strong>${p.usedSlots}/${p.maxUpgrades}</strong></div>`
-    )
+    .map((p) => {
+      const addSlotCost = planetService.getAddSlotCost(p);
+      const canAddSlot = planetService.canAddSlot(player, p);
+      return `<div class="planet-row" data-planet-id="${p.id}" title="${p.usedSlots}/${p.maxUpgrades} slots${player.planets.length > 1 ? ' • +' + (player.planets.length - 1) * 5 + '% prod from planets' : ''}">
+        <span class="planet-slot">${p.name}: <strong>${p.usedSlots}/${p.maxUpgrades}</strong></span>
+        <button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'} title="Add one upgrade slot">+1 slot (${formatNumber(addSlotCost, settings.compactNumbers)} ⬡)</button>
+      </div>`;
+    })
     .join('');
+  listEl.querySelectorAll('.add-slot-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-planet-id');
+      if (id) handleAddSlot(id);
+    });
+  });
   const buyPlanetBtn = document.getElementById('buy-planet-btn');
   if (buyPlanetBtn) {
     buyPlanetBtn.textContent = `Buy new planet (${formatNumber(cost, settings.compactNumbers)} ⬡)`;
@@ -277,9 +419,10 @@ function mount() {
         <div class="stat-label">Coins</div>
         <div class="stat-value" id="coins-value">0</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--production" title="Base rate from upgrades × (1 + 5% per extra planet)">
         <div class="stat-label">Production</div>
         <div class="stat-value" id="production-value">0/s</div>
+        <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
       </div>
     </section>
     <section class="mine-zone" id="mine-zone" title="Click to mine">
@@ -288,7 +431,7 @@ function mount() {
     </section>
     <section class="planets-section">
       <h2>Planets</h2>
-      <p class="planets-hint">Each planet has limited upgrade slots. Buy a new planet to expand.</p>
+      <p class="planets-hint">Each planet has upgrade slots (expandable). More planets = +5% production each. Buy a new planet or add slots to expand.</p>
       <div class="planet-list" id="planet-list"></div>
       <button type="button" class="buy-planet-btn" id="buy-planet-btn">Buy new planet</button>
     </section>
@@ -350,9 +493,15 @@ function mount() {
       const target = (e.target as HTMLElement).closest('button.upgrade-btn');
       if (!target || target.hasAttribute('disabled')) return;
       e.preventDefault();
-      const id = target.getAttribute('data-upgrade-id');
-      if (id) {
-        handleUpgradeBuy(id);
+      const upgradeId = target.getAttribute('data-upgrade-id');
+      if (!upgradeId) return;
+      const card = target.closest('.upgrade-card');
+      const select = card?.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
+      const planetId = select?.value || undefined;
+      if (target.getAttribute('data-action') === 'max') {
+        handleUpgradeBuyMax(upgradeId, planetId);
+      } else {
+        handleUpgradeBuy(upgradeId, planetId);
       }
     });
   }
@@ -369,7 +518,7 @@ function gameLoop(now: number) {
   }
   const dt = (now - lastTime) / 1000;
   lastTime = now;
-  const rate = session.player.productionRate.value;
+  const rate = session.player.effectiveProductionRate;
   if (rate > 0) {
     session.player.addCoins(rate * dt);
     updateStats();

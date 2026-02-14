@@ -1,8 +1,9 @@
 import type { Player } from '../entities/Player.js';
-import { Planet } from '../entities/Planet.js';
-import { getNewPlanetCost } from '../constants.js';
+import type { Planet } from '../entities/Planet.js';
+import { Planet as PlanetEntity } from '../entities/Planet.js';
+import { getNewPlanetCost, getAddSlotCost, getPlanetName } from '../constants.js';
 
-/** Domain service: buy a new planet to get more upgrade slots. */
+/** Domain service: buy a new planet or expand a planet's slots. */
 export class PlanetService {
   getNewPlanetCost(player: Player): number {
     return getNewPlanetCost(player.planets.length);
@@ -18,8 +19,23 @@ export class PlanetService {
     const cost = this.getNewPlanetCost(player);
     player.spendCoins(cost);
     const id = `planet-${player.planets.length + 1}`;
-    const name = `Planet ${player.planets.length + 1}`;
-    player.addPlanet(Planet.create(id, name));
+    const name = getPlanetName(player.planets.length);
+    player.addPlanet(PlanetEntity.create(id, name));
+    return true;
+  }
+
+  getAddSlotCost(planet: Planet): number {
+    return getAddSlotCost(planet.maxUpgrades);
+  }
+
+  canAddSlot(player: Player, planet: Planet): boolean {
+    return player.coins.gte(this.getAddSlotCost(planet));
+  }
+
+  addSlot(player: Player, planet: Planet): boolean {
+    if (!this.canAddSlot(player, planet)) return false;
+    player.spendCoins(this.getAddSlotCost(planet));
+    planet.addSlot();
     return true;
   }
 }
