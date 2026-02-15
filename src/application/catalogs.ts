@@ -34,6 +34,18 @@ export function createUpgrade(def: UpgradeDef): Upgrade {
   return new Upgrade(def.id, def.name, def.cost, new UpgradeEffect(def.coinsPerSecond));
 }
 
+/** Tiers the player has unlocked for display. Tier 1 is always visible; tier n+1 unlocks when player owns at least one upgrade of tier n. */
+export function getUnlockedUpgradeTiers(ownedUpgradeIds: string[]): Set<number> {
+  const ownedTiers = new Set<number>();
+  for (const id of ownedUpgradeIds) {
+    const def = UPGRADE_CATALOG.find((d) => d.id === id);
+    if (def) ownedTiers.add(def.tier);
+  }
+  const unlocked = new Set<number>([1]);
+  for (const t of ownedTiers) unlocked.add(t + 1);
+  return unlocked;
+}
+
 export const EVENT_CATALOG: GameEvent[] = [
   new GameEvent('meteor-storm', 'Meteor Storm', new EventEffect(2, 30_000)),
   new GameEvent('solar-flare', 'Solar Flare', new EventEffect(1.5, 45_000)),

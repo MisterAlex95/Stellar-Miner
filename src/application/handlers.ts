@@ -57,6 +57,7 @@ import { renderCrewSection } from '../presentation/crewView.js';
 import { renderQuestSection } from '../presentation/questView.js';
 import { updateComboIndicator } from '../presentation/comboView.js';
 import { ACHIEVEMENTS, getUnlockedAchievements } from './achievements.js';
+import { clearProgression } from './progression.js';
 import {
   showFloatingCoin,
   showSuperLuckyToast,
@@ -220,6 +221,7 @@ export function handleMineClick(e?: MouseEvent): void {
   saveSession();
   updateStats();
   renderUpgradeList();
+  renderQuestSection();
   const progress = getQuestProgress();
   if (progress?.done) checkQuestProgress();
 }
@@ -290,6 +292,7 @@ export function handleClaimQuest(): void {
 
 export function handleResetProgress(): void {
   saveLoad.clearProgress();
+  clearProgression();
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(QUEST_STORAGE_KEY);
     localStorage.removeItem(MILESTONES_STORAGE_KEY);

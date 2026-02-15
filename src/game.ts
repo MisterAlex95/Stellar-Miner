@@ -17,12 +17,12 @@ import {
   mineZoneCanvasApi,
 } from './application/gameState.js';
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS } from './application/catalogs.js';
-import { getQuestProgress } from './application/quests.js';
 import { updateStats } from './presentation/statsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
 import { renderPlanetList } from './presentation/planetListView.js';
 import { renderQuestSection } from './presentation/questView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
+import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/progressionView.js';
 import { updateDebugPanel } from './application/handlers.js';
 import { saveSession } from './application/handlers.js';
 import { triggerRandomEvent } from './application/handlers.js';
@@ -51,9 +51,8 @@ function gameLoop(now: number): void {
     session.player.addCoins(rate * dt);
     updateStats();
     updateUpgradeListInPlace();
-    const p = getQuestProgress();
-    if (p?.done) renderQuestSection();
   }
+  renderQuestSection();
   const planetViews = session.player.planets.map((p) => {
     const upgradeCounts: Record<string, number> = {};
     for (const u of p.upgrades) {
@@ -74,6 +73,7 @@ function gameLoop(now: number): void {
   mineZoneCanvasApi?.draw();
 
   updateComboIndicator();
+  updateProgressionVisibility();
 
   const debugPanel = document.getElementById('debug-panel');
   if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) {
@@ -95,6 +95,7 @@ async function init(): Promise<void> {
   updateStats();
   renderUpgradeList();
   renderPlanetList();
+  maybeShowWelcomeModal();
   if (offlineCoins > 0) showOfflineToast(offlineCoins);
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);

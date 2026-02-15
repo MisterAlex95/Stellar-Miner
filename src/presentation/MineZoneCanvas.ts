@@ -475,10 +475,10 @@ function drawSolarSystem(
   const orbitDashed = systemIndex % 2 === 1;
   if (orbitDashed) ctx.setLineDash([4, 6]);
 
+  const orbitDirection = 1; // All planets orbit the same way
   for (let i = 0; i < systemPlanets.length; i++) {
     const orbitR = orbitRadiusBase + i * orbitSpacing;
-    const direction = (hash(`dir-${systemIndex}-${i}`) % 2 === 0) ? 1 : -1;
-    const speed = direction * (0.18 + (i * 0.08) + ((systemIndex % 3) * 0.04));
+    const speed = orbitDirection * (0.18 + (i * 0.08) + ((systemIndex % 3) * 0.04));
     const angle = orbitTime * speed + (i * Math.PI * 2) / Math.max(systemPlanets.length, 1);
     const px = systemCenterX + Math.cos(angle) * orbitR;
     const py = systemCenterY + Math.sin(angle) * orbitR;

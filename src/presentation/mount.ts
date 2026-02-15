@@ -29,6 +29,13 @@ import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
+import {
+  bindIntroModal,
+  updateProgressionVisibility,
+  maybeShowWelcomeModal,
+  isIntroOverlayOpen,
+  dismissIntroModal,
+} from './progressionView.js';
 
 const APP_HTML = `
     <header>
@@ -105,6 +112,13 @@ const APP_HTML = `
         </div>
       </div>
     </div>
+    <div class="intro-overlay" id="intro-overlay" aria-hidden="true">
+      <div class="intro-modal" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-body">
+        <h2 id="intro-title"></h2>
+        <p id="intro-body"></p>
+        <button type="button" class="intro-got-it" id="intro-got-it">Got it</button>
+      </div>
+    </div>
     <section class="stats">
       <div class="stat-card stat-card--coins" id="coins-stat-card">
         <div class="stat-label">Coins</div>
@@ -127,7 +141,7 @@ const APP_HTML = `
       <p class="mine-zone-hint" aria-hidden="true">Click or press Space to mine</p>
       <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
     </section>
-    <section class="quest-section" id="quest-section">
+    <section class="gameplay-block gameplay-block--locked quest-section" id="quest-section" data-block="quest">
       <h2>Quest</h2>
       <div class="quest-progress-wrap">
         <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
@@ -136,26 +150,26 @@ const APP_HTML = `
       <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
       <button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button>
     </section>
-    <section class="prestige-section">
+    <section class="gameplay-block gameplay-block--locked prestige-section" id="prestige-section" data-block="prestige">
       <h2>Prestige</h2>
       <p class="prestige-hint">Reset coins and planets to gain +5% production per prestige level forever.</p>
       <div class="prestige-status" id="prestige-status"></div>
       <button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button>
     </section>
-    <section class="crew-section" id="crew-section">
+    <section class="gameplay-block gameplay-block--locked crew-section" id="crew-section" data-block="crew">
       <h2>Crew</h2>
       <p class="crew-hint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
       <div class="crew-count" id="crew-count">No crew yet</div>
       <div class="crew-operates" id="crew-operates"></div>
       <button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button>
     </section>
-    <section class="planets-section">
+    <section class="gameplay-block gameplay-block--locked planets-section" id="planets-section" data-block="planets">
       <h2>Planets</h2>
       <p class="planets-hint">Each planet has upgrade slots (expandable). More planets = +5% production each. Buy a new planet or add slots to expand.</p>
       <div class="planet-list" id="planet-list"></div>
       <button type="button" class="buy-planet-btn" id="buy-planet-btn">Buy new planet</button>
     </section>
-    <section class="upgrades-section">
+    <section class="gameplay-block gameplay-block--locked upgrades-section" id="upgrades-section" data-block="upgrades">
       <h2>Upgrades</h2>
       <p class="upgrades-hint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
       <div class="upgrade-list" id="upgrade-list"></div>
@@ -187,6 +201,7 @@ export function mount(): void {
       const prestigeOverlay = document.getElementById('prestige-confirm-overlay');
       if (resetOverlay?.classList.contains('reset-confirm-overlay--open')) closeResetConfirmModal();
       else if (prestigeOverlay?.classList.contains('prestige-confirm-overlay--open')) closePrestigeConfirmModal();
+      else if (isIntroOverlayOpen()) dismissIntroModal();
       else if (settingsOverlay.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
@@ -291,6 +306,8 @@ export function mount(): void {
   const hireAstronautBtn = document.getElementById('hire-astronaut-btn');
   if (hireAstronautBtn) hireAstronautBtn.addEventListener('click', handleHireAstronaut);
 
+  bindIntroModal();
+  updateProgressionVisibility();
   renderPrestigeSection();
   renderCrewSection();
   renderQuestSection();

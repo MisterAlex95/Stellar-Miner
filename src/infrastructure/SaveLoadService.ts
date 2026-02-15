@@ -13,6 +13,7 @@ import { getPlanetName } from '../domain/constants.js';
 
 const STORAGE_KEY = 'stellar-miner-session';
 const LAST_SAVE_KEY = 'stellar-miner-last-save';
+const PROGRESSION_KEY = 'stellar-miner-progression';
 const MIN_OFFLINE_MS = 60_000; // 1 min before offline progress counts
 const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000; // cap 24h
 
@@ -79,6 +80,7 @@ export class SaveLoadService implements ISaveLoadService {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(LAST_SAVE_KEY);
+      localStorage.removeItem(PROGRESSION_KEY);
     }
   }
 

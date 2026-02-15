@@ -4,6 +4,7 @@ import {
   UPGRADE_CATALOG,
   UPGRADE_GROUPS,
   createUpgrade,
+  getUnlockedUpgradeTiers,
 } from '../application/catalogs.js';
 import { updateStats } from './statsView.js';
 
@@ -33,8 +34,13 @@ export function renderUpgradeList(): void {
   const hasFreeSlot = planetsWithSlot.length > 0;
   const choosePlanet = planetsWithSlot.length > 1;
 
+  const ownedIds = player.upgrades.map((u) => u.id);
+  const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
+
   for (const group of UPGRADE_GROUPS) {
-    const groupDefs = UPGRADE_CATALOG.filter((d) => d.tier >= group.minTier && d.tier <= group.maxTier);
+    const groupDefs = UPGRADE_CATALOG.filter(
+      (d) => d.tier >= group.minTier && d.tier <= group.maxTier && unlockedTiers.has(d.tier)
+    );
     if (groupDefs.length === 0) continue;
 
     const header = document.createElement('div');
@@ -61,10 +67,11 @@ export function renderUpgradeList(): void {
           ? `<span class="upgrade-crew-req" title="Cost in astronauts (spent when you buy)">${def.requiredAstronauts} crew</span>`
           : '';
 
-      const costLine =
+      const costCoins = `${formatNumber(def.cost, settings.compactNumbers)} ⬡`;
+      const costCrewLine =
         def.requiredAstronauts > 0
-          ? `${formatNumber(def.cost, settings.compactNumbers)} ⬡ + ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}`
-          : `${formatNumber(def.cost, settings.compactNumbers)} ⬡`;
+          ? `${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}`
+          : '';
 
       const planetOptions = choosePlanet
         ? planetsWithSlot.map((p) => `<option value="${p.id}">${p.name}</option>`).join('')
@@ -90,7 +97,10 @@ export function renderUpgradeList(): void {
           <div class="upgrade-description">${def.description}</div>
           <div class="upgrade-effect">+${formatNumber(def.coinsPerSecond, settings.compactNumbers)} /s each${owned > 0 ? ` · Total: +${formatNumber(owned * def.coinsPerSecond, settings.compactNumbers)}/s` : ''}</div>
         </div>
-        <span class="upgrade-cost">${costLine}</span>
+        <div class="upgrade-cost">
+          <span class="upgrade-cost-coins">${costCoins}</span>
+          ${costCrewLine ? `<span class="upgrade-cost-crew">${costCrewLine}</span>` : ''}
+        </div>
         <div class="upgrade-actions">
           ${planetSelectHtml}
           <div class="upgrade-buttons">
