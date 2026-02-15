@@ -2,11 +2,12 @@ import { getSession, getSettings, planetService } from '../application/gameState
 import { formatNumber } from '../application/format.js';
 import { getPlanetEffectiveProduction } from '../application/productionHelpers.js';
 import { getPlanetType } from '../application/planetAffinity.js';
-import { getEffectiveUsedSlots } from '../application/research.js';
+import { getEffectiveUsedSlots, hasEffectiveFreeSlot } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
 import { drawPlanetSphereToCanvas } from './MineZoneCanvas.js';
 import { buttonWithTooltipHtml, updateTooltipForButton } from './components/buttonTooltip.js';
 import { escapeAttr } from './components/domUtils.js';
+import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
 
 export function renderPlanetList(): void {
   const session = getSession();
@@ -45,6 +46,15 @@ export function renderPlanetList(): void {
         lines.push(`${t('planetInfoHousing')}: ${tParam('planetInfoHousingLine', { n: String(p.housingCount), crew: String(crewCap) })}`);
       }
       const planetInfoTooltip = lines.join('\n');
+      const hasSlot = hasEffectiveFreeSlot(p);
+      const housingCost = planetService.getHousingCost(p);
+      const canBuildHousing = planetService.canBuildHousing(player, p, hasEffectiveFreeSlot);
+      const housingTooltip = canBuildHousing
+        ? tParam('housingBuildTooltip', { planet: planetName(p), cost: formatNumber(housingCost, settings.compactNumbers), capacity: HOUSING_ASTRONAUT_CAPACITY })
+        : tParam('needCoinsForHousing', { cost: formatNumber(housingCost, settings.compactNumbers) });
+      const housingBtn = hasSlot
+        ? buttonWithTooltipHtml(housingTooltip, `<button type="button" class="build-housing-btn" data-planet-id="${p.id}" ${canBuildHousing ? '' : 'disabled'}>${tParam('buildHousingBtn', { cost: formatNumber(housingCost, settings.compactNumbers) })}</button>`)
+        : '';
       return `<div class="planet-card" data-planet-id="${p.id}" title="${cardTitle}">
         <div class="planet-card-header">
           <canvas class="planet-card-visual" width="48" height="48" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" aria-hidden="true"></canvas>
@@ -55,7 +65,10 @@ export function renderPlanetList(): void {
         </div>
         <div class="planet-card-slots"><span class="planet-slot-value">${effectiveUsed}/${p.maxUpgrades}</span> ${t('slots')}</div>
         ${prodLine}
-        ${buttonWithTooltipHtml(slotBtnTitle, `<button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'}>${tParam('addSlotBtn', { cost: formatNumber(addSlotCost, settings.compactNumbers) })}</button>`)}
+        <div class="planet-card-actions">
+          ${buttonWithTooltipHtml(slotBtnTitle, `<button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'}>${tParam('addSlotBtn', { cost: formatNumber(addSlotCost, settings.compactNumbers) })}</button>`)}
+          ${housingBtn}
+        </div>
       </div>`;
     })
     .join('');

@@ -42,18 +42,15 @@ yarn install
 ```
 e2e/                  # Playwright E2E tests (smoke.spec.ts)
 src/
-├── domain/           # DDD core
-│   ├── entities/     # Player, Planet, Upgrade, GameEvent, Artifact
-│   ├── value-objects/# Coins, ProductionRate, UpgradeEffect, EventEffect
-│   ├── aggregates/   # GameSession
-│   ├── events/       # CoinsMined, UpgradePurchased, EventTriggered, PrestigeActivated
-│   ├── services/     # UpgradeService, PlanetService, EventService, PrestigeService
-│   └── constants.ts  # Planet names, costs, prestige/crew bonuses
-├── application/      # gameState, handlers, catalogs, quests, progression, stats, format,
-│                     # eventBus, strings (i18n t(key)), research, achievements, milestones
-├── presentation/     # mount, stats/upgrade/planet/quest/combo/progression/prestige/crew/research/housing views,
-│                     # toasts, tooltip, StarfieldCanvas, MineZoneCanvas
+├── domain/           # DDD core (entities, value-objects, aggregates, events, services, bigNumber)
+├── application/      # gameState; handlers (handlers.ts + handlersSave, handlersMine, handlersUpgrade,
+│                     # handlersPlanet, handlersQuest, handlersPrestige, handlersResearch,
+│                     # handlersSettings, handlersDebug); catalogs, quests, progression, stats,
+│                     # format, eventBus, strings (i18n t(key)), research, achievements, milestones,
+│                     # planetAffinity, version, changelog
+├── presentation/     # mount; tabs: Mine, Empire, Research, Upgrades, Stats; views + components
 ├── infrastructure/   # SaveLoadService (save/load/export/import, version, validateSavePayload)
+├── data/             # JSON: upgrades, events, research, achievements, progression, planetAffinity, changelog
 ├── settings.ts       # User settings: starfield, layout, pause when background, theme, sound, reducedMotion
 ├── main.ts           # Domain sanity check / CLI entry
 ├── game.ts           # Game bootstrap and loop
@@ -76,6 +73,7 @@ To use GitHub Pages: in the repo **Settings → Pages**, set **Source** to “Gi
 ## Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — DDD overview: domains, entities, value objects, aggregates, services, events, layered architecture, current flows, code references, and implemented improvements.
+- [docs/PROGRESSION_CURVE.md](docs/PROGRESSION_CURVE.md) — Economy reference: upgrade costs, unlocks, time estimates, milestones, prestige.
 - [docs/IDEAS.md](docs/IDEAS.md) — Backlog of gameplay ideas for future features.
 - **AI / Cursor** — Project rules for assistants live in `.cursor/rules/` (stellar-miner-project.mdc, typescript-conventions.mdc).
 
@@ -89,7 +87,7 @@ To use GitHub Pages: in the repo **Settings → Pages**, set **Source** to “Gi
 6. **Settings** — **Theme** (light/dark), **Sound effects** toggle, **Reduce motion**; all persisted in `settings.ts`.
 7. **Save format** — **`version: 1`** in payload, **`isSavedSession()`** type guard, migration for legacy (no version); **`SAVE_VERSION`** and **`validateSavePayload()`** in SaveLoadService.
 8. **DevEx** — **ESLint** (`.eslintrc.cjs`) + **Prettier** (`.prettierrc`), scripts **`lint`** and **`format`**.
-9. **Docs** — README and ARCHITECTURE kept in sync (this section and §11 in ARCHITECTURE).
+9. **Docs** — README and ARCHITECTURE kept in sync (this section and §11–12 in ARCHITECTURE).
 10. **Observability** — **`src/application/eventBus.ts`** (subscribe/emit for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed); **performance.mark** in game loop and save.
 
 ## License

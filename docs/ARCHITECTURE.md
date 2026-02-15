@@ -98,10 +98,11 @@ Events that occur in the domain and can trigger side effects.
 
 **Modules (src):**
 
-- **domain/** — Entities, value objects, aggregates, events, domain services
-- **application/** — gameState, handlers, catalogs, quests, progression, stats, format, eventBus, strings, research, achievements, milestones, questState, playTimeStats, productionHelpers, crewHelpers, i18nCatalogs
-- **presentation/** — mount, views (stats, upgrade, planet, quest, combo, progression, prestige, crew, statistics, research, housing), toasts, tooltip, StarfieldCanvas, MineZoneCanvas. Reusable UI building blocks in **presentation/components/** (toasts, modals, gameplay blocks, button+tooltip, upgrade card).
+- **domain/** — Entities, value objects, aggregates, events, domain services; **bigNumber** for large-number math (break_infinity).
+- **application/** — gameState; **handlers** split by domain (handlers.ts re-exports from handlersSave, handlersMine, handlersUpgrade, handlersPlanet, handlersQuest, handlersPrestige, handlersResearch, handlersSettings, handlersDebug); catalogs, quests, progression, stats, format, eventBus, strings, research, achievements, milestones, questState, playTimeStats, productionHelpers, crewHelpers, planetAffinity, i18nCatalogs; **version**, **changelog** (What's new modal).
+- **presentation/** — mount; tabs: **Mine**, **Empire** (production breakdown, crew, planets, quests, prestige; housing is built from each planet card), **Research**, **Upgrades**, **Stats**; views: statsView, upgradeListView, planetListView, questView, comboView, progressionView, prestigeView, crewView, statisticsView, researchView, housingView (used when building housing on a planet). Toasts, tooltip, StarfieldCanvas, MineZoneCanvas. Reusable UI in **presentation/components/** (toasts, modals, gameplay blocks, buttonTooltip, upgradeCard, progressBar, chartUtils, statisticsCard, changelog, debugPanel, etc.).
 - **infrastructure/** — SaveLoadService (save/load/export/import, version, validation)
+- **data/** — JSON config: upgrades, events, research, achievements, progression, planetAffinity, balance, gameConfig, changelog
 - **e2e/** — Playwright E2E tests
 
 ---
@@ -128,10 +129,12 @@ Events that occur in the domain and can trigger side effects.
 - **Value objects**: `src/domain/value-objects/` — Coins, ProductionRate, UpgradeEffect, EventEffect.
 - **Application state**: `src/application/gameState.ts` — session, active event instances, next event time, settings, quest state; `getOrCreateSession`, `saveLoad`, `getEventMultiplier`.
 - **Catalogs & config**: `src/application/catalogs.ts` — UPGRADE_CATALOG, EVENT_CATALOG, combo/lucky/quest constants, storage keys.
-- **Handlers**: `src/application/handlers.ts` — mine click, buy upgrade/planet/slot, hire astronaut, prestige, quest claim, export/import save, settings, debug.
-- **Presentation**: `src/presentation/` — mount, statsView, upgradeListView, planetListView, questView, comboView, progressionView, prestigeView, crewView, statisticsView, researchView, housingView, toasts, tooltip, StarfieldCanvas, MineZoneCanvas.
+- **Handlers**: `src/application/handlers.ts` re-exports; domain-specific modules: handlersSave, handlersMine, handlersUpgrade, handlersPlanet, handlersQuest, handlersPrestige, handlersResearch, handlersSettings, handlersDebug — mine click, buy upgrade/planet/slot/housing, hire astronaut, prestige, quest claim, export/import save, settings, debug.
+- **Presentation**: `src/presentation/` — mount; tabs Mine, Empire, Research, Upgrades, Stats; statsView (Empire panel), upgradeListView, planetListView (housing on each planet card), questView, comboView, progressionView, prestigeView, crewView, statisticsView, researchView, housingView (build housing), toasts, tooltip, StarfieldCanvas, MineZoneCanvas.
 - **Research**: `src/application/research.ts` — tech tree / research unlocks; `researchView` for UI.
+- **Planet affinity**: `src/application/planetAffinity.ts` — planet type (rocky/desert/ice/volcanic/gas) and affinity stats derived from planet name; data in `src/data/planetAffinity.json`.
 - **Achievements & milestones**: `src/application/achievements.ts`, `src/application/milestones.ts` — progression unlocks and one-off rewards.
+- **Version & changelog**: `src/application/version.ts`, `src/application/changelog.ts` — app version (from package.json at build), "What's new" modal; `src/data/changelog.json` (newest first).
 - **Persistence**: `src/infrastructure/SaveLoadService.ts` — save/load/export/import, offline progress (capped), `SAVE_VERSION`, `isSavedSession()`, `validateSavePayload()`; `src/settings.ts` — user settings (starfield, layout, pause when background, theme, soundEnabled, reducedMotion).
 - **Event bus**: `src/application/eventBus.ts` — `subscribe(kind, fn)`, `emit(kind, payload)` for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed.
 - **Strings**: `src/application/strings.ts` — `strings` map and `t(key)` for UI copy (invalid save, offline banner, etc.).
@@ -142,7 +145,7 @@ Events that occur in the domain and can trigger side effects.
 
 - **Mine click**: Handlers → mine click (lucky/critical), combo tracking, coins, toasts; game loop applies passive production and event multiplier.
 - **Buy upgrade**: Handlers → PlanetService/UpgradeService (planet choice if multiple slots); persistence on interval.
-- **Planets & crew**: Buy new planet (PlanetService), add slot (cost scaling), hire astronauts (Player); production = upgrades × planet bonus × prestige × crew bonus.
+- **Planets & crew**: Buy new planet (PlanetService), add slot (cost scaling), **build housing** on each planet (planet card); hire astronauts (Player); production = upgrades × planet bonus × prestige × crew bonus. **Empire** tab shows production breakdown, crew, planets (with housing), quests, prestige.
 - **Quests**: Quest state in gameState; generate/claim in handlers; streak bonus; render in questView.
 - **Prestige**: PrestigeService + handlers; reset to one planet, prestige level +1, bonus to production.
 - **Events**: Game loop checks `nextEventAt`; handlers trigger random event from catalog; active events multiply production until they expire.
@@ -162,5 +165,7 @@ Events that occur in the domain and can trigger side effects.
 6. **Settings** — **Theme** (light/dark), **Sound effects**, **Reduce motion** in `settings.ts` and settings UI; all persisted.
 7. **Save format** — **`version: 1`** in serialized payload; **`isSavedSession()`** validation; legacy (no version) still loads; **`SAVE_VERSION`** and **`validateSavePayload()`** in SaveLoadService.
 8. **DevEx** — **ESLint** (`.eslintrc.cjs`) and **Prettier** (`.prettierrc`) at repo root; **Playwright** (`playwright.config.ts`, `e2e/`); scripts **`npm run lint`**, **`npm run format`**, **`npm run test:e2e`**.
-9. **Documentation** — This file and README kept in sync; IDEAS.md for future gameplay.
+9. **Documentation** — This file and README kept in sync; PROGRESSION_CURVE.md for economy reference; IDEAS.md for future gameplay.
 10. **Observability** — **`src/application/eventBus.ts`**: subscribe/emit for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed; **performance.mark** in game loop and in SaveLoadService save.
+11. **Handlers** — Split by domain into **handlersSave**, **handlersMine**, **handlersUpgrade**, **handlersPlanet**, **handlersQuest**, **handlersPrestige**, **handlersResearch**, **handlersSettings**, **handlersDebug**; **handlers.ts** re-exports for a single entry point.
+12. **Planet affinity** — Planet type (rocky/desert/ice/volcanic/gas), visuals (colors, texture, rings/belt, size) and affinity stats derived deterministically from planet name; **planetAffinity.ts** + **data/planetAffinity.json**.

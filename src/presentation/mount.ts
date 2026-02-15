@@ -36,7 +36,6 @@ import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
-import { renderHousingSection } from './housingView.js';
 import { renderResearchSection } from './researchView.js';
 import { renderStatisticsSection } from './statisticsView.js';
 import {
@@ -135,7 +134,7 @@ export function applyLayout(): void {
       document.querySelector('.app-tab--active')?.getAttribute('data-tab') ||
       localStorage.getItem(TAB_STORAGE_KEY) ||
       DEFAULT_TAB;
-    const validId = ['mine', 'base', 'research', 'upgrades', 'stats'].includes(activeId) ? activeId : DEFAULT_TAB;
+    const validId = ['mine', 'empire', 'research', 'upgrades', 'stats'].includes(activeId) ? activeId : DEFAULT_TAB;
     switchTab(validId);
   }
 }
@@ -362,7 +361,7 @@ const APP_HTML = `
     <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
     <nav class="app-tabs" role="tablist" data-i18n-aria-label="gameSections">
       <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine" data-i18n="tabMine">Mine</button>
-      <button type="button" class="app-tab" role="tab" id="tab-base" aria-selected="false" aria-controls="panel-base" data-tab="base" data-i18n="tabBase">Base</button>
+      <button type="button" class="app-tab" role="tab" id="tab-empire" aria-selected="false" aria-controls="panel-empire" data-tab="empire" data-i18n="tabBase">Empire</button>
       <button type="button" class="app-tab" role="tab" id="tab-research" aria-selected="false" aria-controls="panel-research" data-tab="research" data-i18n="tabResearch">Research</button>
       <button type="button" class="app-tab" role="tab" id="tab-upgrades" aria-selected="false" aria-controls="panel-upgrades" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
       <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats" data-i18n="tabStats">Stats</button>
@@ -387,7 +386,7 @@ const APP_HTML = `
         `,
       })}
     </div>
-    <div class="app-tab-panel" id="panel-base" role="tabpanel" aria-labelledby="tab-base" data-tab="base" hidden>
+    <div class="app-tab-panel" id="panel-empire" role="tabpanel" aria-labelledby="tab-empire" data-tab="empire" hidden>
       ${createGameplayBlock({
         id: 'crew-section',
         sectionClass: 'crew-section',
@@ -406,19 +405,9 @@ const APP_HTML = `
         titleKey: 'planets',
         dataBlock: 'planets',
         bodyHtml: `
-          <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots to expand.</p>
+          <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots or build housing on a planet (+2 crew capacity per module, uses 1 slot).</p>
           <div class="planet-list" id="planet-list"></div>
           <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Send expedition</button></span>
-        `,
-      })}
-      ${createGameplayBlock({
-        id: 'housing-section',
-        sectionClass: 'housing-section',
-        titleKey: 'housing',
-        dataBlock: 'planets',
-        bodyHtml: `
-          <p class="housing-hint" data-i18n="housingHint">Build housing on a planet to increase crew capacity (+2 astronauts per module). Each module uses 1 slot on that planet.</p>
-          <div class="housing-list" id="housing-list"></div>
         `,
       })}
       ${createGameplayBlock({
@@ -504,7 +493,7 @@ export function mount(): void {
 
   const COLLAPSED_STORAGE_PREFIX = 'stellar-miner-collapsed-';
   const COLLAPSIBLE_SECTION_IDS = [
-    'quest-section', 'crew-section', 'planets-section', 'housing-section',
+    'quest-section', 'crew-section', 'planets-section',
     'prestige-section', 'research-section', 'upgrades-section', 'statistics-section',
   ];
 
@@ -852,7 +841,10 @@ export function mount(): void {
       if (!upgradeId) return;
       const card = target.closest('.upgrade-card');
       const select = card?.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
-      const planetId = select?.value || undefined;
+      let planetId: string | undefined = select?.value ?? undefined;
+      if (select && (!planetId || planetId === '') && select.options.length > 0) {
+        planetId = select.options[select.selectedIndex]?.value ?? select.options[0].value ?? undefined;
+      }
       if (target.getAttribute('data-action') === 'max') {
         handleUpgradeBuyMax(upgradeId, planetId);
       } else {
@@ -862,12 +854,11 @@ export function mount(): void {
   }
 
   renderPlanetList();
-  renderHousingSection();
   renderResearchSection();
 
-  const housingList = document.getElementById('housing-list');
-  if (housingList) {
-    housingList.addEventListener('click', (e) => {
+  const empirePanel = document.getElementById('panel-empire');
+  if (empirePanel) {
+    empirePanel.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest('.build-housing-btn');
       if (!btn || (btn as HTMLButtonElement).disabled) return;
       const planetId = (btn as HTMLElement).getAttribute('data-planet-id');
@@ -932,7 +923,7 @@ export function mount(): void {
   });
   const savedTab =
     (typeof localStorage !== 'undefined' && localStorage.getItem(TAB_STORAGE_KEY)) || DEFAULT_TAB;
-  const validTab = ['mine', 'base', 'research', 'upgrades', 'stats'].includes(savedTab) ? savedTab : DEFAULT_TAB;
+  const validTab = ['mine', 'empire', 'research', 'upgrades', 'stats'].includes(savedTab) ? savedTab : DEFAULT_TAB;
   switchTab(validTab);
   applyLayout();
 

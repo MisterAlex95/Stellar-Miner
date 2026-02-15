@@ -7,7 +7,6 @@ import { emit } from './eventBus.js';
 import { updateStats } from '../presentation/statsView.js';
 import { renderUpgradeList } from '../presentation/upgradeListView.js';
 import { renderPlanetList } from '../presentation/planetListView.js';
-import { renderHousingSection } from '../presentation/housingView.js';
 import { renderCrewSection } from '../presentation/crewView.js';
 import { showMiniMilestoneToast } from '../presentation/toasts.js';
 import { checkAchievements } from './achievements.js';
@@ -62,7 +61,6 @@ export function handleAddSlot(planetId: string): void {
   updateStats();
   renderUpgradeList();
   renderPlanetList();
-  renderHousingSection();
 }
 
 export function handleBuildHousing(planetId: string): void {
@@ -76,7 +74,6 @@ export function handleBuildHousing(planetId: string): void {
   renderUpgradeList();
   renderPlanetList();
   renderCrewSection();
-  renderHousingSection();
 }
 
 export function handleHireAstronaut(): void {
@@ -102,6 +99,5 @@ export function handleHireAstronaut(): void {
   renderUpgradeList();
   renderPlanetList();
   renderCrewSection();
-  renderHousingSection();
   checkAchievements();
 }

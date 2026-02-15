@@ -107,11 +107,14 @@ export function buildUpgradeCardHtml(state: UpgradeCardState, options: BuildUpgr
   const { def, owned, canBuy, hasCrew, maxCount, costCoins, costCrewLine, buyLabel, maxLabel, buyTitle, maxTitle, isRecommended } = state;
   const { choosePlanet, planetsForSelect } = options;
 
-  const planetOptions = choosePlanet
-    ? planetsForSelect.map((p) => `<option value="${p.id}">${p.name}</option>`).join('')
-    : '';
+  const planetOptions =
+    planetsForSelect.length > 0
+      ? planetsForSelect
+          .map((p, i) => `<option value="${escapeAttr(p.id)}"${i === 0 ? ' selected' : ''}>${escapeAttr(p.name)}</option>`)
+          .join('')
+      : '';
   const planetSelectHtml = choosePlanet
-    ? `<label class="upgrade-planet-label" for="planet-${def.id}">${t('toPlanet')}</label><select class="upgrade-planet-select" id="planet-${def.id}" data-upgrade-id="${def.id}" aria-label="${t('assignToPlanet')}">${planetOptions}</select>`
+    ? `<label class="upgrade-planet-label" for="planet-${escapeAttr(def.id)}">${t('toPlanet')}</label><select class="upgrade-planet-select" id="planet-${escapeAttr(def.id)}" data-upgrade-id="${escapeAttr(def.id)}" aria-label="${escapeAttr(t('assignToPlanet'))}">${planetOptions}</select>`
     : '';
 
   const eachSec = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });

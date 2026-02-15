@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.3.12",
+    "date": "2026-02-15",
+    "changes": [
+      "Base tab renamed to Empire; production breakdown and stats use Empire rate.",
+      "Housing merged into Planets: build housing is now on each planet card (no separate Housing section)."
+    ]
+  },
+  {
     "version": "0.3.11",
     "date": "2026-02-15",
     "changes": [

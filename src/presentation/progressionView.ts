@@ -151,14 +151,6 @@ export function updateProgressionVisibility(): void {
     section.classList.toggle('gameplay-block--locked', !isUnlocked);
     section.classList.toggle('gameplay-block--unlocked', isUnlocked);
     section.setAttribute('aria-hidden', isUnlocked ? 'false' : 'true');
-    if (block.id === 'planets') {
-      const housingSection = document.getElementById('housing-section');
-      if (housingSection) {
-        housingSection.classList.toggle('gameplay-block--locked', !isUnlocked);
-        housingSection.classList.toggle('gameplay-block--unlocked', isUnlocked);
-        housingSection.setAttribute('aria-hidden', isUnlocked ? 'false' : 'true');
-      }
-    }
 
     const justUnlocked = isUnlocked && !previousUnlocked.has(block.id);
     const shouldShowModal = justUnlocked && !seen.has(block.id) && progressionInitialized;
@@ -186,7 +178,7 @@ export function updateTabVisibility(setActiveTab: (tabId: string) => void): void
     const show =
       tabId === 'mine' ||
       (tabId === 'upgrades' && unlocked.has('upgrades')) ||
-      (tabId === 'base' &&
+      (tabId === 'empire' &&
         (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
       (tabId === 'research' && unlocked.has('research')) ||
       (tabId === 'stats' && unlocked.has('upgrades'));

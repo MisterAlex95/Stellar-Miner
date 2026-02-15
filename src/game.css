@@ -2168,7 +2168,7 @@ h1 {
 }
 
 /* Only Mine tab visible until progression unlocks others (JS toggles display) */
-.app-tab[data-tab="base"],
+.app-tab[data-tab="empire"],
 .app-tab[data-tab="upgrades"],
 .app-tab[data-tab="stats"] {
   display: none;
@@ -3065,6 +3065,13 @@ h1 {
 
 .planet-card-production--zero {
   color: var(--text-dim);
+}
+
+.planet-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .quest-streak-hint {
