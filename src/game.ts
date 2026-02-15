@@ -17,7 +17,9 @@ import {
   mineZoneCanvasApi,
 } from './application/gameState.js';
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS } from './application/catalogs.js';
+import { recordStatsIfDue, loadStatsHistory } from './application/statsHistory.js';
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
+import { updateStatisticsSection } from './presentation/statisticsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
 import { renderPlanetList } from './presentation/planetListView.js';
 import { renderQuestSection } from './presentation/questView.js';
@@ -52,6 +54,7 @@ function gameLoop(now: number): void {
     updateStats();
     updateUpgradeListInPlace();
   }
+  recordStatsIfDue(nowMs, session.player.coins.value, rate, session.player.totalCoinsEver);
   updateCoinDisplay(dt);
   updateProductionDisplay(dt);
   renderQuestSection();
@@ -76,6 +79,7 @@ function gameLoop(now: number): void {
 
   updateComboIndicator();
   updateProgressionVisibility();
+  updateStatisticsSection();
 
   const debugPanel = document.getElementById('debug-panel');
   if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) {
@@ -88,6 +92,7 @@ function gameLoop(now: number): void {
 async function init(): Promise<void> {
   const session = await getOrCreateSession();
   setSession(session);
+  loadStatsHistory();
   const offlineCoins = saveLoad.getLastOfflineCoins();
   const gameStartTime = Date.now();
   setGameStartTime(gameStartTime);

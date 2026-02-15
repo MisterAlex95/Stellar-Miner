@@ -6,6 +6,10 @@ import { EventEffect } from '../domain/value-objects/EventEffect.js';
 export const SAVE_INTERVAL_MS = 3000;
 export const EVENT_INTERVAL_MS = 90_000;
 export const MIN_EVENT_DELAY_MS = 45_000;
+export const STATS_HISTORY_INTERVAL_MS = 5000;
+export const STATS_HISTORY_MAX_POINTS = 80;
+export const STATS_LONG_TERM_INTERVAL_MS = 60_000;
+export const STATS_LONG_TERM_MAX_POINTS = 120;
 
 export type UpgradeDef = {
   id: string;
@@ -102,3 +106,6 @@ export const QUEST_STREAK_MAX = 3;
 export const QUEST_LAST_CLAIM_KEY = 'stellar-miner-quest-last-claim';
 
 export const MILESTONES = [100, 500, 1000, 5000, 10000, 25000, 50000, 100000, 500000, 1000000];
+
+export const STATS_STORAGE_KEY = 'stellar-miner-stats';
+export const STATS_HISTORY_STORAGE_KEY = 'stellar-miner-stats-history';

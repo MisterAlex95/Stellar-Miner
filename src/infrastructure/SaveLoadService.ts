@@ -14,6 +14,8 @@ import { getPlanetName } from '../domain/constants.js';
 const STORAGE_KEY = 'stellar-miner-session';
 const LAST_SAVE_KEY = 'stellar-miner-last-save';
 const PROGRESSION_KEY = 'stellar-miner-progression';
+const STATS_STORAGE_KEY = 'stellar-miner-stats';
+const STATS_HISTORY_STORAGE_KEY = 'stellar-miner-stats-history';
 const MIN_OFFLINE_MS = 60_000; // 1 min before offline progress counts
 const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000; // cap 24h
 
@@ -51,8 +53,17 @@ export class SaveLoadService implements ISaveLoadService {
   async save(session: GameSession): Promise<void> {
     const payload = this.serialize(session);
     if (typeof localStorage !== 'undefined') {
+      const now = Date.now();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      localStorage.setItem(LAST_SAVE_KEY, String(Date.now()));
+      const lastSaveRaw = localStorage.getItem(LAST_SAVE_KEY);
+      const lastSave = lastSaveRaw ? parseInt(lastSaveRaw, 10) : 0;
+      const elapsed = lastSave > 0 ? now - lastSave : 0;
+      const statsRaw = localStorage.getItem(STATS_STORAGE_KEY);
+      const stats = statsRaw ? (JSON.parse(statsRaw) as { firstPlayedAt?: number; totalPlayTimeMs?: number }) : {};
+      const totalPlayTimeMs = (stats.totalPlayTimeMs ?? 0) + elapsed;
+      const firstPlayedAt = stats.firstPlayedAt ?? now;
+      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify({ firstPlayedAt, totalPlayTimeMs }));
+      localStorage.setItem(LAST_SAVE_KEY, String(now));
     }
   }
 
@@ -81,6 +92,8 @@ export class SaveLoadService implements ISaveLoadService {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(LAST_SAVE_KEY);
       localStorage.removeItem(PROGRESSION_KEY);
+      localStorage.removeItem(STATS_STORAGE_KEY);
+      localStorage.removeItem(STATS_HISTORY_STORAGE_KEY);
     }
   }
 

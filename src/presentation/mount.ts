@@ -29,6 +29,7 @@ import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
+import { renderStatisticsSection } from './statisticsView.js';
 import {
   bindIntroModal,
   updateProgressionVisibility,
@@ -182,6 +183,9 @@ const APP_HTML = `
       <h2>Upgrades</h2>
       <p class="upgrades-hint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
       <div class="upgrade-list" id="upgrade-list"></div>
+    </section>
+    <section class="gameplay-block gameplay-block--unlocked statistics-section" id="statistics-section">
+      <div id="statistics-container"></div>
     </section>
   `;
 
@@ -396,4 +400,9 @@ export function mount(): void {
   }
 
   renderPlanetList();
+
+  const statisticsContainer = document.getElementById('statistics-container');
+  if (statisticsContainer) {
+    renderStatisticsSection(statisticsContainer);
+  }
 }
