@@ -1,7 +1,14 @@
 import type { Player } from '../entities/Player.js';
 import type { Planet } from '../entities/Planet.js';
 import { Planet as PlanetEntity } from '../entities/Planet.js';
-import { getNewPlanetCost, getAddSlotCost, getPlanetName, getExpeditionAstronautsRequired, EXPEDITION_DEATH_CHANCE, getHousingCost } from '../constants.js';
+import {
+  getNewPlanetCost,
+  getAddSlotCost,
+  getPlanetName,
+  getExpeditionAstronautsRequired,
+  EXPEDITION_DEATH_CHANCE,
+  getHousingCost,
+} from '../constants.js';
 
 export type ExpeditionOutcome = {
   success: boolean;
@@ -13,7 +20,7 @@ export type ExpeditionOutcome = {
 
 /** Domain service: discover new planets via expedition (astronauts at risk) or expand a planet's slots. */
 export class PlanetService {
-  getNewPlanetCost(player: Player): number {
+  getNewPlanetCost(player: Player) {
     return getNewPlanetCost(player.planets.length);
   }
 
@@ -63,7 +70,7 @@ export class PlanetService {
     return outcome.success;
   }
 
-  getAddSlotCost(planet: Planet): number {
+  getAddSlotCost(planet: Planet) {
     return getAddSlotCost(planet.maxUpgrades);
   }
 
@@ -78,7 +85,7 @@ export class PlanetService {
     return true;
   }
 
-  getHousingCost(planet: Planet): number {
+  getHousingCost(planet: Planet) {
     return getHousingCost(planet.housingCount);
   }
 

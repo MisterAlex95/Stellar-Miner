@@ -11,6 +11,7 @@ import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
 import { getPlanetName } from '../domain/constants.js';
+import { toDecimal } from '../domain/bigNumber.js';
 import { emit } from '../application/eventBus.js';
 import { RESEARCH_STORAGE_KEY, getResearchProductionMultiplier } from '../application/research.js';
 
@@ -24,7 +25,7 @@ const STATS_HISTORY_STORAGE_KEY = 'stellar-miner-stats-history';
 const MIN_OFFLINE_MS = 60_000; // 1 min before offline progress counts
 const MAX_OFFLINE_MS = 12 * 60 * 60 * 1000; // cap 12h
 
-type SavedUpgrade = { id: string; name: string; cost: number; effect: { coinsPerSecond: number } };
+type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
 type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number };
 
 export type SavedSession = {
@@ -192,8 +193,8 @@ export class SaveLoadService implements ISaveLoadService {
           upgrades: p.upgrades.map((u) => ({
             id: u.id,
             name: u.name,
-            cost: u.cost,
-            effect: { coinsPerSecond: u.effect.coinsPerSecond },
+            cost: u.cost.toString(),
+            effect: { coinsPerSecond: u.effect.coinsPerSecond.toString() },
           })),
           housing: p.housingCount,
         })),
@@ -219,24 +220,26 @@ export class SaveLoadService implements ISaveLoadService {
     const version = data.version ?? 0;
     if (version > SAVE_VERSION) throw new Error('Unsupported save version');
     let planets: Planet[];
+    const mapUpgrade = (u: SavedUpgrade): Upgrade => {
+      if (u.effect == null || (typeof u.effect.coinsPerSecond !== 'number' && typeof u.effect.coinsPerSecond !== 'string')) {
+        throw new Error('Invalid upgrade effect');
+      }
+      return new Upgrade(u.id, u.name, toDecimal(u.cost), new UpgradeEffect(toDecimal(u.effect.coinsPerSecond)));
+    };
     if (data.player.planets && data.player.planets.length > 0) {
       planets = data.player.planets.map((p) => {
         const planet = new Planet(
           p.id,
           p.name,
           p.maxUpgrades,
-          p.upgrades.map(
-            (u) => new Upgrade(u.id, u.name, u.cost, new UpgradeEffect(u.effect.coinsPerSecond))
-          ),
+          p.upgrades.map(mapUpgrade),
           p.housing ?? 0
         );
         return planet;
       });
     } else {
       // Migration: old save had flat upgrades → put them on one planet
-      const upgrades = (data.player.upgrades ?? []).map(
-        (u) => new Upgrade(u.id, u.name, u.cost, new UpgradeEffect(u.effect.coinsPerSecond))
-      );
+      const upgrades = (data.player.upgrades ?? []).map(mapUpgrade);
       const first = new Planet('planet-1', getPlanetName(0), 6, upgrades, 0);
       planets = [first];
     }

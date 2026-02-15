@@ -1,5 +1,26 @@
 [
   {
+    "version": "0.3.3",
+    "date": "2026-02-15",
+    "changes": [
+      "Cookie Clicker–style scale: upgrades 25 → 1K → 10K → 100K → 1M → 10M → 100M → 1B → 10B → 100B. Prestige at 1M, planets/crew/slots in the thousands–millions. Milestones and quests spread across 100 to 1e15."
+    ]
+  },
+  {
+    "version": "0.3.2",
+    "date": "2026-02-15",
+    "changes": [
+      "Rebalanced prices and unlock thresholds for a smoother idle-game curve: first upgrade 25 ⬡ (was 100), 5× scaling per tier, crew/planets/quest/research/prestige unlocks aligned with progression. Prestige at 40K, daily bonus 10 ⬡, quest and milestone targets updated."
+    ]
+  },
+  {
+    "version": "0.3.1",
+    "date": "2026-02-15",
+    "changes": [
+      "Full game adapted to extreme numbers: upgrade costs and production, planet/slot/housing/astronaut costs, prestige threshold, and save/load all use Decimal. Stats history and charts cap at Number.MAX_VALUE for display."
+    ]
+  },
+  {
     "version": "0.3.0",
     "date": "2026-02-15",
     "changes": [

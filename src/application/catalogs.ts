@@ -1,3 +1,4 @@
+import { toDecimal } from '../domain/bigNumber.js';
 import { Upgrade } from '../domain/entities/Upgrade.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
 import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
@@ -33,7 +34,7 @@ export type UpgradeDef = {
 export const UPGRADE_CATALOG: UpgradeDef[] = upgradesData as UpgradeDef[];
 
 export function createUpgrade(def: UpgradeDef): Upgrade {
-  return new Upgrade(def.id, def.name, def.cost, new UpgradeEffect(def.coinsPerSecond));
+  return new Upgrade(def.id, def.name, toDecimal(def.cost), new UpgradeEffect(toDecimal(def.coinsPerSecond)));
 }
 
 /** Tiers the player has unlocked for display. Tier 1 always; tier n+1 from owning tier n. */

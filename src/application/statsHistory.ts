@@ -1,3 +1,4 @@
+import { toDecimal, type DecimalSource } from '../domain/bigNumber.js';
 import {
   STATS_HISTORY_INTERVAL_MS,
   STATS_HISTORY_MAX_POINTS,
@@ -80,12 +81,19 @@ export function getStatsHistory(range: ChartRange = 'recent'): HistoryPoint[] {
 
 const STATS_CAP = Number.MAX_VALUE;
 
-export function recordStatsIfDue(now: number, coins: number, production: number, totalCoinsEver: number): void {
+function capForChart(value: number): number {
+  return Number.isFinite(value) ? Math.min(value, STATS_CAP) : 0;
+}
+
+export function recordStatsIfDue(now: number, coins: DecimalSource, production: DecimalSource, totalCoinsEver: DecimalSource): void {
+  const coinsN = capForChart(toDecimal(coins).toNumber());
+  const productionN = capForChart(toDecimal(production).toNumber());
+  const totalN = capForChart(toDecimal(totalCoinsEver).toNumber());
   const point: HistoryPoint = {
     t: now,
-    coins: Number.isFinite(coins) ? Math.min(coins, STATS_CAP) : 0,
-    production: Number.isFinite(production) ? Math.min(production, STATS_CAP) : 0,
-    totalCoinsEver: Number.isFinite(totalCoinsEver) ? Math.min(totalCoinsEver, STATS_CAP) : 0,
+    coins: coinsN,
+    production: productionN,
+    totalCoinsEver: totalN,
   };
   let dirty = false;
   if (now - lastRecordAt >= STATS_HISTORY_INTERVAL_MS) {

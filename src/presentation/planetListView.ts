@@ -21,7 +21,7 @@ export function renderPlanetList(): void {
       const canAddSlot = planetService.canAddSlot(player, p);
       const slotBtnTitle = canAddSlot ? tParam('addSlotTooltip', { cost: formatNumber(addSlotCost, settings.compactNumbers) }) : tParam('needCoinsForSlot', { cost: formatNumber(addSlotCost, settings.compactNumbers) });
       const planetProd = getPlanetEffectiveProduction(p, session);
-      const prodLine = planetProd > 0 ? `<div class="planet-card-production">${formatNumber(planetProd, settings.compactNumbers)}/s</div>` : '';
+      const prodLine = planetProd.gt(0) ? `<div class="planet-card-production">${formatNumber(planetProd, settings.compactNumbers)}/s</div>` : '';
       const cardTitle = player.planets.length > 1
         ? tParam('planetCardTitleProd', { used: p.usedSlots, max: p.maxUpgrades, pct: String((player.planets.length - 1) * 5) })
         : tParam('planetCardTitle', { used: p.usedSlots, max: p.maxUpgrades });

@@ -53,7 +53,7 @@ describe('progression', () => {
 
   it('getUnlockedBlocks unlocks blocks by coin threshold', () => {
     const player = Player.create('p1');
-    player.addCoins(10000);
+    player.addCoins(100000);
     const session = new GameSession('s1', player);
     const unlocked = getUnlockedBlocks(session);
     expect(unlocked.has('upgrades')).toBe(true);

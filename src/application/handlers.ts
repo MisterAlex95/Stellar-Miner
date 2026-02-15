@@ -283,9 +283,12 @@ export function handleMineClick(e?: MouseEvent): void {
   if (typeof localStorage !== 'undefined') {
     const last = localStorage.getItem(LAST_DAILY_BONUS_KEY);
     if (last !== today) {
-      session.player.addCoins(DAILY_BONUS_COINS);
+      // Daily gift starts from day 2: first day we only record the date, no bonus
+      if (last != null && last !== '') {
+        session.player.addCoins(DAILY_BONUS_COINS);
+        showDailyBonusToast();
+      }
       localStorage.setItem(LAST_DAILY_BONUS_KEY, today);
-      showDailyBonusToast();
     }
   }
 

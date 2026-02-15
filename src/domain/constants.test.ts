@@ -17,14 +17,14 @@ import {
 } from './constants.js';
 
 describe('constants', () => {
-  it('NEW_PLANET_BASE_COST is 2500', () => {
-    expect(NEW_PLANET_BASE_COST).toBe(2500);
+  it('NEW_PLANET_BASE_COST is 50000', () => {
+    expect(NEW_PLANET_BASE_COST).toBe(50000);
   });
 
   it('getNewPlanetCost scales with planet count and exponent', () => {
-    expect(getNewPlanetCost(0)).toBe(2500);
-    expect(getNewPlanetCost(1)).toBe(Math.floor(2500 * 2 * Math.pow(1.15, 1)));
-    expect(getNewPlanetCost(2)).toBe(Math.floor(2500 * 3 * Math.pow(1.15, 2)));
+    expect(getNewPlanetCost(0).toNumber()).toBe(50000);
+    expect(getNewPlanetCost(1).toNumber()).toBe(120000);
+    expect(getNewPlanetCost(2).toNumber()).toBe(216000);
   });
 
   it('PLANET_PRODUCTION_BONUS is 0.05', () => {
@@ -35,24 +35,24 @@ describe('constants', () => {
     expect(PRESTIGE_BONUS_PER_LEVEL).toBe(0.05);
   });
 
-  it('PRESTIGE_COIN_THRESHOLD is 50_000', () => {
-    expect(PRESTIGE_COIN_THRESHOLD).toBe(50_000);
+  it('PRESTIGE_COIN_THRESHOLD is 1_000_000', () => {
+    expect(PRESTIGE_COIN_THRESHOLD.toNumber()).toBe(1_000_000);
   });
 
   it('getAddSlotCost gives first expansion discount when at base slots (6)', () => {
-    const raw6 = Math.floor(150 * Math.pow(6, 1.25));
-    const atBase = getAddSlotCost(6);
-    const next = getAddSlotCost(7);
+    const raw6 = Math.floor(10000 * Math.pow(6, 1.3));
+    const atBase = getAddSlotCost(6).toNumber();
+    const next = getAddSlotCost(7).toNumber();
     expect(atBase).toBe(Math.floor(raw6 * 0.85));
     expect(atBase).toBeLessThan(raw6);
-    expect(next).toBe(Math.floor(150 * Math.pow(7, 1.25)));
+    expect(next).toBe(Math.floor(10000 * Math.pow(7, 1.3)));
   });
 
   it('getAddSlotCost with custom baseSlots uses it for first-expansion check', () => {
-    const atCustomBase = getAddSlotCost(8, 8);
-    const notBase = getAddSlotCost(8, 6);
-    expect(atCustomBase).toBe(Math.floor(150 * Math.pow(8, 1.25) * 0.85));
-    expect(notBase).toBe(Math.floor(150 * Math.pow(8, 1.25)));
+    const atCustomBase = getAddSlotCost(8, 8).toNumber();
+    const notBase = getAddSlotCost(8, 6).toNumber();
+    expect(atCustomBase).toBe(Math.floor(10000 * Math.pow(8, 1.3) * 0.85));
+    expect(notBase).toBe(Math.floor(10000 * Math.pow(8, 1.3)));
   });
 
   it('PLANET_NAMES has themed names', () => {
@@ -71,16 +71,16 @@ describe('constants', () => {
   });
 
   it('HOUSING_BASE_COST and getHousingCost scale with count', () => {
-    expect(HOUSING_BASE_COST).toBe(500);
-    expect(getHousingCost(0)).toBe(500);
-    expect(getHousingCost(1)).toBe(Math.floor(500 * Math.pow(1.15, 1)));
+    expect(HOUSING_BASE_COST).toBe(5000);
+    expect(getHousingCost(0).toNumber()).toBe(5000);
+    expect(getHousingCost(1).toNumber()).toBe(6000);
   });
 
   it('ASTRONAUT_BASE_COST and getAstronautCost scale with count', () => {
-    expect(ASTRONAUT_BASE_COST).toBe(75);
-    expect(getAstronautCost(0)).toBe(75);
-    expect(getAstronautCost(1)).toBe(Math.floor(75 * Math.pow(1.12, 1)));
-    expect(getAstronautCost(5)).toBe(Math.floor(75 * Math.pow(1.12, 5)));
+    expect(ASTRONAUT_BASE_COST).toBe(1000);
+    expect(getAstronautCost(0).toNumber()).toBe(1000);
+    expect(getAstronautCost(1).toNumber()).toBe(1150);
+    expect(getAstronautCost(5).toNumber()).toBe(2011);
   });
 
   it('ASTRONAUT_PRODUCTION_BONUS is 0.02', () => {

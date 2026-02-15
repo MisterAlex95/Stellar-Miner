@@ -1,3 +1,4 @@
+import { Decimal } from './bigNumber.js';
 import balance from '../data/balance.json';
 
 const B = balance as {
@@ -24,11 +25,14 @@ const B = balance as {
   astronautCostGrowth: number;
 };
 
-/** Cost in coins to launch an expedition to discover a new planet. Scales with count. */
+/** Cost in coins to launch an expedition to discover a new planet. Scales with count. Supports unbounded values. */
 export const NEW_PLANET_BASE_COST = B.newPlanetBaseCost;
 
-export function getNewPlanetCost(planetCount: number): number {
-  return Math.floor(B.newPlanetBaseCost * (planetCount + 1) * Math.pow(B.newPlanetCostGrowth, planetCount));
+export function getNewPlanetCost(planetCount: number): Decimal {
+  return new Decimal(B.newPlanetBaseCost)
+    .mul(planetCount + 1)
+    .mul(Decimal.pow(B.newPlanetCostGrowth, planetCount))
+    .floor();
 }
 
 /** Astronauts required to send on expedition (risk: some may die; if all die, planet not discovered). */
@@ -49,16 +53,16 @@ export const PRESTIGE_BONUS_PER_LEVEL = B.prestigeBonusPerLevel;
 export const PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL = B.prestigeClickBonusPercentPerLevel;
 
 /** Coins required to unlock the Prestige button. Resets run; keeps prestige level. */
-export const PRESTIGE_COIN_THRESHOLD = B.prestigeCoinThreshold;
+export const PRESTIGE_COIN_THRESHOLD = new Decimal(B.prestigeCoinThreshold);
 
 /** Base slot count (from Planet.UPGRADES_PER_PLANET) for "first expansion" discount. */
 const DEFAULT_BASE_SLOTS = B.defaultBaseSlots;
 
-/** Cost to add one upgrade slot. Steeper curve so expanding slots is a real milestone. */
-export function getAddSlotCost(currentMaxSlots: number, baseSlots: number = DEFAULT_BASE_SLOTS): number {
-  const raw = Math.floor(B.addSlotBaseMultiplier * Math.pow(currentMaxSlots, B.addSlotExponent));
+/** Cost to add one upgrade slot. Steeper curve so expanding slots is a real milestone. Supports unbounded values. */
+export function getAddSlotCost(currentMaxSlots: number, baseSlots: number = DEFAULT_BASE_SLOTS): Decimal {
+  const raw = new Decimal(B.addSlotBaseMultiplier).mul(Decimal.pow(currentMaxSlots, B.addSlotExponent)).floor();
   const isFirstExpansion = currentMaxSlots === baseSlots;
-  return isFirstExpansion ? Math.floor(raw * B.addSlotFirstExpansionDiscount) : raw;
+  return isFirstExpansion ? raw.mul(B.addSlotFirstExpansionDiscount).floor() : raw;
 }
 
 /** Themed names for planets (index 0 = first planet). Falls back to "Planet N" if index >= length. */
@@ -83,13 +87,13 @@ export function getMaxAstronauts(planetCount: number, housingCount: number = 0):
 /** Base cost for first housing on a planet. Each additional housing on that planet costs more. */
 export const HOUSING_BASE_COST = B.housingBaseCost;
 
-export function getHousingCost(planetHousingCount: number): number {
-  return Math.floor(B.housingBaseCost * Math.pow(B.housingCostGrowth, planetHousingCount));
+export function getHousingCost(planetHousingCount: number): Decimal {
+  return new Decimal(B.housingBaseCost).mul(Decimal.pow(B.housingCostGrowth, planetHousingCount)).floor();
 }
 
 /** Base cost to hire the first astronaut. Each additional costs more. */
 export const ASTRONAUT_BASE_COST = B.astronautBaseCost;
 
-export function getAstronautCost(currentCount: number): number {
-  return Math.floor(B.astronautBaseCost * Math.pow(B.astronautCostGrowth, currentCount));
+export function getAstronautCost(currentCount: number): Decimal {
+  return new Decimal(B.astronautBaseCost).mul(Decimal.pow(B.astronautCostGrowth, currentCount)).floor();
 }

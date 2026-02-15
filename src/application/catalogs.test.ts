@@ -13,7 +13,7 @@ describe('catalogs', () => {
   it('createUpgrade returns Upgrade instance', () => {
     const u = createUpgrade(UPGRADE_CATALOG[0]);
     expect(u.id).toBe('mining-robot');
-    expect(u.effect.coinsPerSecond).toBe(2);
+    expect(u.effect.coinsPerSecond.toNumber()).toBe(1);
   });
 
   it('getUnlockedUpgradeTiers includes tier+1 for owned', () => {

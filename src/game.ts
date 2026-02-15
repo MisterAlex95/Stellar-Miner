@@ -73,13 +73,7 @@ function gameLoop(now: number): void {
     updateStats();
     updateUpgradeListInPlace();
   }
-  const rateNum = rateDec.toNumber();
-  recordStatsIfDue(
-    nowMs,
-    session.player.coins.value.toNumber(),
-    Number.isFinite(rateNum) ? rateNum : 0,
-    session.player.totalCoinsEver.toNumber()
-  );
+  recordStatsIfDue(nowMs, session.player.coins.value, rateDec, session.player.totalCoinsEver);
   updateCoinDisplay(dt);
   updateProductionDisplay(dt);
   if (nowMs - lastQuestRenderMs >= QUEST_RENDER_INTERVAL_MS) {

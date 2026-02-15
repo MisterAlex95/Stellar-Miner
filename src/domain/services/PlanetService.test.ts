@@ -10,11 +10,9 @@ describe('PlanetService', () => {
   it('getNewPlanetCost returns cost for next planet (scales with current count)', () => {
     const player = Player.create('p1');
     const service = new PlanetService();
-    const cost1 = Math.floor(2500 * 2 * Math.pow(1.15, 1));
-    expect(service.getNewPlanetCost(player)).toBe(cost1);
+    expect(service.getNewPlanetCost(player).toNumber()).toBe(120000);
     player.addPlanet(Planet.create('planet-2', 'Nova Prime'));
-    const cost2 = Math.floor(2500 * 3 * Math.pow(1.15, 2));
-    expect(service.getNewPlanetCost(player)).toBe(cost2);
+    expect(service.getNewPlanetCost(player).toNumber()).toBe(216000);
   });
 
   it('canLaunchExpedition is true when player has enough coins and astronauts', () => {
@@ -22,7 +20,7 @@ describe('PlanetService', () => {
     const service = new PlanetService();
     const cost = service.getNewPlanetCost(player);
     const required = service.getExpeditionAstronautsRequired(player);
-    player.addCoins(cost + getAstronautCost(0) + getAstronautCost(1));
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
     player.hireAstronaut(getAstronautCost(0));
     player.hireAstronaut(getAstronautCost(1));
     expect(service.canLaunchExpedition(player)).toBe(true);
@@ -48,7 +46,7 @@ describe('PlanetService', () => {
     const service = new PlanetService();
     const cost = service.getNewPlanetCost(player);
     const required = service.getExpeditionAstronautsRequired(player);
-    player.addCoins(cost + getAstronautCost(0) + getAstronautCost(1));
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
     player.hireAstronaut(getAstronautCost(0));
     player.hireAstronaut(getAstronautCost(1));
     const noDeathRoll = () => 1;
@@ -77,7 +75,7 @@ describe('PlanetService', () => {
     const service = new PlanetService();
     const cost = service.getNewPlanetCost(player);
     const required = service.getExpeditionAstronautsRequired(player);
-    player.addCoins(cost + getAstronautCost(0) + getAstronautCost(1));
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
     player.hireAstronaut(getAstronautCost(0));
     player.hireAstronaut(getAstronautCost(1));
     const allDeathRoll = () => 0;
@@ -93,7 +91,7 @@ describe('PlanetService', () => {
     const player = Player.create('p1');
     const service = new PlanetService();
     const cost = service.getNewPlanetCost(player);
-    player.addCoins(cost + getAstronautCost(0) + getAstronautCost(1));
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
     player.hireAstronaut(getAstronautCost(0));
     player.hireAstronaut(getAstronautCost(1));
     const ok = service.buyNewPlanet(player);
@@ -106,8 +104,8 @@ describe('PlanetService', () => {
   it('getAddSlotCost returns cost for planet max slots', () => {
     const service = new PlanetService();
     const planet = Planet.create('p1', 'Titan', 6);
-    const raw = Math.floor(150 * Math.pow(6, 1.25));
-    expect(service.getAddSlotCost(planet)).toBe(Math.floor(raw * 0.85));
+    const raw = Math.floor(10000 * Math.pow(6, 1.3));
+    expect(service.getAddSlotCost(planet).toNumber()).toBe(Math.floor(raw * 0.85));
   });
 
   it('canAddSlot is true when player can afford', () => {
@@ -143,9 +141,9 @@ describe('PlanetService', () => {
   it('getHousingCost returns cost for planet housing count', () => {
     const service = new PlanetService();
     const planet = Planet.create('p1', 'Titan', 6);
-    expect(service.getHousingCost(planet)).toBe(Math.floor(500 * Math.pow(1.15, 0)));
+    expect(service.getHousingCost(planet).toNumber()).toBe(5000);
     planet.addHousing();
-    expect(service.getHousingCost(planet)).toBe(Math.floor(500 * Math.pow(1.15, 1)));
+    expect(service.getHousingCost(planet).toNumber()).toBe(6000);
   });
 
   it('canBuildHousing is true when planet has free slot and player can afford', () => {
