@@ -298,6 +298,20 @@ export function getModifierCrewEntries(node: ResearchNode): { id: string; n: num
   return [...fromFree, ...fromReduction];
 }
 
+/** Crew that can be unassigned from equipment when this node is unlocked (player already has the node's crew modifiers applied after save). */
+export function getCrewFreedByUnlockingNode(
+  node: ResearchNode,
+  ownedUpgrades: { id: string }[]
+): number {
+  const entries = getModifierCrewEntries(node);
+  let freed = 0;
+  for (const { id: upgradeId, n } of entries) {
+    const count = ownedUpgrades.filter((u) => u.id === upgradeId).length;
+    freed += n * count;
+  }
+  return freed;
+}
+
 /** Optional: (upgradeId, kind, reduction amount) => display line for success message. */
 export type GetUpgradeDisplayLine = (upgradeId: string, kind: 'slot' | 'crew', n: number) => string;
 

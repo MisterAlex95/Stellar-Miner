@@ -2,6 +2,7 @@ import { getSession } from './gameState.js';
 import {
   attemptResearch,
   canAttemptResearch,
+  getCrewFreedByUnlockingNode,
   setResearchInProgress,
   isResearchInProgress,
   RESEARCH_CATALOG,
@@ -11,6 +12,7 @@ import { t, tParam } from './strings.js';
 import { updateStats } from '../presentation/statsView.js';
 import { renderUpgradeList } from '../presentation/upgradeListView.js';
 import { renderResearchSection } from '../presentation/researchView.js';
+import { renderCrewSection } from '../presentation/crewView.js';
 import { showMiniMilestoneToast } from '../presentation/toasts.js';
 import { saveSession } from './handlersSave.js';
 
@@ -38,6 +40,16 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
   renderResearchSection();
   setResearchInProgress(false);
   if (result.success) {
+    const node = RESEARCH_CATALOG.find((n) => n.id === id);
+    if (node) {
+      const freed = getCrewFreedByUnlockingNode(node, session.player.upgrades);
+      if (freed > 0) {
+        session.player.unassignCrewFromEquipment(freed);
+        session.player.addAstronauts(freed, 'miner');
+        saveSession();
+        renderCrewSection();
+      }
+    }
     showMiniMilestoneToast(result.message);
   } else if (result.message.includes('failed')) {
     showMiniMilestoneToast(result.message.includes('Coins spent') ? t('researchFailedCoinsSpent') : t('researchFailedTryAgain'));
