@@ -8,6 +8,8 @@ import {
   setQuestState,
   setSessionClickCount,
   setSessionCoinsFromClicks,
+  resetRunStatsOnPrestige,
+  incrementPrestigesToday,
 } from './gameState.js';
 import { generateQuest } from './quests.js';
 import { saveQuestState } from './questState.js';
@@ -89,6 +91,8 @@ export function confirmPrestige(): void {
   const newPlayer = Player.createAfterPrestige(session.player);
   setSession(new GameSession(session.id, newPlayer, []));
   setActiveEventInstances([]);
+  resetRunStatsOnPrestige();
+  incrementPrestigesToday();
   const newQuestState = { quest: generateQuest() };
   setQuestState(newQuestState);
   saveQuestState(newQuestState);

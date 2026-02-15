@@ -11,8 +11,17 @@ import { createMineZoneCanvas } from '../presentation/MineZoneCanvas.js';
 import { loadQuestState } from './questState.js';
 import type { QuestState } from './questState.js';
 import { emit } from './eventBus.js';
+import { PRESTIGES_TODAY_KEY } from './catalogs.js';
 
 export type ActiveEventInstance = { event: GameEvent; endsAt: number };
+
+export type RunStats = {
+  runStartTime: number;
+  runCoinsEarned: number;
+  runQuestsClaimed: number;
+  runEventsTriggered: number;
+  runMaxComboMult: number;
+};
 
 let session: GameSession;
 let activeEventInstances: ActiveEventInstance[] = [];
@@ -24,6 +33,13 @@ let lastCoinsForBump: Decimal = new Decimal(0);
 let clickTimestamps: number[] = [];
 let sessionClickCount = 0;
 let sessionCoinsFromClicks = 0;
+let runStats: RunStats = {
+  runStartTime: 0,
+  runCoinsEarned: 0,
+  runQuestsClaimed: 0,
+  runEventsTriggered: 0,
+  runMaxComboMult: 0,
+};
 
 export const saveLoad = new SaveLoadService();
 export const upgradeService = new UpgradeService();
@@ -116,6 +132,80 @@ export function setSessionCoinsFromClicks(n: number): void {
   sessionCoinsFromClicks = n;
 }
 
+export function getRunStats(): RunStats {
+  return runStats;
+}
+
+export function setRunStatsFromPayload(data: Partial<RunStats> | null): void {
+  if (!data) {
+    runStats = {
+      runStartTime: Date.now(),
+      runCoinsEarned: 0,
+      runQuestsClaimed: 0,
+      runEventsTriggered: 0,
+      runMaxComboMult: 0,
+    };
+    return;
+  }
+  runStats = {
+    runStartTime: data.runStartTime ?? Date.now(),
+    runCoinsEarned: data.runCoinsEarned ?? 0,
+    runQuestsClaimed: data.runQuestsClaimed ?? 0,
+    runEventsTriggered: data.runEventsTriggered ?? 0,
+    runMaxComboMult: data.runMaxComboMult ?? 0,
+  };
+}
+
+export function resetRunStatsOnPrestige(): void {
+  runStats = {
+    runStartTime: Date.now(),
+    runCoinsEarned: 0,
+    runQuestsClaimed: 0,
+    runEventsTriggered: 0,
+    runMaxComboMult: 0,
+  };
+}
+
+export function addRunCoins(amount: number): void {
+  runStats.runCoinsEarned += amount;
+}
+
+export function incrementRunQuestsClaimed(): void {
+  runStats.runQuestsClaimed += 1;
+}
+
+export function incrementRunEventsTriggered(): void {
+  runStats.runEventsTriggered += 1;
+}
+
+export function updateRunMaxComboMult(mult: number): void {
+  if (mult > runStats.runMaxComboMult) runStats.runMaxComboMult = mult;
+}
+
+export function getPrestigesToday(): number {
+  if (typeof localStorage === 'undefined') return 0;
+  try {
+    const raw = localStorage.getItem(PRESTIGES_TODAY_KEY);
+    if (!raw) return 0;
+    const data = JSON.parse(raw) as { date?: string; count?: number };
+    const today = new Date().toISOString().slice(0, 10);
+    return data.date === today && typeof data.count === 'number' ? data.count : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function incrementPrestigesToday(): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const raw = localStorage.getItem(PRESTIGES_TODAY_KEY);
+    const data = raw ? (JSON.parse(raw) as { date?: string; count?: number }) : {};
+    const count = data.date === today && typeof data.count === 'number' ? data.count + 1 : 1;
+    localStorage.setItem(PRESTIGES_TODAY_KEY, JSON.stringify({ date: today, count }));
+  } catch {}
+}
+
 export function setStarfieldApi(api: ReturnType<typeof startStarfield> | null): void {
   starfieldApi = api;
 }
@@ -140,10 +230,15 @@ export function getEventMultiplier(): number {
 }
 
 export async function getOrCreateSession(): Promise<GameSession> {
-  const loaded = await saveLoad.load();
-  emit('session_loaded', { fromStorage: !!loaded });
-  if (loaded) return loaded;
+  const result = await saveLoad.load();
+  emit('session_loaded', { fromStorage: !!result });
+  if (result) {
+    setSession(result.session);
+    setRunStatsFromPayload(result.runStats ?? null);
+    return result.session;
+  }
   const player = Player.create('player-1');
   player.addCoins(0);
+  setRunStatsFromPayload(null);
   return new GameSession('session-1', player);
 }

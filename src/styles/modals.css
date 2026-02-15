@@ -787,6 +787,12 @@
   pointer-events: none;
 }
 
+.settings-last-saved {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
 .settings-reset {
   margin-top: 0.5rem;
   padding-top: 1rem;

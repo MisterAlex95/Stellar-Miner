@@ -96,3 +96,17 @@
 .app-tab-panel .mine-zone {
   margin-bottom: 1.5rem;
 }
+
+/* Tab layout: body content flows normally, page scrolls */
+#app[data-layout="tabs"] .gameplay-block-body {
+  max-height: none;
+  overflow: visible;
+}
+
+/* One-page layout: only the inner body of each section scrolls (header stays fixed) */
+#app[data-layout="one-page"] .gameplay-block-body {
+  max-height: min(65vh, 520px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}

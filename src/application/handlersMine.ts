@@ -7,6 +7,8 @@ import {
   setSessionCoinsFromClicks,
   getSessionCoinsFromClicks,
   mineZoneCanvasApi,
+  addRunCoins,
+  updateRunMaxComboMult,
 } from './gameState.js';
 import {
   LAST_DAILY_BONUS_KEY,
@@ -72,6 +74,7 @@ export function handleMineClick(e?: MouseEvent): void {
     if (last !== today) {
       if (last != null && last !== '') {
         session.player.addCoins(DAILY_BONUS_COINS);
+        addRunCoins(DAILY_BONUS_COINS);
         showDailyBonusToast();
       }
       localStorage.setItem(LAST_DAILY_BONUS_KEY, today);
@@ -95,6 +98,8 @@ export function handleMineClick(e?: MouseEvent): void {
   coins = Math.max(1, Math.round(coins * researchClickMult * prestigeClickMult));
 
   session.player.addCoins(coins);
+  addRunCoins(coins);
+  if (comboMult > 1) updateRunMaxComboMult(comboMult);
   setSessionClickCount(getSessionClickCount() + 1);
   setSessionCoinsFromClicks(getSessionCoinsFromClicks() + coins);
   incrementTotalClicksEver();

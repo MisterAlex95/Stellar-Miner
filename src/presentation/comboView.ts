@@ -1,4 +1,4 @@
-import { getClickTimestamps } from '../application/gameState.js';
+import { getClickTimestamps, updateRunMaxComboMult } from '../application/gameState.js';
 import { COMBO_WINDOW_MS, COMBO_MIN_CLICKS, COMBO_MULT_PER_LEVEL, COMBO_MAX_MULT } from '../application/catalogs.js';
 import { getCatalogComboName } from '../application/i18nCatalogs.js';
 
@@ -16,6 +16,7 @@ export function updateComboIndicator(): void {
   const el = document.getElementById('combo-indicator');
   if (!el) return;
   if (mult > 1) {
+    updateRunMaxComboMult(mult);
     const name = getCatalogComboName(mult);
     el.textContent = `${name} ×${mult.toFixed(1)}`;
     el.setAttribute('data-combo-tier', name.toLowerCase().replace(/\s+/g, '-'));

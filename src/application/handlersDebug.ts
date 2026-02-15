@@ -1,4 +1,4 @@
-import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances } from './gameState.js';
+import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered } from './gameState.js';
 import { getEventMultiplier } from './gameState.js';
 import { getResearchProductionMultiplier } from './research.js';
 import { EVENT_CATALOG } from './catalogs.js';
@@ -16,6 +16,7 @@ import { showEventToast } from '../presentation/toasts.js';
 export function triggerRandomEvent(): void {
   const event = EVENT_CATALOG[Math.floor(Math.random() * EVENT_CATALOG.length)];
   pushActiveEventInstance({ event, endsAt: Date.now() + event.effect.durationMs });
+  incrementRunEventsTriggered();
   showEventToast(event);
 }
 
@@ -91,9 +92,10 @@ export function renderAchievementsList(container: HTMLElement): void {
   const unlocked = getUnlockedAchievements();
   container.innerHTML = ACHIEVEMENTS.map(
     (a) => {
-      const name = getCatalogAchievementName(a.id);
-      const title = unlocked.has(a.id) ? name : t('achievementLockedTitle');
-      return `<div class="achievement-item achievement-item--${unlocked.has(a.id) ? 'unlocked' : 'locked'}" title="${title}">${unlocked.has(a.id) ? '✓' : '?'} ${unlocked.has(a.id) ? name : t('locked')}</div>`;
+      const displayName = unlocked.has(a.id) ? getCatalogAchievementName(a.id) : (a.secret ? t('achievementSecret') : getCatalogAchievementName(a.id));
+      const title = unlocked.has(a.id) ? displayName : t('achievementLockedTitle');
+      const label = unlocked.has(a.id) ? displayName : (a.secret ? t('achievementSecret') : t('locked'));
+      return `<div class="achievement-item achievement-item--${unlocked.has(a.id) ? 'unlocked' : 'locked'}" title="${title}">${unlocked.has(a.id) ? '✓' : '?'} ${label}</div>`;
     }
   ).join('');
 }

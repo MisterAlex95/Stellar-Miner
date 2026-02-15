@@ -20,7 +20,7 @@ import { RESEARCH_STORAGE_KEY, getResearchProductionMultiplier } from '../applic
 export const SAVE_VERSION = 1;
 
 const STORAGE_KEY = 'stellar-miner-session';
-const LAST_SAVE_KEY = 'stellar-miner-last-save';
+export const LAST_SAVE_KEY = 'stellar-miner-last-save';
 const PROGRESSION_KEY = 'stellar-miner-progression';
 const STATS_STORAGE_KEY = 'stellar-miner-stats';
 const STATS_HISTORY_STORAGE_KEY = 'stellar-miner-stats-history';
@@ -34,6 +34,14 @@ const DECAY_24H_PLUS_MULT = 0.5;
 
 type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
 type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number };
+
+export type SavedRunStats = {
+  runStartTime: number;
+  runCoinsEarned: number;
+  runQuestsClaimed: number;
+  runEventsTriggered: number;
+  runMaxComboMult: number;
+};
 
 export type SavedSession = {
   version?: number;
@@ -50,6 +58,7 @@ export type SavedSession = {
     astronautCount?: number;
   };
   activeEvents: Array<{ id: string; name: string; effect: { multiplier: number; durationMs: number } }>;
+  runStats?: SavedRunStats;
 };
 
 function isSavedSession(data: unknown): data is SavedSession {
@@ -84,9 +93,18 @@ export class SaveLoadService implements ISaveLoadService {
     return v;
   }
 
-  async save(session: GameSession): Promise<void> {
+  /** Timestamp (ms) of last successful save, or null if never saved. */
+  getLastSaveTimestamp(): number | null {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem(LAST_SAVE_KEY);
+    if (!raw) return null;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  async save(session: GameSession, runStats?: SavedRunStats): Promise<void> {
     if (typeof performance !== 'undefined' && performance.mark) performance.mark('save-start');
-    const payload = this.serialize(session);
+    const payload = this.serialize(session, runStats);
     if (typeof localStorage === 'undefined') return;
     const now = Date.now();
     try {
@@ -114,7 +132,7 @@ export class SaveLoadService implements ISaveLoadService {
     emit('save_success', undefined);
   }
 
-  async load(): Promise<GameSession | null> {
+  async load(): Promise<{ session: GameSession; runStats?: SavedRunStats } | null> {
     if (typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -131,6 +149,7 @@ export class SaveLoadService implements ISaveLoadService {
     } catch {
       return null;
     }
+    const runStats = data.runStats && typeof data.runStats === 'object' ? (data.runStats as SavedRunStats) : undefined;
     const lastSaveRaw = localStorage.getItem(LAST_SAVE_KEY);
     if (lastSaveRaw) {
       const lastSave = parseInt(lastSaveRaw, 10);
@@ -168,7 +187,7 @@ export class SaveLoadService implements ISaveLoadService {
         this.lastOfflineWasCapped = elapsed > FULL_CAP_OFFLINE_MS;
       }
     }
-    return session;
+    return { session, runStats };
   }
 
   clearProgress(): void {
@@ -208,8 +227,8 @@ export class SaveLoadService implements ISaveLoadService {
     }
   }
 
-  private serialize(session: GameSession): SavedSession {
-    return {
+  private serialize(session: GameSession, runStats?: SavedRunStats): SavedSession {
+    const payload: SavedSession = {
       version: SAVE_VERSION,
       id: session.id,
       player: {
@@ -244,6 +263,8 @@ export class SaveLoadService implements ISaveLoadService {
         effect: { multiplier: e.effect.multiplier, durationMs: e.effect.durationMs },
       })),
     };
+    if (runStats) payload.runStats = runStats;
+    return payload;
   }
 
   private deserialize(data: SavedSession): GameSession {

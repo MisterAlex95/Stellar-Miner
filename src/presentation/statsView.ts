@@ -98,12 +98,13 @@ export function updateStats(): void {
   const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
   const coinsCard = document.getElementById('coins-stat-card');
   const crewLineEl = document.getElementById('crew-stat-line');
+  const totalCrew = player.astronautCount + (session ? getAssignedAstronauts(session) : 0);
   if (crewLineEl) {
-    const session = getSession();
-    const total = player.astronautCount + (session ? getAssignedAstronauts(session) : 0);
-    crewLineEl.textContent = total > 0 ? tParam('crewStatFormat', { n: total }) : '';
-    crewLineEl.style.display = total > 0 ? 'block' : 'none';
+    crewLineEl.textContent = totalCrew > 0 ? tParam('crewStatFormat', { n: totalCrew }) : '';
+    crewLineEl.style.display = totalCrew > 0 ? 'block' : 'none';
   }
+  const crewCompactEl = document.getElementById('stats-compact-crew');
+  if (crewCompactEl) crewCompactEl.textContent = String(totalCrew);
   const lastCoinsForBump = getLastCoinsForBump();
   if (coinsCard && player.coins.value.gt(lastCoinsForBump)) {
     coinsCard.classList.add('stat-card--bump');

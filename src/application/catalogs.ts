@@ -116,6 +116,7 @@ export const QUEST_LAST_CLAIM_KEY = S.questLastClaimKey;
 
 export const MILESTONES = gameConfig.milestones;
 export const COMBO_MASTER_KEY = S.comboMasterKey;
+export const PRESTIGES_TODAY_KEY = (S as { prestigesTodayKey?: string }).prestigesTodayKey ?? 'stellar-miner-prestiges-today';
 
 export const STATS_STORAGE_KEY = S.statsStorageKey;
 export const STATS_HISTORY_STORAGE_KEY = S.statsHistoryStorageKey;

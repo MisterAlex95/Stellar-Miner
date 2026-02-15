@@ -6,9 +6,9 @@ import { getQuestStreak, getQuestLastClaimAt } from './quests.js';
 import { showAchievementToast } from '../presentation/toasts.js';
 import achievementsData from '../data/achievements.json';
 
-export type Achievement = { id: string; name: string; check: () => boolean };
+export type Achievement = { id: string; name: string; check: () => boolean; secret?: boolean };
 
-type AchievementDef = { id: string; name: string; type: string; value: number };
+type AchievementDef = { id: string; name: string; type: string; value: number; secret?: boolean };
 
 function buildCheck(def: AchievementDef): () => boolean {
   const session = () => getSession();
@@ -43,6 +43,7 @@ export const ACHIEVEMENTS: Achievement[] = (achievementsData as AchievementDef[]
   id: def.id,
   name: def.name,
   check: buildCheck(def),
+  secret: def.secret === true,
 }));
 
 export function getTotalClicksEver(): number {

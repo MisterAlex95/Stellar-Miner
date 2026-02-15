@@ -9,7 +9,7 @@ import {
   QUEST_STREAK_BONUS_PER_LEVEL,
   QUEST_STREAK_MAX,
 } from './catalogs.js';
-import { getSession, getQuestState, setQuestState } from './gameState.js';
+import { getSession, getQuestState, setQuestState, incrementRunQuestsClaimed, addRunCoins, getRunStats, getPrestigesToday } from './gameState.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { getResearchProductionMultiplier } from './research.js';
 import gameConfig from '../data/gameConfig.json';
@@ -24,7 +24,13 @@ type QuestGenerationConfig = {
   production: { targets: number[]; rewardMult: number; rewardBase: number };
   upgrade: { maxUpgradeIndex: number; countMin: number; countMax: number; rewardCostMult: number; rewardBase: number };
   astronauts: { targets: number[]; rewardBase: number; rewardPerTarget: number };
+  prestige_today?: { targets: number[]; rewardBase: number; rewardPerPrestige: number };
+  combo_tier?: { multTargets: number[]; rewardBase: number };
+  events_triggered?: { targets: number[]; rewardBase: number; rewardPerEvent: number };
+  tier1_set?: { reward: number };
 };
+
+const TIER1_UPGRADE_IDS = UPGRADE_CATALOG.filter((d) => d.tier === 1).map((d) => d.id);
 
 export function generateQuest(): Quest {
   const roll = Math.random();
@@ -59,13 +65,55 @@ export function generateQuest(): Quest {
       description: `Own ${n}× ${def.name}`,
     };
   }
-  const targets = Q.astronauts.targets;
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  if (roll < Q.typeWeights[3]) {
+    const targets = Q.astronauts.targets;
+    const target = targets[Math.floor(Math.random() * targets.length)];
+    return {
+      type: 'astronauts',
+      target,
+      reward: Q.astronauts.rewardBase + target * Q.astronauts.rewardPerTarget,
+      description: `Have ${target} astronaut${target > 1 ? 's' : ''}`,
+    };
+  }
+  if (roll < Q.typeWeights[4]) {
+    const cfg = Q.prestige_today ?? { targets: [1, 2], rewardBase: 2000, rewardPerPrestige: 1500 };
+    const targets = cfg.targets;
+    const target = targets[Math.floor(Math.random() * targets.length)];
+    return {
+      type: 'prestige_today',
+      target,
+      reward: cfg.rewardBase + target * cfg.rewardPerPrestige,
+      description: `Prestige ${target} time${target > 1 ? 's' : ''} today`,
+    };
+  }
+  if (roll < Q.typeWeights[5]) {
+    const cfg = Q.combo_tier ?? { multTargets: [1.2, 1.3, 1.4], rewardBase: 800 };
+    const mult = cfg.multTargets[Math.floor(Math.random() * cfg.multTargets.length)];
+    const target = Math.round(mult * 100);
+    return {
+      type: 'combo_tier',
+      target,
+      reward: cfg.rewardBase + Math.round(mult * 200),
+      description: `Reach ×${mult} combo`,
+    };
+  }
+  if (roll < Q.typeWeights[6]) {
+    const cfg = Q.events_triggered ?? { targets: [2, 5, 10], rewardBase: 500, rewardPerEvent: 300 };
+    const targets = cfg.targets;
+    const target = targets[Math.floor(Math.random() * targets.length)];
+    return {
+      type: 'events_triggered',
+      target,
+      reward: cfg.rewardBase + target * cfg.rewardPerEvent,
+      description: `Trigger ${target} event${target > 1 ? 's' : ''} this run`,
+    };
+  }
+  const cfg = Q.tier1_set ?? { reward: 1500 };
   return {
-    type: 'astronauts',
-    target,
-    reward: Q.astronauts.rewardBase + target * Q.astronauts.rewardPerTarget,
-    description: `Have ${target} astronaut${target > 1 ? 's' : ''}`,
+    type: 'tier1_set',
+    target: TIER1_UPGRADE_IDS.length,
+    reward: cfg.reward,
+    description: 'Own at least one of every tier-1 upgrade',
   };
 }
 
@@ -80,6 +128,11 @@ export function getQuestProgress(): { current: number | Decimal; target: number;
   else if (q.type === 'upgrade' && q.targetId)
     current = session.player.upgrades.filter((u) => u.id === q.targetId).length;
   else if (q.type === 'astronauts') current = session.player.astronautCount + getAssignedAstronauts(session);
+  else if (q.type === 'prestige_today') current = getPrestigesToday();
+  else if (q.type === 'combo_tier') current = getRunStats().runMaxComboMult >= q.target / 100 ? q.target : Math.round(getRunStats().runMaxComboMult * 100);
+  else if (q.type === 'events_triggered') current = getRunStats().runEventsTriggered;
+  else if (q.type === 'tier1_set')
+    current = TIER1_UPGRADE_IDS.filter((id) => session.player.upgrades.some((u) => u.id === id)).length;
   const done = typeof current === 'number' ? current >= q.target : current.gte(q.target);
   return { current, target: q.target, done };
 }
@@ -126,6 +179,8 @@ export function claimQuest(callbacks: ClaimQuestCallbacks): boolean {
   const bonusMult = 1 + (streak - 1) * QUEST_STREAK_BONUS_PER_LEVEL;
   const reward = Math.floor(baseReward * bonusMult);
   session.player.addCoins(reward);
+  incrementRunQuestsClaimed();
+  addRunCoins(reward);
   const newState: QuestState = { quest: generateQuest() };
   setQuestState(newState);
   if (typeof localStorage !== 'undefined') {

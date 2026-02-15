@@ -7,6 +7,7 @@ import {
   getEventMultiplier,
   getSessionClickCount,
   getSessionCoinsFromClicks,
+  getRunStats,
 } from '../application/gameState.js';
 import { getTotalClicksEver, getUnlockedAchievements, ACHIEVEMENTS } from '../application/achievements.js';
 import { getQuestStreak } from '../application/quests.js';
@@ -45,6 +46,7 @@ const STAT_GROUP_UNLOCK: Record<string, BlockId> = {
   'production-breakdown': 'crew',
   progression: 'upgrades',
   activity: 'quest',
+  'run-stats': 'quest',
   'quests-events': 'quest',
   achievements: 'upgrades',
 };
@@ -76,6 +78,10 @@ const STAT_IDS = [
   'achievements-unlocked',
   'achievements-total',
   'coins-per-click-avg',
+  'run-duration',
+  'run-coins-earned',
+  'run-quests-claimed',
+  'run-events-triggered',
 ] as const;
 
 function getStatEl(id: string): HTMLElement | null {
@@ -195,6 +201,17 @@ export function renderStatisticsSection(container: HTMLElement): void {
           createStatisticsCard(t('sessionDuration'), 'session-duration'),
         ].join(''),
         'activity'
+      )}
+      ${createStatisticsGroup(
+        'stat-run-stats',
+        t('runStatsTitle'),
+        [
+          createStatisticsCard(t('runDuration'), 'run-duration'),
+          createStatisticsCard(t('runCoinsEarned'), 'run-coins-earned'),
+          createStatisticsCard(t('runQuestsClaimed'), 'run-quests-claimed'),
+          createStatisticsCard(t('runEventsTriggered'), 'run-events-triggered'),
+        ].join(''),
+        'run-stats'
       )}
       ${createStatisticsGroup(
         'stat-quests-events',
@@ -382,6 +399,12 @@ export function updateStatisticsSection(): void {
   setStat('coins-from-clicks-session', formatNumber(sessionCoinsFromClicks, compact));
   setStat('play-time', formatDuration(playTime.totalPlayTimeMs));
   setStat('session-duration', formatDuration(sessionDurationMs));
+  const run = getRunStats();
+  const runDurationMs = now - run.runStartTime;
+  setStat('run-duration', formatDuration(runDurationMs));
+  setStat('run-coins-earned', formatNumber(run.runCoinsEarned, compact));
+  setStat('run-quests-claimed', String(run.runQuestsClaimed));
+  setStat('run-events-triggered', String(run.runEventsTriggered));
   setStat('quest-streak', String(getQuestStreak()));
   if (eventsUnlocked) {
     setStat('active-events-count', String(activeEvents.length));

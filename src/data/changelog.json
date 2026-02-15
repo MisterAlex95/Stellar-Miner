@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.3.13",
+    "date": "2026-02-15",
+    "changes": [
+      "Last saved indicator in Settings (Saved / Saved Xs ago), updated on save_success and when opening Settings.",
+      "Secret achievements: Combo master, Speed run, Void walker show ??? until unlocked.",
+      "New quest types: Prestige N times today, Reach ×N combo, Trigger N events this run, Own one of every tier-1 upgrade.",
+      "Run stats (Stats tab): This run section with run duration, coins earned, quests claimed, events triggered since last prestige."
+    ]
+  },
+  {
     "version": "0.3.12",
     "date": "2026-02-15",
     "changes": [

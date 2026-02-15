@@ -16,6 +16,7 @@ export {
   openSettings,
   closeSettings,
   applySettingsToUI,
+  updateLastSavedIndicator,
   openResetConfirmModal,
   closeResetConfirmModal,
   handleResetProgress,

@@ -1,8 +1,8 @@
-import { getSession, setSession, saveLoad } from './gameState.js';
+import { getSession, setSession, getRunStats, setRunStatsFromPayload, saveLoad } from './gameState.js';
 
 export function saveSession(): void {
   const session = getSession();
-  saveLoad.save(session);
+  saveLoad.save(session, getRunStats());
 }
 
 export function handleExportSave(): void {
@@ -24,6 +24,7 @@ export async function handleImportSave(json: string): Promise<boolean> {
   const session = saveLoad.importSession(json);
   if (!session) return false;
   setSession(session);
-  await saveLoad.save(session);
+  setRunStatsFromPayload(null);
+  await saveLoad.save(session, getRunStats());
   return true;
 }

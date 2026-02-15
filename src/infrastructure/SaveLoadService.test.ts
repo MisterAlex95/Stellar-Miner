@@ -83,16 +83,17 @@ describe('SaveLoadService', () => {
     const loaded = await service.load();
 
     expect(loaded).not.toBeNull();
-    expect(loaded!.id).toBe('session-1');
-    expect(loaded!.player.id).toBe('p1');
-    expect(loaded!.player.coins.value.toNumber()).toBe(500);
-    expect(loaded!.player.productionRate.value.toNumber()).toBe(5);
-    expect(loaded!.player.upgrades).toHaveLength(1);
-    expect(loaded!.player.upgrades[0].id).toBe('drill');
-    expect(loaded!.player.planets).toHaveLength(1);
-    expect(loaded!.player.planets[0].upgrades).toHaveLength(1);
-    expect(loaded!.activeEvents).toHaveLength(1);
-    expect(loaded!.activeEvents[0].id).toBe('e1');
+    const s = loaded!.session;
+    expect(s.id).toBe('session-1');
+    expect(s.player.id).toBe('p1');
+    expect(s.player.coins.value.toNumber()).toBe(500);
+    expect(s.player.productionRate.value.toNumber()).toBe(5);
+    expect(s.player.upgrades).toHaveLength(1);
+    expect(s.player.upgrades[0].id).toBe('drill');
+    expect(s.player.planets).toHaveLength(1);
+    expect(s.player.planets[0].upgrades).toHaveLength(1);
+    expect(s.activeEvents).toHaveLength(1);
+    expect(s.activeEvents[0].id).toBe('e1');
   });
 
   it('round-trip save and load restores session with artifacts', async () => {
@@ -114,10 +115,11 @@ describe('SaveLoadService', () => {
     const loaded = await service.load();
 
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.artifacts).toHaveLength(1);
-    expect(loaded!.player.artifacts[0].id).toBe('crystal');
-    expect(loaded!.player.artifacts[0].name).toBe('Lucky Crystal');
-    expect(loaded!.player.artifacts[0].isActive).toBe(true);
+    const s = loaded!.session;
+    expect(s.player.artifacts).toHaveLength(1);
+    expect(s.player.artifacts[0].id).toBe('crystal');
+    expect(s.player.artifacts[0].name).toBe('Lucky Crystal');
+    expect(s.player.artifacts[0].isActive).toBe(true);
   });
 
   it('clearProgress removes session from localStorage', async () => {
@@ -156,12 +158,13 @@ describe('SaveLoadService', () => {
     const loaded = await service.load();
 
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.planets).toHaveLength(1);
-    expect(loaded!.player.planets[0].id).toBe('planet-1');
-    expect(loaded!.player.planets[0].upgrades).toHaveLength(1);
-    expect(loaded!.player.planets[0].upgrades[0].id).toBe('drill');
-    expect(loaded!.player.coins.value.toNumber()).toBe(100);
-    expect(loaded!.player.productionRate.value.toNumber()).toBe(5);
+    const s = loaded!.session;
+    expect(s.player.planets).toHaveLength(1);
+    expect(s.player.planets[0].id).toBe('planet-1');
+    expect(s.player.planets[0].upgrades).toHaveLength(1);
+    expect(s.player.planets[0].upgrades[0].id).toBe('drill');
+    expect(s.player.coins.value.toNumber()).toBe(100);
+    expect(s.player.productionRate.value.toNumber()).toBe(5);
   });
 
   it('load migrates legacy save with no upgrades key (empty array fallback)', async () => {
@@ -183,8 +186,9 @@ describe('SaveLoadService', () => {
     const loaded = await service.load();
 
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.planets).toHaveLength(1);
-    expect(loaded!.player.planets[0].upgrades).toHaveLength(0);
+    const s = loaded!.session;
+    expect(s.player.planets).toHaveLength(1);
+    expect(s.player.planets[0].upgrades).toHaveLength(0);
   });
 
   it('getLastOfflineCoins returns 0 and resets after each call', async () => {
@@ -225,9 +229,10 @@ describe('SaveLoadService', () => {
     vi.useRealTimers();
 
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.coins.value.toNumber()).toBeGreaterThan(0);
+    const s = loaded!.session;
+    expect(s.player.coins.value.toNumber()).toBeGreaterThan(0);
     const reported = service.getLastOfflineCoins();
-    expect(reported).toBe(loaded!.player.coins.value.toNumber());
+    expect(reported).toBe(s.player.coins.value.toNumber());
   });
 
   it('exportSession returns JSON string', async () => {
@@ -304,7 +309,7 @@ describe('SaveLoadService', () => {
     const loaded = await service.load();
     vi.useRealTimers();
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.coins.value.toNumber()).toBeGreaterThan(0);
+    expect(loaded!.session.player.coins.value.toNumber()).toBeGreaterThan(0);
   });
 
   it('load applies offline progress in 14-24h decay window', async () => {
@@ -320,7 +325,7 @@ describe('SaveLoadService', () => {
     const loaded = await service.load();
     vi.useRealTimers();
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.coins.value.toNumber()).toBeGreaterThan(0);
+    expect(loaded!.session.player.coins.value.toNumber()).toBeGreaterThan(0);
   });
 
   it('load applies offline progress in 24h+ window and getLastOfflineWasCapped', async () => {
@@ -338,7 +343,7 @@ describe('SaveLoadService', () => {
     expect(service.getLastOfflineWasCapped()).toBe(false);
     vi.useRealTimers();
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.coins.value.toNumber()).toBeGreaterThan(0);
+    expect(loaded!.session.player.coins.value.toNumber()).toBeGreaterThan(0);
   });
 
   it('load returns null when deserialize throws', async () => {

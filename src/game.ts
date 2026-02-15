@@ -15,6 +15,7 @@ import {
   starfieldApi,
   setStarfieldApi,
   mineZoneCanvasApi,
+  addRunCoins,
 } from './application/gameState.js';
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory } from './application/statsHistory.js';
@@ -70,6 +71,8 @@ function gameLoop(now: number): void {
   const shouldProduce = !getSettings().pauseWhenBackground || document.visibilityState !== 'hidden';
   if (rateDec.gt(0) && shouldProduce) {
     session.player.addCoins(rateDec.mul(dt));
+    const earned = rateDec.mul(dt).toNumber();
+    if (Number.isFinite(earned)) addRunCoins(earned);
     updateStats();
     updateUpgradeListInPlace();
   }

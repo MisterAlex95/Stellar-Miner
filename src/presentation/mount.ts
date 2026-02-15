@@ -31,7 +31,9 @@ import {
   handleDebugAction,
   updateDebugPanel,
   renderAchievementsList,
+  updateLastSavedIndicator,
 } from '../application/handlers.js';
+import { subscribe } from '../application/eventBus.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
@@ -117,8 +119,10 @@ export function switchTab(tabId: string): void {
 /** Apply layout mode: tabs (one panel at a time) or one-page (all sections stacked). */
 export function applyLayout(): void {
   const layout = getSettings().layout;
+  const app = document.getElementById('app');
   const tabsNav = document.querySelector('.app-tabs') as HTMLElement | null;
   const panels = document.querySelectorAll<HTMLElement>('.app-tab-panel');
+  if (app) app.setAttribute('data-layout', layout);
   if (layout === 'one-page') {
     if (tabsNav) tabsNav.style.display = 'none';
     panels.forEach((p) => {
@@ -249,6 +253,7 @@ const APP_HTML = `
               <button type="button" class="settings-import-btn" id="settings-import-btn" title="Load a previously exported save (replaces current)" data-i18n="importSave">Import save</button>
             </div>
             <input type="file" id="settings-import-file" accept=".json,application/json" class="settings-import-file" aria-hidden="true" />
+            <p class="settings-last-saved" id="last-saved-indicator" aria-live="polite"></p>
           </div>
           <div class="settings-option settings-achievements">
             <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false" data-i18n="achievements">Achievements</button>
@@ -348,6 +353,10 @@ const APP_HTML = `
         <div class="stat-value stat-value--hero" id="coins-value">0</div>
         <div class="stat-coins-extra" id="crew-stat-line" aria-live="polite"></div>
       </div>
+      <div class="stat-card stat-card--crew stats-compact-only" id="crew-compact-card" aria-hidden="true">
+        <div class="stat-label" data-i18n="crew">Crew</div>
+        <div class="stat-value" id="stats-compact-crew">0</div>
+      </div>
       <div class="stat-card stat-card--production" id="production-stat-card" data-i18n-title="productionTitle">
         <div class="stat-label"><span data-i18n="production">Production</span> <span class="production-live" id="production-live" aria-hidden="true"></span></div>
         <div class="stat-value" id="production-value">0/s</div>
@@ -357,6 +366,7 @@ const APP_HTML = `
         <div class="next-event-countdown" id="next-event-countdown" aria-live="polite"></div>
       </div>
     </section>
+    <div class="stats-spacer" id="stats-spacer" aria-hidden="true"></div>
     <p class="next-milestone" id="next-milestone" aria-live="polite"></p>
     <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
     <nav class="app-tabs" role="tablist" data-i18n-aria-label="gameSections">
@@ -606,6 +616,7 @@ export function mount(): void {
     });
   }
   if (settingsClose) settingsClose.addEventListener('click', closeSettings);
+  subscribe('save_success', () => updateLastSavedIndicator());
 
   const starfieldSpeedEl = document.getElementById('setting-starfield-speed') as HTMLSelectElement | null;
   const orbitLinesEl = document.getElementById('setting-orbit-lines') as HTMLInputElement | null;
@@ -938,6 +949,46 @@ export function mount(): void {
   updateOfflineBanner();
   window.addEventListener('online', updateOfflineBanner);
   window.addEventListener('offline', updateOfflineBanner);
+
+  const statsSection = document.querySelector('.stats') as HTMLElement | null;
+  const statsSpacer = document.getElementById('stats-spacer');
+  const STATS_COMPACT_ENTER = 70;
+  const STATS_COMPACT_LEAVE = 35;
+  let statsCompactRaf: number | null = null;
+  function updateStatsCompact(): void {
+    if (!statsSection) return;
+    const y = window.scrollY;
+    const wasCompact = statsSection.classList.contains('stats--compact');
+    const compact = wasCompact ? y > STATS_COMPACT_LEAVE : y > STATS_COMPACT_ENTER;
+    const crewCompactCard = document.getElementById('crew-compact-card');
+    if (crewCompactCard) crewCompactCard.setAttribute('aria-hidden', String(!compact));
+    if (compact && !wasCompact && statsSpacer) {
+      const spacerHeight = statsSection.offsetHeight;
+      statsSpacer.style.height = `${spacerHeight}px`;
+      statsSpacer.style.display = 'block';
+      statsSection.classList.add('stats--compact');
+    } else if (!compact) {
+      statsSection.classList.remove('stats--compact');
+      if (statsSpacer) {
+        statsSpacer.style.display = 'none';
+        statsSpacer.style.height = '';
+      }
+    }
+  }
+  function onScrollForStatsCompact(): void {
+    if (statsCompactRaf != null) return;
+    statsCompactRaf = requestAnimationFrame(() => {
+      statsCompactRaf = null;
+      updateStatsCompact();
+    });
+  }
+  updateStatsCompact();
+  window.addEventListener('scroll', onScrollForStatsCompact, { passive: true });
+  window.addEventListener('resize', () => {
+    if (statsSection?.classList.contains('stats--compact') && statsSpacer) {
+      statsSpacer.style.height = `${statsSection.offsetHeight}px`;
+    }
+  });
 
   initTooltips();
 }

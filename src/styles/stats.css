@@ -24,7 +24,7 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem 1.25rem;
-  transition: box-shadow 0.25s ease, transform 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.25s ease, transform 0.2s ease, border-color 0.2s ease, padding 0.35s ease;
 }
 
 .stat-card:hover {
@@ -49,6 +49,7 @@
   letter-spacing: 0.1em;
   color: var(--text-dim);
   margin-bottom: 0.25rem;
+  transition: font-size 0.35s ease, margin-bottom 0.35s ease;
 }
 
 .stat-value {
@@ -56,6 +57,7 @@
   font-weight: 600;
   font-size: 1.5rem;
   color: var(--accent);
+  transition: font-size 0.35s ease;
 }
 
 .stat-value--hero {
@@ -65,6 +67,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  transition: font-size 0.35s ease;
 }
 
 @media (max-width: 360px) {
@@ -165,4 +168,73 @@
   font-size: 0.75rem;
   color: var(--text-dim);
   margin-top: 0.35rem;
+}
+
+/* Crew card: only visible in compact bar */
+.stats-compact-only {
+  display: none;
+}
+
+/* Sticky stats: stick at top and shrink when scrolling */
+.stats {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: transparent;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  transition: padding 0.35s ease;
+}
+
+.stats-spacer {
+  display: none;
+  pointer-events: none;
+}
+
+.stats--compact {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 560px;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+  transition: padding 0.35s ease;
+}
+
+.stats--compact .stats-compact-only {
+  display: block;
+}
+
+.stats--compact .stat-card {
+  padding: 0.35rem 0.6rem;
+}
+
+.stats--compact .stat-label {
+  font-size: 0.55rem;
+  margin-bottom: 0.1rem;
+}
+
+.stats--compact .stat-value,
+.stats--compact .stat-value--hero {
+  font-size: 0.85rem;
+}
+
+.stats--compact .stat-coins-extra,
+.stats--compact .stat-breakdown,
+.stats--compact .active-events,
+.stats--compact .next-event-progress-wrap,
+.stats--compact .next-event-countdown {
+  display: none !important;
+}
+
+.stats--compact .stat-card .stat-label .production-live {
+  display: none;
 }
