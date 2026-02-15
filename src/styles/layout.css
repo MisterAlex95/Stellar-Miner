@@ -27,7 +27,7 @@
   }
 }
 
-/* Tabs */
+/* Tabs: scroll in inner wrap so dropdown menu is not clipped */
 .app-tabs {
   display: flex;
   gap: 0.25rem;
@@ -36,6 +36,29 @@
   background: var(--bg-card);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
+  overflow: visible;
+  position: relative;
+}
+
+.app-tabs-scroll {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.app-tabs-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.app-tabs-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+.app-tabs-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
 }
 
 .app-tab {
@@ -94,17 +117,18 @@
   outline-offset: 2px;
 }
 
-/* Tabs share width; label truncates with ellipsis if needed */
-.app-tabs {
-  position: relative;
+.app-tabs-scroll {
   flex-wrap: nowrap;
 }
 
 .app-tab {
   flex: 1 1 0;
-  min-width: 0;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  min-width: 2.75rem;
+  max-width: 8rem;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  flex-shrink: 1;
+  overflow: hidden;
 }
 
 .app-tab > span:not(.app-tab-key) {
@@ -112,6 +136,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
 }
 
 .app-tab-key {
@@ -202,7 +227,8 @@
   outline-offset: 2px;
 }
 
-/* Menu items: show only when their tab is hidden (same breakpoints as below) */
+/* Menu items: show only when their tab is hidden (same breakpoints as below).
+   Order: Stats, Upgrades, Research, Empire, Dashboard (right to left). */
 .app-tabs-menu-item {
   display: none;
 }
@@ -231,7 +257,13 @@
   }
 }
 
-/* Progressive: hide tabs from the right as width shrinks, add them to "..." menu */
+@media (max-width: 320px) {
+  .app-tabs-menu-item[data-tab="dashboard"] {
+    display: block;
+  }
+}
+
+/* Progressive: hide tabs from the right as width shrinks (Stats → Upgrades → Research → Empire → Dashboard) */
 @media (max-width: 620px) {
   .app-tab[data-tab="stats"] {
     display: none !important;
@@ -257,6 +289,12 @@
   .app-tab[data-tab="empire"] {
     display: none !important;
   }
+}
+
+@media (max-width: 320px) {
+  .app-tab[data-tab="dashboard"] {
+    display: none !important;
+  }
   .app-tab[data-tab="mine"] {
     flex: 1 1 auto;
     min-width: 0;
@@ -272,6 +310,7 @@
 }
 
 .app-tab-panel .quest-section,
+.app-tab-panel .dashboard-section,
 .app-tab-panel .prestige-section,
 .app-tab-panel .crew-section,
 .app-tab-panel .planets-section,
@@ -284,6 +323,7 @@
 
 /* One-page layout: more separation between blocks */
 #app[data-layout="one-page"] .quest-section,
+#app[data-layout="one-page"] .dashboard-section,
 #app[data-layout="one-page"] .prestige-section,
 #app[data-layout="one-page"] .crew-section,
 #app[data-layout="one-page"] .planets-section,

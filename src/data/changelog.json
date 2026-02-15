@@ -1,5 +1,27 @@
 [
   {
+    "version": "0.4.6",
+    "date": "2026-02-15",
+    "changes": [
+      "Stats charts: each chart has a ? with a short description (tooltip). Two new charts — Clicks (per period) and Coins from clicks (per period). History now records clicks and coins-from-clicks per sample."
+    ]
+  },
+  {
+    "version": "0.4.5",
+    "date": "2026-02-15",
+    "changes": [
+      "Dashboard tab (Tableau de bord): overview (coins, production, crew, planets, prestige), next milestone, active events, quest progress with claim, expedition status, and quick actions to jump to Mine, Empire, Upgrades, Research, Stats or Prestige.",
+      "Stats tab: two new charts — Coins gained (per period) and Production (smoothed, 5-point moving average)."
+    ]
+  },
+  {
+    "version": "0.4.4",
+    "date": "2026-02-15",
+    "changes": [
+      "Stats tab: new stats — Best combo (run), Avg coins/s (run), Prestiges today, Research nodes, Expedition status, Playing since, Peak production (chart)."
+    ]
+  },
+  {
     "version": "0.4.3",
     "date": "2026-02-15",
     "changes": [

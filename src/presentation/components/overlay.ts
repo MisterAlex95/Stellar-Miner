@@ -18,6 +18,7 @@ export const OVERLAYS: OverlaySpec[] = [
   { id: 'prestige-confirm-overlay', openClass: 'prestige-confirm-overlay--open' },
   { id: 'prestige-rewards-overlay', openClass: 'prestige-rewards-overlay--open' },
   { id: 'events-hint-overlay', openClass: 'events-hint-overlay--open' },
+  { id: 'chart-help-overlay', openClass: 'chart-help-overlay--open' },
 ];
 
 export interface OpenOverlayOptions {

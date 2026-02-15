@@ -8,12 +8,14 @@ import {
   getSessionClickCount,
   getSessionCoinsFromClicks,
   getRunStats,
+  getPrestigesToday,
+  getExpeditionEndsAt,
 } from '../application/gameState.js';
 import { getTotalClicksEver, getUnlockedAchievements, ACHIEVEMENTS } from '../application/achievements.js';
 import { getQuestStreak } from '../application/quests.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { getPlayTimeStats, formatDuration } from '../application/playTimeStats.js';
-import { getStatsHistory, type ChartRange } from '../application/statsHistory.js';
+import { getStatsHistory, type ChartRange, type HistoryPoint } from '../application/statsHistory.js';
 import { formatNumber } from '../application/format.js';
 import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL, ASTRONAUT_PRODUCTION_BONUS } from '../domain/constants.js';
 import {
@@ -24,7 +26,9 @@ import {
 } from '../application/catalogs.js';
 import { getUnlockedBlocks } from '../application/progression.js';
 import type { BlockId } from '../application/progression.js';
-import { getResearchProductionMultiplier, getResearchProductionPercent, getResearchClickPercent, getEffectiveUsedSlots } from '../application/research.js';
+import { getResearchProductionMultiplier, getResearchProductionPercent, getResearchClickPercent, getEffectiveUsedSlots, getUnlockedResearch } from '../application/research.js';
+import { RESEARCH_CATALOG } from '../application/research.js';
+import { getComboName } from '../application/catalogs.js';
 import { t, tParam } from '../application/strings.js';
 import {
   createStatisticsCard,
@@ -82,6 +86,13 @@ const STAT_IDS = [
   'run-coins-earned',
   'run-quests-claimed',
   'run-events-triggered',
+  'run-max-combo',
+  'run-avg-coins-per-sec',
+  'prestiges-today',
+  'research-nodes-unlocked',
+  'expedition-status',
+  'playing-since',
+  'peak-production-chart',
 ] as const;
 
 function getStatEl(id: string): HTMLElement | null {
@@ -105,6 +116,26 @@ function updateChartLegend(legendId: string, legendLabel: string, min: number, m
 
 const STATS_RANGE_STORAGE_KEY = 'stellar-miner-stats-range';
 
+/** Coins gained per period: first point 0, then delta of totalCoinsEver. */
+function getCoinsGainedPerPeriod(history: HistoryPoint[]): number[] {
+  if (history.length === 0) return [];
+  const out: number[] = [0];
+  for (let i = 1; i < history.length; i++) {
+    out.push(Math.max(0, history[i].totalCoinsEver - history[i - 1].totalCoinsEver));
+  }
+  return out;
+}
+
+/** Average coins per click in each period (0 when no clicks). */
+function getCoinsPerClickPerPeriod(history: HistoryPoint[]): number[] {
+  if (history.length === 0) return [];
+  return history.map((p) => {
+    const clicks = p.clicksInPeriod ?? 0;
+    const fromClicks = p.coinsFromClicksInPeriod ?? 0;
+    return clicks > 0 ? fromClicks / clicks : 0;
+  });
+}
+
 let lastHistoryLength = 0;
 let chartRange: ChartRange = 'recent';
 
@@ -126,7 +157,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
         </div>
         <div class="statistics-charts-row">
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('coinsOverTime')}</div>
+            <div class="statistics-chart-label">${t('coinsOverTime')} <span class="statistics-chart-help" data-chart-title="coinsOverTime" data-chart-desc="chartDescCoins" title="${t('chartDescCoins').replace(/"/g, '&quot;')}" aria-label="${t('chartDescCoins').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-coins" width="260" height="120" role="img" aria-label="${t('chartAriaCoins')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-coins">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins"></span>
@@ -135,7 +166,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('productionOverTime')}</div>
+            <div class="statistics-chart-label">${t('productionOverTime')} <span class="statistics-chart-help" data-chart-title="productionOverTime" data-chart-desc="chartDescProduction" title="${t('chartDescProduction').replace(/"/g, '&quot;')}" aria-label="${t('chartDescProduction').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-production" width="260" height="120" role="img" aria-label="${t('chartAriaProduction')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-production">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--production"></span>
@@ -144,11 +175,47 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('totalCoinsEverChart')}</div>
+            <div class="statistics-chart-label">${t('totalCoinsEverChart')} <span class="statistics-chart-help" data-chart-title="totalCoinsEverChart" data-chart-desc="chartDescTotalEver" title="${t('chartDescTotalEver').replace(/"/g, '&quot;')}" aria-label="${t('chartDescTotalEver').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-total-ever" width="260" height="120" role="img" aria-label="${t('chartAriaTotalEver')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-total-ever">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--total-ever"></span>
               <span class="statistics-chart-legend-label">${t('chartLegendTotalEver')}</span>
+              <span class="statistics-chart-legend-minmax">${t('chartLegendMinMaxPlaceholder')}</span>
+            </div>
+          </div>
+          <div class="statistics-chart-wrap">
+            <div class="statistics-chart-label">${t('coinsGainedPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsGainedPerPeriod" data-chart-desc="chartDescCoinsGained" title="${t('chartDescCoinsGained').replace(/"/g, '&quot;')}" aria-label="${t('chartDescCoinsGained').replace(/"/g, '&quot;')}">?</span></div>
+            <canvas class="statistics-chart" id="chart-coins-gained" width="260" height="120" role="img" aria-label="${t('chartAriaCoinsGained')}"></canvas>
+            <div class="statistics-chart-legend" id="chart-legend-coins-gained">
+              <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-gained"></span>
+              <span class="statistics-chart-legend-label">${t('chartLegendCoinsGained')}</span>
+              <span class="statistics-chart-legend-minmax">${t('chartLegendMinMaxPlaceholder')}</span>
+            </div>
+          </div>
+          <div class="statistics-chart-wrap">
+            <div class="statistics-chart-label">${t('coinsPerClickPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsPerClickPerPeriod" data-chart-desc="chartDescCoinsPerClickPerPeriod" title="${t('chartDescCoinsPerClickPerPeriod').replace(/"/g, '&quot;')}" aria-label="${t('chartDescCoinsPerClickPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
+            <canvas class="statistics-chart" id="chart-coins-per-click" width="260" height="120" role="img" aria-label="${t('chartAriaCoinsPerClickPerPeriod')}"></canvas>
+            <div class="statistics-chart-legend" id="chart-legend-coins-per-click">
+              <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-per-click"></span>
+              <span class="statistics-chart-legend-label">${t('chartLegendCoinsPerClick')}</span>
+              <span class="statistics-chart-legend-minmax">${t('chartLegendMinMaxPlaceholder')}</span>
+            </div>
+          </div>
+          <div class="statistics-chart-wrap">
+            <div class="statistics-chart-label">${t('clicksPerPeriod')} <span class="statistics-chart-help" data-chart-title="clicksPerPeriod" data-chart-desc="chartDescClicksPerPeriod" title="${t('chartDescClicksPerPeriod').replace(/"/g, '&quot;')}" aria-label="${t('chartDescClicksPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
+            <canvas class="statistics-chart" id="chart-clicks" width="260" height="120" role="img" aria-label="${t('chartAriaClicks')}"></canvas>
+            <div class="statistics-chart-legend" id="chart-legend-clicks">
+              <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--clicks"></span>
+              <span class="statistics-chart-legend-label">${t('chartLegendClicks')}</span>
+              <span class="statistics-chart-legend-minmax">${t('chartLegendMinMaxPlaceholder')}</span>
+            </div>
+          </div>
+          <div class="statistics-chart-wrap">
+            <div class="statistics-chart-label">${t('coinsFromClicksPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsFromClicksPerPeriod" data-chart-desc="chartDescCoinsFromClicksPerPeriod" title="${t('chartDescCoinsFromClicksPerPeriod').replace(/"/g, '&quot;')}" aria-label="${t('chartDescCoinsFromClicksPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
+            <canvas class="statistics-chart" id="chart-coins-from-clicks" width="260" height="120" role="img" aria-label="${t('chartAriaCoinsFromClicks')}"></canvas>
+            <div class="statistics-chart-legend" id="chart-legend-coins-from-clicks">
+              <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-from-clicks"></span>
+              <span class="statistics-chart-legend-label">${t('chartLegendCoinsFromClicks')}</span>
               <span class="statistics-chart-legend-minmax">${t('chartLegendMinMaxPlaceholder')}</span>
             </div>
           </div>
@@ -187,6 +254,9 @@ export function renderStatisticsSection(container: HTMLElement): void {
           createStatisticsCard(t('upgradesOwned'), 'upgrades-count'),
           createStatisticsCard(t('slotsUsedTotal'), 'slots-used'),
           createStatisticsCard(t('prestigeLevel'), 'prestige-level'),
+          createStatisticsCard(t('prestigesToday'), 'prestiges-today'),
+          createStatisticsCard(t('researchNodesUnlocked'), 'research-nodes-unlocked'),
+          createStatisticsCard(t('expeditionStatus'), 'expedition-status'),
           createStatisticsCard(t('crewFree'), 'crew-count'),
           createStatisticsCard(t('crewAssigned'), 'assigned-astronauts'),
         ].join(''),
@@ -201,6 +271,8 @@ export function renderStatisticsSection(container: HTMLElement): void {
           createStatisticsCard(t('coinsFromClicksSession'), 'coins-from-clicks-session'),
           createStatisticsCard(t('totalPlayTime'), 'play-time'),
           createStatisticsCard(t('sessionDuration'), 'session-duration'),
+          createStatisticsCard(t('playingSince'), 'playing-since'),
+          createStatisticsCard(t('peakProductionChart'), 'peak-production-chart'),
         ].join(''),
         'activity'
       )}
@@ -212,6 +284,8 @@ export function renderStatisticsSection(container: HTMLElement): void {
           createStatisticsCard(t('runCoinsEarned'), 'run-coins-earned'),
           createStatisticsCard(t('runQuestsClaimed'), 'run-quests-claimed'),
           createStatisticsCard(t('runEventsTriggered'), 'run-events-triggered'),
+          createStatisticsCard(t('runMaxCombo'), 'run-max-combo'),
+          createStatisticsCard(t('runAvgCoinsPerSec'), 'run-avg-coins-per-sec'),
         ].join(''),
         'run-stats'
       )}
@@ -304,7 +378,7 @@ function bindChartHover(container: HTMLElement): void {
     chartHoverState = null;
   }
 
-  type ValueType = 'coins' | 'production' | 'totalEver';
+  type ValueType = 'coins' | 'production' | 'totalEver' | 'coinsGained' | 'coinsPerClickPerPeriod' | 'clicksPerPeriod' | 'coinsFromClicksPerPeriod';
   function onChartMouseMove(e: MouseEvent, canvasId: string, valueType: ValueType): void {
     const canvas = e.currentTarget as HTMLCanvasElement;
     const history = getStatsHistory(chartRange);
@@ -312,18 +386,35 @@ function bindChartHover(container: HTMLElement): void {
     const offsetX = e.offsetX;
     const index = getChartIndexAtOffsetX(canvas, history.length, offsetX);
     chartHoverState = { canvasId, index };
-    const point = history[index];
     const compact = getSettings().compactNumbers;
-    const text =
-      valueType === 'coins'
-        ? `${formatNumber(point.coins, compact)} ⬡`
-        : valueType === 'production'
-          ? `${formatNumber(point.production, compact)}/s`
-          : `${formatNumber(point.totalCoinsEver, compact)} ⬡ total`;
+    let text: string;
+    if (valueType === 'coins') {
+      text = `${formatNumber(history[index].coins, compact)} ⬡`;
+    } else if (valueType === 'production') {
+      text = `${formatNumber(history[index].production, compact)}/s`;
+    } else if (valueType === 'totalEver') {
+      text = `${formatNumber(history[index].totalCoinsEver, compact)} ⬡ total`;
+    } else if (valueType === 'coinsGained') {
+      const gained = getCoinsGainedPerPeriod(history);
+      text = `${formatNumber(gained[index] ?? 0, compact)} ⬡`;
+    } else if (valueType === 'coinsPerClickPerPeriod') {
+      const avg = getCoinsPerClickPerPeriod(history);
+      text = `${formatNumber(avg[index] ?? 0, compact)} ⬡/click`;
+    } else if (valueType === 'clicksPerPeriod') {
+      const n = history[index].clicksInPeriod ?? 0;
+      text = `${formatNumber(n, compact)} clicks`;
+    } else {
+      const n = history[index].coinsFromClicksInPeriod ?? 0;
+      text = `${formatNumber(n, compact)} ⬡`;
+    }
     showTooltip(text, e.clientX, e.clientY);
   }
 
   const totalEverCanvas = container.querySelector('#chart-total-ever') as HTMLCanvasElement | null;
+  const coinsGainedCanvas = container.querySelector('#chart-coins-gained') as HTMLCanvasElement | null;
+  const coinsPerClickCanvas = container.querySelector('#chart-coins-per-click') as HTMLCanvasElement | null;
+  const clicksCanvas = container.querySelector('#chart-clicks') as HTMLCanvasElement | null;
+  const coinsFromClicksCanvas = container.querySelector('#chart-coins-from-clicks') as HTMLCanvasElement | null;
   if (coinsCanvas) {
     coinsCanvas.addEventListener('mousemove', (e: MouseEvent) => onChartMouseMove(e, 'chart-coins', 'coins'));
     coinsCanvas.addEventListener('mouseleave', hideTooltip);
@@ -335,6 +426,22 @@ function bindChartHover(container: HTMLElement): void {
   if (totalEverCanvas) {
     totalEverCanvas.addEventListener('mousemove', (e: MouseEvent) => onChartMouseMove(e, 'chart-total-ever', 'totalEver'));
     totalEverCanvas.addEventListener('mouseleave', hideTooltip);
+  }
+  if (coinsGainedCanvas) {
+    coinsGainedCanvas.addEventListener('mousemove', (e: MouseEvent) => onChartMouseMove(e, 'chart-coins-gained', 'coinsGained'));
+    coinsGainedCanvas.addEventListener('mouseleave', hideTooltip);
+  }
+  if (coinsPerClickCanvas) {
+    coinsPerClickCanvas.addEventListener('mousemove', (e: MouseEvent) => onChartMouseMove(e, 'chart-coins-per-click', 'coinsPerClickPerPeriod'));
+    coinsPerClickCanvas.addEventListener('mouseleave', hideTooltip);
+  }
+  if (clicksCanvas) {
+    clicksCanvas.addEventListener('mousemove', (e: MouseEvent) => onChartMouseMove(e, 'chart-clicks', 'clicksPerPeriod'));
+    clicksCanvas.addEventListener('mouseleave', hideTooltip);
+  }
+  if (coinsFromClicksCanvas) {
+    coinsFromClicksCanvas.addEventListener('mousemove', (e: MouseEvent) => onChartMouseMove(e, 'chart-coins-from-clicks', 'coinsFromClicksPerPeriod'));
+    coinsFromClicksCanvas.addEventListener('mouseleave', hideTooltip);
   }
 }
 
@@ -421,6 +528,40 @@ export function updateStatisticsSection(): void {
   setStat('run-coins-earned', formatNumber(run.runCoinsEarned, compact));
   setStat('run-quests-claimed', String(run.runQuestsClaimed));
   setStat('run-events-triggered', String(run.runEventsTriggered));
+  setStat(
+    'run-max-combo',
+    run.runMaxComboMult > 0 ? `${getComboName(run.runMaxComboMult)} ×${run.runMaxComboMult.toFixed(1)}` : '—'
+  );
+  setStat(
+    'run-avg-coins-per-sec',
+    runDurationMs > 0
+      ? formatNumber(run.runCoinsEarned / (runDurationMs / 1000), compact) + '/s'
+      : '—'
+  );
+  setStat('prestiges-today', String(getPrestigesToday()));
+  setStat('research-nodes-unlocked', `${getUnlockedResearch().length} / ${RESEARCH_CATALOG.length}`);
+  const expeditionEndsAt = getExpeditionEndsAt();
+  setStat(
+    'expedition-status',
+    expeditionEndsAt != null && expeditionEndsAt > now
+      ? tParam('expeditionStatInProgress', { s: String(Math.ceil((expeditionEndsAt - now) / 1000)) })
+      : t('expeditionStatNone')
+  );
+  setStat(
+    'playing-since',
+    playTime.firstPlayedAt > 0
+      ? new Date(playTime.firstPlayedAt).toLocaleDateString(undefined, {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '—'
+  );
+  const history = getStatsHistory(chartRange);
+  setStat(
+    'peak-production-chart',
+    history.length >= 1 ? formatNumber(Math.max(...history.map((p) => p.production)), compact) + '/s' : '—'
+  );
   setStat('quest-streak', String(getQuestStreak()));
   if (eventsUnlocked) {
     setStat('active-events-count', String(activeEvents.length));
@@ -437,7 +578,6 @@ export function updateStatisticsSection(): void {
   setStat('achievements-total', String(ACHIEVEMENTS.length));
   setStat('coins-per-click-avg', sessionClicks > 0 ? formatNumber(avgCoinsPerClick, compact) : '—');
 
-  const history = getStatsHistory(chartRange);
   const hoverChanged =
     chartHoverState?.canvasId !== lastDrawnHover?.canvasId || chartHoverState?.index !== lastDrawnHover?.index;
   if (history.length >= 2 && (history.length !== lastHistoryLength || hoverChanged)) {
@@ -446,13 +586,25 @@ export function updateStatisticsSection(): void {
     const coinsCanvas = document.getElementById('chart-coins') as HTMLCanvasElement | null;
     const productionCanvas = document.getElementById('chart-production') as HTMLCanvasElement | null;
     const totalEverCanvas = document.getElementById('chart-total-ever') as HTMLCanvasElement | null;
+    const coinsGainedCanvas = document.getElementById('chart-coins-gained') as HTMLCanvasElement | null;
+    const coinsPerClickCanvas = document.getElementById('chart-coins-per-click') as HTMLCanvasElement | null;
+    const clicksCanvas = document.getElementById('chart-clicks') as HTMLCanvasElement | null;
+    const coinsFromClicksCanvas = document.getElementById('chart-coins-from-clicks') as HTMLCanvasElement | null;
     const coinsHover = chartHoverState?.canvasId === 'chart-coins' ? chartHoverState.index : null;
     const productionHover = chartHoverState?.canvasId === 'chart-production' ? chartHoverState.index : null;
     const totalEverHover = chartHoverState?.canvasId === 'chart-total-ever' ? chartHoverState.index : null;
+    const coinsGainedHover = chartHoverState?.canvasId === 'chart-coins-gained' ? chartHoverState.index : null;
+    const coinsPerClickHover = chartHoverState?.canvasId === 'chart-coins-per-click' ? chartHoverState.index : null;
+    const clicksHover = chartHoverState?.canvasId === 'chart-clicks' ? chartHoverState.index : null;
+    const coinsFromClicksHover = chartHoverState?.canvasId === 'chart-coins-from-clicks' ? chartHoverState.index : null;
     const formatVal = (n: number) => formatNumber(n, compact);
     const coinsValues = history.map((p) => p.coins);
     const productionValues = history.map((p) => p.production);
     const totalEverValues = history.map((p) => p.totalCoinsEver);
+    const coinsGainedValues = getCoinsGainedPerPeriod(history);
+    const coinsPerClickValues = getCoinsPerClickPerPeriod(history);
+    const clicksValues = history.map((p) => p.clicksInPeriod ?? 0);
+    const coinsFromClicksValues = history.map((p) => p.coinsFromClicksInPeriod ?? 0);
     if (coinsCanvas) {
       drawLineChart(
         coinsCanvas,
@@ -500,6 +652,70 @@ export function updateStatisticsSection(): void {
       const minT = Math.min(...totalEverValues);
       const maxT = Math.max(...totalEverValues);
       updateChartLegend('chart-legend-total-ever', t('chartLegendTotalEver'), minT, maxT, formatVal);
+    }
+    if (coinsGainedCanvas && coinsGainedValues.length >= 2) {
+      drawLineChart(
+        coinsGainedCanvas,
+        coinsGainedValues,
+        {
+          colorStroke: CHART_COLORS.strokeCoinsGained,
+          colorFill: CHART_COLORS.fillCoinsGained,
+          legendLabel: t('chartLegendCoinsGained'),
+          formatValue: formatVal,
+        },
+        coinsGainedHover
+      );
+      const minG = Math.min(...coinsGainedValues);
+      const maxG = Math.max(...coinsGainedValues);
+      updateChartLegend('chart-legend-coins-gained', t('chartLegendCoinsGained'), minG, maxG, formatVal);
+    }
+    if (coinsPerClickCanvas && coinsPerClickValues.length >= 2) {
+      drawLineChart(
+        coinsPerClickCanvas,
+        coinsPerClickValues,
+        {
+          colorStroke: CHART_COLORS.strokeCoinsPerClick,
+          colorFill: CHART_COLORS.fillCoinsPerClick,
+          legendLabel: t('chartLegendCoinsPerClick'),
+          formatValue: formatVal,
+        },
+        coinsPerClickHover
+      );
+      const minCp = Math.min(...coinsPerClickValues);
+      const maxCp = Math.max(...coinsPerClickValues);
+      updateChartLegend('chart-legend-coins-per-click', t('chartLegendCoinsPerClick'), minCp, maxCp, formatVal);
+    }
+    if (clicksCanvas && clicksValues.length >= 2) {
+      drawLineChart(
+        clicksCanvas,
+        clicksValues,
+        {
+          colorStroke: CHART_COLORS.strokeClicks,
+          colorFill: CHART_COLORS.fillClicks,
+          legendLabel: t('chartLegendClicks'),
+          formatValue: formatVal,
+        },
+        clicksHover
+      );
+      const minCl = Math.min(...clicksValues);
+      const maxCl = Math.max(...clicksValues);
+      updateChartLegend('chart-legend-clicks', t('chartLegendClicks'), minCl, maxCl, formatVal);
+    }
+    if (coinsFromClicksCanvas && coinsFromClicksValues.length >= 2) {
+      drawLineChart(
+        coinsFromClicksCanvas,
+        coinsFromClicksValues,
+        {
+          colorStroke: CHART_COLORS.strokeCoinsFromClicks,
+          colorFill: CHART_COLORS.fillCoinsFromClicks,
+          legendLabel: t('chartLegendCoinsFromClicks'),
+          formatValue: formatVal,
+        },
+        coinsFromClicksHover
+      );
+      const minCf = Math.min(...coinsFromClicksValues);
+      const maxCf = Math.max(...coinsFromClicksValues);
+      updateChartLegend('chart-legend-coins-from-clicks', t('chartLegendCoinsFromClicks'), minCf, maxCf, formatVal);
     }
   }
 }

@@ -230,6 +230,21 @@ function getModalsHtml(): string {
       `,
     }),
     createModalOverlay({
+      overlayId: 'chart-help-overlay',
+      overlayClass: 'chart-help-overlay',
+      dialogClass: 'chart-help-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'chart-help-modal-title',
+      ariaDescribedBy: 'chart-help-modal-body',
+      bodyHtml: `
+        <div class="chart-help-modal-header">
+          <h2 id="chart-help-modal-title" class="chart-help-modal-title"></h2>
+          <button type="button" class="chart-help-close" id="chart-help-close" data-i18n-aria-label="close">×</button>
+        </div>
+        <p id="chart-help-modal-body" class="chart-help-modal-body" aria-describedby="chart-help-modal-body"></p>
+      `,
+    }),
+    createModalOverlay({
       overlayId: 'section-rules-overlay',
       overlayClass: 'section-rules-overlay',
       dialogClass: 'section-rules-modal',
@@ -387,21 +402,32 @@ function getTabsAndPanelsHtml(): string {
 
   return `
     <nav class="app-tabs" role="tablist" data-i18n-aria-label="gameSections">
-      <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine"><span data-i18n="tabMine">Mine</span><span class="app-tab-key" aria-hidden="true">1</span></button>
-      <button type="button" class="app-tab" role="tab" id="tab-empire" aria-selected="false" aria-controls="panel-empire" data-tab="empire"><span data-i18n="tabBase">Empire</span><span class="app-tab-key" aria-hidden="true">2</span></button>
-      <button type="button" class="app-tab" role="tab" id="tab-research" aria-selected="false" aria-controls="panel-research" data-tab="research"><span data-i18n="tabResearch">Research</span><span class="app-tab-key" aria-hidden="true">3</span></button>
-      <button type="button" class="app-tab" role="tab" id="tab-upgrades" aria-selected="false" aria-controls="panel-upgrades" data-tab="upgrades"><span data-i18n="tabUpgrades">Upgrades</span><span class="app-tab-key" aria-hidden="true">4</span></button>
-      <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats"><span data-i18n="tabStats">Stats</span><span class="app-tab-key" aria-hidden="true">5</span></button>
+      <div class="app-tabs-scroll">
+        <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine"><span data-i18n="tabMine">Mine</span></button>
+        <button type="button" class="app-tab" role="tab" id="tab-dashboard" aria-selected="false" aria-controls="panel-dashboard" data-tab="dashboard"><span data-i18n="tabDashboard">Dashboard</span></button>
+        <button type="button" class="app-tab" role="tab" id="tab-empire" aria-selected="false" aria-controls="panel-empire" data-tab="empire"><span data-i18n="tabBase">Empire</span></button>
+        <button type="button" class="app-tab" role="tab" id="tab-research" aria-selected="false" aria-controls="panel-research" data-tab="research"><span data-i18n="tabResearch">Research</span></button>
+        <button type="button" class="app-tab" role="tab" id="tab-upgrades" aria-selected="false" aria-controls="panel-upgrades" data-tab="upgrades"><span data-i18n="tabUpgrades">Upgrades</span></button>
+        <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats"><span data-i18n="tabStats">Stats</span></button>
+      </div>
       <div class="app-tabs-more-wrap">
         <button type="button" class="app-tab app-tab-more" id="tab-more" aria-haspopup="true" aria-expanded="false" aria-label="" data-i18n-aria-label="tabsMoreLabel">⋯</button>
         <div class="app-tabs-menu" id="app-tabs-menu" role="menu" aria-label="" hidden>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="empire" data-i18n="tabBase">Empire</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="research" data-i18n="tabResearch">Research</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
           <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="stats" data-i18n="tabStats">Stats</button>
+          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
+          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="research" data-i18n="tabResearch">Research</button>
+          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="empire" data-i18n="tabBase">Empire</button>
+          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="dashboard" data-i18n="tabDashboard">Dashboard</button>
         </div>
       </div>
     </nav>
+    <p class="keyboard-hint keyboard-hint--below-tabs" id="keyboard-hint" data-i18n-aria-label="keyboardShortcutsHint">
+      <span class="key key--space" data-i18n="keyboardShortcutsSpaceKey">Space</span>
+      <span class="keyboard-hint-text" data-i18n="keyboardShortcutsMine">to mine</span>
+      <span class="keyboard-hint-sep" aria-hidden="true">·</span>
+      <span class="key" aria-hidden="true">1</span><span class="key" aria-hidden="true">2</span><span class="key" aria-hidden="true">3</span><span class="key" aria-hidden="true">4</span><span class="key" aria-hidden="true">5</span><span class="key" aria-hidden="true">6</span>
+      <span class="keyboard-hint-text" data-i18n="keyboardShortcutsTabs">switch tabs</span>
+    </p>
     <div class="app-tab-panel app-tab-panel--active" id="panel-mine" role="tabpanel" aria-labelledby="tab-mine" data-tab="mine">
       <section class="mine-zone" id="mine-zone" data-i18n-title="mineZoneTitle">
         <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
@@ -409,14 +435,13 @@ function getTabsAndPanelsHtml(): string {
         <p class="mine-zone-hint" id="mine-zone-hint" data-i18n="mineZoneTitle"></p>
         <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
       </section>
-      <p class="keyboard-hint" id="keyboard-hint" data-i18n-aria-label="keyboardShortcutsHint">
-        <span class="key key--space" data-i18n="keyboardShortcutsSpaceKey">Space</span>
-        <span class="keyboard-hint-text" data-i18n="keyboardShortcutsMine">to mine</span>
-        <span class="keyboard-hint-sep" aria-hidden="true">·</span>
-        <span class="key" aria-hidden="true">1</span><span class="key" aria-hidden="true">2</span><span class="key" aria-hidden="true">3</span><span class="key" aria-hidden="true">4</span>
-        <span class="keyboard-hint-text" data-i18n="keyboardShortcutsTabs">switch tabs</span>
-      </p>
       ${questBlock}
+    </div>
+    <div class="app-tab-panel" id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" data-tab="dashboard" hidden>
+      <section class="dashboard-section" id="dashboard-section" aria-labelledby="dashboard-title">
+        <h2 id="dashboard-title" class="dashboard-title" data-i18n="dashboardTitle">Dashboard</h2>
+        <div id="dashboard-content" class="dashboard-content"></div>
+      </section>
     </div>
     <div class="app-tab-panel" id="panel-empire" role="tabpanel" aria-labelledby="tab-empire" data-tab="empire" hidden>
       ${crewBlock}

@@ -1,6 +1,6 @@
 import './styles/index.css';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
-import { mount } from './presentation/mount.js';
+import { mount, updateTabMenuVisibility, updateTabMoreActiveState, switchTab } from './presentation/mount.js';
 import {
   getOrCreateSession,
   setSession,
@@ -16,6 +16,8 @@ import {
   setStarfieldApi,
   mineZoneCanvasApi,
   addRunCoins,
+  getSessionClickCount,
+  getSessionCoinsFromClicks,
 } from './application/gameState.js';
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory } from './application/statsHistory.js';
@@ -29,7 +31,6 @@ import { renderQuestSection } from './presentation/questView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
-import { switchTab } from './presentation/mount.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { showOfflineToast } from './presentation/toasts.js';
 
@@ -37,6 +38,7 @@ let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 150;
 let lastQuestRenderMs = 0;
 let lastEventsUnlocked = false;
+let pageWasHidden = document.visibilityState === 'hidden';
 
 function gameLoop(now: number): void {
   if (typeof performance !== 'undefined' && performance.mark) performance.mark('game-loop-start');
@@ -45,8 +47,17 @@ function gameLoop(now: number): void {
     requestAnimationFrame(gameLoop);
     return;
   }
+  if (document.visibilityState === 'visible') {
+    if (pageWasHidden) {
+      lastTime = now;
+      pageWasHidden = false;
+    }
+  } else {
+    pageWasHidden = true;
+  }
   const dt = (now - lastTime) / 1000;
   lastTime = now;
+  const canvasDt = document.visibilityState === 'hidden' ? 0 : dt;
 
   const nowMs = Date.now();
   completeExpeditionIfDue();
@@ -76,7 +87,14 @@ function gameLoop(now: number): void {
     updateStats();
   }
   updateUpgradeListInPlace();
-  recordStatsIfDue(nowMs, session.player.coins.value, rateDec, session.player.totalCoinsEver);
+  recordStatsIfDue(
+    nowMs,
+    session.player.coins.value,
+    rateDec,
+    session.player.totalCoinsEver,
+    getSessionClickCount(),
+    getSessionCoinsFromClicks()
+  );
   updateCoinDisplay(dt);
   updateProductionDisplay(dt);
   if (nowMs - lastQuestRenderMs >= QUEST_RENDER_INTERVAL_MS) {
@@ -96,15 +114,17 @@ function gameLoop(now: number): void {
       upgradeCounts,
     };
   });
-  starfieldApi?.update(dt);
-  starfieldApi?.draw();
+  starfieldApi?.update(canvasDt);
+  if (document.visibilityState !== 'hidden') starfieldApi?.draw();
   mineZoneCanvasApi?.setPlanets(planetViews);
-  mineZoneCanvasApi?.update(dt);
-  mineZoneCanvasApi?.draw();
+  mineZoneCanvasApi?.update(canvasDt);
+  if (document.visibilityState !== 'hidden') mineZoneCanvasApi?.draw();
 
   updateComboIndicator();
   updateProgressionVisibility();
   updateTabVisibility(switchTab);
+  updateTabMenuVisibility();
+  updateTabMoreActiveState();
   if (typeof requestIdleCallback !== 'undefined') {
     requestIdleCallback(() => updateStatisticsSection(), { timeout: 100 });
   } else {

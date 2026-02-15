@@ -12,6 +12,14 @@ export const CHART_COLORS = {
   fillProduction: 'rgba(34, 197, 94, 0.2)',
   strokeTotalEver: '#a78bfa',
   fillTotalEver: 'rgba(167, 139, 250, 0.2)',
+  strokeCoinsGained: '#06b6d4',
+  fillCoinsGained: 'rgba(6, 182, 212, 0.2)',
+  strokeCoinsPerClick: '#f97316',
+  fillCoinsPerClick: 'rgba(249, 115, 22, 0.2)',
+  strokeClicks: '#e879f9',
+  fillClicks: 'rgba(232, 121, 249, 0.2)',
+  strokeCoinsFromClicks: '#eab308',
+  fillCoinsFromClicks: 'rgba(234, 179, 8, 0.2)',
 };
 
 export function getChartIndexAtOffsetX(

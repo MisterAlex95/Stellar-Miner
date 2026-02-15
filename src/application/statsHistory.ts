@@ -7,7 +7,16 @@ import {
   STATS_LONG_TERM_MAX_POINTS,
 } from './catalogs.js';
 
-export type HistoryPoint = { t: number; coins: number; production: number; totalCoinsEver: number };
+export type HistoryPoint = {
+  t: number;
+  coins: number;
+  production: number;
+  totalCoinsEver: number;
+  /** Clicks in this period (since previous sample). Optional for backward compat. */
+  clicksInPeriod?: number;
+  /** Coins earned from clicks in this period. Optional for backward compat. */
+  coinsFromClicksInPeriod?: number;
+};
 
 export type ChartRange = 'recent' | 'longTerm';
 
@@ -15,13 +24,24 @@ let points: HistoryPoint[] = [];
 let longTermPoints: HistoryPoint[] = [];
 let lastRecordAt = 0;
 let lastLongTermRecordAt = 0;
+let lastRecordedClicks = 0;
+let lastRecordedCoinsFromClicks = 0;
 
-function migratePoint(p: { t: number; coins: number; production: number; totalCoinsEver?: number }): HistoryPoint {
+function migratePoint(p: {
+  t: number;
+  coins: number;
+  production: number;
+  totalCoinsEver?: number;
+  clicksInPeriod?: number;
+  coinsFromClicksInPeriod?: number;
+}): HistoryPoint {
   return {
     t: p.t,
     coins: p.coins,
     production: p.production,
     totalCoinsEver: p.totalCoinsEver ?? p.coins,
+    clicksInPeriod: p.clicksInPeriod ?? 0,
+    coinsFromClicksInPeriod: p.coinsFromClicksInPeriod ?? 0,
   };
 }
 
@@ -85,19 +105,34 @@ function capForChart(value: number): number {
   return Number.isFinite(value) ? Math.min(value, STATS_CAP) : 0;
 }
 
-export function recordStatsIfDue(now: number, coins: DecimalSource, production: DecimalSource, totalCoinsEver: DecimalSource): void {
+export function recordStatsIfDue(
+  now: number,
+  coins: DecimalSource,
+  production: DecimalSource,
+  totalCoinsEver: DecimalSource,
+  sessionClicksTotal?: number,
+  sessionCoinsFromClicksTotal?: number
+): void {
   const coinsN = capForChart(toDecimal(coins).toNumber());
   const productionN = capForChart(toDecimal(production).toNumber());
   const totalN = capForChart(toDecimal(totalCoinsEver).toNumber());
+  const clicksTotal = sessionClicksTotal ?? 0;
+  const coinsFromClicksTotal = sessionCoinsFromClicksTotal ?? 0;
+  const clicksInPeriod = Math.max(0, clicksTotal - lastRecordedClicks);
+  const coinsFromClicksInPeriod = Math.max(0, coinsFromClicksTotal - lastRecordedCoinsFromClicks);
   const point: HistoryPoint = {
     t: now,
     coins: coinsN,
     production: productionN,
     totalCoinsEver: totalN,
+    clicksInPeriod,
+    coinsFromClicksInPeriod,
   };
   let dirty = false;
   if (now - lastRecordAt >= STATS_HISTORY_INTERVAL_MS) {
     lastRecordAt = now;
+    lastRecordedClicks = clicksTotal;
+    lastRecordedCoinsFromClicks = coinsFromClicksTotal;
     points.push(point);
     if (points.length > STATS_HISTORY_MAX_POINTS) points = points.slice(-STATS_HISTORY_MAX_POINTS);
     dirty = true;
@@ -116,6 +151,8 @@ export function resetStatsHistory(): void {
   longTermPoints = [];
   lastRecordAt = 0;
   lastLongTermRecordAt = 0;
+  lastRecordedClicks = 0;
+  lastRecordedCoinsFromClicks = 0;
   if (typeof localStorage !== 'undefined') {
     try {
       localStorage.removeItem(STATS_HISTORY_STORAGE_KEY);

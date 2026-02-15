@@ -173,6 +173,34 @@
 .statistics-chart-legend-swatch--coins { background: #f59e0b; }
 .statistics-chart-legend-swatch--production { background: #22c55e; }
 .statistics-chart-legend-swatch--total-ever { background: #a78bfa; }
+.statistics-chart-legend-swatch--coins-gained { background: #06b6d4; }
+.statistics-chart-legend-swatch--coins-per-click { background: #f97316; }
+.statistics-chart-legend-swatch--clicks { background: #e879f9; }
+.statistics-chart-legend-swatch--coins-from-clicks { background: #eab308; }
+
+.statistics-chart-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  margin-left: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-dim);
+  background: rgba(42, 47, 61, 0.8);
+  border: 1px solid rgba(139, 144, 154, 0.5);
+  border-radius: 50%;
+  cursor: help;
+  vertical-align: middle;
+}
+
+.statistics-chart-help:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(42, 47, 61, 1);
+}
 
 .statistics-chart-legend-label {
   font-weight: 600;

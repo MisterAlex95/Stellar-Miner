@@ -173,6 +173,7 @@ export function updateTabVisibility(setActiveTab: (tabId: string) => void): void
     if (!tabId) return;
     const show =
       tabId === 'mine' ||
+      tabId === 'dashboard' ||
       (tabId === 'upgrades' && unlocked.has('upgrades')) ||
       (tabId === 'empire' &&
         (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||

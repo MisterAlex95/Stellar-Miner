@@ -1,5 +1,6 @@
 import { createMineZoneCanvas } from './MineZoneCanvas.js';
-import { getSettings, getEventContext, setSettings, setMineZoneCanvasApi } from '../application/gameState.js';
+import { getSession, getSettings, getEventContext, setSettings, setMineZoneCanvasApi } from '../application/gameState.js';
+import { getUnlockedBlocks } from '../application/progression.js';
 import { t, applyTranslations, type StringKey } from '../application/strings.js';
 import {
   openSettings,
@@ -40,6 +41,7 @@ import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
 import { renderResearchSection } from './researchView.js';
 import { renderStatisticsSection } from './statisticsView.js';
+import { renderDashboardSection } from './dashboardView.js';
 import {
   bindIntroModal,
   updateProgressionVisibility,
@@ -59,6 +61,8 @@ const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
 const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
+const CHART_HELP_OVERLAY_ID = 'chart-help-overlay';
+const CHART_HELP_OPEN_CLASS = 'chart-help-overlay--open';
 const COLLAPSED_STORAGE_PREFIX = 'stellar-miner-collapsed-';
 const COLLAPSIBLE_SECTION_IDS = [
   'quest-section',
@@ -71,7 +75,7 @@ const COLLAPSIBLE_SECTION_IDS = [
 ];
 const STATS_COMPACT_ENTER = 70;
 const STATS_COMPACT_LEAVE = 35;
-const VALID_TAB_IDS = ['mine', 'empire', 'research', 'upgrades', 'stats'] as const;
+const VALID_TAB_IDS = ['mine', 'dashboard', 'empire', 'research', 'upgrades', 'stats'] as const;
 
 function isAnyModalOpen(): boolean {
   return getOpenOverlayElement() !== null;
@@ -157,14 +161,40 @@ export function switchTab(tabId: string): void {
     // ignore
   }
   if (tabId === 'research') renderResearchSection();
-  const tabMore = document.getElementById('tab-more');
-  if (tabMore) {
-    const inMenu = ['empire', 'research', 'upgrades', 'stats'].includes(tabId);
-    tabMore.classList.toggle('app-tab-more--active', inMenu);
-  }
+  if (tabId === 'dashboard') renderDashboardSection();
   document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
     item.classList.toggle('app-tabs-menu-item--active', item.getAttribute('data-tab') === tabId);
   });
+  updateTabMoreActiveState();
+}
+
+/** Show menu items only when the tab is unlocked (progression). When unlocked, CSS media queries control at which viewport they appear. */
+export function updateTabMenuVisibility(): void {
+  const session = getSession();
+  const unlocked = getUnlockedBlocks(session);
+  document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
+    const tabId = item.getAttribute('data-tab');
+    if (!tabId) return;
+    const isUnlocked =
+      tabId === 'dashboard' ||
+      (tabId === 'upgrades' && unlocked.has('upgrades')) ||
+      (tabId === 'empire' && (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
+      (tabId === 'research' && unlocked.has('research')) ||
+      (tabId === 'stats' && unlocked.has('upgrades'));
+    item.style.display = isUnlocked ? '' : 'none';
+  });
+}
+
+/** Update ⋯ button orange state: only active when current tab is hidden (in overflow menu). Call from switchTab and from game loop on resize. */
+export function updateTabMoreActiveState(): void {
+  const tabMore = document.getElementById('tab-more');
+  if (!tabMore) return;
+  const activeTab = document.querySelector<HTMLElement>('.app-tab[data-tab].app-tab--active');
+  const tabId = activeTab?.getAttribute('data-tab');
+  if (!tabId) return;
+  const activeTabEl = document.querySelector<HTMLElement>(`.app-tab[data-tab="${tabId}"]`);
+  const isActiveTabHidden = activeTabEl ? activeTabEl.offsetParent === null || getComputedStyle(activeTabEl).display === 'none' : false;
+  tabMore.classList.toggle('app-tab-more--active', isActiveTabHidden);
 }
 
 /** Apply layout mode: tabs (one panel at a time) or one-page (all sections stacked). */
@@ -324,6 +354,30 @@ export function mount(): void {
     });
   }
 
+  function closeChartHelpModal(): void {
+    closeOverlay(CHART_HELP_OVERLAY_ID, CHART_HELP_OPEN_CLASS);
+  }
+  document.addEventListener('click', (e: MouseEvent) => {
+    const help = (e.target as Element)?.closest?.('.statistics-chart-help');
+    if (!help || !(help instanceof HTMLElement)) return;
+    const titleKey = help.getAttribute('data-chart-title');
+    const descKey = help.getAttribute('data-chart-desc');
+    if (!titleKey || !descKey) return;
+    const titleEl = document.getElementById('chart-help-modal-title');
+    const bodyEl = document.getElementById('chart-help-modal-body');
+    if (titleEl) titleEl.textContent = t(titleKey as StringKey);
+    if (bodyEl) bodyEl.textContent = t(descKey as StringKey);
+    openOverlay(CHART_HELP_OVERLAY_ID, CHART_HELP_OPEN_CLASS, { focusId: 'chart-help-close' });
+  });
+  const chartHelpClose = document.getElementById('chart-help-close');
+  const chartHelpOverlay = document.getElementById(CHART_HELP_OVERLAY_ID);
+  if (chartHelpClose) chartHelpClose.addEventListener('click', closeChartHelpModal);
+  if (chartHelpOverlay) {
+    chartHelpOverlay.addEventListener('click', (e: MouseEvent) => {
+      if (e.target === chartHelpOverlay) closeChartHelpModal();
+    });
+  }
+
   if (settingsBtn && settingsOverlay) {
     settingsBtn.addEventListener('click', openSettings);
     settingsOverlay.addEventListener('click', (e) => {
@@ -359,6 +413,7 @@ export function mount(): void {
       else if (document.getElementById('section-rules-overlay')?.classList.contains(SECTION_RULES_OVERLAY_CLASS)) closeSectionRulesModal();
       else if (document.getElementById('info-overlay')?.classList.contains('info-overlay--open')) closeInfoModal();
       else if (document.getElementById(EVENTS_HINT_OVERLAY_ID)?.classList.contains(EVENTS_HINT_OPEN_CLASS)) closeEventsHintModal();
+      else if (document.getElementById(CHART_HELP_OVERLAY_ID)?.classList.contains(CHART_HELP_OPEN_CLASS)) closeChartHelpModal();
       else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
@@ -715,6 +770,43 @@ export function mount(): void {
   const statisticsContainer = document.getElementById('statistics-container');
   if (statisticsContainer) renderStatisticsSection(statisticsContainer);
 
+  // --- Dashboard: delegated click so buttons work after dynamic render ---
+  app.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement).closest('#dashboard-content button');
+    if (!target) return;
+    const id = target.id;
+    const goto = target.getAttribute('data-goto');
+    if (id === 'dashboard-do-claim') {
+      handleClaimQuest();
+      renderDashboardSection();
+      return;
+    }
+    if (id === 'dashboard-do-prestige') {
+      openPrestigeConfirmModal();
+      return;
+    }
+    if (id === 'dashboard-do-upgrade') {
+      const upgradeId = target.getAttribute('data-upgrade-id');
+      const planetId = target.getAttribute('data-planet-id') || undefined;
+      if (upgradeId) {
+        handleUpgradeBuy(upgradeId, planetId);
+        renderDashboardSection();
+      }
+      return;
+    }
+    if (id === 'dashboard-goto-mine') {
+      switchTab('mine');
+      return;
+    }
+    if (id === 'dashboard-goto-empire') {
+      switchTab('empire');
+      return;
+    }
+    if (goto) {
+      switchTab(goto);
+    }
+  });
+
   // --- Tabs, layout, offline, stats compact ---
   document.querySelectorAll<HTMLElement>('.app-tab[data-tab]').forEach((tab) => {
     tab.addEventListener('click', () => {
@@ -760,7 +852,7 @@ export function mount(): void {
   }
   document.addEventListener('keydown', (e) => {
     const key = e.key;
-    if (key !== '1' && key !== '2' && key !== '3' && key !== '4' && key !== '5') return;
+    if (key !== '1' && key !== '2' && key !== '3' && key !== '4' && key !== '5' && key !== '6') return;
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.closest('[role="dialog"]'))) return;
     const idx = parseInt(key, 10) - 1;

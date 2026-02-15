@@ -1,0 +1,227 @@
+/* Dashboard (Tableau de bord) — mission control */
+.dashboard-section {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--panel-shadow);
+}
+
+.dashboard-title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Hero: one recommended action */
+.dashboard-hero {
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+}
+
+.dashboard-hero-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.dashboard-hero-desc {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.dashboard-hero-action {
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-hero-btn {
+  display: inline-block;
+  padding: 0.6rem 1.25rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.1s;
+}
+
+.dashboard-hero-btn:hover {
+  filter: brightness(1.1);
+}
+
+.dashboard-hero-btn:active {
+  transform: scale(0.98);
+}
+
+.dashboard-hero-btn--claim {
+  background: var(--accent);
+  color: var(--bg-dark);
+}
+
+.dashboard-hero-btn--prestige {
+  background: var(--prestige-color, #c9a227);
+  color: var(--bg);
+}
+
+.dashboard-hero-btn--upgrade {
+  background: var(--accent);
+  color: var(--bg-dark);
+}
+
+.dashboard-hero-btn--goto {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.dashboard-hero-btn--goto:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dashboard-time {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* Run summary */
+.dashboard-run {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.dashboard-run-label {
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.dashboard-run-values {
+  color: var(--text);
+}
+
+/* Live: events + expedition */
+.dashboard-live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.dashboard-events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.dashboard-event-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: var(--radius-sm);
+}
+
+.dashboard-expedition,
+.dashboard-next-event {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+/* Quest progress (compact) */
+.dashboard-quest-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dashboard-quest-mini .dashboard-quest-bar-wrap {
+  flex: 1;
+  min-width: 0;
+  height: 5px;
+  margin: 0;
+}
+
+.dashboard-quest-mini-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.dashboard-quest-bar-wrap {
+  height: 5px;
+  background: var(--bg-card);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dashboard-quest-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.2s;
+}
+
+/* Shortcuts */
+.dashboard-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.dashboard-shortcuts-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-right: 0.25rem;
+}
+
+.dashboard-shortcut {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.dashboard-shortcut:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.dashboard-empty {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+#app[data-layout="one-page"] .dashboard-section {
+  margin-bottom: 1.75rem;
+}
