@@ -20,7 +20,7 @@ test('tabs switch with keyboard', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#panel-mine')).toBeVisible();
   await page.keyboard.press('2');
-  await expect(page.locator('#panel-base')).toBeVisible();
+  await expect(page.locator('#panel-dashboard')).toBeVisible();
   await page.keyboard.press('1');
   await expect(page.locator('#panel-mine')).toBeVisible();
 });

@@ -77,6 +77,23 @@ describe('handlersUpgrade', () => {
       expect(player.upgrades.filter((u) => u.id === 'drill-mk1').length).toBe(0);
       expect(player.coins.value.toNumber()).toBe(2000);
     });
+
+    it('does not purchase when no free slot for slot-using upgrade', () => {
+      const session = getSession();
+      const player = session.player;
+      const planet = player.planets[0];
+      while (planet.usedSlots < planet.maxUpgrades) {
+        player.addCoins(10000);
+        player.addAstronauts(1);
+        handleUpgradeBuy('drill-mk1');
+      }
+      const coinsBefore = player.coins.value.toNumber();
+      player.addCoins(10000);
+
+      handleUpgradeBuy('drill-mk1');
+
+      expect(player.coins.value.toNumber()).toBe(coinsBefore + 10000);
+    });
   });
 
   describe('handleUpgradeBuyMax', () => {
@@ -105,6 +122,17 @@ describe('handlersUpgrade', () => {
       const drillCount = player.upgrades.filter((u) => u.id === 'drill-mk1').length;
       expect(drillCount).toBeGreaterThan(0);
       expect(drillCount).toBeLessThanOrEqual(slots);
+    });
+
+    it('buys zero when cannot afford first', () => {
+      const session = getSession();
+      const player = session.player;
+      player.addCoins(10);
+      const beforeCount = player.upgrades.filter((u) => u.id === 'mining-robot').length;
+
+      handleUpgradeBuyMax('mining-robot');
+
+      expect(player.upgrades.filter((u) => u.id === 'mining-robot').length).toBe(beforeCount);
     });
   });
 });
