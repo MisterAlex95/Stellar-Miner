@@ -1,6 +1,8 @@
 const MAX_PARTICLES = 30;
 const CLICK_BURST_COUNT = 12;
+const CLICK_BURST_LUCKY_COUNT = 24;
 const CLICK_PARTICLE_LIFE = 0.6;
+const CLICK_FLASH_LIFE = 0.35;
 
 /** Planets per solar system (grouping for display). */
 const PLANETS_PER_SOLAR_SYSTEM = 4;
@@ -13,6 +15,7 @@ type Particle = {
   life: number;
   maxLife: number;
   size: number;
+  color?: string;
 };
 
 /** Per-planet data for the spatial view. */
@@ -34,6 +37,9 @@ let width = 0;
 let height = 0;
 let solarSystems: SolarSystemView[] = [];
 let orbitTime = 0;
+
+type ClickFlash = { x: number; y: number; life: number; maxLife: number; critical?: boolean };
+let clickFlash: ClickFlash | null = null;
 
 export type MineZoneSettings = { showOrbitLines?: boolean; clickParticles?: boolean };
 export type EventContext = { activeEventIds: string[] };
@@ -78,7 +84,11 @@ function getThemeColor(name: string, fallback: string): string {
 }
 
 function getOrCreateParticle(): Particle {
-  if (pool.length > 0) return pool.pop()!;
+  if (pool.length > 0) {
+    const p = pool.pop()!;
+    p.color = undefined;
+    return p;
+  }
   return { x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 2 };
 }
 
@@ -86,20 +96,42 @@ function releaseParticle(p: Particle): void {
   if (pool.length < MAX_PARTICLES) pool.push(p);
 }
 
-function emitBurst(originX: number, originY: number): void {
-  const count = Math.min(CLICK_BURST_COUNT, MAX_PARTICLES - particles.length);
+function emitBurst(
+  originX: number,
+  originY: number,
+  options?: { superLucky?: boolean; critical?: boolean }
+): void {
+  const count = Math.min(
+    options?.superLucky || options?.critical ? CLICK_BURST_LUCKY_COUNT : CLICK_BURST_COUNT,
+    MAX_PARTICLES - particles.length
+  );
+  const speedMult = options?.superLucky || options?.critical ? 1.4 : 1;
+  const sizeMult = options?.critical ? 1.5 : options?.superLucky ? 1.2 : 1;
   for (let i = 0; i < count; i++) {
     const p = getOrCreateParticle();
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-    const speed = 50 + Math.random() * 70;
+    const speed = (50 + Math.random() * 70) * speedMult;
     p.x = originX;
     p.y = originY;
     p.vx = Math.cos(angle) * speed;
     p.vy = Math.sin(angle) * speed - 30;
     p.life = CLICK_PARTICLE_LIFE;
     p.maxLife = CLICK_PARTICLE_LIFE;
-    p.size = 1 + Math.random() * 1.5;
+    p.size = (1 + Math.random() * 1.5) * sizeMult;
     particles.push(p);
+  }
+  const burstColor = options?.critical ? '#f87171' : options?.superLucky ? '#fde047' : undefined;
+  for (let i = particles.length - count; i < particles.length; i++) {
+    particles[i].color = burstColor;
+  }
+  if (options?.superLucky || options?.critical) {
+    clickFlash = {
+      x: originX,
+      y: originY,
+      life: CLICK_FLASH_LIFE,
+      maxLife: CLICK_FLASH_LIFE,
+      critical: options.critical,
+    };
   }
 }
 
@@ -611,6 +643,10 @@ export function createMineZoneCanvas(
     update(dt: number) {
       orbitTime += dt * 0.35;
       eventOverlayTime += dt;
+      if (clickFlash) {
+        clickFlash.life -= dt;
+        if (clickFlash.life <= 0) clickFlash = null;
+      }
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
@@ -630,13 +666,29 @@ export function createMineZoneCanvas(
       const accent = getThemeColor('--accent', '#f59e0b');
       for (const p of particles) {
         const t = 1 - p.life / p.maxLife;
-        ctx.fillStyle = accent;
+        ctx.fillStyle = p.color ?? accent;
         ctx.globalAlpha = 1 - t * t;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+      if (clickFlash && ctx) {
+        const t = 1 - clickFlash.life / clickFlash.maxLife;
+        const r = 40 + t * 80;
+        const grd = ctx.createRadialGradient(
+          clickFlash.x, clickFlash.y, 0,
+          clickFlash.x, clickFlash.y, r
+        );
+        const color = clickFlash.critical ? 'rgba(248, 113, 113, 0.4)' : 'rgba(253, 224, 71, 0.35)';
+        grd.addColorStop(0, clickFlash.critical ? 'rgba(248, 113, 113, 0.5)' : 'rgba(253, 224, 71, 0.5)');
+        grd.addColorStop(0.5, color);
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = 1 - t * t;
+        ctx.fillStyle = grd;
+        ctx.fillRect(clickFlash.x - r, clickFlash.y - r, r * 2, r * 2);
+        ctx.globalAlpha = 1;
+      }
 
       const eventIds = getMineZoneEventContext?.()?.activeEventIds ?? [];
       const overlayStyle = getEventOverlayStyle(eventIds);
@@ -655,12 +707,16 @@ export function createMineZoneCanvas(
         ctx.fillRect(0, 0, width, height);
       }
     },
-    onMineClick(clientX?: number, clientY?: number) {
+    onMineClick(
+      clientX?: number,
+      clientY?: number,
+      options?: { superLucky?: boolean; critical?: boolean }
+    ) {
       if (getMineZoneSettings?.()?.clickParticles === false) return;
       const rect = container.getBoundingClientRect();
       const x = clientX != null ? clientX - rect.left : width / 2;
       const y = clientY != null ? clientY - rect.top : height / 2;
-      emitBurst(x, y);
+      emitBurst(x, y, options);
     },
     setPlanets(planetViews: PlanetView[]) {
       const list = planetViews.map((p) => ({ ...p, upgradeCounts: { ...p.upgradeCounts } }));

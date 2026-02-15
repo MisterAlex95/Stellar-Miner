@@ -17,7 +17,7 @@ import {
   mineZoneCanvasApi,
 } from './application/gameState.js';
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS } from './application/catalogs.js';
-import { updateStats } from './presentation/statsView.js';
+import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
 import { renderPlanetList } from './presentation/planetListView.js';
 import { renderQuestSection } from './presentation/questView.js';
@@ -52,6 +52,8 @@ function gameLoop(now: number): void {
     updateStats();
     updateUpgradeListInPlace();
   }
+  updateCoinDisplay(dt);
+  updateProductionDisplay(dt);
   renderQuestSection();
   const planetViews = session.player.planets.map((p) => {
     const upgradeCounts: Record<string, number> = {};
@@ -92,6 +94,8 @@ async function init(): Promise<void> {
   setNextEventAt(gameStartTime + MIN_EVENT_DELAY_MS);
   setStarfieldApi(startStarfield(getSettings, getEventContext));
   mount();
+  syncCoinDisplay();
+  syncProductionDisplay();
   updateStats();
   renderUpgradeList();
   renderPlanetList();

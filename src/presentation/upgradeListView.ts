@@ -170,7 +170,12 @@ export function updateUpgradeListInPlace(): void {
       maxBtn.textContent = maxLabel;
       maxBtn.toggleAttribute('disabled', maxCount <= 0 || !hasCrew);
     }
+    const wasAffordable = card.classList.contains('upgrade-card--affordable');
     card.classList.toggle('upgrade-card--affordable', canBuy);
+    if (canBuy && !wasAffordable) {
+      card.classList.add('upgrade-card--just-affordable');
+      setTimeout(() => card.classList.remove('upgrade-card--just-affordable'), 800);
+    }
     card.classList.toggle('upgrade-card--recommended', isRecommended);
     card.classList.toggle('upgrade-card--needs-crew', !hasCrew && def.requiredAstronauts > 0);
   });

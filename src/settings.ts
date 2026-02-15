@@ -5,6 +5,7 @@ export type Settings = {
   showOrbitLines: boolean;
   clickParticles: boolean;
   compactNumbers: boolean;
+  spaceKeyRepeat: boolean;
 };
 
 const DEFAULTS: Settings = {
@@ -12,6 +13,7 @@ const DEFAULTS: Settings = {
   showOrbitLines: true,
   clickParticles: true,
   compactNumbers: true,
+  spaceKeyRepeat: false,
 };
 
 export function loadSettings(): Settings {

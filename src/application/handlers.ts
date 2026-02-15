@@ -214,7 +214,16 @@ export function handleMineClick(e?: MouseEvent): void {
   if (e) showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical, comboMult: comboMult > 1 ? comboMult : undefined });
   if (superLucky) showSuperLuckyToast(coins);
   if (isCritical) showCriticalToast(coins);
-  mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY);
+  mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY, { superLucky, critical: isCritical });
+  if (superLucky || isCritical) {
+    const app = document.getElementById('app');
+    if (app) {
+      app.classList.remove('app--shake');
+      void app.offsetWidth;
+      app.classList.add('app--shake');
+      setTimeout(() => app.classList.remove('app--shake'), 400);
+    }
+  }
   updateComboIndicator();
   checkAndShowMilestones();
   checkAchievements();

@@ -14,6 +14,62 @@ import { getTotalClicksEver } from '../application/achievements.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
+import { EVENT_INTERVAL_MS } from '../application/catalogs.js';
+
+let displayedCoins = -1;
+let displayedProduction = -1;
+
+/** Call from game loop with dt to animate coin counter toward target. */
+export function updateCoinDisplay(dt: number): void {
+  const session = getSession();
+  if (!session) return;
+  const target = session.player.coins.value;
+  const settings = getSettings();
+  const coinsEl = document.getElementById('coins-value');
+  if (!coinsEl) return;
+  if (displayedCoins < 0) displayedCoins = target;
+  else {
+    const speed = 12;
+    displayedCoins += (target - displayedCoins) * Math.min(1, dt * speed);
+    if (Math.abs(displayedCoins - target) < 0.5) displayedCoins = target;
+  }
+  coinsEl.textContent = formatNumber(Math.floor(displayedCoins), settings.compactNumbers);
+}
+
+/** Call from game loop with dt to animate production rate toward target. */
+export function updateProductionDisplay(dt: number): void {
+  const session = getSession();
+  if (!session) return;
+  const eventMult = getEventMultiplier();
+  const target = session.player.effectiveProductionRate * eventMult;
+  const settings = getSettings();
+  const rateEl = document.getElementById('production-value');
+  if (!rateEl) return;
+  if (displayedProduction < 0) displayedProduction = target;
+  else {
+    const speed = 10;
+    displayedProduction += (target - displayedProduction) * Math.min(1, dt * speed);
+    if (Math.abs(displayedProduction - target) < 0.05) displayedProduction = target;
+  }
+  rateEl.textContent = formatNumber(displayedProduction, settings.compactNumbers) + '/s';
+}
+
+export function syncCoinDisplay(): void {
+  const session = getSession();
+  if (!session) return;
+  displayedCoins = session.player.coins.value;
+  const coinsEl = document.getElementById('coins-value');
+  if (coinsEl) coinsEl.textContent = formatNumber(Math.floor(displayedCoins), getSettings().compactNumbers);
+}
+
+export function syncProductionDisplay(): void {
+  const session = getSession();
+  if (!session) return;
+  const eventMult = getEventMultiplier();
+  displayedProduction = session.player.effectiveProductionRate * eventMult;
+  const rateEl = document.getElementById('production-value');
+  if (rateEl) rateEl.textContent = formatNumber(displayedProduction, getSettings().compactNumbers) + '/s';
+}
 
 export function updateStats(): void {
   const session = getSession();
@@ -22,11 +78,7 @@ export function updateStats(): void {
   const settings = getSettings();
   const eventMult = getEventMultiplier();
   const effectiveRate = player.effectiveProductionRate * eventMult;
-  const coinsEl = document.getElementById('coins-value');
-  const rateEl = document.getElementById('production-value');
   const coinsCard = document.getElementById('coins-stat-card');
-  if (coinsEl) coinsEl.textContent = formatNumber(player.coins.value, settings.compactNumbers);
-  if (rateEl) rateEl.textContent = formatNumber(effectiveRate, settings.compactNumbers) + '/s';
   const crewLineEl = document.getElementById('crew-stat-line');
   if (crewLineEl) {
     const session = getSession();
@@ -99,9 +151,11 @@ export function updateStats(): void {
     }
   }
   const nextEventEl = document.getElementById('next-event-countdown');
+  const nextEventProgressWrap = document.getElementById('next-event-progress-wrap');
+  const nextEventProgressBar = document.getElementById('next-event-progress-bar');
+  const now = Date.now();
+  const active = activeEventInstances.filter((a) => a.endsAt > now);
   if (nextEventEl) {
-    const now = Date.now();
-    const active = activeEventInstances.filter((a) => a.endsAt > now);
     if (active.length > 0) {
       nextEventEl.textContent = '';
       nextEventEl.style.display = 'none';
@@ -112,5 +166,12 @@ export function updateStats(): void {
       nextEventEl.textContent = m > 0 ? `Next event in ${m}:${s.toString().padStart(2, '0')}` : `Next event in ${secs}s`;
       nextEventEl.style.display = 'block';
     }
+  }
+  if (nextEventProgressWrap && nextEventProgressBar && active.length === 0) {
+    const progress = Math.max(0, Math.min(1, 1 - (nextEventAt - now) / EVENT_INTERVAL_MS));
+    nextEventProgressWrap.style.display = 'block';
+    nextEventProgressBar.style.width = `${progress * 100}%`;
+  } else if (nextEventProgressWrap) {
+    nextEventProgressWrap.style.display = active.length > 0 ? 'none' : 'block';
   }
 }

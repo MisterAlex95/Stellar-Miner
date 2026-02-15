@@ -21,6 +21,7 @@ describe('settings', () => {
       showOrbitLines: true,
       clickParticles: true,
       compactNumbers: true,
+      spaceKeyRepeat: false,
     });
   });
 
@@ -33,6 +34,7 @@ describe('settings', () => {
       showOrbitLines: true,
       clickParticles: true,
       compactNumbers: true,
+      spaceKeyRepeat: false,
     });
     vi.stubGlobal('localStorage', orig);
   });
@@ -47,6 +49,7 @@ describe('settings', () => {
     expect(s.compactNumbers).toBe(false);
     expect(s.showOrbitLines).toBe(true);
     expect(s.clickParticles).toBe(true);
+    expect(s.spaceKeyRepeat).toBe(false);
   });
 
   it('loadSettings returns defaults on invalid JSON', () => {
@@ -57,6 +60,7 @@ describe('settings', () => {
       showOrbitLines: true,
       clickParticles: true,
       compactNumbers: true,
+      spaceKeyRepeat: false,
     });
   });
 
@@ -66,6 +70,7 @@ describe('settings', () => {
       showOrbitLines: false,
       clickParticles: false,
       compactNumbers: false,
+      spaceKeyRepeat: true,
     });
     const raw = storage['stellar-miner-settings'];
     expect(raw).toBeDefined();
@@ -83,6 +88,7 @@ describe('settings', () => {
         showOrbitLines: true,
         clickParticles: true,
         compactNumbers: true,
+        spaceKeyRepeat: false,
       })
     ).not.toThrow();
     vi.stubGlobal('localStorage', orig);
@@ -100,6 +106,7 @@ describe('settings', () => {
         showOrbitLines: true,
         clickParticles: true,
         compactNumbers: true,
+        spaceKeyRepeat: false,
       })
     ).not.toThrow();
   });

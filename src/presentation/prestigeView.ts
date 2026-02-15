@@ -2,6 +2,8 @@ import { getSession, getSettings } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { PRESTIGE_COIN_THRESHOLD } from '../domain/constants.js';
 
+let lastCanPrestige = false;
+
 export function renderPrestigeSection(): void {
   const session = getSession();
   if (!session) return;
@@ -16,4 +18,9 @@ export function renderPrestigeSection(): void {
       ? `Prestige level ${player.prestigeLevel} (+${player.prestigeLevel * 5}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`
       : `Reach ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to unlock Prestige.`;
   btnEl.toggleAttribute('disabled', !canPrestige);
+  if (canPrestige && !lastCanPrestige) {
+    btnEl.classList.add('prestige-btn--just-unlocked');
+    setTimeout(() => btnEl.classList.remove('prestige-btn--just-unlocked'), 1500);
+  }
+  lastCanPrestige = canPrestige;
 }

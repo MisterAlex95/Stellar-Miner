@@ -82,6 +82,12 @@ const APP_HTML = `
               <span>Compact numbers (1.2K)</span>
             </label>
           </div>
+          <div class="settings-option">
+            <label class="settings-toggle">
+              <input type="checkbox" id="setting-space-key-repeat" />
+              <span>Allow Space key repeat (hold to mine)</span>
+            </label>
+          </div>
           <div class="settings-option settings-achievements">
             <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false">Achievements</button>
             <div class="achievements-list" id="achievements-list" aria-hidden="true"></div>
@@ -131,6 +137,9 @@ const APP_HTML = `
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
         <div class="session-stats" id="session-stats" aria-live="polite"></div>
         <div class="active-events" id="active-events" aria-live="polite"></div>
+        <div class="next-event-progress-wrap" id="next-event-progress-wrap" aria-hidden="true">
+          <div class="next-event-progress-bar" id="next-event-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
         <div class="next-event-countdown" id="next-event-countdown" aria-live="polite"></div>
       </div>
     </section>
@@ -211,10 +220,12 @@ export function mount(): void {
   const orbitLinesEl = document.getElementById('setting-orbit-lines') as HTMLInputElement | null;
   const clickParticlesEl = document.getElementById('setting-click-particles') as HTMLInputElement | null;
   const compactNumbersEl = document.getElementById('setting-compact-numbers') as HTMLInputElement | null;
+  const spaceKeyRepeatEl = document.getElementById('setting-space-key-repeat') as HTMLInputElement | null;
   if (starfieldSpeedEl) starfieldSpeedEl.value = String(settings.starfieldSpeed);
   if (orbitLinesEl) orbitLinesEl.checked = settings.showOrbitLines;
   if (clickParticlesEl) clickParticlesEl.checked = settings.clickParticles;
   if (compactNumbersEl) compactNumbersEl.checked = settings.compactNumbers;
+  if (spaceKeyRepeatEl) spaceKeyRepeatEl.checked = settings.spaceKeyRepeat;
   if (starfieldSpeedEl) starfieldSpeedEl.addEventListener('change', () => {
     const s = getSettings();
     s.starfieldSpeed = Number(starfieldSpeedEl.value);
@@ -235,6 +246,11 @@ export function mount(): void {
     s.compactNumbers = compactNumbersEl.checked;
     setSettings(s);
     applySettingsToUI();
+  });
+  if (spaceKeyRepeatEl) spaceKeyRepeatEl.addEventListener('change', () => {
+    const s = getSettings();
+    s.spaceKeyRepeat = spaceKeyRepeatEl.checked;
+    setSettings(s);
   });
 
   const resetBtn = document.getElementById('settings-reset-btn');
@@ -283,7 +299,13 @@ export function mount(): void {
     const target = e.target as HTMLElement;
     if (target?.closest('input, select, textarea, [role="dialog"]')) return;
     e.preventDefault();
-    handleMineClick();
+    mineZone?.classList.add('mine-zone--active');
+    const allowRepeat = getSettings().spaceKeyRepeat;
+    if (!e.repeat || allowRepeat) handleMineClick();
+  });
+  document.addEventListener('keyup', (e: KeyboardEvent) => {
+    if (e.code !== 'Space') return;
+    document.getElementById('mine-zone')?.classList.remove('mine-zone--active');
   });
 
   const buyPlanetBtn = document.getElementById('buy-planet-btn');
