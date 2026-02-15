@@ -1,9 +1,9 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './base.js';
 import * as fs from 'node:fs';
 
 test.describe('Tabs', () => {
-  test('keys 1-6 switch to correct panel', async ({ page }) => {
-    await page.goto('/');
+  test('keys 1-6 switch to correct panel', async ({ page, gotoApp }) => {
+    await gotoApp();
     const panels = [
       '#panel-mine',
       '#panel-dashboard',
@@ -18,8 +18,8 @@ test.describe('Tabs', () => {
     }
   });
 
-  test('clicking tab shows same panel', async ({ page }) => {
-    await page.goto('/');
+  test('clicking tab shows same panel', async ({ page, gotoApp }) => {
+    await gotoApp();
     await expect(page.locator('#panel-mine')).toBeVisible();
     await page.locator('#tab-empire').click();
     await expect(page.locator('#panel-empire')).toBeVisible();
@@ -31,12 +31,12 @@ test.describe('Tabs', () => {
 });
 
 test.describe('Empire', () => {
-  test('opening Empire tab shows panel with no console errors', async ({ page }) => {
+  test('opening Empire tab shows panel with no console errors', async ({ page, gotoApp }) => {
     const errors: string[] = [];
     page.on('console', (msg) => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
-    await page.goto('/');
+    await gotoApp();
     await page.keyboard.press('3');
     await expect(page.locator('#panel-empire')).toBeVisible();
     expect(errors).toHaveLength(0);
@@ -44,8 +44,8 @@ test.describe('Empire', () => {
 });
 
 test.describe('Upgrades', () => {
-  test('buying first affordable upgrade decreases coins', async ({ page }) => {
-    await page.goto('/');
+  test('buying first affordable upgrade decreases coins', async ({ page, gotoApp }) => {
+    await gotoApp();
     const coinsEl = page.locator('#coins-value');
     for (let i = 0; i < 20; i++) await page.locator('#mine-zone').click();
     await page.waitForTimeout(200);
@@ -62,8 +62,8 @@ test.describe('Upgrades', () => {
 });
 
 test.describe('Prestige', () => {
-  test('prestige confirm modal opens and cancel closes it', async ({ page }) => {
-    await page.goto('/');
+  test('prestige confirm modal opens and cancel closes it', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-empire').click();
     await expect(page.locator('#panel-empire')).toBeVisible();
     const prestigeBtn = page.locator('#prestige-btn');
@@ -79,8 +79,8 @@ test.describe('Prestige', () => {
 });
 
 test.describe('Settings', () => {
-  test('settings open and close', async ({ page }) => {
-    await page.goto('/');
+  test('settings open and close', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#settings-btn').click();
     await expect(page.locator('#settings-overlay')).toBeVisible();
     await page.locator('#settings-close').click();
@@ -89,8 +89,8 @@ test.describe('Settings', () => {
 });
 
 test.describe('Save', () => {
-  test('export then import restores session', async ({ page }) => {
-    await page.goto('/');
+  test('export then import restores session', async ({ page, gotoApp }) => {
+    await gotoApp();
     for (let i = 0; i < 15; i++) await page.locator('#mine-zone').click();
     await page.waitForTimeout(200);
     const coinsBefore = (await page.locator('#coins-value').textContent()) ?? '';
@@ -115,34 +115,34 @@ test.describe('Save', () => {
 });
 
 test.describe('Research and Stats', () => {
-  test('Research tab shows panel', async ({ page }) => {
-    await page.goto('/');
+  test('Research tab shows panel', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.keyboard.press('4');
     await expect(page.locator('#panel-research')).toBeVisible();
   });
 
-  test('Stats tab shows panel', async ({ page }) => {
-    await page.goto('/');
+  test('Stats tab shows panel', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.keyboard.press('6');
     await expect(page.locator('#panel-stats')).toBeVisible();
   });
 
-  test('Research panel has research section', async ({ page }) => {
-    await page.goto('/');
+  test('Research panel has research section', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-research').click();
     await expect(page.locator('#research-section')).toBeVisible();
   });
 
-  test('Stats panel has production value', async ({ page }) => {
-    await page.goto('/');
+  test('Stats panel has production value', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-stats').click();
     await expect(page.locator('#production-value')).toBeVisible();
   });
 });
 
 test.describe('Mine', () => {
-  test('multiple mine clicks increase coins repeatedly', async ({ page }) => {
-    await page.goto('/');
+  test('multiple mine clicks increase coins repeatedly', async ({ page, gotoApp }) => {
+    await gotoApp();
     const coinsEl = page.locator('#coins-value');
     const first = await coinsEl.textContent();
     for (let i = 0; i < 30; i++) await page.locator('#mine-zone').click();
@@ -151,49 +151,49 @@ test.describe('Mine', () => {
     expect(after).not.toBe(first);
   });
 
-  test('mine zone is visible and has hint', async ({ page }) => {
-    await page.goto('/');
+  test('mine zone is visible and has hint', async ({ page, gotoApp }) => {
+    await gotoApp();
     await expect(page.locator('#mine-zone')).toBeVisible();
     await expect(page.locator('#mine-zone-hint')).toBeVisible();
   });
 
-  test('combo indicator exists', async ({ page }) => {
-    await page.goto('/');
+  test('combo indicator exists', async ({ page, gotoApp }) => {
+    await gotoApp();
     await expect(page.locator('#combo-indicator')).toBeVisible();
   });
 });
 
 test.describe('Header and modals', () => {
-  test('header shows title and subtitle', async ({ page }) => {
-    await page.goto('/');
+  test('header shows title and subtitle', async ({ page, gotoApp }) => {
+    await gotoApp();
     await expect(page.locator('h1')).toContainText('STELLAR MINER');
   });
 
-  test('info modal opens and closes', async ({ page }) => {
-    await page.goto('/');
+  test('info modal opens and closes', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#info-btn').click();
     await expect(page.locator('#info-overlay')).toBeVisible();
     await page.locator('#info-close').click();
     await expect(page.locator('#info-overlay')).not.toBeVisible();
   });
 
-  test('settings has export and import buttons', async ({ page }) => {
-    await page.goto('/');
+  test('settings has export and import buttons', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#settings-btn').click();
     await expect(page.locator('#settings-export-btn')).toBeVisible();
     await expect(page.locator('#settings-import-btn')).toBeVisible();
     await page.locator('#settings-close').click();
   });
 
-  test('settings has theme selector', async ({ page }) => {
-    await page.goto('/');
+  test('settings has theme selector', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#settings-btn').click();
     await expect(page.locator('#setting-theme')).toBeVisible();
     await page.locator('#settings-close').click();
   });
 
-  test('Escape closes settings when open', async ({ page }) => {
-    await page.goto('/');
+  test('Escape closes settings when open', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#settings-btn').click();
     await expect(page.locator('#settings-overlay')).toBeVisible();
     await page.keyboard.press('Escape');
@@ -202,8 +202,8 @@ test.describe('Header and modals', () => {
 });
 
 test.describe('Tabs extended', () => {
-  test('each tab button toggles correct panel', async ({ page }) => {
-    await page.goto('/');
+  test('each tab button toggles correct panel', async ({ page, gotoApp }) => {
+    await gotoApp();
     const tabs = [
       { tab: '#tab-mine', panel: '#panel-mine' },
       { tab: '#tab-dashboard', panel: '#panel-dashboard' },
@@ -218,8 +218,8 @@ test.describe('Tabs extended', () => {
     }
   });
 
-  test('key 1 returns to Mine panel', async ({ page }) => {
-    await page.goto('/');
+  test('key 1 returns to Mine panel', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.keyboard.press('3');
     await expect(page.locator('#panel-empire')).toBeVisible();
     await page.keyboard.press('1');
@@ -228,40 +228,40 @@ test.describe('Tabs extended', () => {
 });
 
 test.describe('Empire extended', () => {
-  test('Empire has quest section', async ({ page }) => {
-    await page.goto('/');
+  test('Empire has quest section', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-empire').click();
     await expect(page.locator('#quest-section')).toBeVisible();
   });
 
-  test('Empire has crew section', async ({ page }) => {
-    await page.goto('/');
+  test('Empire has crew section', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-empire').click();
     await expect(page.locator('#crew-section')).toBeVisible();
   });
 
-  test('Empire has planets section', async ({ page }) => {
-    await page.goto('/');
+  test('Empire has planets section', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-empire').click();
     await expect(page.locator('#planets-section')).toBeVisible();
   });
 
-  test('Empire has prestige section', async ({ page }) => {
-    await page.goto('/');
+  test('Empire has prestige section', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-empire').click();
     await expect(page.locator('#prestige-section')).toBeVisible();
   });
 });
 
 test.describe('Upgrades extended', () => {
-  test('Upgrades panel has upgrade list container', async ({ page }) => {
-    await page.goto('/');
+  test('Upgrades panel has upgrade list container', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-upgrades').click();
     await expect(page.locator('#upgrade-list')).toBeVisible();
   });
 
-  test('buying mining robot then clicking mine shows production', async ({ page }) => {
-    await page.goto('/');
+  test('buying mining robot then clicking mine shows production', async ({ page, gotoApp }) => {
+    await gotoApp();
     for (let i = 0; i < 25; i++) await page.locator('#mine-zone').click();
     await page.waitForTimeout(150);
     await page.locator('#tab-upgrades').click();
@@ -277,8 +277,8 @@ test.describe('Upgrades extended', () => {
 });
 
 test.describe('Prestige extended', () => {
-  test('prestige confirm overlay has cancel and confirm buttons', async ({ page }) => {
-    await page.goto('/');
+  test('prestige confirm overlay has cancel and confirm buttons', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#tab-empire').click();
     const prestigeBtn = page.locator('#prestige-btn');
     if (await prestigeBtn.isDisabled()) {
@@ -293,8 +293,8 @@ test.describe('Prestige extended', () => {
 });
 
 test.describe('Save extended', () => {
-  test('export produces valid JSON with version', async ({ page }) => {
-    await page.goto('/');
+  test('export produces valid JSON with version', async ({ page, gotoApp }) => {
+    await gotoApp();
     await page.locator('#settings-btn').click();
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#settings-export-btn').click();
@@ -305,5 +305,154 @@ test.describe('Save extended', () => {
     const data = JSON.parse(json);
     expect(data.version).toBeDefined();
     expect(data.session).toBeDefined();
+  });
+});
+
+test.describe("What's new / Info", () => {
+  test('info modal opens and shows version', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#info-btn').click();
+    await expect(page.locator('#info-overlay')).toBeVisible();
+    await expect(page.locator('#info-version-value')).toBeVisible();
+    await page.locator('#info-close').click();
+    await expect(page.locator('#info-overlay')).not.toBeVisible();
+  });
+
+  test('info modal has changelog list container', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#info-btn').click();
+    await expect(page.locator('#info-changelog-list')).toBeVisible();
+    await page.locator('#info-close').click();
+  });
+});
+
+test.describe('Keyboard', () => {
+  test('Space key mines from Mine tab', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await expect(page.locator('#panel-mine')).toBeVisible();
+    const coinsEl = page.locator('#coins-value');
+    const initial = await coinsEl.textContent();
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(200);
+    const after = await coinsEl.textContent();
+    expect(after).not.toBe(initial);
+  });
+
+  test('Escape closes info modal when open', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#info-btn').click();
+    await expect(page.locator('#info-overlay')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#info-overlay')).not.toBeVisible();
+  });
+});
+
+test.describe('Settings extended', () => {
+  test('settings has language selector', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#settings-btn').click();
+    await expect(page.locator('#setting-language')).toBeVisible();
+    await page.locator('#settings-close').click();
+  });
+
+  test('settings has achievements toggle', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#settings-btn').click();
+    await expect(page.locator('#achievements-toggle-btn')).toBeVisible();
+    await page.locator('#settings-close').click();
+  });
+
+  test('settings has reset progress button', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#settings-btn').click();
+    await expect(page.locator('#settings-reset-btn')).toBeVisible();
+    await page.locator('#settings-close').click();
+  });
+
+  test('reset confirm modal opens and cancel closes it', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#settings-btn').click();
+    await page.locator('#settings-reset-btn').click();
+    await expect(page.locator('#reset-confirm-overlay.reset-confirm-overlay--open')).toBeVisible();
+    await page.locator('#reset-confirm-cancel').click();
+    await expect(page.locator('#reset-confirm-overlay.reset-confirm-overlay--open')).not.toBeVisible();
+    await page.locator('#settings-close').click();
+  });
+});
+
+test.describe('Dashboard extended', () => {
+  test('Dashboard has Go to Mine button', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#tab-dashboard').click();
+    await expect(page.locator('#panel-dashboard')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Go to Mine/i })).toBeVisible();
+  });
+
+  test('Dashboard shows coins and production', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#tab-dashboard').click();
+    await expect(page.locator('#dashboard-section')).toContainText('Coins');
+    await expect(page.locator('#dashboard-section')).toContainText('Production');
+  });
+});
+
+test.describe('Quest', () => {
+  test('Quest section shows progress', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#tab-empire').click();
+    await expect(page.locator('#quest-section')).toBeVisible();
+    await expect(page.locator('#quest-progress')).toBeVisible();
+  });
+
+  test('Quest claim button exists', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#tab-empire').click();
+    await expect(page.locator('#quest-claim')).toBeVisible();
+  });
+});
+
+test.describe('Prestige rewards', () => {
+  test('prestige rewards button opens modal and close works', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#tab-empire').click();
+    const rewardsBtn = page.locator('#prestige-rewards-btn');
+    if ((await rewardsBtn.count()) === 0) {
+      test.skip(true, 'Prestige rewards not yet visible');
+      return;
+    }
+    await rewardsBtn.click();
+    await expect(page.locator('#prestige-rewards-overlay.prestige-rewards-overlay--open')).toBeVisible();
+    await page.locator('#prestige-rewards-close').click();
+    await expect(page.locator('#prestige-rewards-overlay.prestige-rewards-overlay--open')).not.toBeVisible();
+  });
+});
+
+test.describe('Events hint', () => {
+  test('events hint trigger exists in header stats', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await expect(page.locator('#events-hint-trigger')).toBeVisible();
+  });
+
+  test('events hint modal opens and closes', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#events-hint-trigger').click();
+    await expect(page.locator('#events-hint-overlay.events-hint-overlay--open')).toBeVisible();
+    await page.locator('#events-hint-close').click();
+    await expect(page.locator('#events-hint-overlay.events-hint-overlay--open')).not.toBeVisible();
+  });
+});
+
+test.describe('Stats panel', () => {
+  test('Stats panel shows statistics container', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await page.locator('#tab-stats').click();
+    await expect(page.locator('#statistics-container')).toBeVisible();
+  });
+});
+
+test.describe('Next milestone', () => {
+  test('next milestone text is visible', async ({ page, gotoApp }) => {
+    await gotoApp();
+    await expect(page.locator('#next-milestone')).toBeVisible();
   });
 });

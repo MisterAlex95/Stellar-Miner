@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.14",
+    "date": "2026-02-15",
+    "changes": [
+      "Planets section: collapse/expand by solar system. Each system (Alpha Centauri, Beta Ceti, etc.) has a header you can click to show or hide its planets."
+    ]
+  },
+  {
     "version": "0.4.13",
     "date": "2026-02-15",
     "changes": [

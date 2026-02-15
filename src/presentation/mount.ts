@@ -212,6 +212,17 @@ export function updateTabMenuVisibility(): void {
       (tabId === 'stats' && unlocked.has('upgrades'));
     item.style.display = isUnlocked ? '' : 'none';
   });
+  updateTabMoreWrapVisibility();
+}
+
+/** Hide ⋯ button when no menu item is visible (dropdown would be empty). */
+function updateTabMoreWrapVisibility(): void {
+  const wrap = document.querySelector<HTMLElement>('.app-tabs-more-wrap');
+  if (!wrap) return;
+  const hasVisibleItem = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-menu-item')).some(
+    (el) => getComputedStyle(el).display !== 'none'
+  );
+  wrap.classList.toggle('app-tabs-more-wrap--empty', !hasVisibleItem);
 }
 
 /** Update ⋯ button orange state: only active when current tab is hidden (in overflow menu). Call from switchTab and from game loop on resize. */

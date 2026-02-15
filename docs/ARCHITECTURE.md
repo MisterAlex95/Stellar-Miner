@@ -169,3 +169,78 @@ Events that occur in the domain and can trigger side effects.
 10. **Observability** — **`src/application/eventBus.ts`**: subscribe/emit for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed; **performance.mark** in game loop and in SaveLoadService save.
 11. **Handlers** — Split by domain into **handlersSave**, **handlersMine**, **handlersUpgrade**, **handlersPlanet**, **handlersQuest**, **handlersPrestige**, **handlersResearch**, **handlersSettings**, **handlersDebug**; **handlers.ts** re-exports for a single entry point.
 12. **Planet affinity** — Planet type (rocky/desert/ice/volcanic/gas), visuals (colors, texture, rings/belt, size) and affinity stats derived deterministically from planet name; **planetAffinity.ts** + **data/planetAffinity.json**.
+
+---
+
+## 12. Game rules (how to play)
+
+Summary of the game’s rules and numbers. Exact values come from **balance.json**, **gameConfig.json**, **progression.json**, and the data catalogs.
+
+### Goal
+
+Mine coins (click or idle), buy upgrades and hire crew, expand to new planets, complete quests, and Prestige to gain permanent bonuses so each run goes further.
+
+### Mine click
+
+- **Base**: 1 coin per click before Prestige 1. After Prestige 1, click bonuses apply (Lucky, Super Lucky, Critical, Combo, Research +% click).
+- **Lucky / Super Lucky / Critical**: Random multipliers on click (chances and ranges in **gameConfig.lucky**). Unlocked after first Prestige.
+- **Combo**: Click within **2.4 s** of the previous click to build a combo. Minimum **6 clicks** to get a multiplier; each extra level adds **+9%** up to **×1.55** (names: Hot, On fire, Unstoppable, Legendary, Mega). Combo applies to click reward.
+
+### Upgrades
+
+- **Catalog**: **data/upgrades.json** (tiers 1–10). Each upgrade has cost, coins/s, and required astronauts. Cost for the next copy: **baseCost × 1.19^ownedCount**.
+- **Slots**: Each planet has a limited number of slots (default **6**). Most upgrades and each housing module use one slot. Add slots per planet at scaling cost (**25,000 × slots^1.38**, first expansion **×0.82**).
+
+### Crew (astronauts)
+
+- **Hire cost**: **2,500 × 1.2^count** (next astronaut costs more). **+1.5%** production per astronaut (stacking).
+- **Capacity**: Base **2** per planet; each **housing** on any planet adds **+2** capacity. Overcrowding applies a morale malus.
+- **Professions**: Miners, scientists, pilots (and veterans from expeditions). Bonuses from **balance.json** (miner, scientist, pilot, veteran, morale).
+
+### Planets and expeditions
+
+- **New planet cost**: **120,000 × (planetCount + 1) × 1.28^planetCount**.
+- **Expedition**: Requires **2–6** astronauts (scales with planet count). **Duration** increases with planet count (base + per-planet ms). Each astronaut has a **death chance**; if all die, the planet is not discovered.
+- **Planet bonus**: **+4%** production per extra planet (first planet is base).
+
+### Housing
+
+- **Cost per planet**: **12,000 × 1.26^count** (count = housing already on that planet). **+2** crew capacity per housing. Uses one upgrade slot on that planet.
+
+### Research
+
+- **Skill tree**: **data/research.json**. Unlock nodes by spending coins; each attempt has a success chance (can fail, coins lost). Scientists in crew increase success chance (capped). Grants **+% production** and **+% click**. **Resets on Prestige.**
+
+### Events
+
+- **Trigger**: Random event every **~2 min** (interval and min delay in **gameConfig.timing**). First event after unlock is sooner (**firstEventDelayMs**).
+- **Pool**: Only **positive** events until **4** events have been triggered in the run; then **negative** events can appear (**events.negativeUnlockAfterTriggers**). Each event has a **multiplier** and **duration**; active events multiply production until they expire.
+
+### Quests
+
+- **Unlock**: **250,000** coins (progression).
+- **Types**: Random (coins, production, upgrade, astronauts, prestige_today, combo_tier, events_triggered, tier1_set). Reach the target, then **Claim**.
+- **Streak**: Claim within **5 minutes** of completing a quest to build a streak. **+12%** reward per streak level (max streak **3**). If you don’t claim in time, streak resets.
+
+### Prestige
+
+- **Threshold**: **5,000,000** coins (current wallet).
+- **Effect**: Reset run (coins, planets, upgrades, crew, research). Keep **Prestige level** and **total coins ever**. **+4%** production per Prestige level (permanent, stacking). From **Prestige 2** onward, **+4%** click per level (stacking).
+
+### Offline progress
+
+- **Minimum absence**: **1 minute** before offline coins apply.
+- **Cap**: Full production rate for up to **12 hours**. After 12 h: **80%** rate for 12–14 h, then linear decay to **50%** at 24 h; beyond 24 h, **50%** rate.
+
+### Milestones and achievements
+
+- **Milestones**: Toasts when **total coins ever** crosses thresholds (from **gameConfig.milestones**).
+- **Achievements**: Unlock by prestige level, quest streak, combo master, etc. (**data/achievements.json**). Shown in Stats.
+
+### Daily bonus
+
+- **800** coins once per calendar day (**gameConfig.dailyBonusCoins**).
+
+### Progression unlocks (coin thresholds)
+
+Features unlock when **current coins** (wallet) reach a threshold (**progression.json**): Welcome 0, Upgrades 30, Crew 1,500, Research 12,000, Planets & Events 120,000, Quests 250,000, Prestige 5,000,000.

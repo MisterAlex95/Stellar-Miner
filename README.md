@@ -72,8 +72,8 @@ To use GitHub Pages: in the repo **Settings → Pages**, set **Source** to “Gi
 
 ## Documentation
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — DDD overview: domains, entities, value objects, aggregates, services, events, layered architecture, current flows, code references, and implemented improvements.
-- [docs/PROGRESSION_CURVE.md](docs/PROGRESSION_CURVE.md) — Economy reference: upgrade costs, unlocks, time estimates, milestones, prestige.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — DDD overview, layered architecture, code references, **§12 Game rules** (objectives, mine click, combo, upgrades, crew, planets, events, quests, prestige, offline, milestones, achievements).
+- [docs/PROGRESSION_CURVE.md](docs/PROGRESSION_CURVE.md) — Economy reference: upgrade costs, progression unlocks, astronaut/planet/slot/housing formulas, milestones, prestige (aligned with balance.json).
 - [docs/IDEAS.md](docs/IDEAS.md) — Backlog of gameplay ideas for future features.
 - **AI / Cursor** — Project rules for assistants live in `.cursor/rules/` (stellar-miner-project.mdc, typescript-conventions.mdc).
 

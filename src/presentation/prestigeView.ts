@@ -1,6 +1,6 @@
 import { getSession, getSettings } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
-import { PRESTIGE_COIN_THRESHOLD } from '../domain/constants.js';
+import { PRESTIGE_COIN_THRESHOLD, PRESTIGE_BONUS_PER_LEVEL } from '../domain/constants.js';
 import { updateTooltipForButton } from './components/buttonTooltip.js';
 
 let lastCanPrestige = false;
@@ -31,12 +31,14 @@ export function renderPrestigeSection(): void {
   if (!statusEl || !btnEl) return;
   const canPrestige = player.coins.gte(PRESTIGE_COIN_THRESHOLD);
   const title = getPrestigeTitle(player.prestigeLevel);
+  const prestigePct = Math.round(player.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL * 100);
   statusEl.textContent =
     player.prestigeLevel > 0
-      ? `Prestige level ${player.prestigeLevel} — ${title} (+${player.prestigeLevel * 5}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`
+      ? `Prestige level ${player.prestigeLevel} — ${title} (+${prestigePct}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`
       : `Reach ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to unlock Prestige.`;
+  const tooltipPct = Math.round(PRESTIGE_BONUS_PER_LEVEL * 100);
   const tooltipText = canPrestige
-    ? 'Reset coins and planets to gain +5% production per prestige level forever'
+    ? `Reset coins and planets to gain +${tooltipPct}% production per prestige level forever`
     : `Reach ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige`;
   updateTooltipForButton(btnEl, tooltipText);
   btnEl.toggleAttribute('disabled', !canPrestige);

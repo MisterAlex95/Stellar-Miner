@@ -20,37 +20,37 @@ Each planet has a **limited number of upgrade slots**. The first planet starts w
 
 ## 2. Upgrades (cost and production)
 
-Each tier multiplies cost by ×10 from tier 2 onward. Production scales by ×5 per tier (efficiency decreases at higher tiers).
+Cost for the next copy of an upgrade: **baseCost × 1.19^ownedCount**. Production per upgrade is fixed per type. First tier (Mining Robot) does not use a slot by default.
 
-| Tier | Name             | Cost (⬡)   | Prod (/s) | Cost per 1/s | Crew | Typical time to afford (idle at prev. prod) |
-|------|------------------|------------|-----------|--------------|------|----------------------------------------------|
-| 1    | Mining Robot     | 25         | 1         | 25           | 0    | ~25 clicks (~30 s active)                    |
-| 2    | Drill Mk.I       | 1,000      | 10        | 100          | 1    | ~17 min at 1/s                               |
-| 3    | Drill Mk.II      | 10,000     | 50        | 200          | 2    | ~17 min at 10/s                              |
-| 4    | Asteroid Rig     | 100,000    | 250       | 400          | 2    | ~33 min at 50/s                              |
-| 5    | Orbital Station  | 1,000,000  | 1,250     | 800          | 3    | ~1.1 h at 250/s                              |
-| 6    | Deep Core Drill  | 10,000,000 | 6,250     | 1,600        | 3    | ~2.2 h at 1,250/s                            |
-| 7    | Stellar Harvester| 100,000,000| 31,250    | 3,200        | 4    | ~4.4 h at 6,250/s                            |
-| 8    | Quantum Extractor| 1,000,000,000 | 156,250 | 6,400     | 4    | ~9 h at 31,250/s                             |
-| 9    | Void Crusher     | 10,000,000,000 | 781,250 | 12,800   | 5    | ~18 h at 156,250/s                           |
-| 10   | Nexus Collector  | 100,000,000,000 | 3,906,250 | 25,600  | 5    | ~1.5 d at 781,250/s                          |
+| Tier | Name             | Base cost (⬡) | Prod (/s) | Crew | Typical time to afford first (idle at prev. prod) |
+|------|------------------|---------------|-----------|------|----------------------------------------------------|
+| 1    | Mining Robot     | 45            | 0.8       | 0    | ~45 clicks (~1 min active)                         |
+| 2    | Drill Mk.I       | 1,800         | 8         | 1    | ~38 min at 0.8/s                                  |
+| 3    | Drill Mk.II      | 22,000        | 42        | 2    | ~46 min at 8/s                                    |
+| 4    | Asteroid Rig     | 220,000       | 200       | 2    | ~1.5 h at 42/s                                    |
+| 5    | Orbital Station  | 2,500,000     | 1,000     | 3    | ~3.5 h at 200/s                                   |
+| 6    | Deep Core Drill  | 28,000,000    | 5,000     | 3    | ~7 h at 1,000/s                                   |
+| 7    | Stellar Harvester| 320,000,000   | 25,000    | 4    | ~18 h at 5,000/s                                  |
+| 8    | Quantum Extractor| 3,500,000,000 | 125,000   | 4    | ~1.5 d at 25,000/s                                |
+| 9    | Void Crusher     | 42,000,000,000| 625,000   | 5    | ~4 d at 125,000/s                                 |
+| 10   | Nexus Collector  | 550,000,000,000 | 3,125,000| 5    | ~2+ weeks at 625,000/s                            |
 
 ---
 
 ## 3. Progression unlocks (coin threshold)
 
-Unlocks are gated by **current coins** (wallet), not total coins ever.
+Unlocks are gated by **current coins** (wallet), not total coins ever. Values from **progression.json**.
 
 | Threshold (⬡) | Feature    | Rough time to reach (first run, mostly idle) |
 |----------------|------------|-----------------------------------------------|
 | 0              | Welcome    | Start                                         |
-| 15             | Upgrades UI| ~15 clicks                                    |
-| 800            | Crew       | ~13 min at 1/s                                |
-| 5,000          | Research   | ~1 h at 1–10/s                                |
-| 50,000         | Planets    | ~1–2 h at 50–100/s                            |
-| 50,000         | Events     | Same as planets                               |
-| 100,000        | Quests     | ~2–3 h at 50–100/s                            |
-| 1,000,000      | Prestige   | ~3–8 h depending on upgrades/crew/planets     |
+| 30             | Upgrades UI| ~30 clicks                                    |
+| 1,500          | Crew       | ~30 min at 0.8/s                              |
+| 12,000         | Research   | ~4 h at 0.8–8/s                               |
+| 120,000        | Planets    | ~4–8 h at 8–42/s                              |
+| 120,000        | Events     | Same as planets                               |
+| 250,000        | Quests     | ~2–4 h at 42–200/s                            |
+| 5,000,000      | Prestige   | ~6–15 h depending on upgrades/crew/planets     |
 
 ---
 
@@ -58,35 +58,35 @@ Unlocks are gated by **current coins** (wallet), not total coins ever.
 
 ### 4.1 Astronauts
 
-- **Formula**: `floor(1000 × 1.15^count)`. First: 1,000; second: 1,150; third: 1,323; fifth: 1,751.
-- **Effect**: +2% production per astronaut (stacking).
+- **Formula**: `floor(2,500 × 1.2^count)`. First: 2,500; second: 3,000; third: 3,600; fifth: 5,184.
+- **Effect**: +1.5% production per astronaut (stacking).
 
-| # hired | Next cost (⬡) | Idle at 10/s | Idle at 100/s |
-|--------|----------------|--------------|---------------|
-| 0 → 1  | 1,000          | ~1.7 min     | ~10 s         |
-| 1 → 2  | 1,150          | ~2 min       | ~12 s         |
-| 2 → 3  | 1,323          | ~2.2 min     | ~13 s         |
-| 4 → 5  | 1,751          | ~3 min       | ~18 s         |
+| # hired | Next cost (⬡) | Idle at 8/s | Idle at 100/s |
+|--------|----------------|-------------|---------------|
+| 0 → 1  | 2,500          | ~5 min      | ~25 s         |
+| 1 → 2  | 3,000          | ~6 min      | ~30 s         |
+| 2 → 3  | 3,600          | ~7.5 min    | ~36 s         |
+| 4 → 5  | 5,184          | ~11 min     | ~52 s         |
 
 ### 4.2 New planet (expedition)
 
-- **Formula**: `floor(50,000 × (count + 1) × 1.2^count)`. First planet (count 0): 50,000; second: 120,000; third: 216,000.
-- **Effect**: +5% production per extra planet (first planet is base).
+- **Formula**: `floor(120,000 × (count + 1) × 1.28^count)`. First planet (count 0): 120,000; second: 307,200; third: 589,824.
+- **Effect**: +4% production per extra planet (first planet is base).
 
 | Planets owned | Cost for next (⬡) | Idle at 500/s | Idle at 2,000/s |
 |---------------|--------------------|---------------|-----------------|
-| 1             | 50,000             | ~1.7 min      | ~25 s           |
-| 2             | 120,000            | ~4 min        | ~1 min          |
-| 3             | 216,000            | ~7 min        | ~2 min          |
+| 1             | 120,000            | ~4 min        | ~1 min          |
+| 2             | 307,200            | ~10 min       | ~2.5 min        |
+| 3             | 589,824            | ~20 min       | ~5 min          |
 
 ### 4.3 Add slot (per planet)
 
-- **Formula**: `floor(10,000 × maxSlots^1.3)`, first expansion ×0.85. Base slots = 6.
-- Example: 6 → 7 slots ≈ 72,900; 7 → 8 ≈ 97,900.
+- **Formula**: `floor(25,000 × maxSlots^1.38)`, first expansion ×0.82. Base slots = 6.
+- Example: 6 → 7 slots ≈ 209,000; 7 → 8 ≈ 293,000.
 
 ### 4.4 Housing (per planet)
 
-- **Formula**: `floor(5,000 × 1.2^count)`. First: 5,000; second: 6,000; third: 7,200.
+- **Formula**: `floor(12,000 × 1.26^count)`. First: 12,000; second: 15,120; third: 19,051.
 - **Effect**: +2 crew capacity per housing.
 
 ---
@@ -112,9 +112,9 @@ Toast milestones use **total coins ever** (lifetime), not current wallet.
 
 ## 6. Prestige
 
-- **Threshold**: 1,000,000 coins (current wallet).
-- **Effect**: Reset coins and planets; keep total coins ever. +5% production per prestige level (permanent).
-- **First prestige**: typically 4–10 h first run (idle + some clicks). Later runs faster due to prestige bonus and knowledge of the curve.
+- **Threshold**: 5,000,000 coins (current wallet).
+- **Effect**: Reset run (coins, planets, upgrades, crew, research); keep total coins ever and Prestige level. +4% production per prestige level (permanent, stacking). From Prestige 2 onward, +4% click per level.
+- **First prestige**: typically 6–15 h first run (idle + some clicks). Later runs faster due to prestige bonus and knowledge of the curve.
 
 ---
 
@@ -122,11 +122,11 @@ Toast milestones use **total coins ever** (lifetime), not current wallet.
 
 | Phase              | Coins (order) | Time (rough) | Main action                    |
 |--------------------|---------------|--------------|---------------------------------|
-| First upgrade      | 25            | &lt;1 min    | Click to 25                     |
-| First automation   | 25 → 1K       | 15–20 min    | Idle 1/s, then buy Drill        |
-| Crew + research    | 1K → 10K      | 1–2 h        | Hire 1–2, research, more drills |
-| Planets            | 10K → 100K    | 1–2 h        | First expedition, more upgrades |
-| Quest + grind      | 100K → 1M     | 2–5 h        | Quests, events, full slots     |
-| First prestige     | 1M            | —            | Prestige, restart with +5%      |
+| First upgrade      | 45            | &lt;1 min    | Click to 45 (Mining Robot)      |
+| First automation   | 45 → 1.8K     | 30–45 min    | Idle 0.8/s, then buy Drill Mk.I |
+| Crew + research    | 1.8K → 22K    | 2–4 h        | Hire 1–2, research, more drills |
+| Planets            | 22K → 250K    | 2–4 h        | First expedition, more upgrades |
+| Quest + grind      | 250K → 5M     | 4–10 h       | Quests, events, full slots      |
+| First prestige     | 5M            | —            | Prestige, restart with +4%      |
 
 *All times are indicative and depend on activity (idle vs active), RNG (events, research), and choices (quests, order of purchases).*
