@@ -37,6 +37,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  user-select: none;
   z-index: 2;
 }
 
@@ -171,7 +172,7 @@
   }
 }
 
-/* Float coins & combo */
+/* Float coins & combo (non-selectable so drag doesn't highlight them) */
 .float-coin {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -182,6 +183,8 @@
   text-shadow: 0 0 8px var(--accent-glow);
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.6s ease;
+  user-select: none;
+  pointer-events: none;
 }
 
 .float-coin--active {
@@ -219,6 +222,7 @@
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.6s ease;
   pointer-events: none;
+  user-select: none;
   z-index: 3;
 }
 
@@ -279,6 +283,7 @@
   font-size: 1.1rem;
   color: var(--success);
   pointer-events: none;
+  user-select: none;
   z-index: 60;
   opacity: 0;
   transform: translate(-50%, 0);

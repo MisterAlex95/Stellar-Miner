@@ -104,12 +104,23 @@ export function handleMineClick(e?: MouseEvent): void {
   setSessionCoinsFromClicks(getSessionCoinsFromClicks() + coins);
   incrementTotalClicksEver();
 
-  const clientX = e?.clientX ?? 0;
-  const clientY = e?.clientY ?? 0;
-  if (e) showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical, comboMult: comboMult > 1 ? comboMult : undefined });
+  let clientX = e?.clientX;
+  let clientY = e?.clientY;
+  if (clientX == null || clientY == null) {
+    const zone = document.getElementById('mine-zone');
+    if (zone) {
+      const rect = zone.getBoundingClientRect();
+      clientX = rect.left + rect.width / 2;
+      clientY = rect.top + rect.height / 2;
+    } else {
+      clientX = 0;
+      clientY = 0;
+    }
+  }
+  showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical, comboMult: comboMult > 1 ? comboMult : undefined });
   if (superLucky) showSuperLuckyToast(coins);
   if (isCritical) showCriticalToast(coins);
-  mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY);
+  mineZoneCanvasApi?.onMineClick(clientX, clientY);
   if (superLucky || isCritical) {
     const app = document.getElementById('app');
     if (app) {
