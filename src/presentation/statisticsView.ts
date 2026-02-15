@@ -23,6 +23,8 @@ import {
 } from '../application/catalogs.js';
 import { getUnlockedBlocks } from '../application/progression.js';
 import type { BlockId } from '../application/progression.js';
+import { getResearchProductionMultiplier, getResearchProductionPercent, getResearchClickPercent } from '../application/research.js';
+import { t, tParam } from '../application/strings.js';
 
 /** Which block must be unlocked to show each statistics group. */
 const STAT_GROUP_UNLOCK: Record<string, BlockId> = {
@@ -44,6 +46,7 @@ const STAT_IDS = [
   'prestige-bonus',
   'crew-bonus',
   'event-mult',
+  'research-bonus',
   'planets-count',
   'upgrades-count',
   'slots-used',
@@ -208,7 +211,7 @@ function updateChartLegend(legendId: string, legendLabel: string, min: number, m
   const el = document.getElementById(legendId);
   if (!el) return;
   const minmaxEl = el.querySelector('.statistics-chart-legend-minmax');
-  if (minmaxEl) minmaxEl.textContent = `Min ${formatValue(min)} · Max ${formatValue(max)}`;
+  if (minmaxEl) minmaxEl.textContent = tParam('chartMinMax', { min: formatValue(min), max: formatValue(max) });
 }
 
 let lastHistoryLength = 0;
@@ -220,21 +223,21 @@ export function renderStatisticsSection(container: HTMLElement): void {
   lastDrawnHover = null;
   const recentMin = Math.round((STATS_HISTORY_MAX_POINTS * STATS_HISTORY_INTERVAL_MS) / 60000);
   const longTermMin = Math.round((STATS_LONG_TERM_MAX_POINTS * STATS_LONG_TERM_INTERVAL_MS) / 60000);
-  const longTermLabel = longTermMin >= 60 ? `Last ${longTermMin / 60} h` : `Last ${longTermMin} min`;
+  const longTermLabel = longTermMin >= 60 ? tParam('lastXHours', { n: longTermMin / 60 }) : tParam('lastXMin', { n: longTermMin });
   container.innerHTML = `
-    <h2>Statistics</h2>
-    <p class="statistics-intro">Track your mining empire: economy, progression, and activity. Chart data is saved across sessions.</p>
+    <h2>${t('statisticsTitle')}</h2>
+    <p class="statistics-intro">${t('statisticsIntro')}</p>
     <div class="statistics-grid">
       <section class="statistics-group statistics-charts" aria-labelledby="stat-charts" data-stat-group="charts">
-        <h3 id="stat-charts" class="statistics-group-title">Charts</h3>
+        <h3 id="stat-charts" class="statistics-group-title">${t('chartsTitle')}</h3>
         <div class="statistics-chart-range" role="tablist" aria-label="Chart time range">
-          <button type="button" class="statistics-range-btn statistics-range-btn--active" data-range="recent" role="tab" aria-selected="true">Last ${recentMin} min</button>
+          <button type="button" class="statistics-range-btn statistics-range-btn--active" data-range="recent" role="tab" aria-selected="true">${tParam('lastXMin', { n: recentMin })}</button>
           <button type="button" class="statistics-range-btn" data-range="longTerm" role="tab" aria-selected="false">${longTermLabel}</button>
         </div>
         <div class="statistics-charts-row">
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">Coins over time</div>
-            <canvas class="statistics-chart" id="chart-coins" width="260" height="120" role="img" aria-label="Coins over time line chart. Hover to see values."></canvas>
+            <div class="statistics-chart-label">${t('coinsOverTime')}</div>
+            <canvas class="statistics-chart" id="chart-coins" width="260" height="120" role="img" aria-label="${t('chartAriaCoins')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-coins">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins"></span>
               <span class="statistics-chart-legend-label">Coins ⬡</span>
@@ -242,8 +245,8 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">Production over time</div>
-            <canvas class="statistics-chart" id="chart-production" width="260" height="120" role="img" aria-label="Production over time line chart. Hover to see values."></canvas>
+            <div class="statistics-chart-label">${t('productionOverTime')}</div>
+            <canvas class="statistics-chart" id="chart-production" width="260" height="120" role="img" aria-label="${t('chartAriaProduction')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-production">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--production"></span>
               <span class="statistics-chart-legend-label">Production /s</span>
@@ -251,8 +254,8 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">Total coins ever</div>
-            <canvas class="statistics-chart" id="chart-total-ever" width="260" height="120" role="img" aria-label="Total coins ever line chart. Hover to see values."></canvas>
+            <div class="statistics-chart-label">${t('totalCoinsEverChart')}</div>
+            <canvas class="statistics-chart" id="chart-total-ever" width="260" height="120" role="img" aria-label="${t('chartAriaTotalEver')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-total-ever">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--total-ever"></span>
               <span class="statistics-chart-legend-label">Total ever ⬡</span>
@@ -263,127 +266,131 @@ export function renderStatisticsSection(container: HTMLElement): void {
         <div id="chart-tooltip" class="statistics-chart-tooltip" aria-live="polite" aria-hidden="true"></div>
       </section>
       <section class="statistics-group" aria-labelledby="stat-economy" data-stat-group="economy">
-        <h3 id="stat-economy" class="statistics-group-title">Economy</h3>
+        <h3 id="stat-economy" class="statistics-group-title">${t('economyTitle')}</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
-            <span class="statistics-card-label">Current coins</span>
+            <span class="statistics-card-label">${t('currentCoins')}</span>
             <span class="statistics-card-value" data-stat-id="coins">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Production (effective)</span>
+            <span class="statistics-card-label">${t('productionEffective')}</span>
             <span class="statistics-card-value" data-stat-id="production">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Total coins ever</span>
+            <span class="statistics-card-label">${t('totalCoinsEverLabel')}</span>
             <span class="statistics-card-value" data-stat-id="total-coins-ever">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Avg coins per click (session)</span>
+            <span class="statistics-card-label">${t('avgCoinsPerClick')}</span>
             <span class="statistics-card-value" data-stat-id="coins-per-click-avg">—</span>
           </div>
         </div>
       </section>
       <section class="statistics-group" aria-labelledby="stat-production-breakdown" data-stat-group="production-breakdown">
-        <h3 id="stat-production-breakdown" class="statistics-group-title">Production breakdown</h3>
+        <h3 id="stat-production-breakdown" class="statistics-group-title">${t('productionBreakdownTitle')}</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
-            <span class="statistics-card-label">Base rate</span>
+            <span class="statistics-card-label">${t('baseRate')}</span>
             <span class="statistics-card-value" data-stat-id="base-production">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Planet bonus</span>
+            <span class="statistics-card-label">${t('planetBonus')}</span>
             <span class="statistics-card-value" data-stat-id="planet-bonus">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Prestige bonus</span>
+            <span class="statistics-card-label">${t('prestigeBonus')}</span>
             <span class="statistics-card-value" data-stat-id="prestige-bonus">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Crew bonus</span>
+            <span class="statistics-card-label">${t('crewBonus')}</span>
             <span class="statistics-card-value" data-stat-id="crew-bonus">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Event multiplier</span>
+            <span class="statistics-card-label">${t('eventMultiplier')}</span>
             <span class="statistics-card-value" data-stat-id="event-mult">—</span>
+          </div>
+          <div class="statistics-card">
+            <span class="statistics-card-label">${t('researchBonus')}</span>
+            <span class="statistics-card-value" data-stat-id="research-bonus">—</span>
           </div>
         </div>
       </section>
       <section class="statistics-group" aria-labelledby="stat-progression" data-stat-group="progression">
-        <h3 id="stat-progression" class="statistics-group-title">Progression</h3>
+        <h3 id="stat-progression" class="statistics-group-title">${t('progressionTitle')}</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
-            <span class="statistics-card-label">Planets</span>
+            <span class="statistics-card-label">${t('planetsCount')}</span>
             <span class="statistics-card-value" data-stat-id="planets-count">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Upgrades owned</span>
+            <span class="statistics-card-label">${t('upgradesOwned')}</span>
             <span class="statistics-card-value" data-stat-id="upgrades-count">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Slots used / total</span>
+            <span class="statistics-card-label">${t('slotsUsedTotal')}</span>
             <span class="statistics-card-value" data-stat-id="slots-used">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Prestige level</span>
+            <span class="statistics-card-label">${t('prestigeLevel')}</span>
             <span class="statistics-card-value" data-stat-id="prestige-level">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Crew (free)</span>
+            <span class="statistics-card-label">${t('crewFree')}</span>
             <span class="statistics-card-value" data-stat-id="crew-count">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Crew (assigned)</span>
+            <span class="statistics-card-label">${t('crewAssigned')}</span>
             <span class="statistics-card-value" data-stat-id="assigned-astronauts">—</span>
           </div>
         </div>
       </section>
       <section class="statistics-group" aria-labelledby="stat-activity" data-stat-group="activity">
-        <h3 id="stat-activity" class="statistics-group-title">Activity</h3>
+        <h3 id="stat-activity" class="statistics-group-title">${t('activityTitle')}</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
-            <span class="statistics-card-label">Clicks (lifetime)</span>
+            <span class="statistics-card-label">${t('clicksLifetime')}</span>
             <span class="statistics-card-value" data-stat-id="clicks-lifetime">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Clicks (this session)</span>
+            <span class="statistics-card-label">${t('clicksSession')}</span>
             <span class="statistics-card-value" data-stat-id="clicks-session">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Coins from clicks (session)</span>
+            <span class="statistics-card-label">${t('coinsFromClicksSession')}</span>
             <span class="statistics-card-value" data-stat-id="coins-from-clicks-session">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Total play time</span>
+            <span class="statistics-card-label">${t('totalPlayTime')}</span>
             <span class="statistics-card-value" data-stat-id="play-time">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Session duration</span>
+            <span class="statistics-card-label">${t('sessionDuration')}</span>
             <span class="statistics-card-value" data-stat-id="session-duration">—</span>
           </div>
         </div>
       </section>
       <section class="statistics-group" aria-labelledby="stat-quests-events" data-stat-group="quests-events">
-        <h3 id="stat-quests-events" class="statistics-group-title">Quests & events</h3>
+        <h3 id="stat-quests-events" class="statistics-group-title">${t('questsEventsTitle')}</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
-            <span class="statistics-card-label">Quest streak</span>
+            <span class="statistics-card-label">${t('questStreak')}</span>
             <span class="statistics-card-value" data-stat-id="quest-streak">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Active events</span>
+            <span class="statistics-card-label">${t('activeEvents')}</span>
             <span class="statistics-card-value" data-stat-id="active-events-count">—</span>
           </div>
           <div class="statistics-card">
-            <span class="statistics-card-label">Next event in</span>
+            <span class="statistics-card-label">${t('nextEventIn')}</span>
             <span class="statistics-card-value" data-stat-id="next-event-in">—</span>
           </div>
         </div>
       </section>
       <section class="statistics-group" aria-labelledby="stat-achievements" data-stat-group="achievements">
-        <h3 id="stat-achievements" class="statistics-group-title">Achievements</h3>
+        <h3 id="stat-achievements" class="statistics-group-title">${t('achievementsTitle')}</h3>
         <div class="statistics-cards">
           <div class="statistics-card statistics-card--wide">
-            <span class="statistics-card-label">Unlocked</span>
+            <span class="statistics-card-label">${t('unlockedLabel')}</span>
             <span class="statistics-card-value" data-stat-id="achievements-unlocked">—</span>
             <span class="statistics-card-suffix"> / </span>
             <span class="statistics-card-value" data-stat-id="achievements-total">—</span>
@@ -499,7 +506,8 @@ export function updateStatisticsSection(): void {
   const player = session.player;
   const now = Date.now();
   const eventMult = getEventMultiplier();
-  const effectiveRate = player.effectiveProductionRate * eventMult;
+  const researchMult = getResearchProductionMultiplier();
+  const effectiveRate = player.effectiveProductionRate * eventMult * researchMult;
   const playTime = getPlayTimeStats();
   const sessionStart = getGameStartTime();
   const sessionDurationMs = now - sessionStart;
@@ -526,6 +534,15 @@ export function updateStatisticsSection(): void {
   setStat('prestige-bonus', prestigeBonusPct > 0 ? `+${prestigeBonusPct.toFixed(0)}%` : '—');
   setStat('crew-bonus', crewBonusPct > 0 ? `+${crewBonusPct.toFixed(0)}%` : '—');
   setStat('event-mult', eventMult > 1 ? `×${eventMult.toFixed(2)}` : '×1');
+  const researchProdPct = getResearchProductionPercent();
+  const researchClickPct = getResearchClickPercent();
+  const researchBonusText =
+    researchProdPct > 0 || researchClickPct > 0
+      ? [researchProdPct > 0 ? `+${researchProdPct.toFixed(0)}% prod` : '', researchClickPct > 0 ? `+${researchClickPct.toFixed(0)}% click` : '']
+          .filter(Boolean)
+          .join(', ')
+      : '—';
+  setStat('research-bonus', researchBonusText);
   setStat('planets-count', String(player.planets.length));
   setStat('upgrades-count', String(player.upgrades.length));
   setStat('slots-used', `${usedSlots} / ${totalSlots}`);

@@ -7,12 +7,30 @@ import {
   shouldShowWelcome,
   type BlockId,
 } from '../application/progression.js';
+import { t, type StringKey } from '../application/strings.js';
+
+const INTRO_READY_DELAY_MS = 5000;
 
 let previousUnlocked: Set<BlockId> = new Set();
 let progressionInitialized = false;
+let introCanClose = false;
+let introReadyTimeoutId: ReturnType<typeof setTimeout> | null = null;
+let introProgressStartTs = 0;
+let introProgressRafId: number | null = null;
 
 function getBlockById(id: BlockId) {
   return PROGRESSION_BLOCKS.find((b) => b.id === id);
+}
+
+function tickIntroProgress(): void {
+  const wrap = document.getElementById('intro-progress-wrap');
+  const bar = document.getElementById('intro-progress-bar');
+  if (!wrap || !bar) return;
+  const elapsed = Date.now() - introProgressStartTs;
+  const pct = Math.min(100, (elapsed / INTRO_READY_DELAY_MS) * 100);
+  bar.style.width = `${pct}%`;
+  bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+  if (pct < 100) introProgressRafId = requestAnimationFrame(tickIntroProgress);
 }
 
 export function showIntroModal(blockId: BlockId): void {
@@ -21,23 +39,81 @@ export function showIntroModal(blockId: BlockId): void {
   const overlay = document.getElementById('intro-overlay');
   const titleEl = document.getElementById('intro-title');
   const bodyEl = document.getElementById('intro-body');
+  const gotItBtn = overlay?.querySelector('#intro-got-it') as HTMLButtonElement | null;
+  const progressWrap = document.getElementById('intro-progress-wrap');
+  const progressBar = document.getElementById('intro-progress-bar');
   if (!overlay || !titleEl || !bodyEl) return;
-  titleEl.textContent = block.title;
-  bodyEl.textContent = block.body;
+
+  if (introReadyTimeoutId) {
+    clearTimeout(introReadyTimeoutId);
+    introReadyTimeoutId = null;
+  }
+  if (introProgressRafId) {
+    cancelAnimationFrame(introProgressRafId);
+    introProgressRafId = null;
+  }
+
+  introCanClose = false;
+  const titleKey = ('progression' + block.id.charAt(0).toUpperCase() + block.id.slice(1) + 'Title') as StringKey;
+  const bodyKey = ('progression' + block.id.charAt(0).toUpperCase() + block.id.slice(1) + 'Body') as StringKey;
+  titleEl.textContent = t(titleKey);
+  bodyEl.textContent = t(bodyKey);
+  if (progressWrap) {
+    progressWrap.style.display = '';
+    progressWrap.setAttribute('aria-hidden', 'false');
+  }
+  if (progressBar) {
+    progressBar.style.width = '0%';
+    progressBar.setAttribute('aria-valuenow', '0');
+  }
+  if (gotItBtn) {
+    gotItBtn.disabled = true;
+  }
   overlay.classList.add('intro-overlay--open');
   overlay.setAttribute('aria-hidden', 'false');
-  (overlay.querySelector('#intro-got-it') as HTMLElement)?.focus();
+
+  introProgressStartTs = Date.now();
+  introProgressRafId = requestAnimationFrame(tickIntroProgress);
+
+  introReadyTimeoutId = setTimeout(() => {
+    introReadyTimeoutId = null;
+    introCanClose = true;
+    if (gotItBtn) gotItBtn.disabled = false;
+    if (progressWrap) {
+      progressWrap.style.display = 'none';
+      progressWrap.setAttribute('aria-hidden', 'true');
+    }
+    if (introProgressRafId) {
+      cancelAnimationFrame(introProgressRafId);
+      introProgressRafId = null;
+    }
+    gotItBtn?.focus();
+  }, INTRO_READY_DELAY_MS);
 }
 
 export function closeIntroModal(): void {
+  if (introReadyTimeoutId) {
+    clearTimeout(introReadyTimeoutId);
+    introReadyTimeoutId = null;
+  }
+  if (introProgressRafId) {
+    cancelAnimationFrame(introProgressRafId);
+    introProgressRafId = null;
+  }
   const overlay = document.getElementById('intro-overlay');
+  const progressWrap = document.getElementById('intro-progress-wrap');
   if (overlay) {
     overlay.classList.remove('intro-overlay--open');
     overlay.setAttribute('aria-hidden', 'true');
   }
+  if (progressWrap) {
+    progressWrap.style.display = 'none';
+    progressWrap.setAttribute('aria-hidden', 'true');
+  }
 }
 
 function onIntroGotIt(pendingBlockId: BlockId | null): void {
+  if (!introCanClose) return;
   if (pendingBlockId) markModalSeen(pendingBlockId);
   pendingIntroBlockId = null;
   closeIntroModal();
@@ -53,7 +129,9 @@ export function bindIntroModal(): void {
   }
   if (overlay) {
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) onIntroGotIt(pendingIntroBlockId);
+      if (e.target !== overlay) return;
+      if (!introCanClose) return;
+      onIntroGotIt(pendingIntroBlockId);
     });
   }
 }
@@ -100,6 +178,7 @@ export function updateTabVisibility(setActiveTab: (tabId: string) => void): void
       (tabId === 'upgrades' && unlocked.has('upgrades')) ||
       (tabId === 'base' &&
         (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
+      (tabId === 'research' && unlocked.has('research')) ||
       (tabId === 'stats' && unlocked.has('upgrades'));
     tab.style.display = show ? 'block' : 'none';
     if (show) visibleTabs.add(tabId);
@@ -122,8 +201,9 @@ export function isIntroOverlayOpen(): boolean {
   return overlay?.classList.contains('intro-overlay--open') ?? false;
 }
 
-/** Close intro and mark current pending block as seen (e.g. on Escape). */
+/** Close intro and mark current pending block as seen (e.g. on Escape). No-op if still in the 5s lock. */
 export function dismissIntroModal(): void {
+  if (!introCanClose) return;
   if (pendingIntroBlockId) markModalSeen(pendingIntroBlockId);
   pendingIntroBlockId = null;
   closeIntroModal();

@@ -2,6 +2,7 @@ const STORAGE_KEY = 'stellar-miner-settings';
 
 export type LayoutMode = 'tabs' | 'one-page';
 export type ThemeMode = 'light' | 'dark';
+export type Language = 'en' | 'fr';
 
 export type Settings = {
   starfieldSpeed: number;
@@ -14,6 +15,7 @@ export type Settings = {
   reducedMotion: boolean;
   theme: ThemeMode;
   soundEnabled: boolean;
+  language: Language;
 };
 
 const DEFAULTS: Settings = {
@@ -27,6 +29,7 @@ const DEFAULTS: Settings = {
   reducedMotion: false,
   theme: 'dark',
   soundEnabled: true,
+  language: 'en',
 };
 
 export function loadSettings(): Settings {

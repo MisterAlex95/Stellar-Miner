@@ -156,3 +156,49 @@ Mise des coins sur un événement futur (ex. : "Un astéroïde rare va passer da
 Révoltes de Robots
 Si tu achètes trop de robots, ils peuvent se rebeller et voler une partie de ta production.
 
+
+---
+
+## Proposed gameplay improvements (next steps)
+
+Concrete ideas that build on current systems (quests, events, upgrades, prestige). Scope is kept small so they can be implemented incrementally.
+
+**1. Quest types: "Clicks" and "Spend"**
+- **Clicks**: "Make 50 clicks in 2 minutes" — rewards active play; reuses combo/click tracking.
+- **Spend**: "Spend 1,000 coins in one run" — track `totalSpentThisRun` (reset on prestige), reward big purchases.
+
+**2. Event choice (skip or double)**
+- When a random event is about to trigger, show a short choice: "Accept" (normal) or "Skip" (no bonus, no risk). Later: "Double or nothing" (2× effect or cancel).
+- Adds a tiny decision without changing balance much.
+
+**3. Prestige milestones with small perks**
+- At prestige 5, 10, 25, 50: unlock a small permanent perk (e.g. +1% offline cap, or "first quest of the day gives +10%"). Stored in progression; one perk per milestone keeps it simple.
+
+**4. "Double production" short buff**
+- Once per session (or per N hours): button "Overdrive — 2× production for 60 s". Cooldown shown in UI. Gives a burst moment and a reason to stay for one minute.
+
+**5. Upgrade "mastery" or set bonuses**
+- When you own at least one of every upgrade in a tier (e.g. all tier 1–3): small bonus (e.g. +2% production). Encourages variety and revisiting early tiers.
+
+**6. Daily / weekly challenges**
+- One daily quest (harder than normal, better reward) and one weekly (e.g. "Reach 100k total coins ever" or "Prestige 2 times"). Resets at midnight / week; uses existing quest UI with a "Daily" badge.
+
+**7. Sound and juice on key actions**
+- Optional sound on: mine click (soft), upgrade buy, quest claim, prestige, event start. Toggle in settings (sound already exists). One or two subtle effects improve feel.
+
+**8. Event duration visible on first occurrence**
+- First time an event type is seen, show a short tooltip: "Meteor Storm: 2× production for 30 s." So players learn what each event does without reading a doc.
+
+**9. "Next upgrade" hint**
+- In the upgrade list or in stats: "Next recommended: Drill Mk.I" (cheapest upgrade that increases production the most, or first not owned). Uses existing catalogs and progression.
+
+**10. Soft cap on offline progress**
+- Instead of a hard 12 h cap, decay slowly after 12 h (e.g. 80% after 14 h, 50% after 24 h). Rewards coming back without making offline better than active play.
+
+**11. Combo decay indicator**
+- Show a small bar or countdown next to the combo that represents the 2.5 s window. So players see when the combo is about to drop and can click to maintain it.
+
+**12. Planet names / themes**
+- Unlock a "theme" or rename for a planet at a cost (cosmetic only). Or random adjective + planet name (e.g. "Dust Haven — Prosperous"). Stored in save; no balance change.
+
+Pick 2–3 of these for a first batch; quest types (1), prestige perks (3), and overdrive (4) or mastery (5) are the highest impact for the least scope.

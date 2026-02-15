@@ -71,12 +71,18 @@ export class Player {
     return true;
   }
 
-  /** Spend astronauts (e.g. to assign to an upgrade). Returns true if enough crew. */
+  /** Spend astronauts (e.g. to assign to an upgrade or send on expedition). Returns true if enough crew. */
   spendAstronauts(count: number): boolean {
     if (count <= 0) return true;
     if (this.astronautCount < count) return false;
     (this as { astronautCount: number }).astronautCount -= count;
     return true;
+  }
+
+  /** Add astronauts back (e.g. expedition survivors). */
+  addAstronauts(count: number): void {
+    if (count <= 0) return;
+    (this as { astronautCount: number }).astronautCount += count;
   }
 
   /** Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, prestige level +1. */

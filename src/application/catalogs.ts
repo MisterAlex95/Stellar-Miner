@@ -38,7 +38,7 @@ export function createUpgrade(def: UpgradeDef): Upgrade {
   return new Upgrade(def.id, def.name, def.cost, new UpgradeEffect(def.coinsPerSecond));
 }
 
-/** Tiers the player has unlocked for display. Tier 1 is always visible; tier n+1 unlocks when player owns at least one upgrade of tier n. */
+/** Tiers the player has unlocked for display. Tier 1 always; tier n+1 from owning tier n. */
 export function getUnlockedUpgradeTiers(ownedUpgradeIds: string[]): Set<number> {
   const ownedTiers = new Set<number>();
   for (const id of ownedUpgradeIds) {

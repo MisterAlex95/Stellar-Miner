@@ -1,6 +1,6 @@
 import { createMineZoneCanvas } from './MineZoneCanvas.js';
 import { getSettings, getEventContext, setSettings, setMineZoneCanvasApi } from '../application/gameState.js';
-import { t } from '../application/strings.js';
+import { t, applyTranslations } from '../application/strings.js';
 import {
   openSettings,
   closeSettings,
@@ -19,6 +19,7 @@ import {
   handlePrestige,
   handleHireAstronaut,
   handleClaimQuest,
+  startResearchWithProgress,
   handleExportSave,
   handleImportSave,
   openDebugMenu,
@@ -32,6 +33,7 @@ import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
+import { renderResearchSection } from './researchView.js';
 import { renderStatisticsSection } from './statisticsView.js';
 import {
   bindIntroModal,
@@ -44,6 +46,15 @@ import { initTooltips } from './tooltip.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
+
+function isAnyModalOpen(): boolean {
+  return (
+    isIntroOverlayOpen() ||
+    document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open') === true ||
+    document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open') === true ||
+    document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open') === true
+  );
+}
 
 export function switchTab(tabId: string): void {
   const tabs = document.querySelectorAll('.app-tab');
@@ -65,6 +76,7 @@ export function switchTab(tabId: string): void {
   } catch {
     // ignore
   }
+  if (tabId === 'research') renderResearchSection();
 }
 
 /** Apply layout mode: tabs (one panel at a time) or one-page (all sections stacked). */
@@ -84,20 +96,20 @@ export function applyLayout(): void {
       document.querySelector('.app-tab--active')?.getAttribute('data-tab') ||
       localStorage.getItem(TAB_STORAGE_KEY) ||
       DEFAULT_TAB;
-    const validId = ['mine', 'base', 'upgrades', 'stats'].includes(activeId) ? activeId : DEFAULT_TAB;
+    const validId = ['mine', 'base', 'research', 'upgrades', 'stats'].includes(activeId) ? activeId : DEFAULT_TAB;
     switchTab(validId);
   }
 }
 
 const APP_HTML = `
-    <div class="offline-banner" id="offline-banner" aria-live="polite" aria-hidden="true" role="status" hidden>You are offline. Progress may not be saved.</div>
+    <div class="offline-banner" id="offline-banner" aria-live="polite" aria-hidden="true" role="status" hidden data-i18n="offlineIndicator">You are offline. Progress may not be saved.</div>
     <header>
       <div class="header-row">
         <div>
-          <h1>STELLAR MINER</h1>
-          <p class="subtitle">Mine coins. Buy upgrades. Conquer the belt.</p>
+          <h1 data-i18n="appTitle">STELLAR MINER</h1>
+          <p class="subtitle" data-i18n="appSubtitle">Mine coins. Buy upgrades. Conquer the belt.</p>
         </div>
-        <button type="button" class="settings-btn" id="settings-btn" title="Settings" aria-label="Open settings">
+        <button type="button" class="settings-btn" id="settings-btn" data-i18n-title="settings" data-i18n-aria-label="openSettings">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-1.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v1.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-1.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </div>
@@ -105,108 +117,115 @@ const APP_HTML = `
     <div class="settings-overlay" id="settings-overlay" aria-hidden="true">
       <div class="settings-modal" role="dialog" aria-labelledby="settings-title">
         <div class="settings-header">
-          <h2 id="settings-title">Settings</h2>
-          <button type="button" class="settings-close" id="settings-close" aria-label="Close">×</button>
+          <h2 id="settings-title" data-i18n="settings">Settings</h2>
+          <button type="button" class="settings-close" id="settings-close" data-i18n-aria-label="close">×</button>
         </div>
         <div class="settings-body">
           <div class="settings-option">
-            <label for="setting-starfield-speed">Starfield speed</label>
+            <label for="setting-language" data-i18n="language">Language</label>
+            <select id="setting-language" aria-label="Language">
+              <option value="en" data-i18n="languageEn">English</option>
+              <option value="fr" data-i18n="languageFr">Français</option>
+            </select>
+          </div>
+          <div class="settings-option">
+            <label for="setting-starfield-speed" data-i18n="starfieldSpeed">Starfield speed</label>
             <select id="setting-starfield-speed">
-              <option value="0.5">Slow</option>
-              <option value="1" selected>Normal</option>
-              <option value="1.5">Fast</option>
+              <option value="0.5" data-i18n="starfieldSpeedSlow">Slow</option>
+              <option value="1" selected data-i18n="starfieldSpeedNormal">Normal</option>
+              <option value="1.5" data-i18n="starfieldSpeedFast">Fast</option>
             </select>
           </div>
           <div class="settings-option">
             <label class="settings-toggle">
               <input type="checkbox" id="setting-orbit-lines" checked />
-              <span>Show orbit lines</span>
+              <span data-i18n="showOrbitLines">Show orbit lines</span>
             </label>
           </div>
           <div class="settings-option">
             <label class="settings-toggle">
               <input type="checkbox" id="setting-click-particles" checked />
-              <span>Click particles</span>
+              <span data-i18n="clickParticles">Click particles</span>
             </label>
           </div>
           <div class="settings-option">
             <label class="settings-toggle">
               <input type="checkbox" id="setting-compact-numbers" checked />
-              <span>Compact numbers (1.2K)</span>
+              <span data-i18n="compactNumbers">Compact numbers (1.2K)</span>
             </label>
           </div>
           <div class="settings-option">
             <label class="settings-toggle">
               <input type="checkbox" id="setting-space-key-repeat" />
-              <span>Allow Space key repeat (hold to mine)</span>
+              <span data-i18n="spaceKeyRepeat">Allow Space key repeat (hold to mine)</span>
             </label>
           </div>
           <div class="settings-option">
-            <label for="setting-layout">Layout</label>
+            <label for="setting-layout" data-i18n="layout">Layout</label>
             <select id="setting-layout" aria-label="Layout mode">
-              <option value="tabs">Tabs</option>
-              <option value="one-page">One page</option>
+              <option value="tabs" data-i18n="layoutTabs">Tabs</option>
+              <option value="one-page" data-i18n="layoutOnePage">One page</option>
             </select>
           </div>
           <div class="settings-option">
             <label class="settings-toggle">
               <input type="checkbox" id="setting-pause-background" />
-              <span>Pause production when tab in background</span>
+              <span data-i18n="pauseWhenBackground">Pause production when tab in background</span>
             </label>
           </div>
           <div class="settings-option">
-            <label for="setting-theme">Theme</label>
+            <label for="setting-theme" data-i18n="theme">Theme</label>
             <select id="setting-theme" aria-label="Theme">
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
+              <option value="dark" data-i18n="themeDark">Dark</option>
+              <option value="light" data-i18n="themeLight">Light</option>
             </select>
           </div>
           <div class="settings-option">
             <label class="settings-toggle">
               <input type="checkbox" id="setting-sound" />
-              <span>Sound effects</span>
+              <span data-i18n="soundEnabled">Sound effects</span>
             </label>
           </div>
           <div class="settings-option">
             <label class="settings-toggle">
               <input type="checkbox" id="setting-reduced-motion" />
-              <span>Reduce motion</span>
+              <span data-i18n="reducedMotion">Reduce motion</span>
             </label>
           </div>
           <div class="settings-option settings-save-export">
             <div class="settings-save-buttons">
-              <button type="button" class="settings-export-btn" id="settings-export-btn" title="Copy save to clipboard and download as file">Export save</button>
-              <button type="button" class="settings-import-btn" id="settings-import-btn" title="Load a previously exported save (replaces current)">Import save</button>
+              <button type="button" class="settings-export-btn" id="settings-export-btn" title="Copy save to clipboard and download as file" data-i18n="exportSave">Export save</button>
+              <button type="button" class="settings-import-btn" id="settings-import-btn" title="Load a previously exported save (replaces current)" data-i18n="importSave">Import save</button>
             </div>
             <input type="file" id="settings-import-file" accept=".json,application/json" class="settings-import-file" aria-hidden="true" />
           </div>
           <div class="settings-option settings-achievements">
-            <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false">Achievements</button>
+            <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false" data-i18n="achievements">Achievements</button>
             <div class="achievements-list" id="achievements-list" aria-hidden="true"></div>
           </div>
           <div class="settings-option settings-reset">
-            <button type="button" class="reset-btn" id="settings-reset-btn">Reset progress</button>
+            <button type="button" class="reset-btn" id="settings-reset-btn" data-i18n="resetProgress">Reset progress</button>
           </div>
         </div>
       </div>
     </div>
     <div class="reset-confirm-overlay" id="reset-confirm-overlay" aria-hidden="true">
       <div class="reset-confirm-modal" role="alertdialog" aria-labelledby="reset-confirm-title" aria-describedby="reset-confirm-desc">
-        <h2 id="reset-confirm-title">Reset progress?</h2>
-        <p id="reset-confirm-desc">Coins, planets, upgrades, crew, achievements and all progress will be lost. This cannot be undone.</p>
+        <h2 id="reset-confirm-title" data-i18n="resetConfirmTitle">Reset progress?</h2>
+        <p id="reset-confirm-desc" data-i18n="resetConfirmDesc">Coins, planets, upgrades, crew, achievements and all progress will be lost. This cannot be undone.</p>
         <div class="reset-confirm-actions">
-          <button type="button" class="reset-confirm-cancel" id="reset-confirm-cancel">Cancel</button>
-          <button type="button" class="reset-confirm-reset" id="reset-confirm-reset">Reset all</button>
+          <button type="button" class="reset-confirm-cancel" id="reset-confirm-cancel" data-i18n="cancel">Cancel</button>
+          <button type="button" class="reset-confirm-reset" id="reset-confirm-reset" data-i18n="resetAll">Reset all</button>
         </div>
       </div>
     </div>
     <div class="prestige-confirm-overlay" id="prestige-confirm-overlay" aria-hidden="true">
       <div class="prestige-confirm-modal" role="alertdialog" aria-labelledby="prestige-confirm-title" aria-describedby="prestige-confirm-desc">
-        <h2 id="prestige-confirm-title">Prestige?</h2>
-        <p id="prestige-confirm-desc">You'll reset to 0 coins and 1 planet. You keep your new Prestige level and +5% production per level forever.</p>
+        <h2 id="prestige-confirm-title" data-i18n="prestigeConfirmTitle">Prestige?</h2>
+        <p id="prestige-confirm-desc" data-i18n="prestigeConfirmDesc">You'll reset to 0 coins and 1 planet. You keep your new Prestige level and +5% production per level forever.</p>
         <div class="prestige-confirm-actions">
-          <button type="button" class="prestige-confirm-cancel" id="prestige-confirm-cancel">Cancel</button>
-          <button type="button" class="prestige-confirm-do" id="prestige-confirm-do">Prestige</button>
+          <button type="button" class="prestige-confirm-cancel" id="prestige-confirm-cancel" data-i18n="cancel">Cancel</button>
+          <button type="button" class="prestige-confirm-do" id="prestige-confirm-do" data-i18n="prestige">Prestige</button>
         </div>
       </div>
     </div>
@@ -214,17 +233,20 @@ const APP_HTML = `
       <div class="intro-modal" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-body">
         <h2 id="intro-title"></h2>
         <p id="intro-body"></p>
-        <button type="button" class="intro-got-it" id="intro-got-it">Got it</button>
+        <div class="intro-progress-wrap" id="intro-progress-wrap" aria-hidden="true">
+          <div class="intro-progress-bar" id="intro-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+        </div>
+        <button type="button" class="intro-got-it" id="intro-got-it" data-i18n="gotIt">Got it</button>
       </div>
     </div>
     <section class="stats">
-      <div class="stat-card stat-card--coins" id="coins-stat-card" title="Your current coins. Spend them on upgrades, crew, and planets.">
-        <div class="stat-label">Coins</div>
+      <div class="stat-card stat-card--coins" id="coins-stat-card" data-i18n-title="coinsTitle">
+        <div class="stat-label" data-i18n="coins">Coins</div>
         <div class="stat-value stat-value--hero" id="coins-value">0</div>
         <div class="stat-coins-extra" id="crew-stat-line" aria-live="polite"></div>
       </div>
-      <div class="stat-card stat-card--production" id="production-stat-card" title="Base × planets × prestige × events">
-        <div class="stat-label">Production <span class="production-live" id="production-live" aria-hidden="true"></span></div>
+      <div class="stat-card stat-card--production" id="production-stat-card" data-i18n-title="productionTitle">
+        <div class="stat-label"><span data-i18n="production">Production</span> <span class="production-live" id="production-live" aria-hidden="true"></span></div>
         <div class="stat-value" id="production-value">0/s</div>
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
         <div class="active-events" id="active-events" aria-live="polite"></div>
@@ -236,54 +258,62 @@ const APP_HTML = `
     </section>
     <p class="next-milestone" id="next-milestone" aria-live="polite"></p>
     <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
-    <nav class="app-tabs" role="tablist" aria-label="Game sections">
-      <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine">Mine</button>
-      <button type="button" class="app-tab" role="tab" id="tab-base" aria-selected="false" aria-controls="panel-base" data-tab="base">Base</button>
-      <button type="button" class="app-tab" role="tab" id="tab-upgrades" aria-selected="false" aria-controls="panel-upgrades" data-tab="upgrades">Upgrades</button>
-      <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats">Stats</button>
+    <nav class="app-tabs" role="tablist" data-i18n-aria-label="gameSections">
+      <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine" data-i18n="tabMine">Mine</button>
+      <button type="button" class="app-tab" role="tab" id="tab-base" aria-selected="false" aria-controls="panel-base" data-tab="base" data-i18n="tabBase">Base</button>
+      <button type="button" class="app-tab" role="tab" id="tab-research" aria-selected="false" aria-controls="panel-research" data-tab="research" data-i18n="tabResearch">Research</button>
+      <button type="button" class="app-tab" role="tab" id="tab-upgrades" aria-selected="false" aria-controls="panel-upgrades" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
+      <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats" data-i18n="tabStats">Stats</button>
     </nav>
     <div class="app-tab-panel app-tab-panel--active" id="panel-mine" role="tabpanel" aria-labelledby="tab-mine" data-tab="mine">
-      <section class="mine-zone" id="mine-zone" title="Click or press Space to mine">
+      <section class="mine-zone" id="mine-zone" data-i18n-title="mineZoneTitle">
         <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
         <div class="mine-zone-visual" id="mine-zone-visual"></div>
-        <p class="mine-zone-hint" aria-hidden="true">Click or press Space to mine</p>
+        <p class="mine-zone-hint" aria-hidden="true" data-i18n="mineZoneTitle"></p>
         <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
       </section>
       <section class="gameplay-block gameplay-block--locked quest-section" id="quest-section" data-block="quest">
-        <h2>Quest</h2>
+        <h2 data-i18n="quest">Quest</h2>
         <div class="quest-progress-wrap">
           <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         <p class="quest-progress" id="quest-progress"></p>
         <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
-        <span class="btn-tooltip-wrap" id="quest-claim-wrap"><button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button></span>
+        <span class="btn-tooltip-wrap" id="quest-claim-wrap"><button type="button" class="quest-claim-btn" id="quest-claim" disabled data-i18n="claim">Claim</button></span>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-base" role="tabpanel" aria-labelledby="tab-base" data-tab="base" hidden>
       <section class="gameplay-block gameplay-block--locked prestige-section" id="prestige-section" data-block="prestige">
-        <h2>Prestige</h2>
-        <p class="prestige-hint">Reset coins and planets to gain +5% production per prestige level forever.</p>
+        <h2 data-i18n="prestige">Prestige</h2>
+        <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
         <div class="prestige-status" id="prestige-status"></div>
         <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
       </section>
       <section class="gameplay-block gameplay-block--locked crew-section" id="crew-section" data-block="crew">
-        <h2>Crew</h2>
-        <p class="crew-hint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
+        <h2 data-i18n="crew">Crew</h2>
+        <p class="crew-hint" data-i18n="crewHint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
         <div class="crew-count" id="crew-count">No crew yet</div>
         <div class="crew-operates" id="crew-operates"></div>
         <span class="btn-tooltip-wrap" id="hire-astronaut-wrap"><button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button></span>
       </section>
       <section class="gameplay-block gameplay-block--locked planets-section" id="planets-section" data-block="planets">
-        <h2>Planets</h2>
-        <p class="planets-hint">Each planet has upgrade slots (expandable). More planets = +5% production each. Buy a new planet or add slots to expand.</p>
+        <h2 data-i18n="planets">Planets</h2>
+        <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots to expand.</p>
         <div class="planet-list" id="planet-list"></div>
-        <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Buy new planet</button></span>
+        <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Send expedition</button></span>
+      </section>
+    </div>
+    <div class="app-tab-panel" id="panel-research" role="tabpanel" aria-labelledby="tab-research" data-tab="research" hidden>
+      <section class="gameplay-block gameplay-block--locked research-section" id="research-section" data-block="research">
+        <h2 data-i18n="research">Scientific Research</h2>
+        <p class="research-hint" data-i18n="researchHint">Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt has a success chance; on failure coins are lost. Resets on Prestige.</p>
+        <div class="research-list" id="research-list"></div>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-upgrades" role="tabpanel" aria-labelledby="tab-upgrades" data-tab="upgrades" hidden>
       <section class="gameplay-block gameplay-block--locked upgrades-section" id="upgrades-section" data-block="upgrades">
-        <h2>Upgrades</h2>
-        <p class="upgrades-hint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
+        <h2 data-i18n="upgrades">Upgrades</h2>
+        <p class="upgrades-hint" data-i18n="upgradesHint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
         <div class="upgrade-list" id="upgrade-list"></div>
       </section>
     </div>
@@ -306,6 +336,7 @@ export function mount(): void {
   if (!app) return;
   applyThemeAndMotion();
   app.innerHTML = APP_HTML;
+  applyTranslations();
 
   const settings = getSettings();
   const mineZoneVisual = document.getElementById('mine-zone-visual');
@@ -368,6 +399,7 @@ export function mount(): void {
   const layoutEl = document.getElementById('setting-layout') as HTMLSelectElement | null;
   const pauseBackgroundEl = document.getElementById('setting-pause-background') as HTMLInputElement | null;
   const themeEl = document.getElementById('setting-theme') as HTMLSelectElement | null;
+  const languageEl = document.getElementById('setting-language') as HTMLSelectElement | null;
   const soundEl = document.getElementById('setting-sound') as HTMLInputElement | null;
   const reducedMotionEl = document.getElementById('setting-reduced-motion') as HTMLInputElement | null;
   if (starfieldSpeedEl) starfieldSpeedEl.value = String(settings.starfieldSpeed);
@@ -378,6 +410,7 @@ export function mount(): void {
   if (layoutEl) layoutEl.value = settings.layout;
   if (pauseBackgroundEl) pauseBackgroundEl.checked = settings.pauseWhenBackground;
   if (themeEl) themeEl.value = settings.theme;
+  if (languageEl) languageEl.value = settings.language;
   if (soundEl) soundEl.checked = settings.soundEnabled;
   if (reducedMotionEl) reducedMotionEl.checked = settings.reducedMotion;
   if (starfieldSpeedEl) starfieldSpeedEl.addEventListener('change', () => {
@@ -422,6 +455,13 @@ export function mount(): void {
     s.theme = themeEl.value as 'light' | 'dark';
     setSettings(s);
     applyThemeAndMotion();
+  });
+  if (languageEl) languageEl.addEventListener('change', () => {
+    const s = getSettings();
+    s.language = languageEl.value as 'en' | 'fr';
+    setSettings(s);
+    applyTranslations();
+    applySettingsToUI();
   });
   if (soundEl) soundEl.addEventListener('change', () => {
     const s = getSettings();
@@ -496,6 +536,10 @@ export function mount(): void {
 
   document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.code !== 'Space') return;
+    if (isAnyModalOpen()) {
+      e.preventDefault();
+      return;
+    }
     const target = e.target as HTMLElement;
     if (target?.closest('input, select, textarea, [role="dialog"]')) return;
     e.preventDefault();
@@ -544,8 +588,8 @@ export function mount(): void {
     debugPanel.setAttribute('aria-hidden', 'true');
     debugPanel.innerHTML = `
       <div class="debug-panel-header">
-        <span>Debug</span>
-        <button type="button" class="debug-close" id="debug-close" aria-label="Close debug">×</button>
+        <span data-i18n="debug">Debug</span>
+        <button type="button" class="debug-close" id="debug-close" data-i18n-aria-label="closeDebug">×</button>
       </div>
       <div class="debug-panel-body">
         <div class="debug-section" id="debug-stats"></div>
@@ -553,14 +597,15 @@ export function mount(): void {
           <div class="debug-actions">
             <button type="button" class="debug-btn" data-debug="coins-1k">+1K coins</button>
             <button type="button" class="debug-btn" data-debug="coins-50k">+50K coins</button>
-            <button type="button" class="debug-btn" data-debug="trigger-event">Trigger event</button>
-            <button type="button" class="debug-btn" data-debug="clear-events">Clear events</button>
+            <button type="button" class="debug-btn" data-debug="trigger-event" data-i18n="debugTriggerEvent">Trigger event</button>
+            <button type="button" class="debug-btn" data-debug="clear-events" data-i18n="debugClearEvents">Clear events</button>
           </div>
         </div>
       </div>
-      <p class="debug-hint">F3 to toggle</p>
+      <p class="debug-hint" data-i18n="debugF3Hint">F3 to toggle</p>
     `;
     document.body.appendChild(debugPanel);
+    applyTranslations();
     document.getElementById('debug-close')?.addEventListener('click', closeDebugMenu);
     debugPanel.querySelectorAll('.debug-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -596,6 +641,38 @@ export function mount(): void {
   }
 
   renderPlanetList();
+  renderResearchSection();
+
+  const researchList = document.getElementById('research-list');
+  if (researchList) {
+    researchList.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('.research-attempt-btn');
+      if (!btn || (btn as HTMLButtonElement).disabled) return;
+      const id = (btn as HTMLElement).getAttribute('data-research-id');
+      if (!id) return;
+      const card = btn.closest('.research-card');
+      if (card) startResearchWithProgress(card as HTMLElement, id);
+    });
+    researchList.addEventListener('mouseenter', (e) => {
+      const card = (e.target as HTMLElement).closest('.research-card');
+      if (!card) return;
+      researchList.querySelectorAll('.research-card--path-highlight').forEach((el) => {
+        el.classList.remove('research-card--path-highlight');
+      });
+      const path = card.getAttribute('data-unlock-path');
+      if (!path) return;
+      const ids = path.split(',').map((s) => s.trim()).filter(Boolean);
+      ids.forEach((id) => {
+        const el = researchList.querySelector(`[data-research-id="${id}"]`);
+        if (el) el.classList.add('research-card--path-highlight');
+      });
+    }, true);
+    researchList.addEventListener('mouseleave', () => {
+      researchList.querySelectorAll('.research-card--path-highlight').forEach((el) => {
+        el.classList.remove('research-card--path-highlight');
+      });
+    }, true);
+  }
 
   const statisticsContainer = document.getElementById('statistics-container');
   if (statisticsContainer) {
@@ -610,7 +687,7 @@ export function mount(): void {
   });
   document.addEventListener('keydown', (e) => {
     const key = e.key;
-    if (key !== '1' && key !== '2' && key !== '3' && key !== '4') return;
+    if (key !== '1' && key !== '2' && key !== '3' && key !== '4' && key !== '5') return;
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.closest('[role="dialog"]'))) return;
     const tabs = Array.from(document.querySelectorAll<HTMLElement>('.app-tab')).filter((t) => (t as HTMLElement).offsetParent !== null);
@@ -622,7 +699,7 @@ export function mount(): void {
   });
   const savedTab =
     (typeof localStorage !== 'undefined' && localStorage.getItem(TAB_STORAGE_KEY)) || DEFAULT_TAB;
-  const validTab = ['mine', 'base', 'upgrades', 'stats'].includes(savedTab) ? savedTab : DEFAULT_TAB;
+  const validTab = ['mine', 'base', 'research', 'upgrades', 'stats'].includes(savedTab) ? savedTab : DEFAULT_TAB;
   switchTab(validTab);
   applyLayout();
 

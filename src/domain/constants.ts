@@ -1,9 +1,17 @@
-/** Cost in coins to unlock a new planet. Scales with count so progression lasts. */
+/** Cost in coins to launch an expedition to discover a new planet. Scales with count. */
 export const NEW_PLANET_BASE_COST = 2500;
 
 export function getNewPlanetCost(planetCount: number): number {
   return Math.floor(NEW_PLANET_BASE_COST * (planetCount + 1) * Math.pow(1.15, planetCount));
 }
+
+/** Astronauts required to send on expedition (risk: some may die; if all die, planet not discovered). */
+export function getExpeditionAstronautsRequired(planetCount: number): number {
+  return Math.min(2 + Math.floor(planetCount / 2), 6);
+}
+
+/** Per-astronaut death chance during expedition (0–1). Each rolls independently. */
+export const EXPEDITION_DEATH_CHANCE = 0.25;
 
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */
 export const PLANET_PRODUCTION_BONUS = 0.05;
@@ -36,6 +44,11 @@ export function getPlanetName(index: number): string {
 
 /** Crew: astronauts. Production bonus per astronaut (e.g. 0.02 = +2% each). */
 export const ASTRONAUT_PRODUCTION_BONUS = 0.02;
+
+/** Max total astronauts (free + assigned) based on planet count. More planets = more crew capacity. */
+export function getMaxAstronauts(planetCount: number): number {
+  return Math.max(2, 2 * planetCount);
+}
 
 /** Base cost to hire the first astronaut. Each additional costs more. */
 export const ASTRONAUT_BASE_COST = 75;

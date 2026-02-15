@@ -8,7 +8,7 @@ type ProgressionData = {
   unlockedBlocks: string[];
 };
 
-export type BlockId = 'welcome' | 'upgrades' | 'crew' | 'quest' | 'planets' | 'prestige';
+export type BlockId = 'welcome' | 'upgrades' | 'crew' | 'quest' | 'planets' | 'research' | 'prestige';
 
 export type BlockDef = {
   id: BlockId;
@@ -53,8 +53,15 @@ export const PROGRESSION_BLOCKS: BlockDef[] = [
     id: 'planets',
     coinsThreshold: 2000,
     title: 'Planets',
-    body: 'Expand to new planets for more upgrade slots and +5% production per extra planet. You can also add slots to existing planets. More slots = more upgrades = more passive income.',
+    body: 'Send astronauts on expeditions to discover new planets (+5% production each). Some may die during the mission; if all die, the planet is not discovered. You can also add slots to existing planets.',
     sectionId: 'planets-section',
+  },
+  {
+    id: 'research',
+    coinsThreshold: 350,
+    title: 'Scientific Research',
+    body: 'Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt can succeed or fail (coins lost on failure). Resets on Prestige.',
+    sectionId: 'research-section',
   },
   {
     id: 'prestige',

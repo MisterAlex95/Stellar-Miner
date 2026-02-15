@@ -1,6 +1,6 @@
 import { Player } from '../domain/entities/Player.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
-import { PRESTIGE_COIN_THRESHOLD, getAstronautCost } from '../domain/constants.js';
+import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
 import {
   getSession,
   setSession,
@@ -39,6 +39,8 @@ import {
   SUPER_LUCKY_MAX,
   CRITICAL_CLICK_CHANCE,
   QUEST_STORAGE_KEY,
+  QUEST_STREAK_KEY,
+  QUEST_LAST_CLAIM_KEY,
   MILESTONES_STORAGE_KEY,
   TOTAL_CLICKS_KEY,
   ACHIEVEMENTS_KEY,
@@ -52,6 +54,7 @@ import { checkAndShowMilestones } from './milestones.js';
 import { updateStats } from '../presentation/statsView.js';
 import { renderUpgradeList, getMaxBuyCount, flashUpgradeCard } from '../presentation/upgradeListView.js';
 import { renderPlanetList } from '../presentation/planetListView.js';
+import { renderResearchSection } from '../presentation/researchView.js';
 import { renderPrestigeSection } from '../presentation/prestigeView.js';
 import { renderCrewSection } from '../presentation/crewView.js';
 import { renderQuestSection } from '../presentation/questView.js';
@@ -70,8 +73,14 @@ import {
   showMilestoneToast,
   showMiniMilestoneToast,
 } from '../presentation/toasts.js';
+import { getAssignedAstronauts } from './crewHelpers.js';
 import { claimQuest } from './quests.js';
 import { emit } from './eventBus.js';
+import { attemptResearch, clearResearch, getResearchProductionMultiplier, getResearchClickMultiplier, setResearchInProgress, isResearchInProgress, RESEARCH_CATALOG } from './research.js';
+import { t, tParam } from './strings.js';
+import { getCatalogResearchName, getCatalogAchievementName } from './i18nCatalogs.js';
+
+const RESEARCH_PROGRESS_DURATION_MS = 2500;
 
 export function saveSession(): void {
   const session = getSession();
@@ -164,21 +173,31 @@ export function handleBuyNewPlanet(): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
-  if (!planetService.canBuyNewPlanet(player)) return;
+  if (!planetService.canLaunchExpedition(player)) return;
   const wasFirstPlanet = player.planets.length === 1;
-  planetService.buyNewPlanet(player);
-  emit('planet_bought', { planetCount: player.planets.length });
-  if (wasFirstPlanet && typeof localStorage !== 'undefined') {
-    const key = 'stellar-miner-first-planet-toast';
-    if (!localStorage.getItem(key)) {
-      localStorage.setItem(key, '1');
-      showMiniMilestoneToast('First new planet!');
+  const outcome = planetService.launchExpedition(player);
+  if (outcome.success && outcome.planetName) {
+    emit('planet_bought', { planetCount: player.planets.length });
+    if (outcome.deaths > 0) {
+      showMiniMilestoneToast(`Discovered ${outcome.planetName}! ${outcome.survivors} astronaut${outcome.survivors !== 1 ? 's' : ''} returned. ${outcome.deaths} lost.`);
+    } else {
+      showMiniMilestoneToast(`Discovered ${outcome.planetName}! All ${outcome.survivors} astronaut${outcome.survivors !== 1 ? 's' : ''} returned.`);
     }
+    if (wasFirstPlanet && typeof localStorage !== 'undefined') {
+      const key = 'stellar-miner-first-planet-toast';
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, '1');
+        showMiniMilestoneToast('First new planet!');
+      }
+    }
+  } else {
+    showMiniMilestoneToast(`Expedition failed. All ${outcome.totalSent} astronaut${outcome.totalSent !== 1 ? 's' : ''} lost. Planet not discovered.`);
   }
   saveSession();
   updateStats();
   renderUpgradeList();
   renderPlanetList();
+  renderCrewSection();
 }
 
 export function handleAddSlot(planetId: string): void {
@@ -197,6 +216,9 @@ export function handleHireAstronaut(): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
+  const maxCrew = getMaxAstronauts(player.planets.length);
+  const totalCrew = player.astronautCount + getAssignedAstronauts(session);
+  if (totalCrew >= maxCrew) return;
   const cost = getAstronautCost(player.astronautCount);
   if (!player.hireAstronaut(cost)) return;
   emit('astronaut_hired', { count: player.astronautCount });
@@ -257,6 +279,7 @@ export function handleMineClick(e?: MouseEvent): void {
   else if (isLucky) baseCoins = LUCKY_MIN + Math.floor(Math.random() * (LUCKY_MAX - LUCKY_MIN + 1));
   let coins = Math.max(1, Math.round(baseCoins * comboMult));
   if (isCritical) coins *= 2;
+  coins = Math.max(1, Math.round(coins * getResearchClickMultiplier()));
 
   session.player.addCoins(coins);
   setSessionClickCount(getSessionClickCount() + 1);
@@ -296,7 +319,7 @@ export function openPrestigeConfirmModal(): void {
   if (!overlay) return;
   if (session && descEl) {
     const nextLevel = session.player.prestigeLevel + 1;
-    descEl.textContent = `You'll reset to 0 coins and 1 planet. You keep Prestige level ${nextLevel} (+${nextLevel * 5}% production forever).`;
+    descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: nextLevel * 5 });
   }
   overlay.classList.add('prestige-confirm-overlay--open');
   overlay.setAttribute('aria-hidden', 'false');
@@ -322,6 +345,7 @@ export function confirmPrestige(): void {
   const newQuestState = { quest: generateQuest() };
   setQuestState(newQuestState);
   saveQuestState(newQuestState);
+  clearResearch();
   saveSession();
   setSessionClickCount(0);
   setSessionCoinsFromClicks(0);
@@ -329,7 +353,7 @@ export function confirmPrestige(): void {
     const key = 'stellar-miner-first-prestige-toast';
     if (!localStorage.getItem(key)) {
       localStorage.setItem(key, '1');
-      showMiniMilestoneToast('First prestige!');
+      showMiniMilestoneToast(t('firstPrestigeToast'));
     }
   }
   emit('prestige', { level: newPlayer.prestigeLevel });
@@ -339,8 +363,55 @@ export function confirmPrestige(): void {
   renderPlanetList();
   renderPrestigeSection();
   renderCrewSection();
+  renderResearchSection();
   renderQuestSection();
   checkAchievements();
+}
+
+export function handleResearchAttempt(id: string): void {
+  const session = getSession();
+  if (!session) return;
+  const result = attemptResearch(id, (amount) => {
+    if (!session.player.coins.gte(amount)) return false;
+    session.player.spendCoins(amount);
+    return true;
+  });
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderResearchSection();
+  setResearchInProgress(false);
+  if (result.success) {
+    const node = RESEARCH_CATALOG.find((n) => n.id === id);
+    const mods: string[] = [];
+    if (node?.modifiers.productionPercent) mods.push(`+${node.modifiers.productionPercent}% production`);
+    if (node?.modifiers.clickPercent) mods.push(`+${node.modifiers.clickPercent}% click`);
+    showMiniMilestoneToast(tParam('researchSuccessFormat', { name: getCatalogResearchName(id), mods: mods.join(', ') }));
+  } else if (result.message.includes('failed')) {
+    showMiniMilestoneToast(result.message.includes('Coins spent') ? t('researchFailedCoinsSpent') : t('researchFailedTryAgain'));
+  }
+}
+
+export function startResearchWithProgress(cardEl: HTMLElement, id: string): void {
+  if (isResearchInProgress()) return;
+  const durationMs = RESEARCH_PROGRESS_DURATION_MS;
+  const overlay = document.createElement('div');
+  overlay.className = 'research-progress-overlay';
+  overlay.setAttribute('aria-live', 'polite');
+  overlay.setAttribute('aria-busy', 'true');
+  overlay.innerHTML = '<div class="research-progress-track"><div class="research-progress-fill"></div></div><span class="research-progress-label">' + t('researching') + '</span>';
+  cardEl.appendChild(overlay);
+  cardEl.classList.add('research-card--in-progress');
+  const fillEl = overlay.querySelector('.research-progress-fill') as HTMLElement;
+  if (fillEl) {
+    requestAnimationFrame(() => {
+      fillEl.style.width = '100%';
+    });
+  }
+  setResearchInProgress(true);
+  setTimeout(() => {
+    handleResearchAttempt(id);
+  }, durationMs);
 }
 
 export function handlePrestige(): void {
@@ -376,10 +447,14 @@ export function handleResetProgress(): void {
   clearProgression();
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(QUEST_STORAGE_KEY);
+    localStorage.removeItem(QUEST_STREAK_KEY);
+    localStorage.removeItem(QUEST_LAST_CLAIM_KEY);
     localStorage.removeItem(MILESTONES_STORAGE_KEY);
     localStorage.removeItem(TOTAL_CLICKS_KEY);
     localStorage.removeItem(LAST_DAILY_BONUS_KEY);
     localStorage.removeItem(ACHIEVEMENTS_KEY);
+    localStorage.removeItem(COMBO_MASTER_KEY);
+    ['stellar-miner-first-upgrade-toast', 'stellar-miner-first-planet-toast', 'stellar-miner-first-astronaut-toast', 'stellar-miner-first-prestige-toast'].forEach((k) => localStorage.removeItem(k));
   }
   location.reload();
 }
@@ -462,22 +537,23 @@ export function updateDebugPanel(): void {
 
   const player = session.player;
   const eventMult = getEventMultiplier();
-  const effectiveRate = player.effectiveProductionRate * eventMult;
+  const researchMult = getResearchProductionMultiplier();
+  const effectiveRate = player.effectiveProductionRate * eventMult * researchMult;
   const now = Date.now();
   const nextEventAt = getNextEventAt();
   const nextEventIn = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
   const activeCount = getActiveEventInstances().filter((a) => a.endsAt > now).length;
 
   statsEl.innerHTML = `
-    <div class="debug-row"><span>Coins (raw)</span><span>${player.coins.value.toLocaleString()}</span></div>
-    <div class="debug-row"><span>Production (base)</span><span>${player.productionRate.value}/s</span></div>
-    <div class="debug-row"><span>Production (effective)</span><span>${effectiveRate.toFixed(1)}/s</span></div>
-    <div class="debug-row"><span>Event mult</span><span>×${eventMult.toFixed(2)}</span></div>
-    <div class="debug-row"><span>Prestige level</span><span>${player.prestigeLevel}</span></div>
-    <div class="debug-row"><span>Planets</span><span>${player.planets.length}</span></div>
-    <div class="debug-row"><span>Upgrades total</span><span>${player.upgrades.length}</span></div>
-    <div class="debug-row"><span>Next event in</span><span>${nextEventIn}s</span></div>
-    <div class="debug-row"><span>Active events</span><span>${activeCount}</span></div>
+    <div class="debug-row"><span>${t('debugCoinsRaw')}</span><span>${player.coins.value.toLocaleString()}</span></div>
+    <div class="debug-row"><span>${t('debugProductionBase')}</span><span>${player.productionRate.value}/s</span></div>
+    <div class="debug-row"><span>${t('debugProductionEffective')}</span><span>${effectiveRate.toFixed(1)}/s</span></div>
+    <div class="debug-row"><span>${t('debugEventMult')}</span><span>×${eventMult.toFixed(2)}</span></div>
+    <div class="debug-row"><span>${t('debugPrestigeLevel')}</span><span>${player.prestigeLevel}</span></div>
+    <div class="debug-row"><span>${t('debugPlanets')}</span><span>${player.planets.length}</span></div>
+    <div class="debug-row"><span>${t('debugUpgradesTotal')}</span><span>${player.upgrades.length}</span></div>
+    <div class="debug-row"><span>${t('debugNextEventIn')}</span><span>${nextEventIn}s</span></div>
+    <div class="debug-row"><span>${t('debugActiveEvents')}</span><span>${activeCount}</span></div>
   `;
 }
 
@@ -499,6 +575,9 @@ export function handleDebugAction(action: string): void {
 export function renderAchievementsList(container: HTMLElement): void {
   const unlocked = getUnlockedAchievements();
   container.innerHTML = ACHIEVEMENTS.map(
-    (a) => `<div class="achievement-item achievement-item--${unlocked.has(a.id) ? 'unlocked' : 'locked'}" title="${unlocked.has(a.id) ? a.name : '???'}">${unlocked.has(a.id) ? '✓' : '?'} ${unlocked.has(a.id) ? a.name : 'Locked'}</div>`
+    (a) => {
+      const name = getCatalogAchievementName(a.id);
+      return `<div class="achievement-item achievement-item--${unlocked.has(a.id) ? 'unlocked' : 'locked'}" title="${unlocked.has(a.id) ? name : '???'}">${unlocked.has(a.id) ? '✓' : '?'} ${unlocked.has(a.id) ? name : t('locked')}</div>`;
+    }
   ).join('');
 }

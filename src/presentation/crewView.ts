@@ -2,7 +2,9 @@ import { getSession, getSettings } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { UPGRADE_CATALOG } from '../application/catalogs.js';
-import { getAstronautCost } from '../domain/constants.js';
+import { getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
+import { t, tParam } from '../application/strings.js';
+import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
 
 export function renderCrewSection(): void {
   const session = getSession();
@@ -14,37 +16,45 @@ export function renderCrewSection(): void {
   const crewCountEl = document.getElementById('crew-count');
   const crewOperatesEl = document.getElementById('crew-operates');
   if (!listEl || !hireBtn) return;
-  const cost = getAstronautCost(player.astronautCount);
-  const canHire = player.coins.gte(cost);
-  hireBtn.textContent = `Hire astronaut · ${formatNumber(cost, settings.compactNumbers)} ⬡`;
-  const tooltipText = canHire ? `Hire an astronaut for ${formatNumber(cost, settings.compactNumbers)} ⬡ · +2% production each; required for tier 2+ upgrades` : `Need ${formatNumber(cost, settings.compactNumbers)} ⬡ to hire`;
+  const assigned = getAssignedAstronauts(session);
+  const free = player.astronautCount;
+  const maxCrew = getMaxAstronauts(player.planets.length);
+  const totalCrew = free + assigned;
+  const atCap = totalCrew >= maxCrew;
+  const cost = getAstronautCost(free);
+  const canHire = player.coins.gte(cost) && !atCap;
+  hireBtn.textContent = tParam('hireAstronautCost', { cost: formatNumber(cost, settings.compactNumbers) });
   const wrap = hireBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? hireBtn.parentElement : null;
+  const costStr = formatNumber(cost, settings.compactNumbers);
+  const tooltipText = atCap
+    ? tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length })
+    : canHire
+      ? t('hireAstronaut') + ` · ${costStr} ⬡ · +2% production each (${totalCrew}/${maxCrew}).`
+      : tParam('needCoinsToBuy', { cost: costStr, crew: '' }) + ` (${totalCrew}/${maxCrew}).`;
   if (wrap) wrap.setAttribute('title', tooltipText);
   else hireBtn.setAttribute('title', tooltipText);
   hireBtn.toggleAttribute('disabled', !canHire);
-  const assigned = getAssignedAstronauts(session);
-  const free = player.astronautCount;
   if (crewCountEl) {
-    crewCountEl.title = 'Free astronauts give +2% production each; assigned crew operate upgrades';
+    crewCountEl.title = tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length });
     if (free === 0 && assigned === 0) {
-      crewCountEl.textContent = 'No crew yet';
+      crewCountEl.textContent = tParam('noCrewYetMax', { max: maxCrew });
     } else if (free === 0) {
-      crewCountEl.textContent = `${assigned} on equipment · 0 free (hire more for +% production)`;
+      crewCountEl.textContent = tParam('crewLineAssigned', { assigned: String(assigned), max: String(maxCrew) });
     } else if (assigned > 0) {
-      crewCountEl.textContent = `${free} free · +${free * 2}% production | ${assigned} on equipment`;
+      crewCountEl.textContent = tParam('crewLineFree', { free: String(free), pct: String(free * 2), assigned: String(assigned), total: String(totalCrew), max: String(maxCrew) });
     } else {
-      crewCountEl.textContent = `${free} astronaut${free > 1 ? 's' : ''} · +${free * 2}% production`;
+      crewCountEl.textContent = tParam('crewLineAstronauts', { free: String(free), max: String(maxCrew), pct: String(free * 2) });
     }
   }
   if (crewOperatesEl) {
     const totalUpgrades = player.upgrades.length;
     const nextUnlock = UPGRADE_CATALOG.find((d) => d.requiredAstronauts > player.astronautCount);
     if (player.astronautCount === 0 && assigned === 0) {
-      crewOperatesEl.textContent = 'Hire crew to buy tier 2+ upgrades (each costs coins + astronauts).';
+      crewOperatesEl.textContent = t('crewOperatesHint');
     } else if (nextUnlock) {
-      crewOperatesEl.textContent = `${free} available. Next: ${nextUnlock.name} costs ${nextUnlock.requiredAstronauts} crew.`;
+      crewOperatesEl.textContent = tParam('crewOperatesNext', { free: String(free), name: getCatalogUpgradeName(nextUnlock.id), n: String(nextUnlock.requiredAstronauts) });
     } else {
-      crewOperatesEl.textContent = totalUpgrades > 0 ? `${totalUpgrades} upgrade${totalUpgrades !== 1 ? 's' : ''} operated by crew.` : `${free} available.`;
+      crewOperatesEl.textContent = totalUpgrades > 0 ? tParam('crewOperatesUpgrades', { n: String(totalUpgrades) }) : tParam('crewOperatesAvailable', { free: String(free) });
     }
   }
 }

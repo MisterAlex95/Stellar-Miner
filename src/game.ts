@@ -18,10 +18,12 @@ import {
 } from './application/gameState.js';
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory } from './application/statsHistory.js';
+import { getResearchProductionMultiplier } from './application/research.js';
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
 import { updateStatisticsSection } from './presentation/statisticsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
 import { renderPlanetList } from './presentation/planetListView.js';
+import { renderResearchSection } from './presentation/researchView.js';
 import { renderQuestSection } from './presentation/questView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
@@ -52,7 +54,8 @@ function gameLoop(now: number): void {
   }
 
   const eventMult = getEventMultiplier();
-  const rate = session.player.effectiveProductionRate * eventMult;
+  const researchMult = getResearchProductionMultiplier();
+  const rate = session.player.effectiveProductionRate * eventMult * researchMult;
   const shouldProduce = !getSettings().pauseWhenBackground || document.visibilityState !== 'hidden';
   if (rate > 0 && shouldProduce) {
     session.player.addCoins(rate * dt);

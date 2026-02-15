@@ -10,6 +10,7 @@ import {
 } from './catalogs.js';
 import { getSession, getQuestState, setQuestState } from './gameState.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
+import { getResearchProductionMultiplier } from './research.js';
 
 export type { QuestState, Quest };
 
@@ -63,7 +64,7 @@ export function getQuestProgress(): { current: number; target: number; done: boo
   const q = questState.quest;
   let current = 0;
   if (q.type === 'coins') current = session.player.coins.value;
-  else if (q.type === 'production') current = session.player.effectiveProductionRate;
+  else if (q.type === 'production') current = session.player.effectiveProductionRate * getResearchProductionMultiplier();
   else if (q.type === 'upgrade' && q.targetId)
     current = session.player.upgrades.filter((u) => u.id === q.targetId).length;
   else if (q.type === 'astronauts') current = session.player.astronautCount + getAssignedAstronauts(session);

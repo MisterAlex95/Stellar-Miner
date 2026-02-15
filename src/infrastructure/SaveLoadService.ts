@@ -11,6 +11,7 @@ import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
 import { getPlanetName } from '../domain/constants.js';
 import { emit } from '../application/eventBus.js';
+import { RESEARCH_STORAGE_KEY, getResearchProductionMultiplier } from '../application/research.js';
 
 export const SAVE_VERSION = 1;
 
@@ -124,7 +125,8 @@ export class SaveLoadService implements ISaveLoadService {
       const elapsed = Date.now() - lastSave;
       if (elapsed >= MIN_OFFLINE_MS && session.player.productionRate.value > 0) {
         const cappedMs = Math.min(elapsed, MAX_OFFLINE_MS);
-        const offlineCoins = (cappedMs / 1000) * session.player.effectiveProductionRate;
+        const researchMult = getResearchProductionMultiplier();
+        const offlineCoins = (cappedMs / 1000) * session.player.effectiveProductionRate * researchMult;
         session.player.addCoins(offlineCoins);
         this.lastOfflineCoinsApplied = offlineCoins;
         this.lastOfflineWasCapped = elapsed > MAX_OFFLINE_MS;
@@ -140,6 +142,7 @@ export class SaveLoadService implements ISaveLoadService {
       localStorage.removeItem(PROGRESSION_KEY);
       localStorage.removeItem(STATS_STORAGE_KEY);
       localStorage.removeItem(STATS_HISTORY_STORAGE_KEY);
+      localStorage.removeItem(RESEARCH_STORAGE_KEY);
     }
   }
 

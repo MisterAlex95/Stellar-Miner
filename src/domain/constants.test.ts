@@ -11,6 +11,7 @@ import {
   ASTRONAUT_BASE_COST,
   ASTRONAUT_PRODUCTION_BONUS,
   getAstronautCost,
+  getMaxAstronauts,
 } from './constants.js';
 
 describe('constants', () => {
@@ -76,5 +77,12 @@ describe('constants', () => {
 
   it('ASTRONAUT_PRODUCTION_BONUS is 0.02', () => {
     expect(ASTRONAUT_PRODUCTION_BONUS).toBe(0.02);
+  });
+
+  it('getMaxAstronauts is at least 2 and scales with planet count', () => {
+    expect(getMaxAstronauts(1)).toBe(2);
+    expect(getMaxAstronauts(2)).toBe(4);
+    expect(getMaxAstronauts(3)).toBe(6);
+    expect(getMaxAstronauts(5)).toBe(10);
   });
 });
