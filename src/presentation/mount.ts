@@ -275,58 +275,99 @@ const APP_HTML = `
         <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
       </section>
       <section class="gameplay-block gameplay-block--locked quest-section" id="quest-section" data-block="quest">
-        <h2 data-i18n="quest">Quest</h2>
-        <div class="quest-progress-wrap">
-          <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="gameplay-block-header">
+          <h2 data-i18n="quest">Quest</h2>
+          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
         </div>
-        <p class="quest-progress" id="quest-progress"></p>
-        <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
-        <span class="btn-tooltip-wrap" id="quest-claim-wrap"><button type="button" class="quest-claim-btn" id="quest-claim" disabled data-i18n="claim">Claim</button></span>
+        <div class="gameplay-block-body">
+          <div class="quest-progress-wrap">
+            <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <p class="quest-progress" id="quest-progress"></p>
+          <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
+          <span class="btn-tooltip-wrap" id="quest-claim-wrap"><button type="button" class="quest-claim-btn" id="quest-claim" disabled data-i18n="claim">Claim</button></span>
+        </div>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-base" role="tabpanel" aria-labelledby="tab-base" data-tab="base" hidden>
       <section class="gameplay-block gameplay-block--locked crew-section" id="crew-section" data-block="crew">
-        <h2 data-i18n="crew">Crew</h2>
-        <p class="crew-hint" data-i18n="crewHint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
-        <div class="crew-count" id="crew-count">No crew yet</div>
-        <div class="crew-operates" id="crew-operates"></div>
-        <span class="btn-tooltip-wrap" id="hire-astronaut-wrap"><button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button></span>
+        <div class="gameplay-block-header">
+          <h2 data-i18n="crew">Crew</h2>
+          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
+        </div>
+        <div class="gameplay-block-body">
+          <p class="crew-hint" data-i18n="crewHint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
+          <div class="crew-count" id="crew-count">No crew yet</div>
+          <div class="crew-operates" id="crew-operates"></div>
+          <span class="btn-tooltip-wrap" id="hire-astronaut-wrap"><button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button></span>
+        </div>
       </section>
       <section class="gameplay-block gameplay-block--locked planets-section" id="planets-section" data-block="planets">
-        <h2 data-i18n="planets">Planets</h2>
-        <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots to expand.</p>
-        <div class="planet-list" id="planet-list"></div>
-        <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Send expedition</button></span>
+        <div class="gameplay-block-header">
+          <h2 data-i18n="planets">Planets</h2>
+          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
+        </div>
+        <div class="gameplay-block-body">
+          <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots to expand.</p>
+          <div class="planet-list" id="planet-list"></div>
+          <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Send expedition</button></span>
+        </div>
       </section>
       <section class="gameplay-block gameplay-block--locked housing-section" id="housing-section" data-block="planets">
-        <h2 data-i18n="housing">Housing</h2>
-        <p class="housing-hint" data-i18n="housingHint">Build housing on a planet to increase crew capacity (+2 astronauts per module). Each module uses 1 slot on that planet.</p>
-        <div class="housing-list" id="housing-list"></div>
+        <div class="gameplay-block-header">
+          <h2 data-i18n="housing">Housing</h2>
+          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
+        </div>
+        <div class="gameplay-block-body">
+          <p class="housing-hint" data-i18n="housingHint">Build housing on a planet to increase crew capacity (+2 astronauts per module). Each module uses 1 slot on that planet.</p>
+          <div class="housing-list" id="housing-list"></div>
+        </div>
       </section>
       <section class="gameplay-block gameplay-block--locked prestige-section" id="prestige-section" data-block="prestige">
-        <h2 data-i18n="prestige">Prestige</h2>
-        <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
-        <div class="prestige-status" id="prestige-status"></div>
-        <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
+        <div class="gameplay-block-header">
+          <h2 data-i18n="prestige">Prestige</h2>
+          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
+        </div>
+        <div class="gameplay-block-body">
+          <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
+          <div class="prestige-status" id="prestige-status"></div>
+          <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
+        </div>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-research" role="tabpanel" aria-labelledby="tab-research" data-tab="research" hidden>
       <section class="gameplay-block gameplay-block--locked research-section" id="research-section" data-block="research">
-        <h2 data-i18n="research">Scientific Research</h2>
-        <p class="research-hint" data-i18n="researchHint">Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt has a success chance; on failure coins are lost. Resets on Prestige.</p>
-        <div class="research-list" id="research-list"></div>
+        <div class="gameplay-block-header">
+          <h2 data-i18n="research">Scientific Research</h2>
+          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
+        </div>
+        <div class="gameplay-block-body">
+          <p class="research-hint" data-i18n="researchHint">Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt has a success chance; on failure coins are lost. Resets on Prestige.</p>
+          <div class="research-list" id="research-list"></div>
+        </div>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-upgrades" role="tabpanel" aria-labelledby="tab-upgrades" data-tab="upgrades" hidden>
       <section class="gameplay-block gameplay-block--locked upgrades-section" id="upgrades-section" data-block="upgrades">
-        <h2 data-i18n="upgrades">Upgrades</h2>
-        <p class="upgrades-hint" data-i18n="upgradesHint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
-        <div class="upgrade-list" id="upgrade-list"></div>
+        <div class="gameplay-block-header">
+          <h2 data-i18n="upgrades">Upgrades</h2>
+          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
+        </div>
+        <div class="gameplay-block-body">
+          <p class="upgrades-hint" data-i18n="upgradesHint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
+          <div class="upgrade-list" id="upgrade-list"></div>
+        </div>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" data-tab="stats" hidden>
       <section class="gameplay-block gameplay-block--unlocked statistics-section" id="statistics-section">
-        <div id="statistics-container"></div>
+        <div class="gameplay-block-header">
+          <h2 data-i18n="statisticsTitle">Statistics</h2>
+          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
+        </div>
+        <div class="gameplay-block-body">
+          <div id="statistics-container"></div>
+        </div>
       </section>
     </div>
   `;
@@ -344,6 +385,49 @@ export function mount(): void {
   applyThemeAndMotion();
   app.innerHTML = APP_HTML;
   applyTranslations();
+
+  const COLLAPSED_STORAGE_PREFIX = 'stellar-miner-collapsed-';
+  const COLLAPSIBLE_SECTION_IDS = [
+    'quest-section', 'crew-section', 'planets-section', 'housing-section',
+    'prestige-section', 'research-section', 'upgrades-section', 'statistics-section',
+  ];
+
+  function initCollapsedState(): void {
+    COLLAPSIBLE_SECTION_IDS.forEach((id) => {
+      const section = document.getElementById(id);
+      const btn = section?.querySelector('.gameplay-block-toggle') as HTMLElement | null;
+      if (!section || !btn) return;
+      const isCollapsed = typeof localStorage !== 'undefined' && localStorage.getItem(COLLAPSED_STORAGE_PREFIX + id) === '1';
+      if (isCollapsed) {
+        section.classList.add('gameplay-block--collapsed');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('title', t('expandSection'));
+        btn.setAttribute('aria-label', t('expandSection'));
+      } else {
+        btn.setAttribute('title', t('collapseSection'));
+        btn.setAttribute('aria-label', t('collapseSection'));
+      }
+    });
+  }
+
+  function onCollapseToggle(e: Event): void {
+    const target = (e.target as HTMLElement).closest('.gameplay-block-toggle');
+    if (!target) return;
+    const section = (target as HTMLElement).closest('.gameplay-block');
+    if (!section || !section.id) return;
+    const isCollapsed = section.classList.toggle('gameplay-block--collapsed');
+    (target as HTMLElement).setAttribute('aria-expanded', String(!isCollapsed));
+    (target as HTMLElement).setAttribute('title', isCollapsed ? t('expandSection') : t('collapseSection'));
+    (target as HTMLElement).setAttribute('aria-label', isCollapsed ? t('expandSection') : t('collapseSection'));
+    try {
+      localStorage.setItem(COLLAPSED_STORAGE_PREFIX + section.id, isCollapsed ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }
+
+  initCollapsedState();
+  app.addEventListener('click', onCollapseToggle);
 
   const settings = getSettings();
   const mineZoneVisual = document.getElementById('mine-zone-visual');

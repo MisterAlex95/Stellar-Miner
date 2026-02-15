@@ -225,7 +225,6 @@ export function renderStatisticsSection(container: HTMLElement): void {
   const longTermMin = Math.round((STATS_LONG_TERM_MAX_POINTS * STATS_LONG_TERM_INTERVAL_MS) / 60000);
   const longTermLabel = longTermMin >= 60 ? tParam('lastXHours', { n: longTermMin / 60 }) : tParam('lastXMin', { n: longTermMin });
   container.innerHTML = `
-    <h2>${t('statisticsTitle')}</h2>
     <p class="statistics-intro">${t('statisticsIntro')}</p>
     <div class="statistics-grid">
       <section class="statistics-group statistics-charts" aria-labelledby="stat-charts" data-stat-group="charts">
