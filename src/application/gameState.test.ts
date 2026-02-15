@@ -4,6 +4,7 @@ import {
   getSession,
   getEventMultiplier,
   getEventContext,
+  getActiveEventInstances,
   setActiveEventInstances,
   pushActiveEventInstance,
   getNextEventAt,
@@ -24,11 +25,14 @@ import {
   setSessionCoinsFromClicks,
   getOrCreateSession,
   saveLoad,
+  setStarfieldApi,
+  setMineZoneCanvasApi,
 } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
+import Decimal from 'break_infinity.js';
 
 describe('gameState', () => {
   beforeEach(() => {
@@ -51,6 +55,13 @@ describe('gameState', () => {
     const evt = new GameEvent('e1', 'E1', new EventEffect(2, Date.now() + 60000));
     setActiveEventInstances([{ event: evt, endsAt: Date.now() + 60000 }]);
     expect(getEventMultiplier()).toBe(2);
+  });
+
+  it('getActiveEventInstances and setActiveEventInstances', () => {
+    const evt = new GameEvent('e1', 'E1', new EventEffect(1, Date.now() + 60000));
+    setActiveEventInstances([{ event: evt, endsAt: Date.now() + 60000 }]);
+    expect(getActiveEventInstances()).toHaveLength(1);
+    expect(getActiveEventInstances()[0].event.id).toBe('e1');
   });
 
   it('getEventContext returns active event ids', () => {
@@ -91,6 +102,8 @@ describe('gameState', () => {
   it('getLastCoinsForBump / setLastCoinsForBump', () => {
     setLastCoinsForBump(500);
     expect(getLastCoinsForBump().toNumber()).toBe(500);
+    setLastCoinsForBump(new Decimal(100));
+    expect(getLastCoinsForBump().toNumber()).toBe(100);
   });
 
   it('getClickTimestamps / setClickTimestamps', () => {
@@ -113,6 +126,15 @@ describe('gameState', () => {
     const session = await getOrCreateSession();
     expect(session).not.toBeNull();
     expect(session.player.id).toBeDefined();
+  });
+
+  it('setStarfieldApi and setMineZoneCanvasApi accept and clear api', () => {
+    setStarfieldApi(null);
+    setMineZoneCanvasApi(null);
+    setStarfieldApi({} as Parameters<typeof setStarfieldApi>[0]);
+    setMineZoneCanvasApi({} as Parameters<typeof setMineZoneCanvasApi>[0]);
+    setStarfieldApi(null);
+    setMineZoneCanvasApi(null);
   });
 
   it('getOrCreateSession returns loaded session when storage has valid save', async () => {

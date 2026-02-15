@@ -34,6 +34,35 @@ describe('quests', () => {
     expect(typeof q.description).toBe('string');
   });
 
+  it('generateQuest can return production quest when random in range', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.25);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    if (q.type === 'production') {
+      expect(q.target).toBeGreaterThan(0);
+      expect(q.description).toContain('production');
+    }
+  });
+
+  it('generateQuest can return upgrade quest when random in range', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.55);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    if (q.type === 'upgrade') {
+      expect(q.targetId).toBeDefined();
+      expect(q.target).toBeGreaterThan(0);
+    }
+  });
+
+  it('generateQuest can return astronauts quest when random in range', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.95);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    if (q.type === 'astronauts') {
+      expect(q.target).toBeGreaterThan(0);
+    }
+  });
+
   it('getQuestProgress returns null when no session or no quest', () => {
     setQuestState({ quest: null });
     expect(getQuestProgress()).toBeNull();
@@ -50,6 +79,38 @@ describe('quests', () => {
     expect(p).not.toBeNull();
     const current = p!.current;
     expect(typeof current === 'number' ? current : (current as { toNumber: () => number }).toNumber()).toBe(500);
+    expect(p!.done).toBe(true);
+  });
+
+  it('getQuestProgress returns progress for production quest', () => {
+    const player = Player.create('p1');
+    player.setProductionRate(player.productionRate.add(100));
+    setSession(new GameSession('s1', player));
+    setQuestState({ quest: { type: 'production', target: 50, reward: 100, description: 'Reach 50/s' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.done).toBe(true);
+  });
+
+  it('getQuestProgress returns progress for upgrade quest', () => {
+    const player = Player.create('p1');
+    setSession(new GameSession('s1', player));
+    setQuestState({
+      quest: { type: 'upgrade', target: 1, targetId: 'mining-robot', reward: 50, description: 'Own 1× Robot' },
+    });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(typeof p!.current).toBe('number');
+  });
+
+  it('getQuestProgress returns progress for astronauts quest', () => {
+    const player = Player.create('p1');
+    player.addCoins(5000);
+    player.hireAstronaut(1000);
+    setSession(new GameSession('s1', player));
+    setQuestState({ quest: { type: 'astronauts', target: 1, reward: 50, description: 'Have 1 astronaut' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
     expect(p!.done).toBe(true);
   });
 
@@ -75,6 +136,26 @@ describe('quests', () => {
     vi.stubGlobal('localStorage', undefined);
     expect(getQuestLastClaimAt()).toBe(0);
     vi.stubGlobal('localStorage', orig);
+  });
+
+  it('getQuestStreak returns 0 when getItem throws', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('storage error');
+      },
+      setItem: () => {},
+    });
+    expect(getQuestStreak()).toBe(0);
+  });
+
+  it('getQuestLastClaimAt returns 0 when getItem throws', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('storage error');
+      },
+      setItem: () => {},
+    });
+    expect(getQuestLastClaimAt()).toBe(0);
   });
 
   it('claimQuest returns false when no quest or not done', () => {

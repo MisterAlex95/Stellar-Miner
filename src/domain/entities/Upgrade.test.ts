@@ -3,6 +3,11 @@ import { Upgrade } from './Upgrade.js';
 import { UpgradeEffect } from '../value-objects/UpgradeEffect.js';
 
 describe('Upgrade', () => {
+  it('throws when cost is negative', () => {
+    const effect = new UpgradeEffect(10);
+    expect(() => new Upgrade('x', 'X', -1, effect)).toThrow('Upgrade cost must be non-negative');
+  });
+
   it('stores id, name, cost, effect', () => {
     const effect = new UpgradeEffect(10);
     const u = new Upgrade('drill-mk1', 'Drill Mk.I', 200, effect);

@@ -51,9 +51,19 @@ describe('research', () => {
     expect(getResearchClickMultiplier()).toBe(1);
   });
 
+  it('getResearchClickMultiplier returns > 1 when node with clickPercent unlocked', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    expect(getResearchClickMultiplier()).toBeGreaterThan(1);
+  });
+
   it('getResearchProductionPercent and getResearchClickPercent', () => {
     expect(getResearchProductionPercent()).toBe(0);
     expect(getResearchClickPercent()).toBe(0);
+  });
+
+  it('getResearchProductionPercent returns percent when unlocked', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory']);
+    expect(getResearchProductionPercent()).toBeCloseTo(5, 1);
   });
 
   it('getSlotFreeUpgradeIdsFromResearch returns empty when none unlocked', () => {
@@ -100,6 +110,11 @@ describe('research', () => {
     expect(getUnlockPathIds('mining-theory')).toEqual([]);
   });
 
+  it('getUnlockPathIds returns path when node has prerequisites', () => {
+    const ids = getUnlockPathIds('automation');
+    expect(ids).toContain('mining-theory');
+  });
+
   it('getUnlockPath returns names', () => {
     expect(getUnlockPath('mining-theory')).toEqual([]);
   });
@@ -143,6 +158,29 @@ describe('research', () => {
     const r = attemptResearch('automation', () => true);
     vi.restoreAllMocks();
     if (r.success) expect(r.message).toMatch(/production|click/);
+  });
+
+  it('attemptResearch success without getUpgradeDisplayLine uses fallback for crew', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const r = attemptResearch('ai-assist', () => true);
+    vi.restoreAllMocks();
+    expect(r.success).toBe(true);
+    expect(r.message).toMatch(/upgrade|crew/);
+  });
+
+  it('attemptResearch uses getUpgradeDisplayLine for slot and crew when provided', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory']);
+    const getUpgradeDisplayLine = (upgradeId: string, kind: string, n: number) => `${upgradeId}-${kind}-${n}`;
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const r = attemptResearch('automation', () => true, getUpgradeDisplayLine);
+    expect(r.success).toBe(true);
+    expect(r.message).toContain('drill-mk1-slot-1');
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    const r2 = attemptResearch('ai-assist', () => true, getUpgradeDisplayLine);
+    vi.restoreAllMocks();
+    expect(r2.success).toBe(true);
+    expect(r2.message).toContain('drill-mk1-crew');
   });
 
   it('attemptResearch fails when random fails', () => {

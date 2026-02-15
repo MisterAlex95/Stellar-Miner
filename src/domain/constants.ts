@@ -72,6 +72,32 @@ export function getPlanetName(index: number): string {
   return PLANET_NAMES[index] ?? `Planet ${index + 1}`;
 }
 
+/** Deterministic planet name from id: same id always yields the same name. */
+const PLANET_NAME_PARTS_A = [
+  'Titan', 'Nova', 'Dust', 'Iron', 'Crimson', 'Frost', 'Solar', 'Void', 'Stellar', 'Last',
+  'Kel', 'Vor', 'Xan', 'Zeph', 'Nex', 'Orb', 'Pyre', 'Rime', 'Umbra', 'Aether',
+  'Boreal', 'Cinder', 'Drift', 'Ember', 'Flux', 'Glacier', 'Haven', 'Ion', 'Jade', 'Kor',
+];
+const PLANET_NAME_PARTS_B = [
+  'Prime', 'Haven', 'Vein', 'Drift', 'Ring', 'Forge', 'Edge', 'Rest', 'Light', 'Reach',
+  'Dar', 'Mak', 'Vex', 'Tor', 'Nox', 'Ris', 'Kor', 'Thule', 'Ward', 'Ymir',
+  'Belt', 'Core', 'Dawn', 'Fall', 'Gate', 'Hollow', 'Isle', 'Junction', 'Keep', 'Locus',
+];
+
+function hash(s: string): number {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) + s.charCodeAt(i);
+  return h >>> 0;
+}
+
+/** Generates a deterministic, varied planet name from planetId (e.g. "planet-3" → "Kel Drift"). */
+export function generatePlanetName(planetId: string): string {
+  const h = hash(planetId);
+  const a = PLANET_NAME_PARTS_A[h % PLANET_NAME_PARTS_A.length];
+  const b = PLANET_NAME_PARTS_B[(h >> 16) % PLANET_NAME_PARTS_B.length];
+  return `${a} ${b}`;
+}
+
 /** Crew: astronauts. Production bonus per astronaut (e.g. 0.02 = +2% each). */
 export const ASTRONAUT_PRODUCTION_BONUS = B.astronautProductionBonus;
 

@@ -10,7 +10,7 @@ import { ProductionRate } from '../domain/value-objects/ProductionRate.js';
 import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
-import { getPlanetName } from '../domain/constants.js';
+import { generatePlanetName } from '../domain/constants.js';
 import { getUpgradeUsesSlot } from '../application/catalogs.js';
 import { getBaseProductionRateFromPlanets } from '../application/planetAffinity.js';
 import { toDecimal } from '../domain/bigNumber.js';
@@ -276,7 +276,7 @@ export class SaveLoadService implements ISaveLoadService {
     } else {
       // Migration: old save had flat upgrades → put them on one planet
       const upgrades = (data.player.upgrades ?? []).map(mapUpgrade);
-      const first = new Planet('planet-1', getPlanetName(0), 6, upgrades, 0);
+      const first = new Planet('planet-1', generatePlanetName('planet-1'), 6, upgrades, 0);
       planets = [first];
     }
     const artifacts = data.player.artifacts.map(

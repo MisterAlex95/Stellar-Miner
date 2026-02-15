@@ -273,6 +273,74 @@ describe('SaveLoadService', () => {
     expect(service.validateSavePayload('x')).toBe(false);
   });
 
+  it('save emits save_failed when setItem throws', async () => {
+    const eventBus = await import('../application/eventBus.js');
+    const emitSpy = vi.spyOn(eventBus, 'emit');
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => (k === 'stellar-miner-last-save' ? null : storage[k] ?? null),
+      setItem: () => {
+        throw new Error('quota exceeded');
+      },
+      removeItem: (k: string) => delete storage[k],
+    });
+    const player = Player.create('p1');
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    await service.save(session);
+    expect(emitSpy).toHaveBeenCalledWith('save_failed', expect.any(Object));
+    emitSpy.mockRestore();
+  });
+
+  it('load applies offline progress in 12-14h decay window', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000_000_000);
+    const player = Player.create('p1');
+    player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
+    player.setProductionRate(new ProductionRate(10));
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    await service.save(session);
+    vi.setSystemTime(1_000_000_000_000 + 13 * 60 * 60 * 1000);
+    const loaded = await service.load();
+    vi.useRealTimers();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.player.coins.value.toNumber()).toBeGreaterThan(0);
+  });
+
+  it('load applies offline progress in 14-24h decay window', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000_000_000);
+    const player = Player.create('p1');
+    player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
+    player.setProductionRate(new ProductionRate(10));
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    await service.save(session);
+    vi.setSystemTime(1_000_000_000_000 + 20 * 60 * 60 * 1000);
+    const loaded = await service.load();
+    vi.useRealTimers();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.player.coins.value.toNumber()).toBeGreaterThan(0);
+  });
+
+  it('load applies offline progress in 24h+ window and getLastOfflineWasCapped', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000_000_000);
+    const player = Player.create('p1');
+    player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
+    player.setProductionRate(new ProductionRate(10));
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    await service.save(session);
+    vi.setSystemTime(1_000_000_000_000 + 30 * 60 * 60 * 1000);
+    const loaded = await service.load();
+    expect(service.getLastOfflineWasCapped()).toBe(true);
+    expect(service.getLastOfflineWasCapped()).toBe(false);
+    vi.useRealTimers();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.player.coins.value.toNumber()).toBeGreaterThan(0);
+  });
+
   it('load returns null when deserialize throws', async () => {
     const badPayload = JSON.stringify({
       version: 1,

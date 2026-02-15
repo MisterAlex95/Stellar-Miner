@@ -302,9 +302,9 @@ const PLANET_TYPES = [
 
 type PlanetType = (typeof PLANET_TYPES)[0];
 
-/** Planet type from id only so Mine and Base/Planets show the same look for the same planet. */
-function getPlanetTypeById(planetId: string, planetIndex = 0): PlanetType {
-  const idx = (hash(planetId) + planetIndex) % PLANET_TYPES.length;
+/** Planet type from name so stats and visuals match (same name = same type/color). */
+function getPlanetTypeByName(planetName: string, planetIndex = 0): PlanetType {
+  const idx = (hash(planetName) + planetIndex) % PLANET_TYPES.length;
   return PLANET_TYPES[idx];
 }
 
@@ -313,12 +313,12 @@ const textureCache = new Map<string, HTMLCanvasElement>();
 const NOISE_SCALE_MIN = 0.022;
 const NOISE_SCALE_RANGE = 0.058;
 
-/** Per-planet random-ish params (deterministic from id) for more variation. */
-function getPlanetNoiseParams(planetId: string, pType: PlanetType) {
-  const h = hash(planetId + pType.name);
-  const h2 = hash(planetId + pType.name + 'x');
-  const h3 = hash(planetId + pType.name + 'y');
-  const h4 = hash(planetId + pType.name + 'remap');
+/** Per-planet random-ish params (deterministic from name) for more variation. */
+function getPlanetNoiseParams(planetName: string, pType: PlanetType) {
+  const h = hash(planetName + pType.name);
+  const h2 = hash(planetName + pType.name + 'x');
+  const h3 = hash(planetName + pType.name + 'y');
+  const h4 = hash(planetName + pType.name + 'remap');
   return {
     scale: NOISE_SCALE_MIN + (h % 1000) / 1000 * NOISE_SCALE_RANGE,
     offsetX: (h2 % 20000) - 10000,
@@ -332,24 +332,24 @@ function getPlanetNoiseParams(planetId: string, pType: PlanetType) {
   };
 }
 
-function getPlanetTexture(planetId: string, pType: PlanetType): HTMLCanvasElement {
-  const key = `${planetId}-${pType.name}`;
+function getPlanetTexture(planetName: string, pType: PlanetType): HTMLCanvasElement {
+  const key = `${planetName}-${pType.name}`;
   let tex = textureCache.get(key);
   if (tex) return tex;
-  tex = createPlanetTexture(planetId, pType);
+  tex = createPlanetTexture(planetName, pType);
   textureCache.set(key, tex);
   return tex;
 }
 
 /** Generative planet texture: noise → gradient, with per-planet variation. */
-function createPlanetTexture(planetId: string, pType: PlanetType): HTMLCanvasElement {
+function createPlanetTexture(planetName: string, pType: PlanetType): HTMLCanvasElement {
   const size = TEXTURE_SIZE;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const c = canvas.getContext('2d')!;
-  const seed = hash(planetId + pType.name);
-  const params = getPlanetNoiseParams(planetId, pType);
+  const seed = hash(planetName + pType.name);
+  const params = getPlanetNoiseParams(planetName, pType);
   const cx = size / 2;
   const cy = size / 2;
   const maxR = size / 2 - 0.5;
@@ -407,13 +407,13 @@ const MAX_PLANET_SCALE = 1.35;
 
 /** Scale factor from id so planets look clearly bigger or smaller. */
 function planetSizeScale(view: PlanetView): number {
-  return MIN_PLANET_SCALE + ((hash(view.id) % 81) / 100);
+  return MIN_PLANET_SCALE + ((hash(view.name) % 81) / 100);
 }
 
 type PlanetExtra = 'none' | 'rings' | 'belt' | 'rings_and_belt';
 
-function getPlanetExtra(planetId: string): PlanetExtra {
-  const h = hash(planetId + 'extra');
+function getPlanetExtra(planetName: string): PlanetExtra {
+  const h = hash(planetName + 'extra');
   const v = h % 10;
   if (v < 2) return 'rings';
   if (v < 4) return 'belt';
@@ -425,7 +425,7 @@ function drawPlanetRings(
   cx: number,
   cy: number,
   r: number,
-  planetId: string,
+  planetName: string,
   tiltScale: number = 1,
   targetCtx?: CanvasRenderingContext2D | null
 ): void {
@@ -433,12 +433,12 @@ function drawPlanetRings(
   if (!c) return;
   const isListView = targetCtx != null;
   const time = targetCtx ? 0 : orbitTime;
-  const tilt = (hash(planetId + 'tilt') % 31) / 100 * tiltScale;
+  const tilt = (hash(planetName + 'tilt') % 31) / 100 * tiltScale;
   const innerR = r * 1.15;
   const outerR = r * 1.5;
   c.save();
   c.translate(cx, cy);
-  c.rotate(time * 0.05 + (hash(planetId) % 100) / 100);
+  c.rotate(time * 0.05 + (hash(planetName) % 100) / 100);
   c.scale(1, Math.max(0.2, 0.38 - tilt));
   const grd = c.createRadialGradient(0, 0, innerR * 0.3, 0, 0, outerR);
   if (isListView) {
@@ -472,27 +472,27 @@ function drawPlanetBelt(
   cx: number,
   cy: number,
   r: number,
-  planetId: string,
+  planetName: string,
   targetCtx?: CanvasRenderingContext2D | null
 ): void {
   const c = targetCtx ?? ctx;
   if (!c) return;
   const isListView = targetCtx != null;
   const beltRadius = isListView ? r * 1.06 : r * 1.42;
-  const count = isListView ? 18 + (hash(planetId + 'belt') % 8) : 28 + (hash(planetId + 'belt') % 12);
+  const count = isListView ? 18 + (hash(planetName + 'belt') % 8) : 28 + (hash(planetName + 'belt') % 12);
   const dotSize = Math.max(0.4, r * (isListView ? 0.045 : 0.032));
   const dim = getThemeColor('--text-dim', '#6b7280');
   const mid = getThemeColor('--border', '#4b5563');
   c.save();
   c.translate(cx, cy);
-  c.rotate((hash(planetId) % 50) / 50);
+  c.rotate((hash(planetName) % 50) / 50);
   for (let i = 0; i < count; i++) {
-    const angle = (i / count) * Math.PI * 2 + (hash(planetId + String(i)) % 20) / 20 * 0.2;
+    const angle = (i / count) * Math.PI * 2 + (hash(planetName + String(i)) % 20) / 20 * 0.2;
     const x = Math.cos(angle) * beltRadius;
     const y = Math.sin(angle) * 0.26 * beltRadius;
-    const size = dotSize * (0.7 + (hash(planetId + 's' + i) % 30) / 100);
-    c.fillStyle = (hash(planetId + 'c' + i) % 4 === 0 ? mid : dim);
-    c.globalAlpha = isListView ? 0.5 + (hash(planetId + 'a' + i) % 35) / 100 : 0.4 + (hash(planetId + 'a' + i) % 40) / 100;
+    const size = dotSize * (0.7 + (hash(planetName + 's' + i) % 30) / 100);
+    c.fillStyle = (hash(planetName + 'c' + i) % 4 === 0 ? mid : dim);
+    c.globalAlpha = isListView ? 0.5 + (hash(planetName + 'a' + i) % 35) / 100 : 0.4 + (hash(planetName + 'a' + i) % 40) / 100;
     c.beginPath();
     c.arc(x, y, size, 0, Math.PI * 2);
     c.fill();
@@ -512,11 +512,11 @@ function drawOnePlanet(
   const border = getThemeColor('--border', '#2a2f3d');
   if (!ctx) return;
 
-  const pType = getPlanetTypeById(view.id);
+  const pType = getPlanetTypeByName(view.name);
   const scale = planetSizeScale(view);
   const r = planetRadius * scale;
 
-  const texture = getPlanetTexture(view.id, pType);
+  const texture = getPlanetTexture(view.name, pType);
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -543,9 +543,9 @@ function drawOnePlanet(
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  const extra = getPlanetExtra(view.id);
-  if (extra === 'rings' || extra === 'rings_and_belt') drawPlanetRings(cx, cy, r, view.id);
-  if (extra === 'belt' || extra === 'rings_and_belt') drawPlanetBelt(cx, cy, r, view.id);
+  const extra = getPlanetExtra(view.name);
+  if (extra === 'rings' || extra === 'rings_and_belt') drawPlanetRings(cx, cy, r, view.name);
+  if (extra === 'belt' || extra === 'rings_and_belt') drawPlanetBelt(cx, cy, r, view.name);
 
   const labelY = cy - r - 6;
   const fontSize = Math.max(10, Math.min(14, r * 0.5));
@@ -556,8 +556,8 @@ function drawOnePlanet(
   ctx.fillText(view.name, cx, labelY);
 }
 
-/** Draw only the planet sphere (texture + border) to a small canvas, e.g. for Base/Planets list tiles. */
-export function drawPlanetSphereToCanvas(canvas: HTMLCanvasElement, planetId: string): void {
+/** Draw only the planet sphere (texture + border) to a small canvas, e.g. for Base/Planets list tiles. Uses planet name for type/color. */
+export function drawPlanetSphereToCanvas(canvas: HTMLCanvasElement, planetName: string): void {
   const targetCtx = canvas.getContext('2d');
   if (!targetCtx) return;
   const w = canvas.width;
@@ -565,8 +565,8 @@ export function drawPlanetSphereToCanvas(canvas: HTMLCanvasElement, planetId: st
   const cx = w / 2;
   const cy = h / 2;
   const r = Math.min(w, h) / 2 - 1;
-  const pType = getPlanetTypeById(planetId);
-  const texture = getPlanetTexture(planetId, pType);
+  const pType = getPlanetTypeByName(planetName);
+  const texture = getPlanetTexture(planetName, pType);
   const border = getThemeColor('--border', '#2a2f3d');
   targetCtx.save();
   targetCtx.beginPath();
@@ -590,9 +590,9 @@ export function drawPlanetSphereToCanvas(canvas: HTMLCanvasElement, planetId: st
   targetCtx.arc(cx, cy, r, 0, Math.PI * 2);
   targetCtx.stroke();
   targetCtx.globalAlpha = 1;
-  const extra = getPlanetExtra(planetId);
-  if (extra === 'rings' || extra === 'rings_and_belt') drawPlanetRings(cx, cy, r, planetId, 0.7, targetCtx);
-  if (extra === 'belt' || extra === 'rings_and_belt') drawPlanetBelt(cx, cy, r, planetId, targetCtx);
+  const extra = getPlanetExtra(planetName);
+  if (extra === 'rings' || extra === 'rings_and_belt') drawPlanetRings(cx, cy, r, planetName, 0.7, targetCtx);
+  if (extra === 'belt' || extra === 'rings_and_belt') drawPlanetBelt(cx, cy, r, planetName, targetCtx);
 }
 
 /** Draw one solar system: star in center, planets in orbit. */

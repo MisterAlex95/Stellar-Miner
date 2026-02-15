@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { t, tParam, strings, applyTranslations } from './strings.js';
-import { setSettings } from './gameState.js';
+import { setSettings, getSettings } from './gameState.js';
+import type { Settings } from '../settings.js';
 
 describe('strings', () => {
   beforeEach(() => {
@@ -15,7 +16,12 @@ describe('strings', () => {
   });
 
   it('t returns key when missing (fallback)', () => {
-    expect(t('unknownKey' as 'appTitle')).toBeDefined();
+    expect(t('unknownKey' as 'appTitle')).toBe('unknownKey');
+  });
+
+  it('t uses en bundle when language is not en or fr', () => {
+    setSettings({ ...getSettings(), language: 'de' } as unknown as Settings);
+    expect(t('appTitle')).toBe('STELLAR MINER');
   });
 
   it('tParam replaces placeholders', () => {

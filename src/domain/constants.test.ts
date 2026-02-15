@@ -8,6 +8,7 @@ import {
   getAddSlotCost,
   PLANET_NAMES,
   getPlanetName,
+  generatePlanetName,
   HOUSING_BASE_COST,
   getHousingCost,
   ASTRONAUT_BASE_COST,
@@ -68,6 +69,16 @@ describe('constants', () => {
   it('getPlanetName falls back to Planet N when index >= length', () => {
     expect(getPlanetName(PLANET_NAMES.length)).toBe(`Planet ${PLANET_NAMES.length + 1}`);
     expect(getPlanetName(99)).toBe('Planet 100');
+  });
+
+  it('generatePlanetName is deterministic and returns two-word names', () => {
+    expect(generatePlanetName('planet-1')).toBe(generatePlanetName('planet-1'));
+    expect(generatePlanetName('planet-2')).toBe(generatePlanetName('planet-2'));
+    const name1 = generatePlanetName('planet-1');
+    const name2 = generatePlanetName('planet-2');
+    expect(name1).toMatch(/^[A-Za-z]+ [A-Za-z]+$/);
+    expect(name2).toMatch(/^[A-Za-z]+ [A-Za-z]+$/);
+    expect(name1).not.toBe(name2);
   });
 
   it('HOUSING_BASE_COST and getHousingCost scale with count', () => {

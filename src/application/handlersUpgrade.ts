@@ -40,7 +40,7 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
     ? (needsSlot ? (hasEffectiveFreeSlot(targetPlanet) ? targetPlanet : null) : targetPlanet)
     : (needsSlot ? getPlanetWithEffectiveFreeSlot(player) : player.planets[0] ?? null);
   if (!planet) return;
-  const mult = getPlanetTypeMultiplier(def.id, getPlanetType(planet.id));
+  const mult = getPlanetTypeMultiplier(def.id, getPlanetType(planet.name));
   upgradeService.purchaseUpgrade(player, upgrade, planet, mult, hasEffectiveFreeSlot);
   emit('upgrade_purchased', { upgradeId, planetId });
   if (player.upgrades.length === 1 && typeof localStorage !== 'undefined') {
@@ -83,7 +83,7 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): void 
     if (!target) break;
     if (!player.spendAstronauts(crewRequired)) break;
     const upgrade = createUpgrade(def, ownedCount);
-    const mult = getPlanetTypeMultiplier(def.id, getPlanetType(target.id));
+    const mult = getPlanetTypeMultiplier(def.id, getPlanetType(target.name));
     upgradeService.purchaseUpgrade(player, upgrade, target, mult, hasEffectiveFreeSlot);
     bought++;
     ownedCount++;

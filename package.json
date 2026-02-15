@@ -1,6 +1,6 @@
 {
   "name": "stellar-miner",
-  "version": "0.3.9",
+  "version": "0.3.11",
   "private": true,
   "type": "module",
   "scripts": {
@@ -23,6 +23,7 @@
     "@vitest/coverage-v8": "^2.1.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "png-to-ico": "^3.0.1",
     "prettier": "^3.3.3",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",

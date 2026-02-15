@@ -11,9 +11,9 @@ function hash(s: string): number {
   return Math.abs(h);
 }
 
-/** Deterministic planet type from planet id (matches MineZoneCanvas visual). */
-export function getPlanetType(planetId: string): string {
-  const idx = hash(planetId) % PLANET_TYPES.length;
+/** Deterministic planet type from planet name (stats and MineZoneCanvas visual both use this). */
+export function getPlanetType(planetName: string): string {
+  const idx = hash(planetName) % PLANET_TYPES.length;
   return PLANET_TYPES[idx] ?? 'rocky';
 }
 
@@ -29,7 +29,7 @@ export function getPlanetTypeMultiplier(upgradeId: string, planetType: string): 
 export function getBaseProductionRateFromPlanets(planets: Planet[]): Decimal {
   let total = new Decimal(0);
   for (const planet of planets) {
-    const planetType = getPlanetType(planet.id);
+    const planetType = getPlanetType(planet.name);
     for (const upgrade of planet.upgrades) {
       const mult = getPlanetTypeMultiplier(upgrade.id, planetType);
       total = total.add(upgrade.effect.coinsPerSecond.mul(mult));

@@ -4,9 +4,9 @@ import { getPlanetEffectiveProduction } from '../application/productionHelpers.j
 import { getPlanetType } from '../application/planetAffinity.js';
 import { getEffectiveUsedSlots } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
-import { getCatalogPlanetNameById } from '../application/i18nCatalogs.js';
 import { drawPlanetSphereToCanvas } from './MineZoneCanvas.js';
 import { buttonWithTooltipHtml, updateTooltipForButton } from './components/buttonTooltip.js';
+import { escapeAttr } from './components/domUtils.js';
 
 export function renderPlanetList(): void {
   const session = getSession();
@@ -18,7 +18,7 @@ export function renderPlanetList(): void {
   const cost = planetService.getNewPlanetCost(player);
   const astronautsRequired = planetService.getExpeditionAstronautsRequired(player);
   const canLaunch = planetService.canLaunchExpedition(player);
-  const planetName = (pl: { id: string }) => getCatalogPlanetNameById(pl.id);
+  const planetName = (pl: { name: string }) => pl.name;
   listEl.innerHTML = player.planets
     .map((p) => {
       const addSlotCost = planetService.getAddSlotCost(p);
@@ -32,7 +32,7 @@ export function renderPlanetList(): void {
       const cardTitle = player.planets.length > 1
         ? tParam('planetCardTitleProd', { used: effectiveUsed, max: p.maxUpgrades, pct: String((player.planets.length - 1) * 5) })
         : tParam('planetCardTitle', { used: effectiveUsed, max: p.maxUpgrades });
-      const planetType = getPlanetType(p.id);
+      const planetType = getPlanetType(p.name);
       const typeLabel = planetType.charAt(0).toUpperCase() + planetType.slice(1);
       const lines: string[] = [
         planetName(p),
@@ -47,7 +47,7 @@ export function renderPlanetList(): void {
       const planetInfoTooltip = lines.join('\n');
       return `<div class="planet-card" data-planet-id="${p.id}" title="${cardTitle}">
         <div class="planet-card-header">
-          <canvas class="planet-card-visual" width="48" height="48" data-planet-id="${p.id}" aria-hidden="true"></canvas>
+          <canvas class="planet-card-visual" width="48" height="48" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" aria-hidden="true"></canvas>
           <div class="planet-card-name-wrap">
             <span class="planet-card-name">${planetName(p)}</span>
             ${buttonWithTooltipHtml(planetInfoTooltip, `<span class="planet-card-info" aria-label="${t('planetInfoTitle')}">ℹ</span>`, 'planet-card-info-wrap')}
@@ -60,8 +60,8 @@ export function renderPlanetList(): void {
     })
     .join('');
   listEl.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
-    const planetId = canvas.getAttribute('data-planet-id');
-    if (planetId) drawPlanetSphereToCanvas(canvas, planetId);
+    const planetName = canvas.getAttribute('data-planet-name');
+    if (planetName) drawPlanetSphereToCanvas(canvas, planetName);
   });
   const buyPlanetBtn = document.getElementById('buy-planet-btn');
   if (buyPlanetBtn) {

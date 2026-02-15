@@ -16,7 +16,6 @@ import { t, tParam } from '../../application/strings.js';
 import {
   getCatalogUpgradeName,
   getCatalogUpgradeDesc,
-  getCatalogPlanetNameById,
 } from '../../application/i18nCatalogs.js';
 import { buttonWithTooltipHtml } from './buttonTooltip.js';
 import { escapeAttr } from './domUtils.js';
@@ -100,7 +99,7 @@ export function getUpgradeCardState(
 
 export interface BuildUpgradeCardHtmlOptions {
   choosePlanet: boolean;
-  planetsForSelect: { id: string }[];
+  planetsForSelect: { id: string; name: string }[];
 }
 
 export function buildUpgradeCardHtml(state: UpgradeCardState, options: BuildUpgradeCardHtmlOptions): string {
@@ -109,7 +108,7 @@ export function buildUpgradeCardHtml(state: UpgradeCardState, options: BuildUpgr
   const { choosePlanet, planetsForSelect } = options;
 
   const planetOptions = choosePlanet
-    ? planetsForSelect.map((p) => `<option value="${p.id}">${getCatalogPlanetNameById(p.id)}</option>`).join('')
+    ? planetsForSelect.map((p) => `<option value="${p.id}">${p.name}</option>`).join('')
     : '';
   const planetSelectHtml = choosePlanet
     ? `<label class="upgrade-planet-label" for="planet-${def.id}">${t('toPlanet')}</label><select class="upgrade-planet-select" id="planet-${def.id}" data-upgrade-id="${def.id}" aria-label="${t('assignToPlanet')}">${planetOptions}</select>`

@@ -14,6 +14,14 @@ import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs
 
 vi.mock('../presentation/toasts.js', () => ({ showAchievementToast: vi.fn() }));
 
+vi.mock('../data/achievements.json', async (importOriginal) => {
+  const mod = await importOriginal() as { default: Array<{ id: string; name: string; type: string; value: number }> };
+  const orig = Array.isArray(mod?.default) ? mod.default : [];
+  return {
+    default: [...orig, { id: 'def-unknown', name: 'Def', type: 'unknown', value: 0 }],
+  };
+});
+
 describe('achievements', () => {
   let storage: Record<string, string>;
 
@@ -36,6 +44,21 @@ describe('achievements', () => {
     vi.stubGlobal('localStorage', orig);
   });
 
+  it('getTotalClicksEver returns 0 on parse error', () => {
+    storage[TOTAL_CLICKS_KEY] = 'not-a-number';
+    expect(getTotalClicksEver()).toBe(0);
+  });
+
+  it('getTotalClicksEver returns 0 when getItem throws', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('storage error');
+      },
+      setItem: () => {},
+    });
+    expect(getTotalClicksEver()).toBe(0);
+  });
+
   it('getTotalClicksEver returns stored value', () => {
     storage[TOTAL_CLICKS_KEY] = '42';
     expect(getTotalClicksEver()).toBe(42);
@@ -45,6 +68,16 @@ describe('achievements', () => {
     storage[TOTAL_CLICKS_KEY] = '10';
     incrementTotalClicksEver();
     expect(storage[TOTAL_CLICKS_KEY]).toBe('11');
+  });
+
+  it('incrementTotalClicksEver catches setItem error', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => '0',
+      setItem: () => {
+        throw new Error('quota');
+      },
+    });
+    incrementTotalClicksEver();
   });
 
   it('incrementTotalClicksEver does nothing when localStorage undefined', () => {
@@ -86,6 +119,27 @@ describe('achievements', () => {
     storage[TOTAL_CLICKS_KEY] = '1';
     checkAchievements();
     expect(getUnlockedAchievements().has('first-click')).toBe(true);
+  });
+
+  it('totalSlotsGreaterThan check uses session slots', () => {
+    const player = Player.create('p1');
+    player.planets[0].addSlot();
+    player.planets[0].addSlot();
+    setSession(new GameSession('s1', player));
+    const expander = ACHIEVEMENTS.find((a) => a.id === 'first-slot');
+    expect(expander?.check()).toBe(true);
+  });
+
+  it('unlockAchievement shows toast when achievement found', async () => {
+    const toasts = await import('../presentation/toasts.js');
+    unlockAchievement('first-click');
+    expect(toasts.showAchievementToast).toHaveBeenCalledWith('First steps');
+  });
+
+  it('buildCheck default returns false for unknown type', () => {
+    const defUnknown = ACHIEVEMENTS.find((a) => a.id === 'def-unknown');
+    expect(defUnknown).toBeDefined();
+    expect(defUnknown!.check()).toBe(false);
   });
 
   it('combo-master check uses localStorage', () => {

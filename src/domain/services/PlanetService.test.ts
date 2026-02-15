@@ -4,7 +4,7 @@ import { Player } from '../entities/Player.js';
 import { Planet } from '../entities/Planet.js';
 import { Coins } from '../value-objects/Coins.js';
 import { ProductionRate } from '../value-objects/ProductionRate.js';
-import { getAstronautCost } from '../constants.js';
+import { getAstronautCost, generatePlanetName } from '../constants.js';
 
 describe('PlanetService', () => {
   it('getNewPlanetCost returns cost for next planet (scales with current count)', () => {
@@ -56,7 +56,7 @@ describe('PlanetService', () => {
     expect(outcome.deaths).toBe(0);
     expect(player.coins.value.toNumber()).toBe(0);
     expect(player.planets).toHaveLength(2);
-    expect(player.planets[1].name).toBe('Nova Prime');
+    expect(player.planets[1].name).toBe(generatePlanetName('planet-2'));
     expect(player.astronautCount).toBe(required);
   });
 
@@ -87,6 +87,17 @@ describe('PlanetService', () => {
     expect(player.astronautCount).toBe(0);
   });
 
+  it('canBuyNewPlanet (deprecated) matches canLaunchExpedition', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    expect(service.canBuyNewPlanet(player)).toBe(false);
+    const cost = service.getNewPlanetCost(player);
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
+    player.hireAstronaut(getAstronautCost(0));
+    player.hireAstronaut(getAstronautCost(1));
+    expect(service.canBuyNewPlanet(player)).toBe(true);
+  });
+
   it('buyNewPlanet (deprecated) spends coins and adds planet when enough astronauts', () => {
     const player = Player.create('p1');
     const service = new PlanetService();
@@ -98,7 +109,7 @@ describe('PlanetService', () => {
     expect(ok).toBe(true);
     expect(player.planets).toHaveLength(2);
     expect(player.planets[1].id).toBe('planet-2');
-    expect(player.planets[1].name).toBe('Nova Prime');
+    expect(player.planets[1].name).toBe(generatePlanetName('planet-2'));
   });
 
   it('getAddSlotCost returns cost for planet max slots', () => {

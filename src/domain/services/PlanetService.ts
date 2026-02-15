@@ -4,7 +4,7 @@ import { Planet as PlanetEntity } from '../entities/Planet.js';
 import {
   getNewPlanetCost,
   getAddSlotCost,
-  getPlanetName,
+  generatePlanetName,
   getExpeditionAstronautsRequired,
   EXPEDITION_DEATH_CHANCE,
   getHousingCost,
@@ -50,7 +50,7 @@ export class PlanetService {
     const success = survivors >= 1;
     if (success) {
       const id = `planet-${player.planets.length + 1}`;
-      const name = getPlanetName(player.planets.length);
+      const name = generatePlanetName(id);
       player.addPlanet(PlanetEntity.create(id, name));
       player.addAstronauts(survivors);
       return { success: true, totalSent: required, survivors, deaths, planetName: name };

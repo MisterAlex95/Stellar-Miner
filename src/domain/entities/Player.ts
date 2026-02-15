@@ -4,7 +4,7 @@ import { ProductionRate } from '../value-objects/ProductionRate.js';
 import type { Upgrade } from './Upgrade.js';
 import type { Artifact } from './Artifact.js';
 import { Planet } from './Planet.js';
-import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, ASTRONAUT_PRODUCTION_BONUS, getPlanetName } from '../constants.js';
+import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, ASTRONAUT_PRODUCTION_BONUS, generatePlanetName } from '../constants.js';
 
 /** Aggregate root: player and their progression. Holds planets, crew (astronauts), artifacts, coins. */
 export class Player {
@@ -96,7 +96,7 @@ export class Player {
       oldPlayer.id,
       Coins.from(0),
       ProductionRate.from(0),
-      [Planet.create('planet-1', getPlanetName(0))],
+      [Planet.create('planet-1', generatePlanetName('planet-1'))],
       [],
       oldPlayer.prestigeLevel + 1,
       oldPlayer.totalCoinsEver,
@@ -105,7 +105,7 @@ export class Player {
   }
 
   static create(id: string): Player {
-    const firstPlanet = Planet.create('planet-1', getPlanetName(0));
+    const firstPlanet = Planet.create('planet-1', generatePlanetName('planet-1'));
     return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, 0);
   }
 }
