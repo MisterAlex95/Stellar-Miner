@@ -15,6 +15,14 @@
   --tooltip-max: 560px;
   --tooltip-min-sm: 280px;
   --tooltip-max-sm: 420px;
+
+  /* Crew role accents */
+  --crew-miner: #f59e0b;
+  --crew-miner-bg: rgba(245, 158, 11, 0.12);
+  --crew-scientist: #38bdf8;
+  --crew-scientist-bg: rgba(56, 189, 248, 0.12);
+  --crew-pilot: #a78bfa;
+  --crew-pilot-bg: rgba(167, 139, 250, 0.12);
 }
 
 @media (max-width: 480px) {

@@ -1,6 +1,6 @@
 import { createMineZoneCanvas } from './MineZoneCanvas.js';
 import { getSettings, getEventContext, setSettings, setMineZoneCanvasApi } from '../application/gameState.js';
-import { t, applyTranslations } from '../application/strings.js';
+import { t, applyTranslations, type StringKey } from '../application/strings.js';
 import {
   openSettings,
   closeSettings,
@@ -79,6 +79,50 @@ function openInfoModal(): void {
 
 function closeInfoModal(): void {
   closeOverlay('info-overlay', 'info-overlay--open');
+}
+
+const SECTION_RULES_OVERLAY_CLASS = 'section-rules-overlay--open';
+
+/** Parses rules text: lines starting with "- " or "• " become list items; others become paragraphs. */
+function formatRulesContent(text: string): DocumentFragment {
+  const frag = document.createDocumentFragment();
+  const lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  let ul: HTMLUListElement | null = null;
+  for (const line of lines) {
+    const isListItem = line.startsWith('- ') || line.startsWith('• ');
+    const content = isListItem ? line.slice(2).trim() : line;
+    if (isListItem) {
+      if (!ul) {
+        ul = document.createElement('ul');
+        ul.className = 'section-rules-list';
+        frag.appendChild(ul);
+      }
+      const li = document.createElement('li');
+      li.textContent = content;
+      ul.appendChild(li);
+    } else {
+      ul = null;
+      const p = document.createElement('p');
+      p.textContent = content;
+      frag.appendChild(p);
+    }
+  }
+  return frag;
+}
+
+function openSectionRulesModal(rulesKey: string, titleKey: string): void {
+  const titleEl = document.getElementById('section-rules-title');
+  const bodyEl = document.getElementById('section-rules-body');
+  if (titleEl) titleEl.textContent = t(titleKey as StringKey);
+  if (bodyEl) {
+    bodyEl.innerHTML = '';
+    bodyEl.appendChild(formatRulesContent(t(rulesKey as StringKey)));
+  }
+  openOverlay('section-rules-overlay', SECTION_RULES_OVERLAY_CLASS, { focusId: 'section-rules-close' });
+}
+
+function closeSectionRulesModal(): void {
+  closeOverlay('section-rules-overlay', SECTION_RULES_OVERLAY_CLASS);
 }
 
 export function switchTab(tabId: string): void {
@@ -335,6 +379,26 @@ const APP_HTML = `
         <button type="button" class="intro-got-it" id="intro-got-it" data-i18n="gotIt">Got it</button>
       `,
     })}
+    ${createModalOverlay({
+      overlayId: 'section-rules-overlay',
+      overlayClass: 'section-rules-overlay',
+      dialogClass: 'section-rules-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'section-rules-title',
+      ariaDescribedBy: 'section-rules-body',
+      bodyHtml: `
+        <div class="section-rules-header">
+          <h2 id="section-rules-title" class="section-rules-title"></h2>
+          <button type="button" class="section-rules-close" id="section-rules-close" data-i18n-aria-label="close">×</button>
+        </div>
+        <div class="section-rules-content">
+          <div id="section-rules-body" class="section-rules-body"></div>
+        </div>
+        <div class="section-rules-actions">
+          <button type="button" class="section-rules-got-it" id="section-rules-got-it" data-i18n="gotIt">Got it</button>
+        </div>
+      `,
+    })}
     <section class="stats">
       <div class="stat-card stat-card--coins" id="coins-stat-card" data-i18n-title="coinsTitle">
         <div class="stat-label" data-i18n="coins">Coins</div>
@@ -376,6 +440,7 @@ const APP_HTML = `
         sectionClass: 'quest-section',
         titleKey: 'quest',
         dataBlock: 'quest',
+        rulesKey: 'questHint',
         bodyHtml: `
           ${createProgressBarWithWrap('quest-progress-wrap', 'quest-progress-wrap', 'quest-progress-bar', 'quest-progress-bar')}
           <p class="quest-progress" id="quest-progress"></p>
@@ -390,11 +455,21 @@ const APP_HTML = `
         sectionClass: 'crew-section',
         titleKey: 'crew',
         dataBlock: 'crew',
+        rulesKey: 'crewHint',
         bodyHtml: `
-          <p class="crew-hint" data-i18n="crewHint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
-          <div class="crew-count" id="crew-count">No crew yet</div>
+          <p class="crew-hint" data-i18n="crewHint">Hire astronauts by role. Miners boost production; scientists improve research; pilots help expeditions. Resets on Prestige.</p>
+          <div class="crew-stats-card">
+            <div class="crew-count" id="crew-count">No crew yet</div>
+            <div class="crew-breakdown" id="crew-breakdown" aria-live="polite"></div>
+            <div class="crew-veterans" id="crew-veterans" aria-live="polite"></div>
+          </div>
           <div class="crew-operates" id="crew-operates"></div>
-          <span class="btn-tooltip-wrap" id="hire-astronaut-wrap"><button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button></span>
+          <p class="crew-hire-label" id="crew-hire-label" data-i18n="crewRecruitLabel">Recruit</p>
+          <div class="crew-hire-buttons" id="crew-hire-buttons">
+            <span class="btn-tooltip-wrap crew-role-wrap crew-role--miner" data-role="miner"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--miner" id="hire-astronaut-miner" data-role="miner"><span class="crew-btn-text">Miner</span></button></span>
+            <span class="btn-tooltip-wrap crew-role-wrap crew-role--scientist" data-role="scientist"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--scientist" id="hire-astronaut-scientist" data-role="scientist"><span class="crew-btn-text">Scientist</span></button></span>
+            <span class="btn-tooltip-wrap crew-role-wrap crew-role--pilot" data-role="pilot"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--pilot" id="hire-astronaut-pilot" data-role="pilot"><span class="crew-btn-text">Pilot</span></button></span>
+          </div>
         `,
       })}
       ${createGameplayBlock({
@@ -402,6 +477,7 @@ const APP_HTML = `
         sectionClass: 'planets-section',
         titleKey: 'planets',
         dataBlock: 'planets',
+        rulesKey: 'planetsHint',
         bodyHtml: `
           <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots or build housing on a planet (+2 crew capacity per module, uses 1 slot).</p>
           <div class="planet-list" id="planet-list"></div>
@@ -413,6 +489,7 @@ const APP_HTML = `
         sectionClass: 'prestige-section',
         titleKey: 'prestige',
         dataBlock: 'prestige',
+        rulesKey: 'prestigeHint',
         bodyHtml: `
           <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
           <div class="prestige-status" id="prestige-status"></div>
@@ -429,6 +506,7 @@ const APP_HTML = `
         sectionClass: 'research-section',
         titleKey: 'research',
         dataBlock: 'research',
+        rulesKey: 'researchHint',
         bodyHtml: `
           <p class="research-hint" data-i18n="researchHint">Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt has a success chance; on failure coins are lost. Resets on Prestige.</p>
           <div class="research-list" id="research-list"></div>
@@ -441,6 +519,7 @@ const APP_HTML = `
         sectionClass: 'upgrades-section',
         titleKey: 'upgrades',
         dataBlock: 'upgrades',
+        rulesKey: 'upgradesHint',
         bodyHtml: `
           <p class="upgrades-hint" data-i18n="upgradesHint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
           <div class="upgrade-list" id="upgrade-list"></div>
@@ -452,6 +531,7 @@ const APP_HTML = `
         id: 'statistics-section',
         sectionClass: 'statistics-section',
         titleKey: 'statisticsTitle',
+        rulesKey: 'statisticsHint',
         locked: false,
         bodyHtml: `
           <div id="statistics-container"></div>
@@ -514,7 +594,17 @@ export function mount(): void {
   }
 
   function onCollapseToggle(e: Event): void {
-    const header = (e.target as HTMLElement).closest('.gameplay-block-header');
+    const target = e.target as HTMLElement;
+    const rulesBtn = target.closest('.gameplay-block-rules-btn');
+    if (rulesBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const rulesKey = rulesBtn.getAttribute('data-rules-key');
+      const titleKey = rulesBtn.getAttribute('data-title-key');
+      if (rulesKey && titleKey) openSectionRulesModal(rulesKey, titleKey);
+      return;
+    }
+    const header = target.closest('.gameplay-block-header');
     if (!header) return;
     const section = header.closest('.gameplay-block');
     if (!section || !section.id) return;
@@ -554,6 +644,17 @@ export function mount(): void {
   }
   if (infoClose) infoClose.addEventListener('click', closeInfoModal);
 
+  const sectionRulesClose = document.getElementById('section-rules-close');
+  const sectionRulesGotIt = document.getElementById('section-rules-got-it');
+  const sectionRulesOverlay = document.getElementById('section-rules-overlay');
+  if (sectionRulesClose) sectionRulesClose.addEventListener('click', closeSectionRulesModal);
+  if (sectionRulesGotIt) sectionRulesGotIt.addEventListener('click', closeSectionRulesModal);
+  if (sectionRulesOverlay) {
+    sectionRulesOverlay.addEventListener('click', (e) => {
+      if (e.target === sectionRulesOverlay) closeSectionRulesModal();
+    });
+  }
+
   if (settingsBtn && settingsOverlay) {
     settingsBtn.addEventListener('click', openSettings);
     settingsOverlay.addEventListener('click', (e) => {
@@ -586,6 +687,7 @@ export function mount(): void {
       else if (document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open')) closePrestigeConfirmModal();
       else if (document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open')) closePrestigeRewardsModal();
       else if (isIntroOverlayOpen()) dismissIntroModal();
+      else if (document.getElementById('section-rules-overlay')?.classList.contains(SECTION_RULES_OVERLAY_CLASS)) closeSectionRulesModal();
       else if (document.getElementById('info-overlay')?.classList.contains('info-overlay--open')) closeInfoModal();
       else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
     });
@@ -782,8 +884,12 @@ export function mount(): void {
   const prestigeBtn = document.getElementById('prestige-btn');
   if (prestigeBtn) prestigeBtn.addEventListener('click', handlePrestige);
 
-  const hireAstronautBtn = document.getElementById('hire-astronaut-btn');
-  if (hireAstronautBtn) hireAstronautBtn.addEventListener('click', handleHireAstronaut);
+  document.querySelectorAll('.hire-astronaut-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const role = (btn as HTMLElement).getAttribute('data-role') as 'miner' | 'scientist' | 'pilot' | null;
+      handleHireAstronaut(role ?? 'miner');
+    });
+  });
 
   bindIntroModal();
   updateProgressionVisibility();
@@ -821,6 +927,8 @@ export function mount(): void {
   if (upgradeList) {
     upgradeList.addEventListener('click', (e: Event) => {
       const clicked = e.target as HTMLElement;
+      const card = clicked.closest('.upgrade-card');
+      if (!card) return;
       // Button may be wrapped in .btn-tooltip-wrap; click can land on the span so closest('button') misses.
       let target = clicked.closest('button.upgrade-btn') as HTMLButtonElement | null;
       if (!target) {
@@ -829,9 +937,8 @@ export function mount(): void {
       }
       if (!target || target.hasAttribute('disabled')) return;
       e.preventDefault();
-      const upgradeId = target.getAttribute('data-upgrade-id');
+      const upgradeId = target.getAttribute('data-upgrade-id') ?? card.getAttribute('data-upgrade-id');
       if (!upgradeId) return;
-      const card = target.closest('.upgrade-card');
       const select = card?.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
       let planetId: string | undefined = select?.value ?? undefined;
       if (select && (!planetId || planetId === '') && select.options.length > 0) {

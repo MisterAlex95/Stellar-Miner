@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.4.0",
+    "date": "2026-02-15",
+    "changes": [
+      "Crew system: hire by role (Miner, Scientist, Medic, Pilot). Miners +2% production each; others +1%. Scientists boost research success chance; medics reduce expedition death chance; pilots guarantee at least one survivor.",
+      "Veterans: expedition survivors become veterans and give +0.5% production each (lost on Prestige).",
+      "Morale: +5% production when crew ≤ capacity (enough housing); −5% when overcrowded.",
+      "Save format: crewByRole and veteranCount in session; Planet.assignedCrew for future use. Old saves migrate automatically."
+    ]
+  },
+  {
     "version": "0.3.15",
     "date": "2026-02-15",
     "changes": [

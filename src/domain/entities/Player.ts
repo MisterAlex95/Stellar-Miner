@@ -4,14 +4,38 @@ import { ProductionRate } from '../value-objects/ProductionRate.js';
 import type { Upgrade } from './Upgrade.js';
 import type { Artifact } from './Artifact.js';
 import { Planet } from './Planet.js';
-import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, ASTRONAUT_PRODUCTION_BONUS, generatePlanetName } from '../constants.js';
+import {
+  PLANET_PRODUCTION_BONUS,
+  PRESTIGE_BONUS_PER_LEVEL,
+  MINER_PRODUCTION_BONUS,
+  OTHER_CREW_PRODUCTION_BONUS,
+  VETERAN_PRODUCTION_BONUS,
+  MORALE_BONUS_WHEN_COMFORTABLE,
+  MORALE_MALUS_WHEN_OVERCROWDED,
+  generatePlanetName,
+  getMaxAstronauts,
+  type CrewRole,
+  type CrewByRole,
+  CREW_ROLES,
+} from '../constants.js';
 
-/** Aggregate root: player and their progression. Holds planets, crew (astronauts), artifacts, coins. */
+const DEFAULT_CREW_BY_ROLE: CrewByRole = { miner: 0, scientist: 0, pilot: 0 };
+
+/** Order to deduct crew when spending (e.g. for upgrades): miners first to keep pilots for expeditions. */
+const SPEND_ORDER: CrewRole[] = ['miner', 'scientist', 'pilot'];
+
+/** Aggregate root: player and their progression. Holds planets, crew (astronauts by role), veterans, artifacts, coins. */
 export class Player {
   /** Mutable array of planets. Each planet has upgrade slots (expandable) and contributes to production bonus. */
   public readonly planets: Planet[];
 
   public readonly totalCoinsEver: Decimal;
+
+  /** Crew count per role (miner, scientist, pilot). Total crew = sum of these. */
+  public readonly crewByRole: CrewByRole;
+
+  /** Expedition survivors; give production bonus, lost on prestige. */
+  public readonly veteranCount: number;
 
   constructor(
     public readonly id: string,
@@ -21,10 +45,23 @@ export class Player {
     public readonly artifacts: Artifact[],
     public readonly prestigeLevel: number,
     totalCoinsEver: DecimalSource,
-    public readonly astronautCount: number = 0
+    crewByRoleOrAstronautCount?: CrewByRole | number,
+    veteranCount: number = 0
   ) {
     this.planets = planets ? [...planets] : [];
     this.totalCoinsEver = toDecimal(totalCoinsEver);
+    if (typeof crewByRoleOrAstronautCount === 'object' && crewByRoleOrAstronautCount != null) {
+      this.crewByRole = { ...DEFAULT_CREW_BY_ROLE, ...crewByRoleOrAstronautCount };
+    } else {
+      const n = typeof crewByRoleOrAstronautCount === 'number' ? crewByRoleOrAstronautCount : 0;
+      this.crewByRole = { ...DEFAULT_CREW_BY_ROLE, miner: n };
+    }
+    this.veteranCount = Math.max(0, veteranCount);
+  }
+
+  /** Total crew (sum of all roles). Used for capacity and upgrade requirements. */
+  get astronautCount(): number {
+    return CREW_ROLES.reduce((s, r) => s + this.crewByRole[r], 0);
   }
 
   /** All upgrades across all planets (for backward compatibility and UI totals). */
@@ -60,37 +97,76 @@ export class Player {
     return this.planets.filter((p) => p.hasFreeSlot());
   }
 
-  /** Production rate from upgrades × planet bonus × prestige × crew (astronauts +2% each). */
+  /** Production rate from upgrades × planet bonus × prestige × crew (by role) × veterans × morale. */
   get effectiveProductionRate(): Decimal {
     const planetBonus = 1 + (this.planets.length - 1) * PLANET_PRODUCTION_BONUS;
     const prestigeBonus = 1 + this.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL;
-    const crewBonus = 1 + this.astronautCount * ASTRONAUT_PRODUCTION_BONUS;
-    return this.productionRate.value.mul(planetBonus * prestigeBonus * crewBonus);
+    const minerBonus = 1 + this.crewByRole.miner * MINER_PRODUCTION_BONUS;
+    const otherCrewBonus = 1 + (this.crewByRole.scientist + this.crewByRole.pilot) * OTHER_CREW_PRODUCTION_BONUS;
+    const veteranBonus = 1 + this.veteranCount * VETERAN_PRODUCTION_BONUS;
+    const totalCrewAndVeterans = this.astronautCount + this.veteranCount;
+    const totalHousing = this.planets.reduce((s, p) => s + p.housingCount, 0);
+    const maxCrew = getMaxAstronauts(this.planets.length, totalHousing);
+    const morale =
+      totalCrewAndVeterans === 0
+        ? 1
+        : this.astronautCount <= maxCrew
+          ? 1 + MORALE_BONUS_WHEN_COMFORTABLE
+          : 1 - MORALE_MALUS_WHEN_OVERCROWDED;
+    return this.productionRate.value.mul(
+      planetBonus * prestigeBonus * minerBonus * otherCrewBonus * veteranBonus * morale
+    );
   }
 
-  /** Hire one astronaut if the player can afford the cost. Returns true if hired. */
-  hireAstronaut(cost: DecimalSource): boolean {
+  /** Hire one astronaut in the given role if the player can afford the cost. Returns true if hired. */
+  hireAstronaut(cost: DecimalSource, role: CrewRole = 'miner'): boolean {
     if (!this.coins.gte(cost)) return false;
     this.spendCoins(cost);
-    (this as { astronautCount: number }).astronautCount++;
+    (this as { crewByRole: CrewByRole }).crewByRole[role] = this.crewByRole[role] + 1;
     return true;
   }
 
-  /** Spend astronauts (e.g. to assign to an upgrade or send on expedition). Returns true if enough crew. */
+  /** Spend astronauts from crew by role (e.g. for upgrades). Deducts in order: miner, scientist, pilot. Returns true if enough. */
   spendAstronauts(count: number): boolean {
     if (count <= 0) return true;
     if (this.astronautCount < count) return false;
-    (this as { astronautCount: number }).astronautCount -= count;
+    const crew = this.crewByRole as CrewByRole;
+    let remaining = count;
+    for (const r of SPEND_ORDER) {
+      const take = Math.min(remaining, crew[r]);
+      if (take > 0) {
+        crew[r] = crew[r] - take;
+        remaining -= take;
+      }
+      if (remaining <= 0) break;
+    }
     return true;
   }
 
-  /** Add astronauts back (e.g. expedition survivors). */
-  addAstronauts(count: number): void {
+  /** Add astronauts back to a role (e.g. expedition survivors returned to pool — not used; survivors become veterans). */
+  addAstronauts(count: number, role: CrewRole = 'miner'): void {
     if (count <= 0) return;
-    (this as { astronautCount: number }).astronautCount += count;
+    (this as { crewByRole: CrewByRole }).crewByRole[role] = this.crewByRole[role] + count;
   }
 
-  /** Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, prestige level +1. */
+  /** Add veterans (expedition survivors). They give production bonus but are not crew. */
+  addVeterans(count: number): void {
+    if (count <= 0) return;
+    (this as { veteranCount: number }).veteranCount += count;
+  }
+
+  /** Spend crew from composition (for expedition). Returns true if enough of each role. */
+  spendCrewByComposition(comp: { miner: number; scientist: number; pilot: number }): boolean {
+    for (const r of CREW_ROLES) {
+      if (this.crewByRole[r] < comp[r]) return false;
+    }
+    for (const r of CREW_ROLES) {
+      (this as { crewByRole: CrewByRole }).crewByRole[r] = this.crewByRole[r] - comp[r];
+    }
+    return true;
+  }
+
+  /** Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, 0 veterans, prestige level +1. */
   static createAfterPrestige(oldPlayer: Player): Player {
     return new Player(
       oldPlayer.id,
@@ -100,12 +176,13 @@ export class Player {
       [],
       oldPlayer.prestigeLevel + 1,
       oldPlayer.totalCoinsEver,
+      DEFAULT_CREW_BY_ROLE,
       0
     );
   }
 
   static create(id: string): Player {
     const firstPlanet = Planet.create('planet-1', generatePlanetName('planet-1'));
-    return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, 0);
+    return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, DEFAULT_CREW_BY_ROLE, 0);
   }
 }

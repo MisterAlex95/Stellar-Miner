@@ -8,11 +8,12 @@ export interface OverlaySpec {
   openClass: string;
 }
 
-/** All overlays that can be opened (intro, settings, info, confirm dialogs). Used for focus trap and isAnyModalOpen. */
+/** All overlays that can be opened (intro, settings, info, section rules, confirm dialogs). Used for focus trap and isAnyModalOpen. */
 export const OVERLAYS: OverlaySpec[] = [
   { id: 'intro-overlay', openClass: 'intro-overlay--open' },
   { id: 'settings-overlay', openClass: 'settings-overlay--open' },
   { id: 'info-overlay', openClass: 'info-overlay--open' },
+  { id: 'section-rules-overlay', openClass: 'section-rules-overlay--open' },
   { id: 'reset-confirm-overlay', openClass: 'reset-confirm-overlay--open' },
   { id: 'prestige-confirm-overlay', openClass: 'prestige-confirm-overlay--open' },
   { id: 'prestige-rewards-overlay', openClass: 'prestige-rewards-overlay--open' },

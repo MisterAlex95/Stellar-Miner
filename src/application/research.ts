@@ -4,6 +4,10 @@
  */
 import researchData from '../data/research.json';
 import { getUpgradeUsesSlot, UPGRADE_CATALOG } from './catalogs.js';
+import {
+  SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST,
+  SCIENTIST_RESEARCH_SUCCESS_CAP,
+} from '../domain/constants.js';
 import type { Planet } from '../domain/entities/Planet.js';
 import type { Player } from '../domain/entities/Player.js';
 
@@ -96,6 +100,15 @@ export function getResearchProductionPercent(): number {
 /** Total +% click from research (e.g. 12 for +12%). */
 export function getResearchClickPercent(): number {
   return (getResearchClickMultiplier() - 1) * 100;
+}
+
+/** Research success chance multiplier from scientists (1 + scientistBonus, capped). Used in attemptResearch. */
+export function getResearchSuccessChanceMultiplier(scientistCount: number): number {
+  const bonus = Math.min(
+    SCIENTIST_RESEARCH_SUCCESS_CAP,
+    scientistCount * SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST
+  );
+  return 1 + bonus;
 }
 
 /** All upgrade ids that no longer use a slot thanks to unlocked research. */
@@ -291,13 +304,15 @@ export type GetUpgradeDisplayLine = (upgradeId: string, kind: 'slot' | 'crew', n
 export function attemptResearch(
   id: string,
   spendCoins: (amount: number) => boolean,
-  getUpgradeDisplayLine?: GetUpgradeDisplayLine
+  getUpgradeDisplayLine?: GetUpgradeDisplayLine,
+  scientistCount: number = 0
 ): { success: boolean; message: string } {
   const node = RESEARCH_CATALOG.find((n) => n.id === id);
   if (!node) return { success: false, message: 'Unknown research.' };
   if (!canAttemptResearch(id)) return { success: false, message: 'Prerequisites not met or already unlocked.' };
   if (!spendCoins(node.cost)) return { success: false, message: 'Not enough coins.' };
-  const success = Math.random() < node.successChance;
+  const effectiveChance = Math.min(1, node.successChance * getResearchSuccessChanceMultiplier(scientistCount));
+  const success = Math.random() < effectiveChance;
   if (success) {
     const unlocked = loadUnlocked();
     unlocked.push(id);

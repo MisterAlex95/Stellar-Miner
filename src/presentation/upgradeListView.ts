@@ -5,12 +5,7 @@ import {
   getUpgradeCost,
   UPGRADE_DISPLAY_COUNT,
 } from '../application/catalogs.js';
-import {
-  getEffectiveUpgradeUsesSlot,
-  getEffectiveRequiredAstronauts,
-  getPlanetWithEffectiveFreeSlot,
-  getPlanetsWithEffectiveFreeSlot,
-} from '../application/research.js';
+import { getEffectiveUpgradeUsesSlot, getEffectiveRequiredAstronauts } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
 import { formatNumber } from '../application/format.js';
 import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
@@ -53,7 +48,8 @@ export function renderUpgradeList(): void {
   if (!listEl) return;
   listEl.innerHTML = '';
 
-  const planetsWithSlot = getPlanetsWithEffectiveFreeSlot(player);
+  // Use raw free slots so UI matches handler (handler uses getPlanetWithFreeSlot).
+  const planetsWithSlot = player.getPlanetsWithFreeSlot();
   const hasFreeSlot = planetsWithSlot.length > 0;
   const choosePlanet = player.planets.length > 1;
   const hasAnyPlanet = player.planets.length > 0;
@@ -74,6 +70,7 @@ export function renderUpgradeList(): void {
       (state.isRecommended ? ' upgrade-card--recommended' : '') +
       (!state.hasCrew && state.crewReq > 0 ? ' upgrade-card--needs-crew' : '');
     card.setAttribute('data-tier', String(def.tier));
+    card.setAttribute('data-upgrade-id', def.id);
     card.innerHTML = buildUpgradeCardHtml(state, {
       choosePlanet,
       planetsForSelect,
@@ -90,13 +87,14 @@ export function updateUpgradeListInPlace(): void {
   const listEl = document.getElementById('upgrade-list');
   if (!listEl) return;
 
-  const hasFreeSlot = getPlanetWithEffectiveFreeSlot(player) !== null;
-  listEl.querySelectorAll('.upgrade-card').forEach((card) => {
+  const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
+  const cards = listEl.querySelectorAll('.upgrade-card');
+  for (const card of cards) {
     const buyBtn = card.querySelector('.upgrade-btn--buy');
-    const id = buyBtn?.getAttribute('data-upgrade-id');
-    if (!id) return;
+    const id = (buyBtn?.getAttribute('data-upgrade-id') ?? card.getAttribute('data-upgrade-id')) ?? null;
+    if (!id) continue;
     const def = UPGRADE_CATALOG.find((d) => d.id === id);
-    if (!def) return;
+    if (!def) continue;
     const maxCount = getMaxBuyCount(id);
     const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
 
@@ -117,7 +115,7 @@ export function updateUpgradeListInPlace(): void {
     }
     const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
     if (select) {
-      const planetsForSelect = state.needsSlot ? getPlanetsWithEffectiveFreeSlot(player) : player.planets;
+      const planetsForSelect = state.needsSlot ? player.getPlanetsWithFreeSlot() : player.planets;
       if (planetsForSelect.length !== select.options.length) {
         updateStats();
         renderUpgradeList();
@@ -147,7 +145,7 @@ export function updateUpgradeListInPlace(): void {
     }
     card.classList.toggle('upgrade-card--recommended', state.isRecommended);
     card.classList.toggle('upgrade-card--needs-crew', !state.hasCrew && state.crewReq > 0);
-  });
+  }
 }
 
 export function flashUpgradeCard(upgradeId: string): void {

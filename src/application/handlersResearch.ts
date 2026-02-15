@@ -30,7 +30,8 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
         session.player.spendCoins(amount);
         return true;
       };
-  const result = attemptResearch(id, spendCoins, getUpgradeDisplayLine);
+  const scientistCount = session.player.crewByRole?.scientist ?? 0;
+  const result = attemptResearch(id, spendCoins, getUpgradeDisplayLine, scientistCount);
   saveSession();
   updateStats();
   renderUpgradeList();

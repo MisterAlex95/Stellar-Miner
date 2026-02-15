@@ -57,7 +57,8 @@ describe('PlanetService', () => {
     expect(player.coins.value.toNumber()).toBe(0);
     expect(player.planets).toHaveLength(2);
     expect(player.planets[1].name).toBe(generatePlanetName('planet-2'));
-    expect(player.astronautCount).toBe(required);
+    expect(player.veteranCount).toBe(required);
+    expect(player.astronautCount).toBe(0);
   });
 
   it('launchExpedition returns failure when not enough astronauts', () => {

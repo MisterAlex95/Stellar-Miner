@@ -33,7 +33,8 @@ const DECAY_14_24H_MS = 10 * 60 * 60 * 1000;
 const DECAY_24H_PLUS_MULT = 0.5;
 
 type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
-type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number };
+type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number; assignedCrew?: number };
+type SavedCrewByRole = { miner?: number; scientist?: number; medic?: number; pilot?: number };
 
 export type SavedRunStats = {
   runStartTime: number;
@@ -56,6 +57,8 @@ export type SavedSession = {
     prestigeLevel: number;
     totalCoinsEver: number | string;
     astronautCount?: number;
+    crewByRole?: SavedCrewByRole;
+    veteranCount?: number;
   };
   activeEvents: Array<{ id: string; name: string; effect: { multiplier: number; durationMs: number } }>;
   runStats?: SavedRunStats;
@@ -246,6 +249,7 @@ export class SaveLoadService implements ISaveLoadService {
             effect: { coinsPerSecond: u.effect.coinsPerSecond.toString() },
           })),
           housing: p.housingCount,
+          assignedCrew: p.assignedCrew,
         })),
         artifacts: session.player.artifacts.map((a) => ({
           id: a.id,
@@ -256,6 +260,8 @@ export class SaveLoadService implements ISaveLoadService {
         prestigeLevel: session.player.prestigeLevel,
         totalCoinsEver: session.player.totalCoinsEver.toString(),
         astronautCount: session.player.astronautCount,
+        crewByRole: session.player.crewByRole,
+        veteranCount: session.player.veteranCount,
       },
       activeEvents: session.activeEvents.map((e) => ({
         id: e.id,
@@ -290,20 +296,31 @@ export class SaveLoadService implements ISaveLoadService {
           p.name,
           p.maxUpgrades,
           p.upgrades.map(mapUpgrade),
-          p.housing ?? 0
+          p.housing ?? 0,
+          p.assignedCrew ?? 0
         );
         return planet;
       });
     } else {
       // Migration: old save had flat upgrades → put them on one planet
       const upgrades = (data.player.upgrades ?? []).map(mapUpgrade);
-      const first = new Planet('planet-1', generatePlanetName('planet-1'), 6, upgrades, 0);
+      const first = new Planet('planet-1', generatePlanetName('planet-1'), 6, upgrades, 0, 0);
       planets = [first];
     }
     const artifacts = data.player.artifacts.map(
       (a) => new Artifact(a.id, a.name, a.effect, a.isActive)
     );
     const productionRate = getBaseProductionRateFromPlanets(planets);
+    const crewByRole = data.player.crewByRole;
+    const veteranCount = data.player.veteranCount ?? 0;
+    const crewOrCount =
+      crewByRole && typeof crewByRole === 'object'
+        ? {
+            miner: crewByRole.miner ?? 0,
+            scientist: crewByRole.scientist ?? 0,
+            pilot: crewByRole.pilot ?? 0,
+          }
+        : (data.player.astronautCount ?? 0);
     const player = new Player(
       data.player.id,
       Coins.from(data.player.coins),
@@ -312,7 +329,8 @@ export class SaveLoadService implements ISaveLoadService {
       artifacts,
       data.player.prestigeLevel,
       new Decimal(data.player.totalCoinsEver),
-      data.player.astronautCount ?? 0
+      crewOrCount,
+      veteranCount
     );
     const activeEvents = data.activeEvents.map(
       (e) => new GameEvent(e.id, e.name, new EventEffect(e.effect.multiplier, e.effect.durationMs))

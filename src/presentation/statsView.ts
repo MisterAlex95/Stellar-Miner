@@ -10,6 +10,7 @@ import {
 } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
+import { getMaxAstronauts } from '../domain/constants.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { EVENT_INTERVAL_MS } from '../application/catalogs.js';
@@ -121,12 +122,23 @@ export function updateStats(): void {
     const base = player.productionRate.value;
     const planetBonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
     const prestigeBonus = player.prestigeLevel > 0 ? player.prestigeLevel * 5 : 0;
-    const crewBonus = player.astronautCount > 0 ? player.astronautCount * 2 : 0;
+    const minerBonus = 1 + player.crewByRole.miner * 0.02;
+    const otherCrewBonus = 1 + (player.crewByRole.scientist + player.crewByRole.pilot) * 0.01;
+    const veteranBonus = 1 + player.veteranCount * 0.005;
+    const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
+    const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
+    const morale =
+      player.astronautCount + player.veteranCount === 0
+        ? 1
+        : player.astronautCount <= maxCrew
+          ? 1.05
+          : 0.95;
+    const crewCombinedPct = (minerBonus * otherCrewBonus * veteranBonus * morale - 1) * 100;
     const parts: string[] = [];
     if (base.gt(0)) parts.push(`${t('breakdownBase')} ${formatNumber(base, settings.compactNumbers)}/s`);
     if (planetBonus > 0) parts.push(`+${planetBonus}% ${t('breakdownPlanets')}`);
     if (prestigeBonus > 0) parts.push(`+${prestigeBonus}% ${t('breakdownPrestige')}`);
-    if (crewBonus > 0) parts.push(`+${crewBonus}% ${t('breakdownCrew')}`);
+    if (crewCombinedPct !== 0) parts.push(`${crewCombinedPct > 0 ? '+' : ''}${Math.round(crewCombinedPct)}% ${t('breakdownCrew')}`);
     const researchPct = getResearchProductionPercent();
     if (researchPct > 0) parts.push(`+${Math.round(researchPct)}% ${t('breakdownResearch')}`);
     if (eventMult > 1) parts.push(`×${eventMult.toFixed(1)} ${t('breakdownEvent')}`);

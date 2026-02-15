@@ -164,7 +164,7 @@ describe('Player', () => {
     expect(after.totalCoinsEver.eq(p.totalCoinsEver)).toBe(true);
   });
 
-  it('effectiveProductionRate applies crew (astronaut) bonus', () => {
+  it('effectiveProductionRate applies crew (miner) bonus', () => {
     const p = new Player(
       'p1',
       new Coins(0),
@@ -173,9 +173,10 @@ describe('Player', () => {
       [],
       0,
       0,
-      10
+      { miner: 10, scientist: 0, pilot: 0 },
+      0
     );
-    expect(p.effectiveProductionRate.toNumber()).toBe(100 * (1 + 10 * 0.02));
+    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(100 * (1 + 10 * 0.02) * 0.95, 5);
   });
 
   it('hireAstronaut returns false when not enough coins', () => {

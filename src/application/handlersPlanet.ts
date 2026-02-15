@@ -1,6 +1,6 @@
 import { getSession } from './gameState.js';
 import { planetService } from './gameState.js';
-import { getMaxAstronauts, getAstronautCost } from '../domain/constants.js';
+import { getMaxAstronauts, getAstronautCost, type CrewRole } from '../domain/constants.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { hasEffectiveFreeSlot } from './research.js';
 import { emit } from './eventBus.js';
@@ -76,7 +76,7 @@ export function handleBuildHousing(planetId: string): void {
   renderCrewSection();
 }
 
-export function handleHireAstronaut(): void {
+export function handleHireAstronaut(role: CrewRole = 'miner'): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
@@ -85,7 +85,7 @@ export function handleHireAstronaut(): void {
   const totalCrew = player.astronautCount + getAssignedAstronauts(session);
   if (totalCrew >= maxCrew) return;
   const cost = getAstronautCost(player.astronautCount);
-  if (!player.hireAstronaut(cost)) return;
+  if (!player.hireAstronaut(cost, role)) return;
   emit('astronaut_hired', { count: player.astronautCount });
   if (player.astronautCount === 1 && typeof localStorage !== 'undefined') {
     const key = 'stellar-miner-first-astronaut-toast';

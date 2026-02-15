@@ -1,12 +1,21 @@
 import { Decimal } from './bigNumber.js';
 import balance from '../data/balance.json';
 
+export type CrewRole = 'miner' | 'scientist' | 'pilot';
+
+export const CREW_ROLES: CrewRole[] = ['miner', 'scientist', 'pilot'];
+
+export type CrewByRole = Record<CrewRole, number>;
+
+export type ExpeditionComposition = Record<CrewRole, number>;
+
 const B = balance as {
   newPlanetBaseCost: number;
   newPlanetCostGrowth: number;
   expeditionMinAstronauts: number;
   expeditionMaxAstronauts: number;
   expeditionDeathChance: number;
+  expeditionMinDeathChance?: number;
   planetProductionBonus: number;
   prestigeBonusPerLevel: number;
   prestigeClickBonusPercentPerLevel: number;
@@ -17,6 +26,13 @@ const B = balance as {
   addSlotFirstExpansionDiscount: number;
   planetNames: string[];
   astronautProductionBonus: number;
+  minerProductionBonus?: number;
+  otherCrewProductionBonus?: number;
+  veteranProductionBonus?: number;
+  moraleBonusWhenComfortable?: number;
+  moraleMalusWhenOvercrowded?: number;
+  scientistResearchSuccessPerScientist?: number;
+  scientistResearchSuccessCap?: number;
   housingAstronautCapacity: number;
   maxAstronautsBase: number;
   housingBaseCost: number;
@@ -42,6 +58,9 @@ export function getExpeditionAstronautsRequired(planetCount: number): number {
 
 /** Per-astronaut death chance during expedition (0–1). Each rolls independently. */
 export const EXPEDITION_DEATH_CHANCE = B.expeditionDeathChance;
+
+/** Minimum death chance (0–1). */
+export const EXPEDITION_MIN_DEATH_CHANCE = B.expeditionMinDeathChance ?? 0.05;
 
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */
 export const PLANET_PRODUCTION_BONUS = B.planetProductionBonus;
@@ -98,8 +117,29 @@ export function generatePlanetName(planetId: string): string {
   return `${a} ${b}`;
 }
 
-/** Crew: astronauts. Production bonus per astronaut (e.g. 0.02 = +2% each). */
+/** Crew: astronauts. Production bonus per astronaut (e.g. 0.02 = +2% each). Legacy / fallback. */
 export const ASTRONAUT_PRODUCTION_BONUS = B.astronautProductionBonus;
+
+/** Production bonus per miner (e.g. 0.02 = +2% each). */
+export const MINER_PRODUCTION_BONUS = B.minerProductionBonus ?? 0.02;
+
+/** Production bonus per non-miner crew (scientist, pilot). */
+export const OTHER_CREW_PRODUCTION_BONUS = B.otherCrewProductionBonus ?? 0.01;
+
+/** Production bonus per veteran (expedition survivor). */
+export const VETERAN_PRODUCTION_BONUS = B.veteranProductionBonus ?? 0.005;
+
+/** Morale: +% production when crew ≤ capacity. */
+export const MORALE_BONUS_WHEN_COMFORTABLE = B.moraleBonusWhenComfortable ?? 0.05;
+
+/** Morale: -% production when crew > capacity (overcrowded). */
+export const MORALE_MALUS_WHEN_OVERCROWDED = B.moraleMalusWhenOvercrowded ?? 0.05;
+
+/** Research success chance bonus per scientist (additive, 0–1). */
+export const SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST = B.scientistResearchSuccessPerScientist ?? 0.02;
+
+/** Cap for scientist research success bonus (e.g. 0.2 = max +20%). */
+export const SCIENTIST_RESEARCH_SUCCESS_CAP = B.scientistResearchSuccessCap ?? 0.2;
 
 /** Crew capacity added per housing module built on any planet. */
 export const HOUSING_ASTRONAUT_CAPACITY = B.housingAstronautCapacity;

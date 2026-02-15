@@ -74,8 +74,8 @@ function gameLoop(now: number): void {
     const earned = rateDec.mul(dt).toNumber();
     if (Number.isFinite(earned)) addRunCoins(earned);
     updateStats();
-    updateUpgradeListInPlace();
   }
+  updateUpgradeListInPlace();
   recordStatsIfDue(nowMs, session.player.coins.value, rateDec, session.player.totalCoinsEver);
   updateCoinDisplay(dt);
   updateProductionDisplay(dt);
