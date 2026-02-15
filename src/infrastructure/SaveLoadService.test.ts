@@ -186,4 +186,45 @@ describe('SaveLoadService', () => {
     expect(loaded!.player.planets).toHaveLength(1);
     expect(loaded!.player.planets[0].upgrades).toHaveLength(0);
   });
+
+  it('getLastOfflineCoins returns 0 and resets after each call', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000_000_000);
+    const player = Player.create('p1');
+    player.addCoins(100);
+    player.setProductionRate(new ProductionRate(10));
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    await service.save(session);
+
+    expect(service.getLastOfflineCoins()).toBe(0);
+    expect(service.getLastOfflineCoins()).toBe(0);
+
+    vi.setSystemTime(1_000_000_000_000 + 120_000);
+    await service.load();
+    const offline = service.getLastOfflineCoins();
+    expect(offline).toBeGreaterThan(0);
+    expect(service.getLastOfflineCoins()).toBe(0);
+    vi.useRealTimers();
+  });
+
+  it('load applies offline progress when elapsed >= 1 min and production > 0', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000_000_000);
+    const player = Player.create('p1');
+    player.addCoins(0);
+    player.setProductionRate(new ProductionRate(10));
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    await service.save(session);
+
+    vi.setSystemTime(1_000_000_000_000 + 120_000);
+    const loaded = await service.load();
+    vi.useRealTimers();
+
+    expect(loaded).not.toBeNull();
+    expect(loaded!.player.coins.value).toBeGreaterThan(0);
+    const reported = service.getLastOfflineCoins();
+    expect(reported).toBe(loaded!.player.coins.value);
+  });
 });

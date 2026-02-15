@@ -162,4 +162,76 @@ describe('Player', () => {
     expect(after.prestigeLevel).toBe(1);
     expect(after.totalCoinsEver).toBe(p.totalCoinsEver);
   });
+
+  it('effectiveProductionRate applies crew (astronaut) bonus', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(100),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      10
+    );
+    expect(p.effectiveProductionRate).toBe(100 * (1 + 10 * 0.02));
+  });
+
+  it('hireAstronaut returns false when not enough coins', () => {
+    const p = Player.create('p1');
+    p.addCoins(50);
+    const ok = p.hireAstronaut(100);
+    expect(ok).toBe(false);
+    expect(p.coins.value).toBe(50);
+    expect(p.astronautCount).toBe(0);
+  });
+
+  it('hireAstronaut spends coins and increments astronautCount when affordable', () => {
+    const p = Player.create('p1');
+    p.addCoins(200);
+    const ok = p.hireAstronaut(100);
+    expect(ok).toBe(true);
+    expect(p.coins.value).toBe(100);
+    expect(p.astronautCount).toBe(1);
+    p.hireAstronaut(50);
+    expect(p.astronautCount).toBe(2);
+  });
+
+  it('spendAstronauts returns true when count is 0 or negative', () => {
+    const p = Player.create('p1');
+    expect(p.spendAstronauts(0)).toBe(true);
+    expect(p.spendAstronauts(-1)).toBe(true);
+  });
+
+  it('spendAstronauts returns false when not enough crew', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(0),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      2
+    );
+    expect(p.spendAstronauts(3)).toBe(false);
+    expect(p.astronautCount).toBe(2);
+  });
+
+  it('spendAstronauts decrements astronautCount when enough crew', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(0),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      5
+    );
+    expect(p.spendAstronauts(2)).toBe(true);
+    expect(p.astronautCount).toBe(3);
+    expect(p.spendAstronauts(3)).toBe(true);
+    expect(p.astronautCount).toBe(0);
+  });
 });
