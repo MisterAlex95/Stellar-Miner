@@ -35,6 +35,27 @@ Cost for the next copy of an upgrade: **baseCost × 1.19^ownedCount**. Productio
 | 9    | Void Crusher     | 42,000,000,000| 625,000   | 5    | ~4 d at 125,000/s                                 |
 | 10   | Nexus Collector  | 550,000,000,000 | 3,125,000| 5    | ~2+ weeks at 625,000/s                            |
 
+### 2.1 Upgrade install duration
+
+After buying an upgrade it "installs" for a duration before it adds production. Formula (config: `gameConfig.upgrades`):
+
+**Duration (ms) = base × tier^exponent × (1 + costFactor × min(log10Cap, log10(cost)))**
+
+Default: `installDurationBaseMs: 6000`, `installDurationCostFactor: 0.18`, `installDurationTierExponent: 1.4`, `installDurationLog10Cap: 8`.
+
+| Tier | Upgrade            | Base cost (⬡) | log10(cost) | costMult | tier^1.4 | Duration (ms) | Duration  |
+|------|--------------------|---------------|-------------|----------|----------|---------------|-----------|
+| 1    | Mining Robot       | 45            | 1.65        | 1.30     | 1.00     | 7,800         | ~8 s      |
+| 2    | Drill Mk.I         | 1,800         | 3.26        | 1.59     | 2.64     | 25,200        | ~25 s     |
+| 3    | Drill Mk.II        | 22,000        | 4.34        | 1.78     | 4.55     | 48,700        | ~49 s     |
+| 4    | Asteroid Rig       | 220,000       | 5.34        | 1.96     | 6.96     | 81,900        | ~1m 22s   |
+| 5    | Orbital Station    | 2.5 M         | 6.40        | 2.15     | 9.52     | 122,800       | ~2m 03s   |
+| 6    | Deep Core Drill    | 28 M          | 7.45        | 2.34     | 12.58    | 176,900       | ~2m 57s   |
+| 7    | Stellar Harvester  | 320 M         | 8.51→8      | 2.44     | 16.25    | 237,800       | ~3m 58s   |
+| 8    | Quantum Extractor  | 3.5 B         | 9.54→8      | 2.44     | 20.54    | 300,100       | ~5m 00s   |
+| 9    | Void Crusher       | 42 B          | 10.62→8     | 2.44     | 21.67    | 317,300       | ~5m 17s   |
+| 10   | Nexus Collector    | 550 B         | 11.74→8     | 2.44     | 25.12    | 367,800       | ~6m 08s   |
+
 ---
 
 ## 3. Progression unlocks (coin threshold)

@@ -60,7 +60,7 @@ function buildPlanetCardHtml(
   const prodLine = `<div class="${prodClass}">${prodStr}/s</div>`;
   const effectiveUsed = getEffectiveUsedSlots(p);
   const cardTitle = player.planets.length > 1
-    ? tParam('planetCardTitleProd', { used: effectiveUsed, max: p.maxUpgrades, pct: String((player.planets.length - 1) * 5) })
+    ? tParam('planetCardTitleProd', { used: effectiveUsed, max: p.maxUpgrades, pct: String(Math.round((player.planets.length - 1) * 5)) })
     : tParam('planetCardTitle', { used: effectiveUsed, max: p.maxUpgrades });
   const planetType = getPlanetType(p.name);
   const typeLabel = planetType.charAt(0).toUpperCase() + planetType.slice(1);
@@ -93,6 +93,7 @@ function buildPlanetCardHtml(
       </div>
     </div>
     <div class="planet-card-slots"><span class="planet-slot-value">${effectiveUsed}/${p.maxUpgrades}</span> ${t('slots')}</div>
+    ${p.installingUpgrades.length > 0 ? `<div class="planet-card-installing-wrap" data-planet-id="${p.id}"><span class="planet-card-installing-label">${tParam('upgradeInstallingCount', { n: String(p.installingUpgrades.length) })}</span><div class="planet-installing-progress-track"><div class="planet-installing-progress-fill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div></div>` : ''}
     ${prodLine}
     <div class="planet-card-actions">
       ${buttonWithTooltipHtml(slotBtnTitle, `<button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'}>${tParam('addSlotBtn', { cost: formatNumber(addSlotCost, settings.compactNumbers) })}</button>`)}
@@ -215,4 +216,27 @@ export function updateExpeditionProgress(): void {
   const progressWrap = document.getElementById('expedition-progress-wrap');
   if (!progressWrap || progressWrap.hidden) return;
   updateExpeditionProgressDom(progressWrap, endsAt, getExpeditionDurationMs());
+}
+
+/** Call from game loop to refresh installing upgrade progress bars on planet cards. */
+export function updateInstallingProgress(): void {
+  const session = getSession();
+  if (!session) return;
+  const listEl = document.getElementById('planet-list');
+  if (!listEl) return;
+  const now = Date.now();
+  listEl.querySelectorAll<HTMLElement>('.planet-card-installing-wrap').forEach((wrap) => {
+    const planetId = wrap.getAttribute('data-planet-id');
+    const planet = planetId ? session.player.planets.find((p) => p.id === planetId) : null;
+    if (!planet || planet.installingUpgrades.length === 0) return;
+    const soonest = planet.installingUpgrades.reduce((a, b) => (a.endsAt <= b.endsAt ? a : b));
+    const totalMs = Math.max(1, soonest.endsAt - soonest.startAt);
+    const progress = Math.min(1, Math.max(0, (now - soonest.startAt) / totalMs));
+    const fill = wrap.querySelector('.planet-installing-progress-fill') as HTMLElement | null;
+    if (fill) {
+      const pct = Math.round(progress * 100);
+      fill.style.width = `${pct}%`;
+      fill.setAttribute('aria-valuenow', String(pct));
+    }
+  });
 }

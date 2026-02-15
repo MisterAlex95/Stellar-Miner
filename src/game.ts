@@ -25,7 +25,7 @@ import { getResearchProductionMultiplier, isResearchInProgress } from './applica
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
 import { updateStatisticsSection } from './presentation/statisticsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
-import { renderPlanetList, updateExpeditionProgress } from './presentation/planetListView.js';
+import { renderPlanetList, updateExpeditionProgress, updateInstallingProgress } from './presentation/planetListView.js';
 import { renderResearchSection } from './presentation/researchView.js';
 import { renderCrewSection } from './presentation/crewView.js';
 import { renderPrestigeSection } from './presentation/prestigeView.js';
@@ -36,6 +36,7 @@ import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
+import { completeUpgradeInstallations } from './application/upgradeInstallation.js';
 import { showOfflineToast } from './presentation/toasts.js';
 
 let lastTime = performance.now();
@@ -71,7 +72,9 @@ function gameLoop(now: number): void {
 
   const nowMs = Date.now();
   completeExpeditionIfDue();
+  completeUpgradeInstallations(session, nowMs);
   updateExpeditionProgress();
+  updateInstallingProgress();
   const eventsUnlocked = getUnlockedBlocks(session).has('events');
   if (eventsUnlocked) {
     if (!lastEventsUnlocked) {

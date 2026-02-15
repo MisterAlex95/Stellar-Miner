@@ -56,10 +56,10 @@ export function renderCrewSection(): void {
   const costStr = formatNumber(cost, settings.compactNumbers);
 
   const { miner, scientist, pilot } = player.crewByRole;
-  const crewBonusPct =
-    Math.round(
-      (miner * MINER_PRODUCTION_BONUS + (scientist + pilot) * OTHER_CREW_PRODUCTION_BONUS) * 100
-    ) + Math.round(player.veteranCount * VETERAN_PRODUCTION_BONUS * 100);
+  const crewBonusPct = Math.round(
+    (miner * MINER_PRODUCTION_BONUS + (scientist + pilot) * OTHER_CREW_PRODUCTION_BONUS) * 100 +
+      player.veteranCount * VETERAN_PRODUCTION_BONUS * 100
+  );
 
   if (crewCapacityFill && crewCapacityWrap) {
     crewCapacityFill.style.width = '100%';
@@ -133,7 +133,7 @@ export function renderCrewSection(): void {
 
     if (effectEl) {
       if (role === 'miner') {
-        effectEl.textContent = n > 0 ? tParam(ROLE_EFFECT_KEYS[role], { pct: String(n * MINER_PRODUCTION_BONUS * 100) }) : '';
+        effectEl.textContent = n > 0 ? tParam(ROLE_EFFECT_KEYS[role], { pct: String(Math.round(n * MINER_PRODUCTION_BONUS * 100)) }) : '';
       } else if (role === 'scientist') {
         const scientistPct = Math.min(
           n * SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST * 100,

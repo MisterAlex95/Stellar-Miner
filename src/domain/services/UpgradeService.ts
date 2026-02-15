@@ -10,13 +10,16 @@ export class UpgradeService {
    * If targetPlanet is provided, it must belong to the player and (if upgrade uses a slot) have a free slot.
    * productionMultiplier: optional planet-type multiplier (default 1) applied to base coinsPerSecond when adding to production.
    * hasFreeSlot: optional predicate to determine if a planet has a free slot (e.g. effective slots when research grants slot-free upgrades).
+   * installDurationMs: if > 0, the upgrade is added as "installing" and will contribute production after this many ms; nowMs is used as start time.
    */
   purchaseUpgrade(
     player: Player,
     upgrade: Upgrade,
     targetPlanet?: Planet | null,
     productionMultiplier: number = 1,
-    hasFreeSlot?: (planet: Planet) => boolean
+    hasFreeSlot?: (planet: Planet) => boolean,
+    installDurationMs: number = 0,
+    nowMs: number = 0
   ): DomainEvent | null {
     if (!player.coins.gte(upgrade.cost)) return null;
     if (targetPlanet != null && !player.planets.includes(targetPlanet)) return null;
@@ -29,9 +32,14 @@ export class UpgradeService {
     }
     if (!planet) return null;
     player.spendCoins(upgrade.cost);
-    planet.addUpgrade(upgrade);
     const rate = upgrade.effect.coinsPerSecond.mul(productionMultiplier);
-    player.setProductionRate(player.productionRate.add(rate));
+    if (installDurationMs > 0 && nowMs >= 0) {
+      const endsAt = nowMs + installDurationMs;
+      planet.addInstallingUpgrade(upgrade, nowMs, endsAt, rate);
+    } else {
+      planet.addUpgrade(upgrade);
+      player.setProductionRate(player.productionRate.add(rate));
+    }
     return createUpgradePurchased(player.id, upgrade.id);
   }
 }

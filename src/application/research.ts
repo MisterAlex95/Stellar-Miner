@@ -91,14 +91,14 @@ export function getResearchClickMultiplier(): number {
   return 1 + sumUnlockedModifierPercent('clickPercent') / 100;
 }
 
-/** Total +% production from research (e.g. 15 for +15%). */
+/** Total +% production from research (e.g. 15 for +15%). Rounded for display. */
 export function getResearchProductionPercent(): number {
-  return (getResearchProductionMultiplier() - 1) * 100;
+  return Math.round((getResearchProductionMultiplier() - 1) * 100);
 }
 
-/** Total +% click from research (e.g. 12 for +12%). */
+/** Total +% click from research (e.g. 12 for +12%). Rounded for display. */
 export function getResearchClickPercent(): number {
-  return (getResearchClickMultiplier() - 1) * 100;
+  return Math.round((getResearchClickMultiplier() - 1) * 100);
 }
 
 /** Research success chance multiplier from scientists (1 + scientistBonus, capped). Used in attemptResearch. */

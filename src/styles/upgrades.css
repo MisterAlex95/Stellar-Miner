@@ -30,6 +30,7 @@
 }
 
 .upgrade-card {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-left-width: 4px;
@@ -101,6 +102,64 @@
 .upgrade-card--needs-crew .upgrade-crew-req {
   background: rgba(245, 158, 11, 0.25);
   color: #fbbf24;
+}
+
+.upgrade-card--installing {
+  pointer-events: none;
+}
+
+.upgrade-card--installing .upgrade-install-progress-overlay {
+  pointer-events: auto;
+}
+
+.upgrade-install-progress-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 11, 15, 0.85);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  overflow-y: auto;
+}
+
+.upgrade-install-progress-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 200px;
+}
+
+.upgrade-install-progress-item .upgrade-install-progress-label {
+  font-size: 0.7rem;
+}
+
+.upgrade-install-progress-track {
+  width: 100%;
+  max-width: 200px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.upgrade-install-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), rgba(245, 158, 11, 0.8));
+  border-radius: 3px;
+}
+
+.upgrade-install-progress-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.05em;
 }
 
 .upgrade-card--just-bought {

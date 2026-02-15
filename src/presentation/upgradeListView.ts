@@ -16,6 +16,78 @@ import { getUpgradeCardState, buildUpgradeCardHtml } from './components/upgradeC
 
 const UPGRADE_LIST_ID = 'upgrade-list';
 
+/** (startAt, endsAt) of all installations in progress for this upgrade across all planets. */
+function getInstallingRanges(upgradeId: string): { startAt: number; endsAt: number }[] {
+  const session = getSession();
+  if (!session) return [];
+  return session.player.planets.flatMap((p) =>
+    p.installingUpgrades
+      .filter((i) => i.upgrade.id === upgradeId)
+      .map((i) => ({ startAt: i.startAt, endsAt: i.endsAt }))
+  );
+}
+
+/** Sync install progress overlays from state: one bar per installing copy, add/remove to match state. */
+function attachInstallProgressOverlays(cardEl: HTMLElement, upgradeId: string): void {
+  const now = Date.now();
+  const ranges = getInstallingRanges(upgradeId).filter((r) => r.endsAt > now);
+  let container = cardEl.querySelector('.upgrade-install-progress-overlay') as HTMLElement | null;
+  const existingItems = container
+    ? Array.from(container.querySelectorAll<HTMLElement>('.upgrade-install-progress-item'))
+    : [];
+  const existingEndTimes = new Set(existingItems.map((el) => Number(el.getAttribute('data-ends-at'))));
+
+  // Remove overlays for completed installations
+  existingItems.forEach((item) => {
+    const endsAt = Number(item.getAttribute('data-ends-at'));
+    if (!ranges.some((r) => r.endsAt === endsAt)) item.remove();
+  });
+
+  // Add overlay container if we have any installing and it doesn't exist
+  if (ranges.length > 0 && !container) {
+    container = document.createElement('div');
+    container.className = 'upgrade-install-progress-overlay';
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-busy', 'true');
+    cardEl.appendChild(container);
+    cardEl.classList.add('upgrade-card--installing');
+  }
+  if (ranges.length === 0) {
+    container?.remove();
+    cardEl.classList.remove('upgrade-card--installing');
+    return;
+  }
+
+  // Add one bar per new installation (width updated below from real time)
+  ranges.forEach(({ startAt, endsAt }) => {
+    if (existingEndTimes.has(endsAt)) return;
+    const item = document.createElement('div');
+    item.className = 'upgrade-install-progress-item';
+    item.setAttribute('data-start-at', String(startAt));
+    item.setAttribute('data-ends-at', String(endsAt));
+    item.innerHTML =
+      '<div class="upgrade-install-progress-track"><div class="upgrade-install-progress-fill"></div></div><span class="upgrade-install-progress-label"></span>';
+    const labelEl = item.querySelector('.upgrade-install-progress-label') as HTMLElement;
+    if (labelEl) labelEl.textContent = t('upgrading');
+    container!.appendChild(item);
+  });
+
+  // Update all bar widths from current time (avoids wrong 100% when tab was hidden and CSS transition paused)
+  const allItems = container ? container.querySelectorAll<HTMLElement>('.upgrade-install-progress-item') : [];
+  allItems.forEach((item) => {
+    const startAt = Number(item.getAttribute('data-start-at'));
+    const endsAt = Number(item.getAttribute('data-ends-at'));
+    const fill = item.querySelector('.upgrade-install-progress-fill') as HTMLElement | null;
+    if (!fill || !Number.isFinite(startAt) || !Number.isFinite(endsAt)) return;
+    const totalMs = Math.max(1, endsAt - startAt);
+    const progress = Math.min(1, Math.max(0, (now - startAt) / totalMs));
+    const pct = Math.round(progress * 100);
+    fill.style.transition = 'none';
+    fill.style.width = `${pct}%`;
+    fill.setAttribute('aria-valuenow', String(pct));
+  });
+}
+
 export function getMaxBuyCount(upgradeId: string): number {
   const session = getSession();
   if (!session) return 0;
@@ -83,6 +155,7 @@ export function renderUpgradeList(): void {
       planetsForSelect,
     });
     listEl.appendChild(card);
+    attachInstallProgressOverlays(card, def.id);
   }
 }
 
@@ -152,6 +225,7 @@ export function updateUpgradeListInPlace(): void {
     }
     card.classList.toggle('upgrade-card--recommended', state.isRecommended);
     card.classList.toggle('upgrade-card--needs-crew', !state.hasCrew && state.crewReq > 0);
+    if (card instanceof HTMLElement) attachInstallProgressOverlays(card, id);
   }
 }
 

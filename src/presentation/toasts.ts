@@ -91,7 +91,7 @@ export function showCriticalToast(coins: number): void {
 }
 
 export function showPrestigeMilestoneToast(level: number): void {
-  showToast(tParam('prestigeMilestoneToastFormat', { level, pct: level * 5 }), 'prestige-milestone', {
+  showToast(tParam('prestigeMilestoneToastFormat', { level, pct: Math.round(level * 5) }), 'prestige-milestone', {
     duration: 3500,
   });
 }

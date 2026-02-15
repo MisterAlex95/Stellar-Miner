@@ -33,7 +33,17 @@ const DECAY_14_24H_MS = 10 * 60 * 60 * 1000;
 const DECAY_24H_PLUS_MULT = 0.5;
 
 type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
-type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number; assignedCrew?: number; visualSeed?: number };
+type SavedInstallingUpgrade = { upgrade: SavedUpgrade; startAt?: number; endsAt: number; rateToAdd: number | string };
+type SavedPlanet = {
+  id: string;
+  name: string;
+  maxUpgrades: number;
+  upgrades: SavedUpgrade[];
+  housing?: number;
+  assignedCrew?: number;
+  visualSeed?: number;
+  installingUpgrades?: SavedInstallingUpgrade[];
+};
 type SavedCrewByRole = { miner?: number; scientist?: number; medic?: number; pilot?: number };
 
 export type SavedRunStats = {
@@ -284,6 +294,20 @@ export class SaveLoadService implements ISaveLoadService {
           housing: p.housingCount,
           assignedCrew: p.assignedCrew,
           visualSeed: p.visualSeed,
+          installingUpgrades:
+            p.installingUpgrades?.length > 0
+              ? p.installingUpgrades.map((i) => ({
+                  upgrade: {
+                    id: i.upgrade.id,
+                    name: i.upgrade.name,
+                    cost: i.upgrade.cost.toString(),
+                    effect: { coinsPerSecond: i.upgrade.effect.coinsPerSecond.toString() },
+                  },
+                  startAt: i.startAt,
+                  endsAt: i.endsAt,
+                  rateToAdd: i.rateToAdd.toString(),
+                }))
+              : undefined,
         })),
         artifacts: session.player.artifacts.map((a) => ({
           id: a.id,
@@ -331,6 +355,13 @@ export class SaveLoadService implements ISaveLoadService {
     if (data.player.planets && data.player.planets.length > 0) {
       planets = data.player.planets.map((p) => {
         const visualSeed = p.visualSeed ?? Math.floor(Math.random() * 0xffff_ffff);
+        const savedInstalling = p.installingUpgrades ?? [];
+        const installingUpgrades = savedInstalling.map((i) => ({
+          upgrade: mapUpgrade(i.upgrade),
+          startAt: i.startAt ?? i.endsAt - 60_000,
+          endsAt: i.endsAt,
+          rateToAdd: toDecimal(i.rateToAdd),
+        }));
         const planet = new Planet(
           p.id,
           p.name,
@@ -338,7 +369,8 @@ export class SaveLoadService implements ISaveLoadService {
           p.upgrades.map(mapUpgrade),
           p.housing ?? 0,
           p.assignedCrew ?? 0,
-          visualSeed
+          visualSeed,
+          installingUpgrades
         );
         return planet;
       });

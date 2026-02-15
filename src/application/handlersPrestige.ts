@@ -52,9 +52,9 @@ export function openPrestigeConfirmModal(): void {
       const afterEl = document.getElementById('prestige-confirm-after');
       if (session && descEl) {
         const nextLevel = session.player.prestigeLevel + 1;
-        descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: nextLevel * 5 });
+        descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: Math.round(nextLevel * 5) });
         if (afterEl) {
-          afterEl.textContent = tParam('prestigeConfirmAfter', { level: nextLevel, pct: nextLevel * 5 });
+          afterEl.textContent = tParam('prestigeConfirmAfter', { level: nextLevel, pct: Math.round(nextLevel * 5) });
         }
       }
     },
@@ -76,8 +76,8 @@ export function openPrestigeRewardsModal(): void {
       li1.textContent = t('prestigeReward1');
       listEl.appendChild(li1);
       for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
-        const prod = level * 5;
-        const click = (level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL;
+        const prod = Math.round(level * 5);
+        const click = Math.round((level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL);
         const li = document.createElement('li');
         li.textContent = tParam('prestigeRewardLevelFormat', { level, prod, click });
         listEl.appendChild(li);

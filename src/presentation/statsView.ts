@@ -193,11 +193,11 @@ export function updateStats(): void {
     const crewCombinedPct = (minerBonus * otherCrewBonus * veteranBonus * morale - 1) * 100;
     const parts: string[] = [];
     if (base.gt(0)) parts.push(`${t('breakdownBase')} ${formatNumber(base, settings.compactNumbers)}/s`);
-    if (planetBonus > 0) parts.push(`+${planetBonus}% ${t('breakdownPlanets')}`);
-    if (prestigeBonus > 0) parts.push(`+${prestigeBonus}% ${t('breakdownPrestige')}`);
+    if (planetBonus > 0) parts.push(`+${Math.round(planetBonus)}% ${t('breakdownPlanets')}`);
+    if (prestigeBonus > 0) parts.push(`+${Math.round(prestigeBonus)}% ${t('breakdownPrestige')}`);
     if (crewCombinedPct !== 0) parts.push(`${crewCombinedPct > 0 ? '+' : ''}${Math.round(crewCombinedPct)}% ${t('breakdownCrew')}`);
     const researchPct = getResearchProductionPercent();
-    if (researchPct > 0) parts.push(`+${Math.round(researchPct)}% ${t('breakdownResearch')}`);
+    if (researchPct > 0) parts.push(`+${researchPct}% ${t('breakdownResearch')}`);
     if (eventMult > 1) parts.push(`×${eventMult.toFixed(1)} ${t('breakdownEvent')}`);
     const now = Date.now();
     const clicksLastSecond = getClickTimestamps().filter((ts) => ts > now - 1000).length;

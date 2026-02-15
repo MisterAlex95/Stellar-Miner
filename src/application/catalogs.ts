@@ -39,10 +39,35 @@ export type UpgradeDef = {
 
 export const UPGRADE_CATALOG: UpgradeDef[] = upgradesData as UpgradeDef[];
 
-const UPGRADES_CONFIG = (gameConfig as { upgrades?: { costMultiplierPerOwned?: number; displayCount?: number } }).upgrades ?? {};
+const UPGRADES_CONFIG = (gameConfig as {
+  upgrades?: {
+    costMultiplierPerOwned?: number;
+    displayCount?: number;
+    installDurationMs?: number;
+    installDurationBaseMs?: number;
+    installDurationCostFactor?: number;
+    installDurationTierExponent?: number;
+    installDurationLog10Cap?: number;
+  };
+}).upgrades ?? {};
 const UPGRADE_COST_MULT = UPGRADES_CONFIG.costMultiplierPerOwned ?? 1.15;
 /** Max number of upgrade cards shown in the list at once. */
 export const UPGRADE_DISPLAY_COUNT = UPGRADES_CONFIG.displayCount ?? 5;
+const INSTALL_BASE_MS = UPGRADES_CONFIG.installDurationBaseMs ?? UPGRADES_CONFIG.installDurationMs ?? 800;
+const INSTALL_COST_FACTOR = UPGRADES_CONFIG.installDurationCostFactor ?? 0.12;
+const INSTALL_TIER_EXPONENT = UPGRADES_CONFIG.installDurationTierExponent ?? 1;
+const INSTALL_LOG10_CAP = UPGRADES_CONFIG.installDurationLog10Cap ?? 3;
+/** Time (ms) an upgrade spends "installing". Fallback when formula not used (e.g. legacy). */
+export const UPGRADE_INSTALL_DURATION_MS = UPGRADES_CONFIG.installDurationMs ?? INSTALL_BASE_MS;
+
+/** Installation duration (ms): base × tier^exponent × (1 + costFactor × min(log10Cap, log10(cost))). */
+export function getUpgradeInstallDurationMs(tier: number, costNumber: number): number {
+  const cost = Math.max(1, costNumber);
+  const logCost = Math.log10(cost);
+  const costMult = 1 + INSTALL_COST_FACTOR * Math.min(INSTALL_LOG10_CAP, logCost);
+  const tierFactor = Math.pow(tier, INSTALL_TIER_EXPONENT);
+  return Math.round(INSTALL_BASE_MS * tierFactor * costMult);
+}
 
 /** Cost for the next copy of this upgrade (baseCost * multiplier^ownedCount). */
 export function getUpgradeCost(def: UpgradeDef, ownedCount: number): Decimal {

@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.18",
+    "date": "2026-02-16",
+    "changes": [
+      "Upgrades now have an installation delay (4s by default): production is applied when the module finishes installing. Planet cards show \"X installing\" while modules are in progress."
+    ]
+  },
+  {
     "version": "0.4.17",
     "date": "2026-02-15",
     "changes": [

@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { setSession, getSession, upgradeService } from './gameState.js';
+import { setSession, getSession } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { handleUpgradeBuy, handleUpgradeBuyMax } from './handlersUpgrade.js';
-import { UPGRADE_CATALOG } from './catalogs.js';
+import { completeUpgradeInstallations } from './upgradeInstallation.js';
+/** Generous delay so all upgrades (variable duration by tier/cost) finish in tests. */
+const INSTALL_WAIT_MS = 10000;
 
 vi.mock('../presentation/statsView.js', () => ({ updateStats: vi.fn() }));
 vi.mock('../presentation/upgradeListView.js', () => ({
@@ -34,6 +36,7 @@ describe('handlersUpgrade', () => {
       const beforeCount = player.upgrades.filter((u) => u.id === 'mining-robot').length;
 
       handleUpgradeBuy('mining-robot');
+      completeUpgradeInstallations(session, Date.now() + INSTALL_WAIT_MS);
 
       expect(player.upgrades.filter((u) => u.id === 'mining-robot').length).toBe(beforeCount + 1);
       expect(player.coins.value.toNumber()).toBe(beforeCoins - 45);
@@ -46,6 +49,7 @@ describe('handlersUpgrade', () => {
       const beforeCount = player.upgrades.filter((u) => u.id === 'drill-mk1').length;
 
       handleUpgradeBuy('drill-mk1');
+      completeUpgradeInstallations(session, Date.now() + INSTALL_WAIT_MS);
 
       expect(player.upgrades.filter((u) => u.id === 'drill-mk1').length).toBe(beforeCount + 1);
       expect(player.crewAssignedToEquipment).toBe(0);
@@ -100,6 +104,7 @@ describe('handlersUpgrade', () => {
       const beforeCount = player.upgrades.filter((u) => u.id === 'mining-robot').length;
 
       handleUpgradeBuyMax('mining-robot');
+      completeUpgradeInstallations(session, Date.now() + INSTALL_WAIT_MS);
 
       const afterCount = player.upgrades.filter((u) => u.id === 'mining-robot').length;
       expect(afterCount).toBeGreaterThan(beforeCount);
@@ -114,6 +119,7 @@ describe('handlersUpgrade', () => {
       player.addAstronauts(slots * 2);
 
       handleUpgradeBuyMax('drill-mk1');
+      completeUpgradeInstallations(session, Date.now() + INSTALL_WAIT_MS);
 
       const drillCount = player.upgrades.filter((u) => u.id === 'drill-mk1').length;
       expect(drillCount).toBeGreaterThan(0);

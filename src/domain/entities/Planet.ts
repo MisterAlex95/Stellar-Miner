@@ -1,13 +1,18 @@
+import type { Decimal } from '../bigNumber.js';
 import type { Upgrade } from './Upgrade.js';
 import { HOUSING_ASTRONAUT_CAPACITY } from '../constants.js';
 
 /** Default max upgrade slots on a new planet (can be expanded later). */
 export const UPGRADES_PER_PLANET = 6;
 
+export type InstallingUpgrade = { upgrade: Upgrade; startAt: number; endsAt: number; rateToAdd: Decimal };
+
 /** Entity: a planet with upgrade slots (expandable by paying coins) and optional housing (uses slots, +crew capacity). */
 export class Planet {
   /** Mutable array so we can push upgrades. */
   public readonly upgrades: Upgrade[];
+  /** Upgrades currently installing; they reserve a slot but do not contribute production until endsAt. */
+  public readonly installingUpgrades: InstallingUpgrade[];
   private _maxUpgrades: number;
   private _housingCount: number;
   /** Crew assigned to this planet (for production bonus). Cap = housingCount * HOUSING_ASTRONAUT_CAPACITY. */
@@ -22,10 +27,12 @@ export class Planet {
     upgrades: Upgrade[] = [],
     housingCount: number = 0,
     assignedCrew: number = 0,
-    visualSeed?: number
+    visualSeed?: number,
+    installingUpgrades: InstallingUpgrade[] = []
   ) {
     this._maxUpgrades = maxUpgrades;
     this.upgrades = upgrades ? [...upgrades] : [];
+    this.installingUpgrades = installingUpgrades ? [...installingUpgrades] : [];
     this._housingCount = Math.max(0, housingCount);
     this._assignedCrew = Math.max(0, assignedCrew);
     this.visualSeed = visualSeed;
@@ -53,9 +60,11 @@ export class Planet {
     return this._housingCount;
   }
 
-  /** Used slots = upgrades that use a slot + housing. */
+  /** Used slots = installed upgrades that use a slot + installing upgrades that use a slot + housing. */
   get usedSlots(): number {
-    return this.upgrades.filter((u) => u.usesSlot).length + this._housingCount;
+    const fromUpgrades = this.upgrades.filter((u) => u.usesSlot).length;
+    const fromInstalling = this.installingUpgrades.filter((i) => i.upgrade.usesSlot).length;
+    return fromUpgrades + fromInstalling + this._housingCount;
   }
 
   get freeSlots(): number {
@@ -69,6 +78,28 @@ export class Planet {
   addUpgrade(upgrade: Upgrade): void {
     if (upgrade.usesSlot && !this.hasFreeSlot()) throw new Error('Planet has no free upgrade slot');
     this.upgrades.push(upgrade);
+  }
+
+  /** Start installing an upgrade; it reserves a slot and will contribute production after endsAt (ms). */
+  addInstallingUpgrade(upgrade: Upgrade, startAt: number, endsAt: number, rateToAdd: Decimal): void {
+    if (upgrade.usesSlot && !this.hasFreeSlot()) throw new Error('Planet has no free upgrade slot');
+    this.installingUpgrades.push({ upgrade, startAt, endsAt, rateToAdd });
+  }
+
+  /**
+   * Move any installing upgrades with endsAt <= now into upgrades and return their rates to add to player production.
+   */
+  tickInstallations(now: number): Decimal[] {
+    const toAdd: Decimal[] = [];
+    for (let i = this.installingUpgrades.length - 1; i >= 0; i--) {
+      const entry = this.installingUpgrades[i];
+      if (entry.endsAt <= now) {
+        this.upgrades.push(entry.upgrade);
+        toAdd.push(entry.rateToAdd);
+        this.installingUpgrades.splice(i, 1);
+      }
+    }
+    return toAdd;
   }
 
   /**
