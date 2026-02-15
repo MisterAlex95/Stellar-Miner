@@ -8,6 +8,7 @@ import {
   getExpeditionEndsAt,
   getRunStats,
   getQuestState,
+  planetService,
 } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { getQuestProgress } from '../application/quests.js';
@@ -16,13 +17,15 @@ import {
   getResearchProductionMultiplier,
   isResearchInProgress,
   getUnlockedResearch,
+  canAttemptResearch,
   RESEARCH_CATALOG,
 } from '../application/research.js';
+import type { ResearchNode } from '../application/research.js';
 import { PRESTIGE_COIN_THRESHOLD } from '../domain/constants.js';
 import { getCatalogEventName } from '../application/i18nCatalogs.js';
 import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
-import { UPGRADE_CATALOG, getUnlockedUpgradeTiers } from '../application/catalogs.js';
+import { UPGRADE_CATALOG, getUnlockedUpgradeTiers, getUpgradeCost } from '../application/catalogs.js';
 import { getUpgradeCardState } from './components/upgradeCard.js';
 import { PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
 import { getMaxBuyCount } from './upgradeListView.js';
@@ -48,6 +51,42 @@ function getNextAffordableUpgrade(): { def: { id: string }; cost: string; planet
         planetId: planetWithSlot?.id,
       };
     }
+  }
+  return null;
+}
+
+/** First upgrade (by tier) we cannot afford yet — for "~X min to [name]" when no affordable upgrade. */
+function getNextUpgradeGoal(): { def: { id: string }; cost: Decimal; name: string } | null {
+  const session = getSession();
+  if (!session) return null;
+  const player = session.player;
+  const settings = getSettings();
+  const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
+  const ownedIds = player.upgrades.map((u) => u.id);
+  const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
+  const defs = UPGRADE_CATALOG.filter((d) => unlockedTiers.has(d.tier)).sort((a, b) => a.tier - b.tier);
+  for (const def of defs) {
+    const maxCount = getMaxBuyCount(def.id);
+    const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
+    if (!state.canBuy) {
+      const owned = player.upgrades.filter((u) => u.id === def.id).length;
+      const cost = getUpgradeCost(def, owned);
+      return { def: { id: def.id }, cost, name: getCatalogUpgradeName(def.id) };
+    }
+  }
+  return null;
+}
+
+/** First attemptable research node the player can afford (by row/col order), or null. */
+function getNextAttemptableResearchAffordable(): ResearchNode | null {
+  const session = getSession();
+  if (!session) return null;
+  const player = session.player;
+  const attemptable = RESEARCH_CATALOG.filter((n) => canAttemptResearch(n.id)).sort(
+    (a, b) => (a.row !== b.row ? a.row - b.row : a.col - b.col)
+  );
+  for (const node of attemptable) {
+    if (player.coins.gte(node.cost)) return node;
   }
   return null;
 }
@@ -95,6 +134,10 @@ export function renderDashboardSection(): void {
   const milestone = getNextMilestone(session);
   const runStats = getRunStats();
   const nextUpgrade = getNextAffordableUpgrade();
+  const nextGoal = getNextUpgradeGoal();
+  const affordableResearch = getNextAttemptableResearchAffordable();
+  const canLaunchExpedition = planetService.canLaunchExpedition(player);
+  const expeditionCost = planetService.getNewPlanetCost(player);
   const unlocked = getUnlockedBlocks(session);
 
   // --- At-a-glance stats row ---
@@ -120,7 +163,7 @@ export function renderDashboardSection(): void {
       </div>
     </div>`;
 
-  // --- Recommended action (hero CTA) ---
+  // --- Recommended action (hero CTA): priority order for maximum progress ---
   let recommendedHtml = '';
   let recommendedLabel = '';
 
@@ -133,9 +176,32 @@ export function renderDashboardSection(): void {
   } else if (nextUpgrade) {
     recommendedLabel = tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--upgrade" id="dashboard-do-upgrade" data-upgrade-id="${nextUpgrade.def.id}" data-planet-id="${nextUpgrade.planetId ?? ''}">${tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) })} · ${nextUpgrade.cost}</button>`;
+  } else if (unlocked.has('research') && !isResearchInProgress() && affordableResearch) {
+    recommendedLabel = tParam('dashboardStartResearch', { name: affordableResearch.name });
+    recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-research">${t('goToResearch')} →</button>`;
   } else if (!expeditionActive && unlocked.has('planets')) {
-    recommendedLabel = t('buyNewPlanet');
-    recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
+    if (canLaunchExpedition) {
+      recommendedLabel = t('buyNewPlanet');
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
+    } else if (player.coins.value.lt(expeditionCost) && effectiveRate.gt(0)) {
+      const remaining = expeditionCost.sub(player.coins.value);
+      const min = minutesUntil(remaining, effectiveRate);
+      recommendedLabel = tParam('dashboardTimeToExpedition', { min: min === Infinity ? '…' : String(min) });
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
+    } else {
+      recommendedLabel = t('buyNewPlanet');
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
+    }
+  } else if (nextGoal && effectiveRate.gt(0)) {
+    const remaining = nextGoal.cost.sub(player.coins.value);
+    if (remaining.gt(0)) {
+      const min = minutesUntil(remaining, effectiveRate);
+      recommendedLabel = tParam('dashboardTimeTo', { min: min === Infinity ? '…' : String(min), target: nextGoal.name });
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
+    } else {
+      recommendedLabel = t('dashboardKeepMining');
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
+    }
   } else {
     recommendedLabel = t('dashboardKeepMining');
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;

@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.13",
+    "date": "2026-02-15",
+    "changes": [
+      "Smarter \"Do this next\": recommends research when affordable and not in progress, expedition only when launchable, time-to-afford for expedition and next upgrade, and \"~X min to [upgrade]\" when mining."
+    ]
+  },
+  {
     "version": "0.4.12",
     "date": "2026-02-15",
     "changes": [

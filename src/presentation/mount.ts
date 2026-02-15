@@ -799,6 +799,10 @@ export function mount(): void {
       switchTab('empire');
       return;
     }
+    if (id === 'dashboard-goto-research') {
+      switchTab('research');
+      return;
+    }
     if (goto) {
       switchTab(goto);
     }
