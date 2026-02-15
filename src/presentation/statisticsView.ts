@@ -21,6 +21,19 @@ import {
   STATS_LONG_TERM_INTERVAL_MS,
   STATS_LONG_TERM_MAX_POINTS,
 } from '../application/catalogs.js';
+import { getUnlockedBlocks } from '../application/progression.js';
+import type { BlockId } from '../application/progression.js';
+
+/** Which block must be unlocked to show each statistics group. */
+const STAT_GROUP_UNLOCK: Record<string, BlockId> = {
+  economy: 'upgrades',
+  charts: 'quest',
+  'production-breakdown': 'crew',
+  progression: 'upgrades',
+  activity: 'quest',
+  'quests-events': 'quest',
+  achievements: 'upgrades',
+};
 
 const STAT_IDS = [
   'coins',
@@ -212,7 +225,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
     <h2>Statistics</h2>
     <p class="statistics-intro">Track your mining empire: economy, progression, and activity. Chart data is saved across sessions.</p>
     <div class="statistics-grid">
-      <section class="statistics-group statistics-charts" aria-labelledby="stat-charts">
+      <section class="statistics-group statistics-charts" aria-labelledby="stat-charts" data-stat-group="charts">
         <h3 id="stat-charts" class="statistics-group-title">Charts</h3>
         <div class="statistics-chart-range" role="tablist" aria-label="Chart time range">
           <button type="button" class="statistics-range-btn statistics-range-btn--active" data-range="recent" role="tab" aria-selected="true">Last ${recentMin} min</button>
@@ -249,7 +262,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
         </div>
         <div id="chart-tooltip" class="statistics-chart-tooltip" aria-live="polite" aria-hidden="true"></div>
       </section>
-      <section class="statistics-group" aria-labelledby="stat-economy">
+      <section class="statistics-group" aria-labelledby="stat-economy" data-stat-group="economy">
         <h3 id="stat-economy" class="statistics-group-title">Economy</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
@@ -270,7 +283,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
           </div>
         </div>
       </section>
-      <section class="statistics-group" aria-labelledby="stat-production-breakdown">
+      <section class="statistics-group" aria-labelledby="stat-production-breakdown" data-stat-group="production-breakdown">
         <h3 id="stat-production-breakdown" class="statistics-group-title">Production breakdown</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
@@ -295,7 +308,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
           </div>
         </div>
       </section>
-      <section class="statistics-group" aria-labelledby="stat-progression">
+      <section class="statistics-group" aria-labelledby="stat-progression" data-stat-group="progression">
         <h3 id="stat-progression" class="statistics-group-title">Progression</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
@@ -324,7 +337,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
           </div>
         </div>
       </section>
-      <section class="statistics-group" aria-labelledby="stat-activity">
+      <section class="statistics-group" aria-labelledby="stat-activity" data-stat-group="activity">
         <h3 id="stat-activity" class="statistics-group-title">Activity</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
@@ -349,7 +362,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
           </div>
         </div>
       </section>
-      <section class="statistics-group" aria-labelledby="stat-quests-events">
+      <section class="statistics-group" aria-labelledby="stat-quests-events" data-stat-group="quests-events">
         <h3 id="stat-quests-events" class="statistics-group-title">Quests & events</h3>
         <div class="statistics-cards">
           <div class="statistics-card">
@@ -366,7 +379,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
           </div>
         </div>
       </section>
-      <section class="statistics-group" aria-labelledby="stat-achievements">
+      <section class="statistics-group" aria-labelledby="stat-achievements" data-stat-group="achievements">
         <h3 id="stat-achievements" class="statistics-group-title">Achievements</h3>
         <div class="statistics-cards">
           <div class="statistics-card statistics-card--wide">
@@ -471,6 +484,17 @@ export function updateStatisticsSection(): void {
   const compact = settings.compactNumbers;
 
   if (!session) return;
+
+  const unlocked = getUnlockedBlocks(session);
+  const container = document.getElementById('statistics-container');
+  if (container) {
+    container.querySelectorAll<HTMLElement>('.statistics-group[data-stat-group]').forEach((el) => {
+      const group = el.getAttribute('data-stat-group');
+      const block = group ? STAT_GROUP_UNLOCK[group] : undefined;
+      const show = block ? unlocked.has(block) : true;
+      el.style.display = show ? '' : 'none';
+    });
+  }
 
   const player = session.player;
   const now = Date.now();

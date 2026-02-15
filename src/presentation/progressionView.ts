@@ -84,6 +84,30 @@ export function updateProgressionVisibility(): void {
   progressionInitialized = true;
 }
 
+/** Show/hide tab buttons based on unlocked blocks. If current tab becomes hidden, call setActiveTab('mine'). */
+export function updateTabVisibility(setActiveTab: (tabId: string) => void): void {
+  const session = getSession();
+  const unlocked = getUnlockedBlocks(session);
+  const tabsNav = document.querySelector('.app-tabs');
+  if (!tabsNav) return;
+  const tabButtons = tabsNav.querySelectorAll<HTMLElement>('.app-tab[data-tab]');
+  const visibleTabs = new Set<string>();
+  tabButtons.forEach((tab) => {
+    const tabId = tab.getAttribute('data-tab');
+    if (!tabId) return;
+    const show =
+      tabId === 'mine' ||
+      (tabId === 'upgrades' && unlocked.has('upgrades')) ||
+      (tabId === 'base' &&
+        (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
+      (tabId === 'stats' && unlocked.has('upgrades'));
+    tab.style.display = show ? 'block' : 'none';
+    if (show) visibleTabs.add(tabId);
+  });
+  const activeTab = tabsNav.querySelector('.app-tab--active')?.getAttribute('data-tab');
+  if (activeTab && !visibleTabs.has(activeTab)) setActiveTab('mine');
+}
+
 /** Call once after mount: show welcome modal if first run. */
 export function maybeShowWelcomeModal(): void {
   const session = getSession();

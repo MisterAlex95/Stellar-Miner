@@ -1,11 +1,14 @@
 const STORAGE_KEY = 'stellar-miner-settings';
 
+export type LayoutMode = 'tabs' | 'one-page';
+
 export type Settings = {
   starfieldSpeed: number;
   showOrbitLines: boolean;
   clickParticles: boolean;
   compactNumbers: boolean;
   spaceKeyRepeat: boolean;
+  layout: LayoutMode;
 };
 
 const DEFAULTS: Settings = {
@@ -14,6 +17,7 @@ const DEFAULTS: Settings = {
   clickParticles: true,
   compactNumbers: true,
   spaceKeyRepeat: false,
+  layout: 'tabs',
 };
 
 export function loadSettings(): Settings {

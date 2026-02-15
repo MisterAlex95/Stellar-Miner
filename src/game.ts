@@ -24,7 +24,8 @@ import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgr
 import { renderPlanetList } from './presentation/planetListView.js';
 import { renderQuestSection } from './presentation/questView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
-import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/progressionView.js';
+import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
+import { switchTab } from './presentation/mount.js';
 import { updateDebugPanel } from './application/handlers.js';
 import { saveSession } from './application/handlers.js';
 import { triggerRandomEvent } from './application/handlers.js';
@@ -79,6 +80,7 @@ function gameLoop(now: number): void {
 
   updateComboIndicator();
   updateProgressionVisibility();
+  updateTabVisibility(switchTab);
   updateStatisticsSection();
 
   const debugPanel = document.getElementById('debug-panel');
@@ -99,6 +101,7 @@ async function init(): Promise<void> {
   setNextEventAt(gameStartTime + MIN_EVENT_DELAY_MS);
   setStarfieldApi(startStarfield(getSettings, getEventContext));
   mount();
+  updateTabVisibility(switchTab);
   syncCoinDisplay();
   syncProductionDisplay();
   updateStats();

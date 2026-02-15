@@ -38,6 +38,53 @@ import {
   dismissIntroModal,
 } from './progressionView.js';
 
+const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
+const DEFAULT_TAB = 'mine';
+
+export function switchTab(tabId: string): void {
+  const tabs = document.querySelectorAll('.app-tab');
+  const panels = document.querySelectorAll('.app-tab-panel');
+  tabs.forEach((tab) => {
+    const t = tab as HTMLElement;
+    const isSelected = t.getAttribute('data-tab') === tabId;
+    t.classList.toggle('app-tab--active', isSelected);
+    t.setAttribute('aria-selected', String(isSelected));
+  });
+  panels.forEach((panel) => {
+    const p = panel as HTMLElement;
+    const isSelected = p.getAttribute('data-tab') === tabId;
+    p.classList.toggle('app-tab-panel--active', isSelected);
+    p.hidden = !isSelected;
+  });
+  try {
+    localStorage.setItem(TAB_STORAGE_KEY, tabId);
+  } catch {
+    // ignore
+  }
+}
+
+/** Apply layout mode: tabs (one panel at a time) or one-page (all sections stacked). */
+export function applyLayout(): void {
+  const layout = getSettings().layout;
+  const tabsNav = document.querySelector('.app-tabs') as HTMLElement | null;
+  const panels = document.querySelectorAll<HTMLElement>('.app-tab-panel');
+  if (layout === 'one-page') {
+    if (tabsNav) tabsNav.style.display = 'none';
+    panels.forEach((p) => {
+      p.style.display = 'block';
+      p.hidden = false;
+    });
+  } else {
+    if (tabsNav) tabsNav.style.display = '';
+    const activeId =
+      document.querySelector('.app-tab--active')?.getAttribute('data-tab') ||
+      localStorage.getItem(TAB_STORAGE_KEY) ||
+      DEFAULT_TAB;
+    const validId = ['mine', 'base', 'upgrades', 'stats'].includes(activeId) ? activeId : DEFAULT_TAB;
+    switchTab(validId);
+  }
+}
+
 const APP_HTML = `
     <header>
       <div class="header-row">
@@ -88,6 +135,13 @@ const APP_HTML = `
               <input type="checkbox" id="setting-space-key-repeat" />
               <span>Allow Space key repeat (hold to mine)</span>
             </label>
+          </div>
+          <div class="settings-option">
+            <label for="setting-layout">Layout</label>
+            <select id="setting-layout" aria-label="Layout mode">
+              <option value="tabs">Tabs</option>
+              <option value="one-page">One page</option>
+            </select>
           </div>
           <div class="settings-option settings-achievements">
             <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false">Achievements</button>
@@ -144,48 +198,62 @@ const APP_HTML = `
       </div>
     </section>
     <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
-    <section class="mine-zone" id="mine-zone" title="Click or press Space to mine">
-      <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
-      <div class="mine-zone-visual" id="mine-zone-visual"></div>
-      <p class="mine-zone-hint" aria-hidden="true">Click or press Space to mine</p>
-      <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
-    </section>
-    <section class="gameplay-block gameplay-block--locked quest-section" id="quest-section" data-block="quest">
-      <h2>Quest</h2>
-      <div class="quest-progress-wrap">
-        <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-      </div>
-      <p class="quest-progress" id="quest-progress"></p>
-      <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
-      <button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button>
-    </section>
-    <section class="gameplay-block gameplay-block--locked prestige-section" id="prestige-section" data-block="prestige">
-      <h2>Prestige</h2>
-      <p class="prestige-hint">Reset coins and planets to gain +5% production per prestige level forever.</p>
-      <div class="prestige-status" id="prestige-status"></div>
-      <button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button>
-    </section>
-    <section class="gameplay-block gameplay-block--locked crew-section" id="crew-section" data-block="crew">
-      <h2>Crew</h2>
-      <p class="crew-hint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
-      <div class="crew-count" id="crew-count">No crew yet</div>
-      <div class="crew-operates" id="crew-operates"></div>
-      <button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button>
-    </section>
-    <section class="gameplay-block gameplay-block--locked planets-section" id="planets-section" data-block="planets">
-      <h2>Planets</h2>
-      <p class="planets-hint">Each planet has upgrade slots (expandable). More planets = +5% production each. Buy a new planet or add slots to expand.</p>
-      <div class="planet-list" id="planet-list"></div>
-      <button type="button" class="buy-planet-btn" id="buy-planet-btn">Buy new planet</button>
-    </section>
-    <section class="gameplay-block gameplay-block--locked upgrades-section" id="upgrades-section" data-block="upgrades">
-      <h2>Upgrades</h2>
-      <p class="upgrades-hint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
-      <div class="upgrade-list" id="upgrade-list"></div>
-    </section>
-    <section class="gameplay-block gameplay-block--unlocked statistics-section" id="statistics-section">
-      <div id="statistics-container"></div>
-    </section>
+    <nav class="app-tabs" role="tablist" aria-label="Game sections">
+      <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine">Mine</button>
+      <button type="button" class="app-tab" role="tab" id="tab-base" aria-selected="false" aria-controls="panel-base" data-tab="base">Base</button>
+      <button type="button" class="app-tab" role="tab" id="tab-upgrades" aria-selected="false" aria-controls="panel-upgrades" data-tab="upgrades">Upgrades</button>
+      <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats">Stats</button>
+    </nav>
+    <div class="app-tab-panel app-tab-panel--active" id="panel-mine" role="tabpanel" aria-labelledby="tab-mine" data-tab="mine">
+      <section class="mine-zone" id="mine-zone" title="Click or press Space to mine">
+        <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
+        <div class="mine-zone-visual" id="mine-zone-visual"></div>
+        <p class="mine-zone-hint" aria-hidden="true">Click or press Space to mine</p>
+        <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
+      </section>
+      <section class="gameplay-block gameplay-block--locked quest-section" id="quest-section" data-block="quest">
+        <h2>Quest</h2>
+        <div class="quest-progress-wrap">
+          <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <p class="quest-progress" id="quest-progress"></p>
+        <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
+        <button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button>
+      </section>
+    </div>
+    <div class="app-tab-panel" id="panel-base" role="tabpanel" aria-labelledby="tab-base" data-tab="base" hidden>
+      <section class="gameplay-block gameplay-block--locked prestige-section" id="prestige-section" data-block="prestige">
+        <h2>Prestige</h2>
+        <p class="prestige-hint">Reset coins and planets to gain +5% production per prestige level forever.</p>
+        <div class="prestige-status" id="prestige-status"></div>
+        <button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button>
+      </section>
+      <section class="gameplay-block gameplay-block--locked crew-section" id="crew-section" data-block="crew">
+        <h2>Crew</h2>
+        <p class="crew-hint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
+        <div class="crew-count" id="crew-count">No crew yet</div>
+        <div class="crew-operates" id="crew-operates"></div>
+        <button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button>
+      </section>
+      <section class="gameplay-block gameplay-block--locked planets-section" id="planets-section" data-block="planets">
+        <h2>Planets</h2>
+        <p class="planets-hint">Each planet has upgrade slots (expandable). More planets = +5% production each. Buy a new planet or add slots to expand.</p>
+        <div class="planet-list" id="planet-list"></div>
+        <button type="button" class="buy-planet-btn" id="buy-planet-btn">Buy new planet</button>
+      </section>
+    </div>
+    <div class="app-tab-panel" id="panel-upgrades" role="tabpanel" aria-labelledby="tab-upgrades" data-tab="upgrades" hidden>
+      <section class="gameplay-block gameplay-block--locked upgrades-section" id="upgrades-section" data-block="upgrades">
+        <h2>Upgrades</h2>
+        <p class="upgrades-hint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
+        <div class="upgrade-list" id="upgrade-list"></div>
+      </section>
+    </div>
+    <div class="app-tab-panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" data-tab="stats" hidden>
+      <section class="gameplay-block gameplay-block--unlocked statistics-section" id="statistics-section">
+        <div id="statistics-container"></div>
+      </section>
+    </div>
   `;
 
 export function mount(): void {
@@ -224,11 +292,13 @@ export function mount(): void {
   const clickParticlesEl = document.getElementById('setting-click-particles') as HTMLInputElement | null;
   const compactNumbersEl = document.getElementById('setting-compact-numbers') as HTMLInputElement | null;
   const spaceKeyRepeatEl = document.getElementById('setting-space-key-repeat') as HTMLInputElement | null;
+  const layoutEl = document.getElementById('setting-layout') as HTMLSelectElement | null;
   if (starfieldSpeedEl) starfieldSpeedEl.value = String(settings.starfieldSpeed);
   if (orbitLinesEl) orbitLinesEl.checked = settings.showOrbitLines;
   if (clickParticlesEl) clickParticlesEl.checked = settings.clickParticles;
   if (compactNumbersEl) compactNumbersEl.checked = settings.compactNumbers;
   if (spaceKeyRepeatEl) spaceKeyRepeatEl.checked = settings.spaceKeyRepeat;
+  if (layoutEl) layoutEl.value = settings.layout;
   if (starfieldSpeedEl) starfieldSpeedEl.addEventListener('change', () => {
     const s = getSettings();
     s.starfieldSpeed = Number(starfieldSpeedEl.value);
@@ -254,6 +324,12 @@ export function mount(): void {
     const s = getSettings();
     s.spaceKeyRepeat = spaceKeyRepeatEl.checked;
     setSettings(s);
+  });
+  if (layoutEl) layoutEl.addEventListener('change', () => {
+    const s = getSettings();
+    s.layout = layoutEl.value as 'tabs' | 'one-page';
+    setSettings(s);
+    applyLayout();
   });
 
   const resetBtn = document.getElementById('settings-reset-btn');
@@ -404,4 +480,16 @@ export function mount(): void {
   if (statisticsContainer) {
     renderStatisticsSection(statisticsContainer);
   }
+
+  document.querySelectorAll('.app-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const tabId = (tab as HTMLElement).getAttribute('data-tab');
+      if (tabId) switchTab(tabId);
+    });
+  });
+  const savedTab =
+    (typeof localStorage !== 'undefined' && localStorage.getItem(TAB_STORAGE_KEY)) || DEFAULT_TAB;
+  const validTab = ['mine', 'base', 'upgrades', 'stats'].includes(savedTab) ? savedTab : DEFAULT_TAB;
+  switchTab(validTab);
+  applyLayout();
 }
