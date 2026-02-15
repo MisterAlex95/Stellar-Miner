@@ -56,6 +56,8 @@ export const EVENT_CATALOG: GameEvent[] = [
   new GameEvent('rich-vein', 'Rich Vein', new EventEffect(2.5, 20_000)),
   new GameEvent('void-bonus', 'Void Bonus', new EventEffect(1.25, 60_000)),
   new GameEvent('lucky-strike', 'Lucky Strike', new EventEffect(3, 15_000)),
+  new GameEvent('asteroid-rush', 'Asteroid Rush', new EventEffect(1.8, 25_000)),
+  new GameEvent('solar-wind', 'Solar Wind', new EventEffect(1.15, 90_000)),
 ];
 
 export const UPGRADE_GROUPS: { label: string; minTier: number; maxTier: number }[] = [

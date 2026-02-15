@@ -129,3 +129,16 @@ export function shouldShowWelcome(seen: Set<BlockId>, session: GameSession | nul
   if (!session || session.player.coins.value > 0) return false;
   return !seen.has('welcome');
 }
+
+/** Next block to unlock (first locked block by coin threshold), or null if all unlocked. */
+export function getNextMilestone(session: GameSession | null): { block: BlockDef; coinsNeeded: number } | null {
+  if (!session) return null;
+  const coins = session.player.coins.value;
+  const unlocked = getUnlockedBlocks(session);
+  for (const block of PROGRESSION_BLOCKS) {
+    if (block.id === 'welcome') continue;
+    if (unlocked.has(block.id)) continue;
+    return { block, coinsNeeded: block.coinsThreshold };
+  }
+  return null;
+}

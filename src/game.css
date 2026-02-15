@@ -717,6 +717,40 @@ header {
   color: var(--muted);
 }
 
+.settings-save-export .settings-save-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.settings-export-btn,
+.settings-import-btn {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.settings-export-btn:hover,
+.settings-import-btn:hover {
+  background: var(--bg-panel);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.settings-import-file {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .settings-reset {
   margin-top: 0.5rem;
   padding-top: 1rem;
@@ -1193,6 +1227,12 @@ h1 {
   font-weight: 600;
 }
 
+.event-toast--milestone {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(99, 102, 241, 0.12) 100%);
+  font-weight: 500;
+}
+
 .event-toast--daily {
   border-color: #22c55e;
   background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(34, 197, 94, 0.12) 100%);
@@ -1421,6 +1461,24 @@ h1 {
 
 .quest-section--complete .quest-claim-btn:hover:not(:disabled) {
   background: rgba(34, 197, 94, 0.3);
+}
+
+.quest-section--claimed {
+  animation: quest-claimed-burst 0.6s ease-out;
+}
+
+@keyframes quest-claimed-burst {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  40% { transform: scale(1.02); box-shadow: 0 0 20px 4px rgba(34, 197, 94, 0.3); }
+  100% { transform: scale(1); box-shadow: none; }
+}
+
+.next-milestone {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: -0.5rem 0 1rem 0;
+  text-align: center;
+  display: none;
 }
 
 /* Section headers: accent underline */

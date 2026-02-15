@@ -590,6 +590,8 @@ function getEventOverlayStyle(ids: string[]): string | null {
   if (id === 'rich-vein') return 'rgba(252, 211, 77, 0.12)';
   if (id === 'void-bonus') return 'rgba(124, 58, 237, 0.18)';
   if (id === 'lucky-strike') return 'rgba(254, 249, 195, 0.1)';
+  if (id === 'asteroid-rush') return 'rgba(245, 158, 11, 0.12)';
+  if (id === 'solar-wind') return 'rgba(14, 165, 233, 0.1)';
   return null;
 }
 

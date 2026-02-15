@@ -17,10 +17,12 @@ export function renderCrewSection(): void {
   const cost = getAstronautCost(player.astronautCount);
   const canHire = player.coins.gte(cost);
   hireBtn.textContent = `Hire astronaut · ${formatNumber(cost, settings.compactNumbers)} ⬡`;
+  hireBtn.title = canHire ? `Hire an astronaut for ${formatNumber(cost, settings.compactNumbers)} ⬡ · +2% production each; required for tier 2+ upgrades` : `Need ${formatNumber(cost, settings.compactNumbers)} ⬡ to hire`;
   hireBtn.toggleAttribute('disabled', !canHire);
   const assigned = getAssignedAstronauts(session);
   const free = player.astronautCount;
   if (crewCountEl) {
+    crewCountEl.title = 'Free astronauts give +2% production each; assigned crew operate upgrades';
     if (free === 0 && assigned === 0) {
       crewCountEl.textContent = 'No crew yet';
     } else if (free === 0) {

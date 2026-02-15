@@ -1,4 +1,4 @@
-import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY } from './catalogs.js';
+import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, QUEST_LAST_CLAIM_KEY } from './catalogs.js';
 import { getSession } from './gameState.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { getQuestStreak } from './quests.js';
@@ -19,6 +19,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'planets-3', name: 'Multi-world', check: () => (getSession()?.player.planets.length ?? 0) >= 3 },
   { id: 'coins-10k', name: 'Wealthy', check: () => (getSession()?.player.totalCoinsEver ?? 0) >= 10000 },
   { id: 'quest-streak-3', name: 'Quest master', check: () => getQuestStreak() >= 3 },
+  { id: 'first-quest', name: 'First quest', check: () => (typeof localStorage !== 'undefined' && localStorage.getItem(QUEST_LAST_CLAIM_KEY) !== null) },
+  { id: 'prestige-10', name: 'Legend', check: () => (getSession()?.player.prestigeLevel ?? 0) >= 10 },
+  { id: 'coins-1m', name: 'Millionaire', check: () => (getSession()?.player.totalCoinsEver ?? 0) >= 1_000_000 },
+  { id: 'planets-10', name: 'Empire', check: () => (getSession()?.player.planets.length ?? 0) >= 10 },
 ];
 
 export function getTotalClicksEver(): number {

@@ -67,12 +67,37 @@ import {
   showFloatingReward,
   showQuestStreakToast,
   showEventToast,
+  showMilestoneToast,
+  showMiniMilestoneToast,
 } from '../presentation/toasts.js';
 import { claimQuest } from './quests.js';
 
 export function saveSession(): void {
   const session = getSession();
   saveLoad.save(session);
+}
+
+export function handleExportSave(): void {
+  const session = getSession();
+  const json = saveLoad.exportSession(session);
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(json).catch(() => {});
+  }
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `stellar-miner-save-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function handleImportSave(json: string): Promise<boolean> {
+  const session = saveLoad.importSession(json);
+  if (!session) return false;
+  setSession(session);
+  await saveLoad.save(session);
+  return true;
 }
 
 export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
@@ -88,6 +113,13 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
   if (player.astronautCount < def.requiredAstronauts) return;
   if (!player.spendAstronauts(def.requiredAstronauts)) return;
   upgradeService.purchaseUpgrade(player, upgrade, targetPlanet ?? null);
+  if (player.upgrades.length === 1 && typeof localStorage !== 'undefined') {
+    const key = 'stellar-miner-first-upgrade-toast';
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      showMiniMilestoneToast('First upgrade!');
+    }
+  }
   saveSession();
   updateStats();
   renderUpgradeList();
@@ -288,7 +320,7 @@ export function handlePrestige(): void {
 }
 
 export function handleClaimQuest(): void {
-  claimQuest({
+  const claimed = claimQuest({
     saveSession,
     updateStats,
     renderUpgradeList,
@@ -297,6 +329,13 @@ export function handleClaimQuest(): void {
     showQuestStreakToast,
     checkAchievements,
   });
+  if (claimed) {
+    const q = document.getElementById('quest-section');
+    if (q) {
+      q.classList.add('quest-section--claimed');
+      setTimeout(() => q.classList.remove('quest-section--claimed'), 600);
+    }
+  }
 }
 
 export function handleResetProgress(): void {

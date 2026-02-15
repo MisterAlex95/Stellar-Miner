@@ -4,6 +4,22 @@ import { PRESTIGE_COIN_THRESHOLD } from '../domain/constants.js';
 
 let lastCanPrestige = false;
 
+const PRESTIGE_TITLES: { minLevel: number; name: string }[] = [
+  { minLevel: 20, name: 'Legend' },
+  { minLevel: 10, name: 'Veteran' },
+  { minLevel: 5, name: 'Champion' },
+  { minLevel: 2, name: 'Rising' },
+  { minLevel: 1, name: 'Rookie' },
+  { minLevel: 0, name: 'Newcomer' },
+];
+
+function getPrestigeTitle(level: number): string {
+  for (const t of PRESTIGE_TITLES) {
+    if (level >= t.minLevel) return t.name;
+  }
+  return PRESTIGE_TITLES[PRESTIGE_TITLES.length - 1].name;
+}
+
 export function renderPrestigeSection(): void {
   const session = getSession();
   if (!session) return;
@@ -13,9 +29,10 @@ export function renderPrestigeSection(): void {
   const btnEl = document.getElementById('prestige-btn');
   if (!statusEl || !btnEl) return;
   const canPrestige = player.coins.gte(PRESTIGE_COIN_THRESHOLD);
+  const title = getPrestigeTitle(player.prestigeLevel);
   statusEl.textContent =
     player.prestigeLevel > 0
-      ? `Prestige level ${player.prestigeLevel} (+${player.prestigeLevel * 5}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`
+      ? `Prestige level ${player.prestigeLevel} — ${title} (+${player.prestigeLevel * 5}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`
       : `Reach ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to unlock Prestige.`;
   btnEl.toggleAttribute('disabled', !canPrestige);
   if (canPrestige && !lastCanPrestige) {

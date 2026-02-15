@@ -58,19 +58,20 @@ export function renderUpgradeList(): void {
       const maxCount = getMaxBuyCount(def.id);
       const maxLabel = maxCount > 1 ? `Max (${maxCount})` : `Max`;
 
-      let buyTitle = '';
-      if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Costs ${formatNumber(def.cost, settings.compactNumbers)} ⬡ + ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
-      else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
-
-      const crewBadge =
-        def.requiredAstronauts > 0
-          ? `<span class="upgrade-crew-req" title="Cost in astronauts (spent when you buy)">${def.requiredAstronauts} crew</span>`
-          : '';
-
       const costCoins = `${formatNumber(def.cost, settings.compactNumbers)} ⬡`;
       const costCrewLine =
         def.requiredAstronauts > 0
           ? `${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}`
+          : '';
+
+      let buyTitle = '';
+      if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Costs ${formatNumber(def.cost, settings.compactNumbers)} ⬡ + ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
+      else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
+      else if (canBuy) buyTitle = `Buy ${def.name} · ${costCoins}${costCrewLine ? ` + ${costCrewLine}` : ''}`;
+
+      const crewBadge =
+        def.requiredAstronauts > 0
+          ? `<span class="upgrade-crew-req" title="Cost in astronauts (spent when you buy)">${def.requiredAstronauts} crew</span>`
           : '';
 
       const planetOptions = choosePlanet

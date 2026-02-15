@@ -12,6 +12,7 @@ import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { EVENT_INTERVAL_MS } from '../application/catalogs.js';
+import { getNextMilestone } from '../application/progression.js';
 
 let displayedCoins = -1;
 let displayedProduction = -1;
@@ -111,6 +112,19 @@ export function updateStats(): void {
   }
   renderPrestigeSection();
   renderCrewSection();
+
+  const nextMilestoneEl = document.getElementById('next-milestone');
+  if (nextMilestoneEl) {
+    const milestone = getNextMilestone(session);
+    if (milestone) {
+      const remaining = Math.max(0, milestone.coinsNeeded - session.player.coins.value);
+      nextMilestoneEl.textContent = `${formatNumber(remaining, settings.compactNumbers)} ⬡ to unlock ${milestone.block.title}`;
+      nextMilestoneEl.style.display = 'block';
+    } else {
+      nextMilestoneEl.textContent = '';
+      nextMilestoneEl.style.display = 'none';
+    }
+  }
 
   const activeEventInstances = getActiveEventInstances();
   const nextEventAt = getNextEventAt();

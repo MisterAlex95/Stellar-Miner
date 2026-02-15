@@ -52,7 +52,8 @@ function gameLoop(now: number): void {
 
   const eventMult = getEventMultiplier();
   const rate = session.player.effectiveProductionRate * eventMult;
-  if (rate > 0) {
+  const shouldProduce = !getSettings().pauseWhenBackground || document.visibilityState !== 'hidden';
+  if (rate > 0 && shouldProduce) {
     session.player.addCoins(rate * dt);
     updateStats();
     updateUpgradeListInPlace();
@@ -113,7 +114,7 @@ async function init(): Promise<void> {
   renderUpgradeList();
   renderPlanetList();
   maybeShowWelcomeModal();
-  if (offlineCoins > 0) showOfflineToast(offlineCoins);
+  if (offlineCoins > 0) showOfflineToast(offlineCoins, saveLoad.getLastOfflineWasCapped());
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
   setInterval(saveSession, SAVE_INTERVAL_MS);

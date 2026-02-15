@@ -18,6 +18,21 @@ export function showAchievementToast(name: string): void {
   }, 4000);
 }
 
+export function showMiniMilestoneToast(message: string): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--milestone';
+  el.setAttribute('role', 'status');
+  el.textContent = message;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
 export function showEventToast(gameEvent: GameEvent): void {
   const container = document.getElementById('event-toasts');
   if (!container) return;
@@ -33,13 +48,15 @@ export function showEventToast(gameEvent: GameEvent): void {
   }, 4000);
 }
 
-export function showOfflineToast(coins: number): void {
+export function showOfflineToast(coins: number, capped?: boolean): void {
   const container = document.getElementById('event-toasts');
   if (!container) return;
   const el = document.createElement('div');
   el.className = 'event-toast event-toast--offline';
   el.setAttribute('role', 'status');
-  el.textContent = `Welcome back! +${formatNumber(coins, false)} coins while you were away.`;
+  el.textContent = capped
+    ? `Welcome back! +${formatNumber(coins, false)} coins while you were away (capped at 12h).`
+    : `Welcome back! +${formatNumber(coins, false)} coins while you were away.`;
   container.appendChild(el);
   requestAnimationFrame(() => el.classList.add('event-toast--visible'));
   setTimeout(() => {

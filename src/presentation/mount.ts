@@ -18,6 +18,8 @@ import {
   handlePrestige,
   handleHireAstronaut,
   handleClaimQuest,
+  handleExportSave,
+  handleImportSave,
   openDebugMenu,
   closeDebugMenu,
   toggleDebugMenu,
@@ -143,6 +145,19 @@ const APP_HTML = `
               <option value="one-page">One page</option>
             </select>
           </div>
+          <div class="settings-option">
+            <label class="settings-toggle">
+              <input type="checkbox" id="setting-pause-background" />
+              <span>Pause production when tab in background</span>
+            </label>
+          </div>
+          <div class="settings-option settings-save-export">
+            <div class="settings-save-buttons">
+              <button type="button" class="settings-export-btn" id="settings-export-btn" title="Copy save to clipboard and download as file">Export save</button>
+              <button type="button" class="settings-import-btn" id="settings-import-btn" title="Load a previously exported save (replaces current)">Import save</button>
+            </div>
+            <input type="file" id="settings-import-file" accept=".json,application/json" class="settings-import-file" aria-hidden="true" />
+          </div>
           <div class="settings-option settings-achievements">
             <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false">Achievements</button>
             <div class="achievements-list" id="achievements-list" aria-hidden="true"></div>
@@ -181,7 +196,7 @@ const APP_HTML = `
       </div>
     </div>
     <section class="stats">
-      <div class="stat-card stat-card--coins" id="coins-stat-card">
+      <div class="stat-card stat-card--coins" id="coins-stat-card" title="Your current coins. Spend them on upgrades, crew, and planets.">
         <div class="stat-label">Coins</div>
         <div class="stat-value stat-value--hero" id="coins-value">0</div>
         <div class="stat-coins-extra" id="crew-stat-line" aria-live="polite"></div>
@@ -197,6 +212,7 @@ const APP_HTML = `
         <div class="next-event-countdown" id="next-event-countdown" aria-live="polite"></div>
       </div>
     </section>
+    <p class="next-milestone" id="next-milestone" aria-live="polite"></p>
     <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
     <nav class="app-tabs" role="tablist" aria-label="Game sections">
       <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine">Mine</button>
@@ -293,12 +309,14 @@ export function mount(): void {
   const compactNumbersEl = document.getElementById('setting-compact-numbers') as HTMLInputElement | null;
   const spaceKeyRepeatEl = document.getElementById('setting-space-key-repeat') as HTMLInputElement | null;
   const layoutEl = document.getElementById('setting-layout') as HTMLSelectElement | null;
+  const pauseBackgroundEl = document.getElementById('setting-pause-background') as HTMLInputElement | null;
   if (starfieldSpeedEl) starfieldSpeedEl.value = String(settings.starfieldSpeed);
   if (orbitLinesEl) orbitLinesEl.checked = settings.showOrbitLines;
   if (clickParticlesEl) clickParticlesEl.checked = settings.clickParticles;
   if (compactNumbersEl) compactNumbersEl.checked = settings.compactNumbers;
   if (spaceKeyRepeatEl) spaceKeyRepeatEl.checked = settings.spaceKeyRepeat;
   if (layoutEl) layoutEl.value = settings.layout;
+  if (pauseBackgroundEl) pauseBackgroundEl.checked = settings.pauseWhenBackground;
   if (starfieldSpeedEl) starfieldSpeedEl.addEventListener('change', () => {
     const s = getSettings();
     s.starfieldSpeed = Number(starfieldSpeedEl.value);
@@ -331,6 +349,29 @@ export function mount(): void {
     setSettings(s);
     applyLayout();
   });
+  if (pauseBackgroundEl) pauseBackgroundEl.addEventListener('change', () => {
+    const s = getSettings();
+    s.pauseWhenBackground = pauseBackgroundEl.checked;
+    setSettings(s);
+  });
+
+  const exportBtn = document.getElementById('settings-export-btn');
+  const importBtn = document.getElementById('settings-import-btn');
+  const importFileEl = document.getElementById('settings-import-file') as HTMLInputElement | null;
+  if (exportBtn) exportBtn.addEventListener('click', handleExportSave);
+  if (importBtn) importBtn.addEventListener('click', () => importFileEl?.click());
+  if (importFileEl) {
+    importFileEl.addEventListener('change', async (e: Event) => {
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const ok = await handleImportSave(text);
+      input.value = '';
+      if (ok) location.reload();
+      else alert('Invalid save file.');
+    });
+  }
 
   const resetBtn = document.getElementById('settings-reset-btn');
   if (resetBtn) resetBtn.addEventListener('click', openResetConfirmModal);
@@ -486,6 +527,18 @@ export function mount(): void {
       const tabId = (tab as HTMLElement).getAttribute('data-tab');
       if (tabId) switchTab(tabId);
     });
+  });
+  document.addEventListener('keydown', (e) => {
+    const key = e.key;
+    if (key !== '1' && key !== '2' && key !== '3' && key !== '4') return;
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.closest('[role="dialog"]'))) return;
+    const tabs = Array.from(document.querySelectorAll<HTMLElement>('.app-tab')).filter((t) => (t as HTMLElement).offsetParent !== null);
+    const idx = parseInt(key, 10) - 1;
+    const tabEl = tabs[idx];
+    if (!tabEl) return;
+    const tabId = tabEl.getAttribute('data-tab');
+    if (tabId) switchTab(tabId);
   });
   const savedTab =
     (typeof localStorage !== 'undefined' && localStorage.getItem(TAB_STORAGE_KEY)) || DEFAULT_TAB;

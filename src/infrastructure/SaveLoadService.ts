@@ -17,7 +17,7 @@ const PROGRESSION_KEY = 'stellar-miner-progression';
 const STATS_STORAGE_KEY = 'stellar-miner-stats';
 const STATS_HISTORY_STORAGE_KEY = 'stellar-miner-stats-history';
 const MIN_OFFLINE_MS = 60_000; // 1 min before offline progress counts
-const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000; // cap 24h
+const MAX_OFFLINE_MS = 12 * 60 * 60 * 1000; // cap 12h
 
 type SavedUpgrade = { id: string; name: string; cost: number; effect: { coinsPerSecond: number } };
 type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[] };
@@ -43,11 +43,18 @@ type SavedSession = {
 /** Infrastructure: persist game session to localStorage. */
 export class SaveLoadService implements ISaveLoadService {
   private lastOfflineCoinsApplied = 0;
+  private lastOfflineWasCapped = false;
 
   getLastOfflineCoins(): number {
     const n = this.lastOfflineCoinsApplied;
     this.lastOfflineCoinsApplied = 0;
     return n;
+  }
+
+  getLastOfflineWasCapped(): boolean {
+    const v = this.lastOfflineWasCapped;
+    this.lastOfflineWasCapped = false;
+    return v;
   }
 
   async save(session: GameSession): Promise<void> {
@@ -82,6 +89,7 @@ export class SaveLoadService implements ISaveLoadService {
         const offlineCoins = (cappedMs / 1000) * session.player.effectiveProductionRate;
         session.player.addCoins(offlineCoins);
         this.lastOfflineCoinsApplied = offlineCoins;
+        this.lastOfflineWasCapped = elapsed > MAX_OFFLINE_MS;
       }
     }
     return session;
@@ -94,6 +102,21 @@ export class SaveLoadService implements ISaveLoadService {
       localStorage.removeItem(PROGRESSION_KEY);
       localStorage.removeItem(STATS_STORAGE_KEY);
       localStorage.removeItem(STATS_HISTORY_STORAGE_KEY);
+    }
+  }
+
+  /** Export current session as JSON string (for copy/download). */
+  exportSession(session: GameSession): string {
+    return JSON.stringify(this.serialize(session));
+  }
+
+  /** Import session from JSON string. Returns null if invalid. */
+  importSession(json: string): GameSession | null {
+    try {
+      const data = JSON.parse(json) as SavedSession;
+      return this.deserialize(data);
+    } catch {
+      return null;
     }
   }
 

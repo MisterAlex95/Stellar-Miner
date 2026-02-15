@@ -67,6 +67,8 @@ function getEventSpeedMult(ids: string[]): number {
   if (ids.includes('meteor-storm')) mult *= 1.4;
   if (ids.includes('void-bonus')) mult *= 0.8;
   if (ids.includes('solar-flare')) mult *= 1.15;
+  if (ids.includes('asteroid-rush')) mult *= 1.2;
+  if (ids.includes('solar-wind')) mult *= 1.05;
   return mult;
 }
 
@@ -99,6 +101,14 @@ function getEventColors(ids: string[], baseAccent: string, baseDim: string): [st
     c0 = baseDim;
     c1 = '#fde047';
     c2 = '#fef9c3';
+  } else if (ids.includes('asteroid-rush')) {
+    c0 = '#422006';
+    c1 = '#b45309';
+    c2 = '#f59e0b';
+  } else if (ids.includes('solar-wind')) {
+    c0 = '#1e3a5f';
+    c1 = '#0ea5e9';
+    c2 = '#7dd3fc';
   }
   return [c0, c1, c2];
 }

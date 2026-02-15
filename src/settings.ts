@@ -9,6 +9,7 @@ export type Settings = {
   compactNumbers: boolean;
   spaceKeyRepeat: boolean;
   layout: LayoutMode;
+  pauseWhenBackground: boolean;
 };
 
 const DEFAULTS: Settings = {
@@ -18,6 +19,7 @@ const DEFAULTS: Settings = {
   compactNumbers: true,
   spaceKeyRepeat: false,
   layout: 'tabs',
+  pauseWhenBackground: false,
 };
 
 export function loadSettings(): Settings {
