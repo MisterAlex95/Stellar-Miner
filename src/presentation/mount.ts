@@ -41,7 +41,7 @@ import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
 import { renderResearchSection } from './researchView.js';
 import { renderStatisticsSection } from './statisticsView.js';
-import { renderDashboardSection } from './dashboardView.js';
+import { renderDashboardSection, updateDashboard } from './dashboardView.js';
 import {
   bindIntroModal,
   updateProgressionVisibility,
@@ -809,7 +809,8 @@ export function mount(): void {
     const goto = target.getAttribute('data-goto');
     if (id === 'dashboard-do-claim') {
       handleClaimQuest();
-      renderDashboardSection();
+      renderQuestSection();
+      updateDashboard();
       return;
     }
     if (id === 'dashboard-do-prestige') {
@@ -821,7 +822,7 @@ export function mount(): void {
       const planetId = target.getAttribute('data-planet-id') || undefined;
       if (upgradeId) {
         handleUpgradeBuy(upgradeId, planetId);
-        renderDashboardSection();
+        updateDashboard();
       }
       return;
     }

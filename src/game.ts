@@ -30,7 +30,7 @@ import { renderResearchSection } from './presentation/researchView.js';
 import { renderCrewSection } from './presentation/crewView.js';
 import { renderPrestigeSection } from './presentation/prestigeView.js';
 import { renderQuestSection } from './presentation/questView.js';
-import { updateDashboardLiveCountdowns } from './presentation/dashboardView.js';
+import { updateDashboard } from './presentation/dashboardView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
 import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
@@ -40,7 +40,7 @@ import { showOfflineToast } from './presentation/toasts.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 150;
-const DASHBOARD_UPDATE_INTERVAL_MS = 1000;
+const DASHBOARD_UPDATE_INTERVAL_MS = 500;
 const EMPIRE_UPDATE_INTERVAL_MS = 1500;
 const RESEARCH_UPDATE_INTERVAL_MS = 1500;
 let lastQuestRenderMs = 0;
@@ -114,7 +114,7 @@ function gameLoop(now: number): void {
   const dashboardPanel = document.getElementById('panel-dashboard');
   if (dashboardPanel && !dashboardPanel.hidden && nowMs - lastDashboardRenderMs >= DASHBOARD_UPDATE_INTERVAL_MS) {
     lastDashboardRenderMs = nowMs;
-    updateDashboardLiveCountdowns();
+    updateDashboard();
   }
   const empirePanel = document.getElementById('panel-empire');
   if (empirePanel && !empirePanel.hidden && nowMs - lastEmpireRenderMs >= EMPIRE_UPDATE_INTERVAL_MS) {

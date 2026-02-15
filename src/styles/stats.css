@@ -132,6 +132,14 @@
   animation: production-pulse 1.5s ease-in-out infinite;
 }
 
+.production-live--events {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.35rem;
+  animation: none;
+}
+
 .stat-card--live .production-live {
   opacity: 1;
 }

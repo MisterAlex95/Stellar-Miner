@@ -153,7 +153,26 @@ export function updateStats(): void {
   const productionCard = document.getElementById('production-stat-card');
   const productionLive = document.getElementById('production-live');
   if (productionCard) productionCard.classList.toggle('stat-card--live', effectiveRate.gt(0));
-  if (productionLive) productionLive.textContent = effectiveRate.gt(0) ? '●' : '';
+  const nowForEvents = Date.now();
+  const activeEventsForProduction = getActiveEventInstances().filter((a) => a.endsAt > nowForEvents);
+  if (productionLive) {
+    productionLive.classList.toggle('production-live--events', activeEventsForProduction.length > 0);
+    if (activeEventsForProduction.length > 0) {
+      productionLive.innerHTML = activeEventsForProduction
+        .map((a) => {
+          const name = getCatalogEventName(a.event.id);
+          const secondsLeft = Math.ceil((a.endsAt - nowForEvents) / 1000);
+          const title = tParam('eventBadgeTitle', { name, mult: String(a.event.effect.multiplier) });
+          const modifier = a.event.effect.multiplier >= 1 ? 'positive' : 'negative';
+          return createEventBadgeHtml(name, secondsLeft, title, { modifier, mult: a.event.effect.multiplier });
+        })
+        .join('');
+      productionLive.setAttribute('aria-hidden', 'false');
+    } else {
+      productionLive.textContent = effectiveRate.gt(0) ? '●' : '';
+      productionLive.setAttribute('aria-hidden', 'true');
+    }
+  }
   const breakdownEl = document.getElementById('production-breakdown');
   if (breakdownEl) {
     const base = player.productionRate.value;
