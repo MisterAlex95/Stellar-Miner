@@ -1,24 +1,22 @@
 import { getSession, getSettings } from '../application/gameState.js';
-import { formatNumber } from '../application/format.js';
 import {
   UPGRADE_CATALOG,
-  createUpgrade,
   getUnlockedUpgradeTiers,
   getUpgradeCost,
   UPGRADE_DISPLAY_COUNT,
 } from '../application/catalogs.js';
-import { getPlanetAffinityDescription } from '../application/planetAffinity.js';
 import {
   getEffectiveUpgradeUsesSlot,
   getEffectiveRequiredAstronauts,
-  getPlanetsWithEffectiveFreeSlot,
   getPlanetWithEffectiveFreeSlot,
-  hasEffectiveFreeSlot,
+  getPlanetsWithEffectiveFreeSlot,
   getEffectiveUsedSlots,
 } from '../application/research.js';
-import { t, tParam } from '../application/strings.js';
-import { getCatalogUpgradeName, getCatalogUpgradeDesc, getCatalogPlanetNameById } from '../application/i18nCatalogs.js';
+import { t } from '../application/strings.js';
+import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
 import { updateStats } from './statsView.js';
+import { updateTooltipForButton } from './components/buttonTooltip.js';
+import { getUpgradeCardState, buildUpgradeCardHtml } from './components/upgradeCard.js';
 
 export function getMaxBuyCount(upgradeId: string): number {
   const session = getSession();
@@ -33,11 +31,13 @@ export function getMaxBuyCount(upgradeId: string): number {
   const effectiveCrew = getEffectiveRequiredAstronauts(def.id);
   const maxByCrew = effectiveCrew === 0 ? Number.MAX_SAFE_INTEGER : Math.floor(player.astronautCount / effectiveCrew);
   if (freeSlots <= 0 || maxByCrew <= 0) return 0;
-  let ownedCount = player.upgrades.filter((u) => u.id === upgradeId).length;
+  const ownedCount = player.upgrades.filter((u) => u.id === upgradeId).length;
   let count = 0;
+  let remaining = player.coins.value;
   while (count < freeSlots && count < maxByCrew) {
     const nextCost = getUpgradeCost(def, ownedCount + count);
-    if (!player.coins.gte(nextCost)) break;
+    if (remaining.lt(nextCost)) break;
+    remaining = remaining.sub(nextCost);
     count++;
   }
   return count;
@@ -63,89 +63,20 @@ export function renderUpgradeList(): void {
   const defsToShow = allUnlockedDefs.slice(0, UPGRADE_DISPLAY_COUNT);
 
   for (const def of defsToShow) {
-    const owned = player.upgrades.filter((u) => u.id === def.id).length;
-    const upgrade = createUpgrade(def, owned);
-    const crewReq = getEffectiveRequiredAstronauts(def.id);
-    const hasCrew = player.astronautCount >= crewReq;
-    const canAfford = player.coins.gte(upgrade.cost);
-    const needsSlot = getEffectiveUpgradeUsesSlot(def.id);
-    const canPlace = needsSlot ? hasFreeSlot : hasAnyPlanet;
-    const canBuy = canAfford && canPlace && hasCrew;
-    const buyLabel = owned > 0 ? t('buyLabelPlusOne') : t('buyLabel');
     const maxCount = getMaxBuyCount(def.id);
-    const maxLabel = maxCount > 1 ? tParam('maxLabelCount', { n: maxCount }) : t('maxLabel');
-
-    const costCoins = `${formatNumber(upgrade.cost, settings.compactNumbers)} ⬡`;
-    const costCrewLine =
-      crewReq > 0
-        ? `${crewReq} crew`
-        : '';
-
-    let buyTitle = '';
-    if (!canBuy) {
-      if (!hasCrew && crewReq > 0) buyTitle = tParam('needAstronauts', { n: crewReq });
-      else if (!canPlace && needsSlot) buyTitle = t('noFreeSlot');
-      else if (!canAfford) buyTitle = tParam('needCoinsToBuy', { cost: costCoins, crew: costCrewLine ? ` + ${costCrewLine}` : '' });
-      else buyTitle = tParam('needCoinsAndSlot', { cost: costCoins });
-    } else buyTitle = tParam('buyUpgradeTitle', { name: getCatalogUpgradeName(def.id), cost: costCoins + (costCrewLine ? ` + ${costCrewLine}` : '') });
-
-    let maxTitle = t('maxBuyTooltip');
-    if (maxCount <= 0 || !hasCrew) {
-      if (!hasCrew && crewReq > 0) maxTitle = t('needCrewToBuy');
-      else if (!canPlace && needsSlot) maxTitle = t('noFreeSlot');
-      else if (!canAfford) maxTitle = tParam('needCoinsForOne', { cost: costCoins });
-      else maxTitle = t('noSlotsOrCoins');
-    }
-
-    const crewBadge =
-      crewReq > 0
-        ? `<span class="upgrade-crew-req" title="${t('crewBadgeTitle')}">${crewReq} crew</span>`
-        : '';
-
-    const planetsForSelect = needsSlot ? planetsWithSlot : player.planets;
-    const planetOptions = choosePlanet
-      ? planetsForSelect.map((p) => `<option value="${p.id}">${getCatalogPlanetNameById(p.id)}</option>`).join('')
-      : '';
-    const planetSelectHtml = choosePlanet
-      ? `<label class="upgrade-planet-label" for="planet-${def.id}">${t('toPlanet')}</label><select class="upgrade-planet-select" id="planet-${def.id}" data-upgrade-id="${def.id}" aria-label="${t('assignToPlanet')}">${planetOptions}</select>`
-      : '';
-
-    const isRecommended = canBuy && !player.upgrades.some((u) => u.id === def.id);
+    const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
+    const planetsForSelect = state.needsSlot ? planetsWithSlot : player.planets;
     const card = document.createElement('div');
     card.className =
       'upgrade-card' +
-      (canBuy ? ' upgrade-card--affordable' : '') +
-      (isRecommended ? ' upgrade-card--recommended' : '') +
-      (!hasCrew && crewReq > 0 ? ' upgrade-card--needs-crew' : '');
+      (state.canBuy ? ' upgrade-card--affordable' : '') +
+      (state.isRecommended ? ' upgrade-card--recommended' : '') +
+      (!state.hasCrew && state.crewReq > 0 ? ' upgrade-card--needs-crew' : '');
     card.setAttribute('data-tier', String(def.tier));
-    const eachSec = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
-    const totalSec = owned > 0 ? ' · ' + tParam('totalPerSecond', { n: formatNumber(owned * def.coinsPerSecond, settings.compactNumbers) }) : '';
-    const slotCostText = getEffectiveUpgradeUsesSlot(def.id) ? t('upgradeUsesSlot') : t('upgradeNoSlot');
-    const affinityDesc = getPlanetAffinityDescription(def.id);
-    const affinityTitleRaw = affinityDesc ? `${t('upgradePlanetAffinityTitle')}: ${affinityDesc}` : t('upgradePlanetAffinityTitle');
-    const affinityTitle = affinityTitleRaw.replace(/"/g, '&quot;');
-    card.innerHTML = `
-        <div class="upgrade-info">
-          <div class="upgrade-header">
-            <span class="upgrade-tier" aria-label="${tParam('tierLabel', { n: def.tier })}">T${def.tier}</span>
-            <div class="upgrade-name">${getCatalogUpgradeName(def.id)}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}${crewBadge}${isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : ''}<span class="upgrade-affinity-info" title="${affinityTitle}" aria-label="${affinityTitleRaw}">i</span></div>
-          </div>
-          <div class="upgrade-description">${getCatalogUpgradeDesc(def.id)}</div>
-          <div class="upgrade-effect">${eachSec}${totalSec}</div>
-        </div>
-        <div class="upgrade-cost">
-          <span class="upgrade-cost-coins">${costCoins}</span>
-          ${costCrewLine ? `<span class="upgrade-cost-crew">${costCrewLine}</span>` : ''}
-          <span class="upgrade-cost-slot">· ${slotCostText}</span>
-        </div>
-        <div class="upgrade-actions">
-          ${planetSelectHtml}
-          <div class="upgrade-buttons">
-            <span class="btn-tooltip-wrap" title="${buyTitle}"><button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" ${canBuy ? '' : 'disabled'}>${buyLabel}</button></span>
-            <span class="btn-tooltip-wrap" title="${maxTitle}"><button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button></span>
-          </div>
-        </div>
-    `;
+    card.innerHTML = buildUpgradeCardHtml(state, {
+      choosePlanet,
+      planetsForSelect,
+    });
     listEl.appendChild(card);
   }
 }
@@ -165,45 +96,20 @@ export function updateUpgradeListInPlace(): void {
     if (!id) return;
     const def = UPGRADE_CATALOG.find((d) => d.id === id);
     if (!def) return;
-    const needsSlot = getEffectiveUpgradeUsesSlot(def.id);
-    const canPlace = needsSlot ? hasFreeSlot : player.planets.length > 0;
-    const owned = player.upgrades.filter((u) => u.id === id).length;
-    const crewReq = getEffectiveRequiredAstronauts(def.id);
-    const hasCrew = player.astronautCount >= crewReq;
-    const nextCost = getUpgradeCost(def, owned);
-    const canAfford = player.coins.gte(nextCost);
-    const canBuy = canAfford && canPlace && hasCrew;
-    const buyLabel = owned > 0 ? t('buyLabelPlusOne') : t('buyLabel');
     const maxCount = getMaxBuyCount(id);
-    const maxLabel = maxCount > 1 ? tParam('maxLabelCount', { n: maxCount }) : t('maxLabel');
+    const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
 
-    const costCoins = formatNumber(nextCost, settings.compactNumbers) + ' ⬡';
-    const costCrew = crewReq > 0 ? ` + ${crewReq} crew` : '';
-    let buyTitle = '';
-    if (!canBuy) {
-      if (!hasCrew && crewReq > 0) buyTitle = tParam('needAstronauts', { n: crewReq });
-      else if (!canPlace && needsSlot) buyTitle = t('noFreeSlot');
-      else if (!canAfford) buyTitle = tParam('needCoinsToBuy', { cost: costCoins, crew: costCrew });
-      else buyTitle = tParam('needCoinsAndSlot', { cost: costCoins });
-    } else buyTitle = tParam('buyUpgradeTitle', { name: getCatalogUpgradeName(id), cost: costCoins + costCrew });
-
-    let maxTitle = t('maxBuyTooltip');
-    if (maxCount <= 0 || !hasCrew) {
-      if (!hasCrew && crewReq > 0) maxTitle = t('needCrewToBuy');
-      else if (!canPlace && needsSlot) maxTitle = t('noFreeSlot');
-      else if (!canAfford) maxTitle = tParam('needCoinsForOne', { cost: costCoins });
-      else maxTitle = t('noSlotsOrCoins');
-    }
-
-    const isRecommended = canBuy && !player.upgrades.some((u) => u.id === id);
-    const crewBadge = crewReq > 0 ? `<span class="upgrade-crew-req" title="${t('crewBadgeTitle')}">${crewReq} crew</span>` : '';
     const nameEl = card.querySelector('.upgrade-name');
     if (nameEl) {
-      nameEl.innerHTML = getCatalogUpgradeName(id) + (owned > 0 ? `<span class="count-badge">×${owned}</span>` : '') + crewBadge + (isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : '');
+      nameEl.innerHTML =
+        getCatalogUpgradeName(id) +
+        (state.owned > 0 ? `<span class="count-badge">×${state.owned}</span>` : '') +
+        state.crewBadge +
+        (state.isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : '');
     }
     const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
     if (select) {
-      const planetsForSelect = needsSlot ? getPlanetsWithEffectiveFreeSlot(player) : player.planets;
+      const planetsForSelect = state.needsSlot ? getPlanetsWithEffectiveFreeSlot(player) : player.planets;
       if (planetsForSelect.length !== select.options.length) {
         updateStats();
         renderUpgradeList();
@@ -214,27 +120,25 @@ export function updateUpgradeListInPlace(): void {
         select.value = planetsForSelect[0]?.id ?? '';
       }
     }
-    if (buyBtn) {
-      buyBtn.textContent = buyLabel;
-      buyBtn.toggleAttribute('disabled', !canBuy);
-      const buyWrap = buyBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? buyBtn.parentElement : null;
-      if (buyWrap) buyWrap.setAttribute('title', buyTitle);
+    if (buyBtn instanceof HTMLElement) {
+      buyBtn.textContent = state.buyLabel;
+      buyBtn.toggleAttribute('disabled', !state.canBuy);
+      updateTooltipForButton(buyBtn, state.buyTitle);
     }
     const maxBtn = card.querySelector('.upgrade-btn--max');
-    if (maxBtn) {
-      maxBtn.textContent = maxLabel;
-      maxBtn.toggleAttribute('disabled', maxCount <= 0 || !hasCrew);
-      const maxWrap = maxBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? maxBtn.parentElement : null;
-      if (maxWrap) maxWrap.setAttribute('title', maxTitle);
+    if (maxBtn instanceof HTMLElement) {
+      maxBtn.textContent = state.maxLabel;
+      maxBtn.toggleAttribute('disabled', state.maxCount <= 0 || !state.hasCrew);
+      updateTooltipForButton(maxBtn, state.maxTitle);
     }
     const wasAffordable = card.classList.contains('upgrade-card--affordable');
-    card.classList.toggle('upgrade-card--affordable', canBuy);
-    if (canBuy && !wasAffordable) {
+    card.classList.toggle('upgrade-card--affordable', state.canBuy);
+    if (state.canBuy && !wasAffordable) {
       card.classList.add('upgrade-card--just-affordable');
       setTimeout(() => card.classList.remove('upgrade-card--just-affordable'), 800);
     }
-    card.classList.toggle('upgrade-card--recommended', isRecommended);
-    card.classList.toggle('upgrade-card--needs-crew', !hasCrew && crewReq > 0);
+    card.classList.toggle('upgrade-card--recommended', state.isRecommended);
+    card.classList.toggle('upgrade-card--needs-crew', !state.hasCrew && state.crewReq > 0);
   });
 }
 

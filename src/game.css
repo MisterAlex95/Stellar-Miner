@@ -3433,10 +3433,16 @@ h1 {
   flex-direction: column;
   gap: 0.35rem;
   align-items: stretch;
+  width: 5rem;
+  flex-shrink: 0;
 }
 
-.upgrade-btn--buy {
-  min-width: 3.5rem;
+.upgrade-btn--buy,
+.upgrade-btn--max {
+  min-width: 5rem;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .upgrade-btn--max {

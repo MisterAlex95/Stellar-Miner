@@ -17,6 +17,7 @@ import { getNextMilestone, getUnlockedBlocks } from '../application/progression.
 import { getResearchProductionMultiplier, getResearchProductionPercent } from '../application/research.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogEventName } from '../application/i18nCatalogs.js';
+import { createEventBadgeHtml } from './components/eventBadge.js';
 
 let displayedCoins = -1;
 let displayedProduction = -1;
@@ -170,12 +171,12 @@ export function updateStats(): void {
       } else {
         activeEl.style.display = 'block';
         activeEl.innerHTML = active
-          .map(
-            (a) => {
-              const name = getCatalogEventName(a.event.id);
-              return `<span class="event-badge" title="${tParam('eventBadgeTitle', { name, mult: String(a.event.effect.multiplier) })}">${name} (${Math.ceil((a.endsAt - now) / 1000)}s)</span>`;
-            }
-          )
+          .map((a) => {
+            const name = getCatalogEventName(a.event.id);
+            const secondsLeft = Math.ceil((a.endsAt - now) / 1000);
+            const title = tParam('eventBadgeTitle', { name, mult: String(a.event.effect.multiplier) });
+            return createEventBadgeHtml(name, secondsLeft, title);
+          })
           .join('');
       }
     }

@@ -6,6 +6,7 @@ import { getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
 import { t, tParam } from '../application/strings.js';
 import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
 import { getEffectiveRequiredAstronauts } from '../application/research.js';
+import { updateTooltipForButton } from './components/buttonTooltip.js';
 
 export function renderCrewSection(): void {
   const session = getSession();
@@ -26,15 +27,13 @@ export function renderCrewSection(): void {
   const cost = getAstronautCost(free);
   const canHire = player.coins.gte(cost) && !atCap;
   hireBtn.textContent = tParam('hireAstronautCost', { cost: formatNumber(cost, settings.compactNumbers) });
-  const wrap = hireBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? hireBtn.parentElement : null;
   const costStr = formatNumber(cost, settings.compactNumbers);
   const tooltipText = atCap
     ? tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length })
     : canHire
       ? t('hireAstronaut') + ` · ${costStr} ⬡ · +2% production each (${totalCrew}/${maxCrew}).`
       : tParam('needCoinsToBuy', { cost: costStr, crew: '' }) + ` (${totalCrew}/${maxCrew}).`;
-  if (wrap) wrap.setAttribute('title', tooltipText);
-  else hireBtn.setAttribute('title', tooltipText);
+  updateTooltipForButton(hireBtn, tooltipText);
   hireBtn.toggleAttribute('disabled', !canHire);
   if (crewCountEl) {
     crewCountEl.title = tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length });

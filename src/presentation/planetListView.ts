@@ -6,6 +6,7 @@ import { getEffectiveUsedSlots } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
 import { getCatalogPlanetNameById } from '../application/i18nCatalogs.js';
 import { drawPlanetSphereToCanvas } from './MineZoneCanvas.js';
+import { buttonWithTooltipHtml, updateTooltipForButton } from './components/buttonTooltip.js';
 
 export function renderPlanetList(): void {
   const session = getSession();
@@ -49,12 +50,12 @@ export function renderPlanetList(): void {
           <canvas class="planet-card-visual" width="48" height="48" data-planet-id="${p.id}" aria-hidden="true"></canvas>
           <div class="planet-card-name-wrap">
             <span class="planet-card-name">${planetName(p)}</span>
-            <span class="btn-tooltip-wrap planet-card-info-wrap" title="${planetInfoTooltip.replace(/"/g, '&quot;')}"><span class="planet-card-info" aria-label="${t('planetInfoTitle')}">ℹ</span></span>
+            ${buttonWithTooltipHtml(planetInfoTooltip, `<span class="planet-card-info" aria-label="${t('planetInfoTitle')}">ℹ</span>`, 'planet-card-info-wrap')}
           </div>
         </div>
         <div class="planet-card-slots"><span class="planet-slot-value">${effectiveUsed}/${p.maxUpgrades}</span> ${t('slots')}</div>
         ${prodLine}
-        <span class="btn-tooltip-wrap" title="${slotBtnTitle}"><button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'}>${tParam('addSlotBtn', { cost: formatNumber(addSlotCost, settings.compactNumbers) })}</button></span>
+        ${buttonWithTooltipHtml(slotBtnTitle, `<button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'}>${tParam('addSlotBtn', { cost: formatNumber(addSlotCost, settings.compactNumbers) })}</button>`)}
       </div>`;
     })
     .join('');
@@ -68,9 +69,7 @@ export function renderPlanetList(): void {
     const tooltipText = canLaunch
       ? tParam('sendExpeditionTooltip', { n: astronautsRequired, cost: formatNumber(cost, settings.compactNumbers) })
       : tParam('needForExpedition', { cost: formatNumber(cost, settings.compactNumbers), n: astronautsRequired });
-    const wrap = buyPlanetBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? buyPlanetBtn.parentElement : null;
-    if (wrap) wrap.setAttribute('title', tooltipText);
-    else buyPlanetBtn.setAttribute('title', tooltipText);
+    updateTooltipForButton(buyPlanetBtn, tooltipText);
     buyPlanetBtn.toggleAttribute('disabled', !canLaunch);
   }
 }

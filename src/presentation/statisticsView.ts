@@ -25,6 +25,11 @@ import { getUnlockedBlocks } from '../application/progression.js';
 import type { BlockId } from '../application/progression.js';
 import { getResearchProductionMultiplier, getResearchProductionPercent, getResearchClickPercent, getEffectiveUsedSlots } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
+import {
+  createStatisticsCard,
+  createStatisticsCardWide,
+  createStatisticsGroup,
+} from './components/statisticsCard.js';
 
 /** Which block must be unlocked to show each statistics group. */
 const STAT_GROUP_UNLOCK: Record<string, BlockId> = {
@@ -264,138 +269,76 @@ export function renderStatisticsSection(container: HTMLElement): void {
         </div>
         <div id="chart-tooltip" class="statistics-chart-tooltip" aria-live="polite" aria-hidden="true"></div>
       </section>
-      <section class="statistics-group" aria-labelledby="stat-economy" data-stat-group="economy">
-        <h3 id="stat-economy" class="statistics-group-title">${t('economyTitle')}</h3>
-        <div class="statistics-cards">
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('currentCoins')}</span>
-            <span class="statistics-card-value" data-stat-id="coins">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('productionEffective')}</span>
-            <span class="statistics-card-value" data-stat-id="production">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('totalCoinsEverLabel')}</span>
-            <span class="statistics-card-value" data-stat-id="total-coins-ever">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('avgCoinsPerClick')}</span>
-            <span class="statistics-card-value" data-stat-id="coins-per-click-avg">—</span>
-          </div>
-        </div>
-      </section>
-      <section class="statistics-group" aria-labelledby="stat-production-breakdown" data-stat-group="production-breakdown">
-        <h3 id="stat-production-breakdown" class="statistics-group-title">${t('productionBreakdownTitle')}</h3>
-        <div class="statistics-cards">
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('baseRate')}</span>
-            <span class="statistics-card-value" data-stat-id="base-production">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('planetBonus')}</span>
-            <span class="statistics-card-value" data-stat-id="planet-bonus">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('prestigeBonus')}</span>
-            <span class="statistics-card-value" data-stat-id="prestige-bonus">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('crewBonus')}</span>
-            <span class="statistics-card-value" data-stat-id="crew-bonus">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('eventMultiplier')}</span>
-            <span class="statistics-card-value" data-stat-id="event-mult">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('researchBonus')}</span>
-            <span class="statistics-card-value" data-stat-id="research-bonus">—</span>
-          </div>
-        </div>
-      </section>
-      <section class="statistics-group" aria-labelledby="stat-progression" data-stat-group="progression">
-        <h3 id="stat-progression" class="statistics-group-title">${t('progressionTitle')}</h3>
-        <div class="statistics-cards">
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('planetsCount')}</span>
-            <span class="statistics-card-value" data-stat-id="planets-count">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('upgradesOwned')}</span>
-            <span class="statistics-card-value" data-stat-id="upgrades-count">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('slotsUsedTotal')}</span>
-            <span class="statistics-card-value" data-stat-id="slots-used">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('prestigeLevel')}</span>
-            <span class="statistics-card-value" data-stat-id="prestige-level">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('crewFree')}</span>
-            <span class="statistics-card-value" data-stat-id="crew-count">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('crewAssigned')}</span>
-            <span class="statistics-card-value" data-stat-id="assigned-astronauts">—</span>
-          </div>
-        </div>
-      </section>
-      <section class="statistics-group" aria-labelledby="stat-activity" data-stat-group="activity">
-        <h3 id="stat-activity" class="statistics-group-title">${t('activityTitle')}</h3>
-        <div class="statistics-cards">
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('clicksLifetime')}</span>
-            <span class="statistics-card-value" data-stat-id="clicks-lifetime">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('clicksSession')}</span>
-            <span class="statistics-card-value" data-stat-id="clicks-session">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('coinsFromClicksSession')}</span>
-            <span class="statistics-card-value" data-stat-id="coins-from-clicks-session">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('totalPlayTime')}</span>
-            <span class="statistics-card-value" data-stat-id="play-time">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('sessionDuration')}</span>
-            <span class="statistics-card-value" data-stat-id="session-duration">—</span>
-          </div>
-        </div>
-      </section>
-      <section class="statistics-group" aria-labelledby="stat-quests-events" data-stat-group="quests-events">
-        <h3 id="stat-quests-events" class="statistics-group-title">${t('questsEventsTitle')}</h3>
-        <div class="statistics-cards">
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('questStreak')}</span>
-            <span class="statistics-card-value" data-stat-id="quest-streak">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('activeEvents')}</span>
-            <span class="statistics-card-value" data-stat-id="active-events-count">—</span>
-          </div>
-          <div class="statistics-card">
-            <span class="statistics-card-label">${t('nextEventIn')}</span>
-            <span class="statistics-card-value" data-stat-id="next-event-in">—</span>
-          </div>
-        </div>
-      </section>
-      <section class="statistics-group" aria-labelledby="stat-achievements" data-stat-group="achievements">
-        <h3 id="stat-achievements" class="statistics-group-title">${t('achievementsTitle')}</h3>
-        <div class="statistics-cards">
-          <div class="statistics-card statistics-card--wide">
-            <span class="statistics-card-label">${t('unlockedLabel')}</span>
-            <span class="statistics-card-value" data-stat-id="achievements-unlocked">—</span>
-            <span class="statistics-card-suffix"> / </span>
-            <span class="statistics-card-value" data-stat-id="achievements-total">—</span>
-          </div>
-        </div>
-      </section>
+      ${createStatisticsGroup(
+        'stat-economy',
+        t('economyTitle'),
+        [
+          createStatisticsCard(t('currentCoins'), 'coins'),
+          createStatisticsCard(t('productionEffective'), 'production'),
+          createStatisticsCard(t('totalCoinsEverLabel'), 'total-coins-ever'),
+          createStatisticsCard(t('avgCoinsPerClick'), 'coins-per-click-avg'),
+        ].join(''),
+        'economy'
+      )}
+      ${createStatisticsGroup(
+        'stat-production-breakdown',
+        t('productionBreakdownTitle'),
+        [
+          createStatisticsCard(t('baseRate'), 'base-production'),
+          createStatisticsCard(t('planetBonus'), 'planet-bonus'),
+          createStatisticsCard(t('prestigeBonus'), 'prestige-bonus'),
+          createStatisticsCard(t('crewBonus'), 'crew-bonus'),
+          createStatisticsCard(t('eventMultiplier'), 'event-mult'),
+          createStatisticsCard(t('researchBonus'), 'research-bonus'),
+        ].join(''),
+        'production-breakdown'
+      )}
+      ${createStatisticsGroup(
+        'stat-progression',
+        t('progressionTitle'),
+        [
+          createStatisticsCard(t('planetsCount'), 'planets-count'),
+          createStatisticsCard(t('upgradesOwned'), 'upgrades-count'),
+          createStatisticsCard(t('slotsUsedTotal'), 'slots-used'),
+          createStatisticsCard(t('prestigeLevel'), 'prestige-level'),
+          createStatisticsCard(t('crewFree'), 'crew-count'),
+          createStatisticsCard(t('crewAssigned'), 'assigned-astronauts'),
+        ].join(''),
+        'progression'
+      )}
+      ${createStatisticsGroup(
+        'stat-activity',
+        t('activityTitle'),
+        [
+          createStatisticsCard(t('clicksLifetime'), 'clicks-lifetime'),
+          createStatisticsCard(t('clicksSession'), 'clicks-session'),
+          createStatisticsCard(t('coinsFromClicksSession'), 'coins-from-clicks-session'),
+          createStatisticsCard(t('totalPlayTime'), 'play-time'),
+          createStatisticsCard(t('sessionDuration'), 'session-duration'),
+        ].join(''),
+        'activity'
+      )}
+      ${createStatisticsGroup(
+        'stat-quests-events',
+        t('questsEventsTitle'),
+        [
+          createStatisticsCard(t('questStreak'), 'quest-streak'),
+          createStatisticsCard(t('activeEvents'), 'active-events-count'),
+          createStatisticsCard(t('nextEventIn'), 'next-event-in'),
+        ].join(''),
+        'quests-events'
+      )}
+      ${createStatisticsGroup(
+        'stat-achievements',
+        t('achievementsTitle'),
+        createStatisticsCardWide({
+          label: t('unlockedLabel'),
+          statId1: 'achievements-unlocked',
+          suffix: ' / ',
+          statId2: 'achievements-total',
+        }),
+        'achievements'
+      )}
     </div>
   `;
   bindChartRange(container);

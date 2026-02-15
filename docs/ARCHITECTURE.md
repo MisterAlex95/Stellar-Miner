@@ -100,7 +100,7 @@ Events that occur in the domain and can trigger side effects.
 
 - **domain/** — Entities, value objects, aggregates, events, domain services
 - **application/** — gameState, handlers, catalogs, quests, progression, stats, format, eventBus, strings, research, achievements, milestones, questState, playTimeStats, productionHelpers, crewHelpers, i18nCatalogs
-- **presentation/** — mount, views (stats, upgrade, planet, quest, combo, progression, prestige, crew, statistics, research, housing), toasts, tooltip, StarfieldCanvas, MineZoneCanvas
+- **presentation/** — mount, views (stats, upgrade, planet, quest, combo, progression, prestige, crew, statistics, research, housing), toasts, tooltip, StarfieldCanvas, MineZoneCanvas. Reusable UI building blocks in **presentation/components/** (toasts, modals, gameplay blocks, button+tooltip, upgrade card).
 - **infrastructure/** — SaveLoadService (save/load/export/import, version, validation)
 - **e2e/** — Playwright E2E tests
 

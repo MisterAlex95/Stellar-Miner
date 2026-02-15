@@ -48,7 +48,12 @@ import {
 } from './progressionView.js';
 import { initTooltips } from './tooltip.js';
 import { APP_VERSION, hasNewUpdate, markUpdateSeen, getLastSeenVersion } from '../application/version.js';
-import { getChangelog, getChangelogSince } from '../application/changelog.js';
+import { getChangelog } from '../application/changelog.js';
+import { createGameplayBlock } from './components/gameplayBlock.js';
+import { buildChangelogHtml } from './components/changelog.js';
+import { createProgressBarWithWrap, createProgressBar } from './components/progressBar.js';
+import { buildDebugPanelHtml } from './components/debugPanel.js';
+import { createModalOverlay } from './components/modal.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
@@ -156,8 +161,13 @@ const APP_HTML = `
         </span>
       </div>
     </header>
-    <div class="settings-overlay" id="settings-overlay" aria-hidden="true">
-      <div class="settings-modal" role="dialog" aria-labelledby="settings-title">
+    ${createModalOverlay({
+      overlayId: 'settings-overlay',
+      overlayClass: 'settings-overlay',
+      dialogClass: 'settings-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'settings-title',
+      bodyHtml: `
         <div class="settings-header">
           <h2 id="settings-title" data-i18n="settings">Settings</h2>
           <button type="button" class="settings-close" id="settings-close" data-i18n-aria-label="close">×</button>
@@ -249,10 +259,15 @@ const APP_HTML = `
             <button type="button" class="reset-btn" id="settings-reset-btn" data-i18n="resetProgress">Reset progress</button>
           </div>
         </div>
-      </div>
-    </div>
-    <div class="info-overlay" id="info-overlay" aria-hidden="true">
-      <div class="info-modal" role="dialog" aria-labelledby="info-title">
+      `,
+    })}
+    ${createModalOverlay({
+      overlayId: 'info-overlay',
+      overlayClass: 'info-overlay',
+      dialogClass: 'info-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'info-title',
+      bodyHtml: `
         <div class="info-header">
           <h2 id="info-title" data-i18n="infoTitle">What's new</h2>
           <button type="button" class="info-close" id="info-close" data-i18n-aria-label="close">×</button>
@@ -264,48 +279,70 @@ const APP_HTML = `
           </div>
           <div class="info-changelog-list" id="info-changelog-list"></div>
         </div>
-      </div>
-    </div>
-    <div class="reset-confirm-overlay" id="reset-confirm-overlay" aria-hidden="true">
-      <div class="reset-confirm-modal" role="alertdialog" aria-labelledby="reset-confirm-title" aria-describedby="reset-confirm-desc">
+      `,
+    })}
+    ${createModalOverlay({
+      overlayId: 'reset-confirm-overlay',
+      overlayClass: 'reset-confirm-overlay',
+      dialogClass: 'reset-confirm-modal',
+      role: 'alertdialog',
+      ariaLabelledBy: 'reset-confirm-title',
+      ariaDescribedBy: 'reset-confirm-desc',
+      bodyHtml: `
         <h2 id="reset-confirm-title" data-i18n="resetConfirmTitle">Reset progress?</h2>
         <p id="reset-confirm-desc" data-i18n="resetConfirmDesc">Coins, planets, upgrades, crew, achievements and all progress will be lost. This cannot be undone.</p>
         <div class="reset-confirm-actions">
           <button type="button" class="reset-confirm-cancel" id="reset-confirm-cancel" data-i18n="cancel">Cancel</button>
           <button type="button" class="reset-confirm-reset" id="reset-confirm-reset" data-i18n="resetAll">Reset all</button>
         </div>
-      </div>
-    </div>
-    <div class="prestige-confirm-overlay" id="prestige-confirm-overlay" aria-hidden="true">
-      <div class="prestige-confirm-modal" role="alertdialog" aria-labelledby="prestige-confirm-title" aria-describedby="prestige-confirm-desc">
+      `,
+    })}
+    ${createModalOverlay({
+      overlayId: 'prestige-confirm-overlay',
+      overlayClass: 'prestige-confirm-overlay',
+      dialogClass: 'prestige-confirm-modal',
+      role: 'alertdialog',
+      ariaLabelledBy: 'prestige-confirm-title',
+      ariaDescribedBy: 'prestige-confirm-desc',
+      bodyHtml: `
         <h2 id="prestige-confirm-title" data-i18n="prestigeConfirmTitle">Prestige?</h2>
         <p id="prestige-confirm-desc" data-i18n="prestigeConfirmDesc">You'll reset to 0 coins and 1 planet. You keep your new Prestige level and +5% production per level forever.</p>
         <div class="prestige-confirm-actions">
           <button type="button" class="prestige-confirm-cancel" id="prestige-confirm-cancel" data-i18n="cancel">Cancel</button>
           <button type="button" class="prestige-confirm-do" id="prestige-confirm-do" data-i18n="prestige">Prestige</button>
         </div>
-      </div>
-    </div>
-    <div class="prestige-rewards-overlay" id="prestige-rewards-overlay" aria-hidden="true">
-      <div class="prestige-rewards-modal" role="dialog" aria-labelledby="prestige-rewards-title" aria-describedby="prestige-rewards-desc">
+      `,
+    })}
+    ${createModalOverlay({
+      overlayId: 'prestige-rewards-overlay',
+      overlayClass: 'prestige-rewards-overlay',
+      dialogClass: 'prestige-rewards-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'prestige-rewards-title',
+      ariaDescribedBy: 'prestige-rewards-desc',
+      bodyHtml: `
         <h2 id="prestige-rewards-title" data-i18n="prestigeRewardsTitle">Prestige rewards</h2>
         <p id="prestige-rewards-desc" class="prestige-rewards-intro" data-i18n="prestigeRewardsIntro">What you gain at each prestige level:</p>
         <ul id="prestige-rewards-list" class="prestige-rewards-list" aria-describedby="prestige-rewards-desc"></ul>
         <div class="prestige-confirm-actions">
           <button type="button" class="prestige-confirm-cancel" id="prestige-rewards-close" data-i18n="gotIt">Got it</button>
         </div>
-      </div>
-    </div>
-    <div class="intro-overlay" id="intro-overlay" aria-hidden="true">
-      <div class="intro-modal" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-body">
+      `,
+    })}
+    ${createModalOverlay({
+      overlayId: 'intro-overlay',
+      overlayClass: 'intro-overlay',
+      dialogClass: 'intro-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'intro-title',
+      ariaDescribedBy: 'intro-body',
+      bodyHtml: `
         <h2 id="intro-title"></h2>
         <p id="intro-body"></p>
-        <div class="intro-progress-wrap" id="intro-progress-wrap" aria-hidden="true">
-          <div class="intro-progress-bar" id="intro-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
-        </div>
+        ${createProgressBarWithWrap('intro-progress-wrap', 'intro-progress-wrap', 'intro-progress-bar', 'intro-progress-bar', true)}
         <button type="button" class="intro-got-it" id="intro-got-it" data-i18n="gotIt">Got it</button>
-      </div>
-    </div>
+      `,
+    })}
     <section class="stats">
       <div class="stat-card stat-card--coins" id="coins-stat-card" data-i18n-title="coinsTitle">
         <div class="stat-label" data-i18n="coins">Coins</div>
@@ -317,9 +354,7 @@ const APP_HTML = `
         <div class="stat-value" id="production-value">0/s</div>
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
         <div class="active-events" id="active-events" aria-live="polite"></div>
-        <div class="next-event-progress-wrap" id="next-event-progress-wrap" aria-hidden="true">
-          <div class="next-event-progress-bar" id="next-event-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
+        ${createProgressBarWithWrap('next-event-progress-wrap', 'next-event-progress-wrap', 'next-event-progress-bar', 'next-event-progress-bar', true)}
         <div class="next-event-countdown" id="next-event-countdown" aria-live="polite"></div>
       </div>
     </section>
@@ -339,104 +374,102 @@ const APP_HTML = `
         <p class="mine-zone-hint" aria-hidden="true" data-i18n="mineZoneTitle"></p>
         <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
       </section>
-      <section class="gameplay-block gameplay-block--locked quest-section" id="quest-section" data-block="quest">
-        <div class="gameplay-block-header">
-          <h2 data-i18n="quest">Quest</h2>
-          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
-        </div>
-        <div class="gameplay-block-body">
-          <div class="quest-progress-wrap">
-            <div class="quest-progress-bar" id="quest-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
+      ${createGameplayBlock({
+        id: 'quest-section',
+        sectionClass: 'quest-section',
+        titleKey: 'quest',
+        dataBlock: 'quest',
+        bodyHtml: `
+          ${createProgressBarWithWrap('quest-progress-wrap', 'quest-progress-wrap', 'quest-progress-bar', 'quest-progress-bar')}
           <p class="quest-progress" id="quest-progress"></p>
           <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
           <span class="btn-tooltip-wrap" id="quest-claim-wrap"><button type="button" class="quest-claim-btn" id="quest-claim" disabled data-i18n="claim">Claim</button></span>
-        </div>
-      </section>
+        `,
+      })}
     </div>
     <div class="app-tab-panel" id="panel-base" role="tabpanel" aria-labelledby="tab-base" data-tab="base" hidden>
-      <section class="gameplay-block gameplay-block--locked crew-section" id="crew-section" data-block="crew">
-        <div class="gameplay-block-header">
-          <h2 data-i18n="crew">Crew</h2>
-          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
-        </div>
-        <div class="gameplay-block-body">
+      ${createGameplayBlock({
+        id: 'crew-section',
+        sectionClass: 'crew-section',
+        titleKey: 'crew',
+        dataBlock: 'crew',
+        bodyHtml: `
           <p class="crew-hint" data-i18n="crewHint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
           <div class="crew-count" id="crew-count">No crew yet</div>
           <div class="crew-operates" id="crew-operates"></div>
           <span class="btn-tooltip-wrap" id="hire-astronaut-wrap"><button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button></span>
-        </div>
-      </section>
-      <section class="gameplay-block gameplay-block--locked planets-section" id="planets-section" data-block="planets">
-        <div class="gameplay-block-header">
-          <h2 data-i18n="planets">Planets</h2>
-          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
-        </div>
-        <div class="gameplay-block-body">
+        `,
+      })}
+      ${createGameplayBlock({
+        id: 'planets-section',
+        sectionClass: 'planets-section',
+        titleKey: 'planets',
+        dataBlock: 'planets',
+        bodyHtml: `
           <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots to expand.</p>
           <div class="planet-list" id="planet-list"></div>
           <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Send expedition</button></span>
-        </div>
-      </section>
-      <section class="gameplay-block gameplay-block--locked housing-section" id="housing-section" data-block="planets">
-        <div class="gameplay-block-header">
-          <h2 data-i18n="housing">Housing</h2>
-          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
-        </div>
-        <div class="gameplay-block-body">
+        `,
+      })}
+      ${createGameplayBlock({
+        id: 'housing-section',
+        sectionClass: 'housing-section',
+        titleKey: 'housing',
+        dataBlock: 'planets',
+        bodyHtml: `
           <p class="housing-hint" data-i18n="housingHint">Build housing on a planet to increase crew capacity (+2 astronauts per module). Each module uses 1 slot on that planet.</p>
           <div class="housing-list" id="housing-list"></div>
-        </div>
-      </section>
-      <section class="gameplay-block gameplay-block--locked prestige-section" id="prestige-section" data-block="prestige">
-        <div class="gameplay-block-header">
-          <h2 data-i18n="prestige">Prestige</h2>
-          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
-        </div>
-        <div class="gameplay-block-body">
+        `,
+      })}
+      ${createGameplayBlock({
+        id: 'prestige-section',
+        sectionClass: 'prestige-section',
+        titleKey: 'prestige',
+        dataBlock: 'prestige',
+        bodyHtml: `
           <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
           <div class="prestige-status" id="prestige-status"></div>
           <div class="prestige-actions">
             <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
             <button type="button" class="prestige-rewards-btn" id="prestige-rewards-btn" data-i18n="prestigeRewardsWhatFor">What do I get?</button>
           </div>
-        </div>
-      </section>
+        `,
+      })}
     </div>
     <div class="app-tab-panel" id="panel-research" role="tabpanel" aria-labelledby="tab-research" data-tab="research" hidden>
-      <section class="gameplay-block gameplay-block--locked research-section" id="research-section" data-block="research">
-        <div class="gameplay-block-header">
-          <h2 data-i18n="research">Scientific Research</h2>
-          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
-        </div>
-        <div class="gameplay-block-body">
+      ${createGameplayBlock({
+        id: 'research-section',
+        sectionClass: 'research-section',
+        titleKey: 'research',
+        dataBlock: 'research',
+        bodyHtml: `
           <p class="research-hint" data-i18n="researchHint">Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt has a success chance; on failure coins are lost. Resets on Prestige.</p>
           <div class="research-list" id="research-list"></div>
-        </div>
-      </section>
+        `,
+      })}
     </div>
     <div class="app-tab-panel" id="panel-upgrades" role="tabpanel" aria-labelledby="tab-upgrades" data-tab="upgrades" hidden>
-      <section class="gameplay-block gameplay-block--locked upgrades-section" id="upgrades-section" data-block="upgrades">
-        <div class="gameplay-block-header">
-          <h2 data-i18n="upgrades">Upgrades</h2>
-          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
-        </div>
-        <div class="gameplay-block-body">
+      ${createGameplayBlock({
+        id: 'upgrades-section',
+        sectionClass: 'upgrades-section',
+        titleKey: 'upgrades',
+        dataBlock: 'upgrades',
+        bodyHtml: `
           <p class="upgrades-hint" data-i18n="upgradesHint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
           <div class="upgrade-list" id="upgrade-list"></div>
-        </div>
-      </section>
+        `,
+      })}
     </div>
     <div class="app-tab-panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" data-tab="stats" hidden>
-      <section class="gameplay-block gameplay-block--unlocked statistics-section" id="statistics-section">
-        <div class="gameplay-block-header">
-          <h2 data-i18n="statisticsTitle">Statistics</h2>
-          <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
-        </div>
-        <div class="gameplay-block-body">
+      ${createGameplayBlock({
+        id: 'statistics-section',
+        sectionClass: 'statistics-section',
+        titleKey: 'statisticsTitle',
+        locked: false,
+        bodyHtml: `
           <div id="statistics-container"></div>
-        </div>
-      </section>
+        `,
+      })}
     </div>
   `;
 
@@ -448,19 +481,7 @@ function applyThemeAndMotion(): void {
 }
 
 function renderChangelogList(container: HTMLElement): void {
-  const entries = getChangelog();
-  container.innerHTML =
-    entries.length === 0
-      ? '<p class="changelog-empty">—</p>'
-      : entries
-          .map(
-            (e, i) =>
-              `<details class="changelog-entry" ${i === 0 ? 'open' : ''}>
-                <summary class="changelog-entry-header">v${e.version} <span class="changelog-date">${e.date}</span></summary>
-                <ul class="changelog-changes">${e.changes.map((c) => `<li>${c}</li>`).join('')}</ul>
-              </details>`
-          )
-          .join('');
+  container.innerHTML = buildChangelogHtml(getChangelog());
 }
 
 export function updateVersionAndChangelogUI(): void {
@@ -803,24 +824,7 @@ export function mount(): void {
     debugPanel.id = 'debug-panel';
     debugPanel.className = 'debug-panel debug-panel--closed';
     debugPanel.setAttribute('aria-hidden', 'true');
-    debugPanel.innerHTML = `
-      <div class="debug-panel-header">
-        <span data-i18n="debug">Debug</span>
-        <button type="button" class="debug-close" id="debug-close" data-i18n-aria-label="closeDebug">×</button>
-      </div>
-      <div class="debug-panel-body">
-        <div class="debug-section" id="debug-stats"></div>
-        <div class="debug-section">
-          <div class="debug-actions">
-            <button type="button" class="debug-btn" data-debug="coins-1k">+1K coins</button>
-            <button type="button" class="debug-btn" data-debug="coins-50k">+50K coins</button>
-            <button type="button" class="debug-btn" data-debug="trigger-event" data-i18n="debugTriggerEvent">Trigger event</button>
-            <button type="button" class="debug-btn" data-debug="clear-events" data-i18n="debugClearEvents">Clear events</button>
-          </div>
-        </div>
-      </div>
-      <p class="debug-hint" data-i18n="debugF3Hint">F3 to toggle</p>
-    `;
+    debugPanel.innerHTML = buildDebugPanelHtml();
     document.body.appendChild(debugPanel);
     applyTranslations();
     document.getElementById('debug-close')?.addEventListener('click', closeDebugMenu);

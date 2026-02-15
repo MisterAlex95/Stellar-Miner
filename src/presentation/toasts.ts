@@ -4,84 +4,32 @@ import { DAILY_BONUS_COINS } from '../application/catalogs.js';
 import { t, tParam } from '../application/strings.js';
 import { getCatalogComboName, getCatalogEventName } from '../application/i18nCatalogs.js';
 import type { GameEvent } from '../domain/entities/GameEvent.js';
+import { showToast } from './components/toasts.js';
 
 export function showAchievementToast(name: string): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--achievement';
-  el.setAttribute('role', 'status');
-  el.textContent = tParam('achievementToast', { name });
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 4000);
+  showToast(tParam('achievementToast', { name }), 'achievement', { duration: 4000 });
 }
 
 export function showMiniMilestoneToast(message: string): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--milestone';
-  el.setAttribute('role', 'status');
-  el.textContent = message;
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 3000);
+  showToast(message, 'milestone', { duration: 3000 });
 }
 
 export function showEventToast(gameEvent: GameEvent): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
   const isNegative = gameEvent.effect.multiplier < 1;
-  el.className = isNegative ? 'event-toast event-toast--negative' : 'event-toast';
-  el.setAttribute('role', 'status');
   const name = getCatalogEventName(gameEvent.id);
-  el.textContent = `${name}: ×${gameEvent.effect.multiplier} production for ${gameEvent.effect.durationMs / 1000}s`;
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 4000);
+  const message = `${name}: ×${gameEvent.effect.multiplier} production for ${gameEvent.effect.durationMs / 1000}s`;
+  showToast(message, isNegative ? 'negative' : '', { duration: 4000 });
 }
 
 export function showOfflineToast(coins: number, capped?: boolean): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--offline';
-  el.setAttribute('role', 'status');
-  el.textContent = capped
+  const message = capped
     ? tParam('welcomeBackCapped', { coins: formatNumber(coins, false) })
     : tParam('welcomeBack', { coins: formatNumber(coins, false) });
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 5000);
+  showToast(message, 'offline', { duration: 5000 });
 }
 
 export function showSuperLuckyToast(coins: number): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--super-lucky';
-  el.setAttribute('role', 'status');
-  el.textContent = tParam('luckyToast', { coins: formatNumber(coins, false) });
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 2800);
+  showToast(tParam('luckyToast', { coins: formatNumber(coins, false) }), 'super-lucky', { duration: 2800 });
 }
 
 export function showFloatingReward(amount: number, anchor: HTMLElement): void {
@@ -101,18 +49,11 @@ export function showFloatingReward(amount: number, anchor: HTMLElement): void {
 }
 
 export function showQuestStreakToast(streak: number, mult: number): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--streak';
-  el.setAttribute('role', 'status');
-  el.textContent = tParam('questStreakToastFormat', { n: streak, pct: Math.round((mult - 1) * 100) });
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 2500);
+  showToast(
+    tParam('questStreakToastFormat', { n: streak, pct: Math.round((mult - 1) * 100) }),
+    'streak',
+    { duration: 2500 }
+  );
 }
 
 export function showFloatingCoin(
@@ -154,61 +95,19 @@ export function showFloatingCoin(
 }
 
 export function showMilestoneToast(coins: number): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--milestone';
-  el.setAttribute('role', 'status');
-  el.textContent = tParam('milestoneToastFormat', { coins: formatNumber(coins, false) });
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 3500);
+  showToast(tParam('milestoneToastFormat', { coins: formatNumber(coins, false) }), 'milestone', { duration: 3500 });
 }
 
 export function showDailyBonusToast(): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--daily';
-  el.setAttribute('role', 'status');
-  el.textContent = tParam('dailyBonusToastFormat', { n: DAILY_BONUS_COINS });
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 3000);
+  showToast(tParam('dailyBonusToastFormat', { n: DAILY_BONUS_COINS }), 'daily', { duration: 3000 });
 }
 
 export function showCriticalToast(coins: number): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--critical';
-  el.setAttribute('role', 'status');
-  el.textContent = tParam('criticalToastFormat', { coins: formatNumber(coins, false) });
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 2500);
+  showToast(tParam('criticalToastFormat', { coins: formatNumber(coins, false) }), 'critical', { duration: 2500 });
 }
 
 export function showPrestigeMilestoneToast(level: number): void {
-  const container = document.getElementById('event-toasts');
-  if (!container) return;
-  const el = document.createElement('div');
-  el.className = 'event-toast event-toast--prestige-milestone';
-  el.setAttribute('role', 'status');
-  el.textContent = tParam('prestigeMilestoneToastFormat', { level, pct: level * 5 });
-  container.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
-  setTimeout(() => {
-    el.classList.remove('event-toast--visible');
-    setTimeout(() => el.remove(), 300);
-  }, 3500);
+  showToast(tParam('prestigeMilestoneToastFormat', { level, pct: level * 5 }), 'prestige-milestone', {
+    duration: 3500,
+  });
 }

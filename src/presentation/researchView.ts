@@ -12,6 +12,8 @@ import {
 } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
 import { getCatalogResearchName, getCatalogResearchDesc, getCatalogUpgradeName } from '../application/i18nCatalogs.js';
+import { escapeAttr, escapeHtml } from './components/domUtils.js';
+import { buttonWithTooltipHtml } from './components/buttonTooltip.js';
 
 function modifierText(node: ResearchNode): string {
   const parts: string[] = [];
@@ -94,14 +96,6 @@ export function renderResearchSection(): void {
     </div>`;
 }
 
-function escapeAttr(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 function renderResearchCard(
   node: ResearchNode,
   rowIndex: number,
@@ -143,8 +137,9 @@ function renderResearchCard(
         <span class="research-card-name">${name}</span>
       </div>
       <div class="research-card-info-block">${cardInfoHtml}</div>
-      <span class="btn-tooltip-wrap" title="${escapeAttr(attemptTitle)}">
-        <button type="button" class="research-attempt-btn" data-research-id="${node.id}" ${canAttempt ? '' : 'disabled'}>${t('attempt')}</button>
-      </span>
+      ${buttonWithTooltipHtml(
+        attemptTitle,
+        `<button type="button" class="research-attempt-btn" data-research-id="${node.id}" ${canAttempt ? '' : 'disabled'}>${t('attempt')}</button>`
+      )}
     </div>`;
 }

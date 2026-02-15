@@ -4,6 +4,7 @@ import { generateQuest, getQuestProgress, getQuestStreak, getQuestLastClaimAt } 
 import { saveQuestState } from '../application/questState.js';
 import { QUEST_STREAK_WINDOW_MS, QUEST_STREAK_MAX, QUEST_STREAK_BONUS_PER_LEVEL } from '../application/catalogs.js';
 import { t, tParam } from '../application/strings.js';
+import { updateTooltipForButton } from './components/buttonTooltip.js';
 
 export function renderQuestSection(): void {
   const container = document.getElementById('quest-section');
@@ -41,9 +42,7 @@ export function renderQuestSection(): void {
     const nextBonus = streak < QUEST_STREAK_MAX ? ` (streak +${Math.round(QUEST_STREAK_BONUS_PER_LEVEL * 100)}%)` : '';
     claimBtn.textContent = p.done ? tParam('claimRewardFormat', { reward: formatNumber(Math.floor(q.reward), settings.compactNumbers) }) + nextBonus : t('claim');
     const tooltipText = p.done ? tParam('claimRewardFormat', { reward: formatNumber(Math.floor(q.reward), settings.compactNumbers) }) + ' reward' : t('completeQuestToClaim');
-    const wrap = claimBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? claimBtn.parentElement : null;
-    if (wrap) wrap.setAttribute('title', tooltipText);
-    else claimBtn.setAttribute('title', tooltipText);
+    updateTooltipForButton(claimBtn, tooltipText);
     claimBtn.toggleAttribute('disabled', !p.done);
   }
   const streakHint = document.getElementById('quest-streak-hint');
