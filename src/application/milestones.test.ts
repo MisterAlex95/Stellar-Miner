@@ -54,9 +54,9 @@ describe('milestones', () => {
 
   it('checkAndShowMilestones marks and shows when threshold reached', () => {
     const player = Player.create('p1');
-    (player as { totalCoinsEver: Decimal }).totalCoinsEver = new Decimal(100);
+    (player as { totalCoinsEver: Decimal }).totalCoinsEver = new Decimal(500);
     setSession(new GameSession('s1', player));
     checkAndShowMilestones();
-    expect(getReachedMilestones()).toContain(100);
+    expect(getReachedMilestones()).toContain(500);
   });
 });

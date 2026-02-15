@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.4.12",
+    "date": "2026-02-15",
+    "changes": [
+      "Balance overhaul: longer, harder progression. Prestige at 5M (was 1M), +4% per level. Upgrades and research cost more; research success chances slightly lower late-game.",
+      "New planet cost 120K (was 50K), expeditions longer and riskier. Crew, housing, slots cost more; bonuses tuned down. Combo/lucky slightly harder.",
+      "More milestones and quest targets; new achievements (Scientist, Lab complete, Fleet, Tycoon, etc.). New event: Ion Storm. Negative events unlock after 4 triggers."
+    ]
+  },
+  {
     "version": "0.4.11",
     "date": "2026-02-15",
     "changes": [

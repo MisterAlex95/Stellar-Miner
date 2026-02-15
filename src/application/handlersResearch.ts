@@ -15,6 +15,7 @@ import { renderResearchSection } from '../presentation/researchView.js';
 import { renderCrewSection } from '../presentation/crewView.js';
 import { showMiniMilestoneToast } from '../presentation/toasts.js';
 import { saveSession } from './handlersSave.js';
+import { checkAchievements } from './achievements.js';
 
 const RESEARCH_PROGRESS_DURATION_MS = 2500;
 
@@ -51,6 +52,7 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
       }
     }
     showMiniMilestoneToast(result.message);
+    checkAchievements();
   } else if (result.message.includes('failed')) {
     showMiniMilestoneToast(result.message.includes('Coins spent') ? t('researchFailedCoinsSpent') : t('researchFailedTryAgain'));
   }

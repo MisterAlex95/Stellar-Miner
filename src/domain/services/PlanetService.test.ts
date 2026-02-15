@@ -10,9 +10,9 @@ describe('PlanetService', () => {
   it('getNewPlanetCost returns cost for next planet (scales with current count)', () => {
     const player = Player.create('p1');
     const service = new PlanetService();
-    expect(service.getNewPlanetCost(player).toNumber()).toBe(120000);
+    expect(service.getNewPlanetCost(player).toNumber()).toBe(307200);
     player.addPlanet(Planet.create('planet-2', 'Nova Prime'));
-    expect(service.getNewPlanetCost(player).toNumber()).toBe(216000);
+    expect(service.getNewPlanetCost(player).toNumber()).toBe(589824);
   });
 
   it('canLaunchExpedition is true when player has enough coins and astronauts', () => {
@@ -216,8 +216,8 @@ describe('PlanetService', () => {
   it('getAddSlotCost returns cost for planet max slots', () => {
     const service = new PlanetService();
     const planet = Planet.create('p1', 'Titan', 6);
-    const raw = Math.floor(10000 * Math.pow(6, 1.3));
-    expect(service.getAddSlotCost(planet).toNumber()).toBe(Math.floor(raw * 0.85));
+    const raw = Math.floor(25000 * Math.pow(6, 1.38));
+    expect(service.getAddSlotCost(planet).toNumber()).toBe(Math.floor(raw * 0.82));
   });
 
   it('canAddSlot is true when player can afford', () => {
@@ -253,9 +253,9 @@ describe('PlanetService', () => {
   it('getHousingCost returns cost for planet housing count', () => {
     const service = new PlanetService();
     const planet = Planet.create('p1', 'Titan', 6);
-    expect(service.getHousingCost(planet).toNumber()).toBe(5000);
+    expect(service.getHousingCost(planet).toNumber()).toBe(12000);
     planet.addHousing();
-    expect(service.getHousingCost(planet).toNumber()).toBe(6000);
+    expect(service.getHousingCost(planet).toNumber()).toBe(15120);
   });
 
   it('canBuildHousing is true when planet has free slot and player can afford', () => {

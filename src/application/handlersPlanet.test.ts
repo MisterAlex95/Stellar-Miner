@@ -156,7 +156,7 @@ describe('handlersPlanet', () => {
     it('increases astronaut count when player can afford and has capacity', () => {
       const session = getSession();
       const player = session.player;
-      player.addCoins(2000);
+      player.addCoins(3000);
       expect(player.astronautCount).toBe(0);
 
       handleHireAstronaut('miner');

@@ -132,9 +132,9 @@ describe('Player', () => {
     p.setProductionRate(new ProductionRate(100));
     expect(p.effectiveProductionRate.toNumber()).toBe(100);
     p.addPlanet(Planet.create('planet-2', 'Nova Prime'));
-    expect(p.effectiveProductionRate.toNumber()).toBe(105);
+    expect(p.effectiveProductionRate.toNumber()).toBe(104);
     p.addPlanet(Planet.create('planet-3', 'Dust Haven'));
-    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(110, 10);
+    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(108, 10);
   });
 
   it('effectiveProductionRate applies prestige bonus', () => {
@@ -147,7 +147,7 @@ describe('Player', () => {
       2,
       0
     );
-    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(100 * (1 + 2 * 0.05), 10);
+    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(100 * (1 + 2 * 0.04), 10);
   });
 
   it('createAfterPrestige resets to one empty planet and increments prestige', () => {
@@ -176,7 +176,7 @@ describe('Player', () => {
       { miner: 10, scientist: 0, pilot: 0 },
       0
     );
-    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(100 * (1 + 10 * 0.02) * 0.95, 5);
+    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(110.92, 2);
   });
 
   it('hireAstronaut returns false when not enough coins', () => {

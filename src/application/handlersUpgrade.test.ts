@@ -36,7 +36,7 @@ describe('handlersUpgrade', () => {
       handleUpgradeBuy('mining-robot');
 
       expect(player.upgrades.filter((u) => u.id === 'mining-robot').length).toBe(beforeCount + 1);
-      expect(player.coins.value.toNumber()).toBe(beforeCoins - 25);
+      expect(player.coins.value.toNumber()).toBe(beforeCoins - 45);
     });
 
     it('purchases drill-mk1 when player has coins and crew and planet has slot', () => {

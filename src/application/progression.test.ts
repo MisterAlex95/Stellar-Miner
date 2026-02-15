@@ -53,7 +53,7 @@ describe('progression', () => {
 
   it('getUnlockedBlocks unlocks blocks by coin threshold', () => {
     const player = Player.create('p1');
-    player.addCoins(100000);
+    player.addCoins(250000);
     const session = new GameSession('s1', player);
     const unlocked = getUnlockedBlocks(session);
     expect(unlocked.has('upgrades')).toBe(true);
@@ -82,12 +82,12 @@ describe('progression', () => {
     const session = new GameSession('s1', player);
     const next = getNextMilestone(session);
     expect(next).not.toBeNull();
-    expect(next!.block.coinsThreshold).toBe(PROGRESSION_BLOCKS.find((b) => b.id === 'upgrades')!.coinsThreshold);
+    expect(next!.block.id).toBe('upgrades');
   });
 
   it('getNextMilestone returns null when all unlocked', () => {
     const player = Player.create('p1');
-    player.addCoins(1_000_000);
+    player.addCoins(10_000_000);
     const session = new GameSession('s1', player);
     getUnlockedBlocks(session);
     const next = getNextMilestone(session);

@@ -2,6 +2,7 @@ import Decimal from 'break_infinity.js';
 import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs.js';
 import { getSession } from './gameState.js';
 import { getQuestStreak, getQuestLastClaimAt } from './quests.js';
+import { getUnlockedResearch } from './research.js';
 import { showAchievementToast } from '../presentation/toasts.js';
 import achievementsData from '../data/achievements.json';
 
@@ -33,6 +34,8 @@ function buildCheck(def: AchievementDef): () => boolean {
       return () => typeof localStorage !== 'undefined' && localStorage.getItem(COMBO_MASTER_KEY) === '1';
     case 'totalSlotsGreaterThan':
       return () => (session()?.player.planets.reduce((s, p) => s + p.maxUpgrades, 0) ?? 0) > value;
+    case 'researchNodesUnlocked':
+      return () => getUnlockedResearch().length >= value;
     default:
       return () => false;
   }
