@@ -76,6 +76,35 @@ const COLLAPSIBLE_SECTION_IDS = [
 const STATS_COMPACT_ENTER = 70;
 const STATS_COMPACT_LEAVE = 35;
 const VALID_TAB_IDS = ['mine', 'dashboard', 'empire', 'research', 'upgrades', 'stats'] as const;
+type TabId = (typeof VALID_TAB_IDS)[number];
+
+const HISTORY_STATE_KEY = 'tab';
+
+function getTabFromHash(): TabId | null {
+  if (typeof location === 'undefined' || !location.hash) return null;
+  const id = location.hash.slice(1).toLowerCase();
+  return VALID_TAB_IDS.includes(id as TabId) ? (id as TabId) : null;
+}
+
+function getInitialTab(): TabId {
+  const fromHash = getTabFromHash();
+  if (fromHash) return fromHash;
+  const stored =
+    typeof localStorage !== 'undefined' ? localStorage.getItem(TAB_STORAGE_KEY) : null;
+  return stored && VALID_TAB_IDS.includes(stored as TabId) ? (stored as TabId) : DEFAULT_TAB;
+}
+
+function pushTabState(tabId: string): void {
+  if (typeof history === 'undefined') return;
+  const url = `${location.pathname}${location.search}#${tabId}`;
+  history.pushState({ [HISTORY_STATE_KEY]: tabId }, '', url);
+}
+
+function replaceTabState(tabId: string): void {
+  if (typeof history === 'undefined') return;
+  const url = `${location.pathname}${location.search}#${tabId}`;
+  history.replaceState({ [HISTORY_STATE_KEY]: tabId }, '', url);
+}
 
 function isAnyModalOpen(): boolean {
   return getOpenOverlayElement() !== null;
@@ -252,6 +281,11 @@ export function mount(): void {
   applyThemeAndMotion();
   app.innerHTML = getAppHtml();
   applyTranslations();
+
+  function goToTab(tabId: string): void {
+    pushTabState(tabId);
+    switchTab(tabId);
+  }
 
   // --- Collapsible sections ---
   function initCollapsedState(): void {
@@ -792,27 +826,31 @@ export function mount(): void {
       return;
     }
     if (id === 'dashboard-goto-mine') {
-      switchTab('mine');
+      goToTab('mine');
       return;
     }
     if (id === 'dashboard-goto-empire') {
-      switchTab('empire');
+      goToTab('empire');
       return;
     }
     if (id === 'dashboard-goto-research') {
-      switchTab('research');
+      goToTab('research');
       return;
     }
     if (goto) {
-      switchTab(goto);
+      goToTab(goto);
     }
   });
 
   // --- Tabs, layout, offline, stats compact ---
+  window.addEventListener('popstate', (e: PopStateEvent) => {
+    const tabId = e.state?.[HISTORY_STATE_KEY];
+    if (tabId && VALID_TAB_IDS.includes(tabId as TabId)) switchTab(tabId);
+  });
   document.querySelectorAll<HTMLElement>('.app-tab[data-tab]').forEach((tab) => {
     tab.addEventListener('click', () => {
       const tabId = tab.getAttribute('data-tab');
-      if (tabId) switchTab(tabId);
+      if (tabId) goToTab(tabId);
     });
   });
   const tabMore = document.getElementById('tab-more');
@@ -835,7 +873,7 @@ export function mount(): void {
     document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
       item.addEventListener('click', () => {
         const tabId = item.getAttribute('data-tab');
-        if (tabId) switchTab(tabId);
+        if (tabId) goToTab(tabId);
         closeTabsMenu();
       });
     });
@@ -860,12 +898,11 @@ export function mount(): void {
     const tabId = VALID_TAB_IDS[idx];
     if (!tabId) return;
     const tabEl = document.querySelector(`.app-tab[data-tab="${tabId}"]`);
-    if (tabEl) switchTab(tabId);
+    if (tabEl) goToTab(tabId);
   });
-  const savedTab =
-    (typeof localStorage !== 'undefined' && localStorage.getItem(TAB_STORAGE_KEY)) || DEFAULT_TAB;
-  const validTab = VALID_TAB_IDS.includes(savedTab as (typeof VALID_TAB_IDS)[number]) ? savedTab : DEFAULT_TAB;
-  switchTab(validTab);
+  const initialTab = getInitialTab();
+  replaceTabState(initialTab);
+  switchTab(initialTab);
   applyLayout();
 
   const offlineBanner = document.getElementById('offline-banner');
