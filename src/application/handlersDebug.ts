@@ -14,6 +14,21 @@ import { renderPrestigeSection } from '../presentation/prestigeView.js';
 import { saveSession } from './handlersSave.js';
 import { showEventToast } from '../presentation/toasts.js';
 
+const DEBUG_PANEL_ID = 'debug-panel';
+
+function getDebugPanel(): HTMLElement | null {
+  return document.getElementById(DEBUG_PANEL_ID);
+}
+
+function refreshAfterDebugAction(): void {
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderPlanetList();
+  renderPrestigeSection();
+  updateDebugPanel();
+}
+
 export function triggerRandomEvent(): void {
   const pool = getEventPoolForRun(getRunStats().runEventsTriggered);
   const event = pool[Math.floor(Math.random() * pool.length)];
@@ -24,7 +39,7 @@ export function triggerRandomEvent(): void {
 }
 
 export function openDebugMenu(): void {
-  const panel = document.getElementById('debug-panel');
+  const panel = getDebugPanel();
   if (panel) {
     panel.classList.remove('debug-panel--closed');
     panel.setAttribute('aria-hidden', 'false');
@@ -33,7 +48,7 @@ export function openDebugMenu(): void {
 }
 
 export function closeDebugMenu(): void {
-  const panel = document.getElementById('debug-panel');
+  const panel = getDebugPanel();
   if (panel) {
     panel.classList.add('debug-panel--closed');
     panel.setAttribute('aria-hidden', 'true');
@@ -41,7 +56,7 @@ export function closeDebugMenu(): void {
 }
 
 export function toggleDebugMenu(): void {
-  const panel = document.getElementById('debug-panel');
+  const panel = getDebugPanel();
   if (!panel) return;
   const isClosed = panel.classList.contains('debug-panel--closed');
   if (isClosed) openDebugMenu();
@@ -52,7 +67,6 @@ export function updateDebugPanel(): void {
   const statsEl = document.getElementById('debug-stats');
   const session = getSession();
   if (!statsEl || !session) return;
-
   const player = session.player;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
@@ -83,22 +97,18 @@ export function handleDebugAction(action: string): void {
   else if (action === 'coins-50k') session.player.addCoins(50_000);
   else if (action === 'trigger-event') triggerRandomEvent();
   else if (action === 'clear-events') setActiveEventInstances([]);
-  saveSession();
-  updateStats();
-  renderUpgradeList();
-  renderPlanetList();
-  renderPrestigeSection();
-  updateDebugPanel();
+  refreshAfterDebugAction();
 }
 
 export function renderAchievementsList(container: HTMLElement): void {
   const unlocked = getUnlockedAchievements();
-  container.innerHTML = ACHIEVEMENTS.map(
-    (a) => {
-      const displayName = unlocked.has(a.id) ? getCatalogAchievementName(a.id) : (a.secret ? t('achievementSecret') : getCatalogAchievementName(a.id));
-      const title = unlocked.has(a.id) ? displayName : t('achievementLockedTitle');
-      const label = unlocked.has(a.id) ? displayName : (a.secret ? t('achievementSecret') : t('locked'));
-      return `<div class="achievement-item achievement-item--${unlocked.has(a.id) ? 'unlocked' : 'locked'}" title="${title}">${unlocked.has(a.id) ? '✓' : '?'} ${label}</div>`;
-    }
-  ).join('');
+  container.innerHTML = ACHIEVEMENTS.map((a) => {
+    const isUnlocked = unlocked.has(a.id);
+    const displayName = isUnlocked ? getCatalogAchievementName(a.id) : (a.secret ? t('achievementSecret') : getCatalogAchievementName(a.id));
+    const title = isUnlocked ? displayName : t('achievementLockedTitle');
+    const label = isUnlocked ? displayName : (a.secret ? t('achievementSecret') : t('locked'));
+    const statusClass = isUnlocked ? 'unlocked' : 'locked';
+    const icon = isUnlocked ? '✓' : '?';
+    return `<div class="achievement-item achievement-item--${statusClass}" title="${title}">${icon} ${label}</div>`;
+  }).join('');
 }

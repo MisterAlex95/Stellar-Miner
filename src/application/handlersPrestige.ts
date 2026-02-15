@@ -30,6 +30,18 @@ import { t, tParam } from './strings.js';
 import { saveSession } from './handlersSave.js';
 
 const PRESTIGE_REWARDS_LIST_MAX_LEVEL = 15;
+const PRESTIGE_MILESTONE_LEVELS = [2, 5, 10, 20];
+
+function refreshAfterPrestige(): void {
+  updateStats();
+  renderUpgradeList();
+  renderPlanetList();
+  renderPrestigeSection();
+  renderCrewSection();
+  renderResearchSection();
+  renderQuestSection();
+  checkAchievements();
+}
 
 export function openPrestigeConfirmModal(): void {
   openOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open', {
@@ -104,15 +116,8 @@ export function confirmPrestige(): void {
     }
   }
   emit('prestige', { level: newPlayer.prestigeLevel });
-  if ([2, 5, 10, 20].includes(newPlayer.prestigeLevel)) showPrestigeMilestoneToast(newPlayer.prestigeLevel);
-  updateStats();
-  renderUpgradeList();
-  renderPlanetList();
-  renderPrestigeSection();
-  renderCrewSection();
-  renderResearchSection();
-  renderQuestSection();
-  checkAchievements();
+  if (PRESTIGE_MILESTONE_LEVELS.includes(newPlayer.prestigeLevel)) showPrestigeMilestoneToast(newPlayer.prestigeLevel);
+  refreshAfterPrestige();
 }
 
 export function handlePrestige(): void {

@@ -16,7 +16,7 @@ describe('catalogs', () => {
   it('createUpgrade returns Upgrade instance', () => {
     const u = createUpgrade(UPGRADE_CATALOG[0]);
     expect(u.id).toBe('mining-robot');
-    expect(u.effect.coinsPerSecond.toNumber()).toBe(0.8);
+    expect(u.effect.coinsPerSecond.toNumber()).toBe(1);
     expect(u.usesSlot).toBe(false);
   });
 

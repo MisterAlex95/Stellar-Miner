@@ -24,6 +24,11 @@ import { createEventBadgeHtml } from './components/eventBadge.js';
 let displayedCoins = -1;
 let displayedProduction = -1;
 
+const COIN_ANIM_SPEED = 12;
+const COIN_ANIM_SNAP_THRESHOLD = 0.5;
+const PRODUCTION_ANIM_SPEED = 10;
+const PRODUCTION_ANIM_SNAP_THRESHOLD = 0.05;
+
 /** Call from game loop with dt to animate coin counter toward target. */
 export function updateCoinDisplay(dt: number): void {
   const session = getSession();
@@ -36,9 +41,8 @@ export function updateCoinDisplay(dt: number): void {
   if (target.lte(Decimal.NUMBER_MAX_VALUE) && Number.isFinite(targetNum)) {
     if (displayedCoins < 0) displayedCoins = targetNum;
     else {
-      const speed = 12;
-      displayedCoins += (targetNum - displayedCoins) * Math.min(1, dt * speed);
-      if (Math.abs(displayedCoins - targetNum) < 0.5) displayedCoins = targetNum;
+      displayedCoins += (targetNum - displayedCoins) * Math.min(1, dt * COIN_ANIM_SPEED);
+      if (Math.abs(displayedCoins - targetNum) < COIN_ANIM_SNAP_THRESHOLD) displayedCoins = targetNum;
     }
     coinsEl.textContent = formatNumber(Math.floor(displayedCoins), settings.compactNumbers);
     if (settings.compactNumbers) coinsEl.title = target.toFixed(2);
@@ -63,9 +67,8 @@ export function updateProductionDisplay(dt: number): void {
   if (target.lte(Decimal.NUMBER_MAX_VALUE) && Number.isFinite(targetNum)) {
     if (displayedProduction < 0) displayedProduction = targetNum;
     else {
-      const speed = 10;
-      displayedProduction += (targetNum - displayedProduction) * Math.min(1, dt * speed);
-      if (Math.abs(displayedProduction - targetNum) < 0.05) displayedProduction = targetNum;
+      displayedProduction += (targetNum - displayedProduction) * Math.min(1, dt * PRODUCTION_ANIM_SPEED);
+      if (Math.abs(displayedProduction - targetNum) < PRODUCTION_ANIM_SNAP_THRESHOLD) displayedProduction = targetNum;
     }
     rateEl.textContent = formatNumber(displayedProduction, settings.compactNumbers) + '/s';
     if (settings.compactNumbers) rateEl.title = target.toFixed(2) + '/s';

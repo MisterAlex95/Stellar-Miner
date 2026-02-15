@@ -96,6 +96,10 @@ function smoothstep(t: number): number {
   return t * t * (3 - 2 * t);
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
 function valueNoise2DSeamlessX(
   seed: number,
   x: number,
@@ -149,7 +153,7 @@ function parseHex(hex: string): [number, number, number] {
 }
 
 function samplePaletteRGB(palette: PlanetPaletteName, t: number): [number, number, number] {
-  const p = Math.max(0, Math.min(100, t));
+  const p = clamp(t, 0, 100);
   const stops = PALETTES[palette] ?? PALETTES.earth;
   let i = 0;
   while (i < stops.length - 1 && stops[i + 1].position < p) i++;
@@ -168,14 +172,23 @@ function samplePaletteRGB(palette: PlanetPaletteName, t: number): [number, numbe
   ];
 }
 
-const TYPE_VAR_SEED_OFFSET: Record<PlanetPaletteName, number> = { earth: 300, desert: 301, ice: 302, lava: 303, gas: 306 };
-const TYPE_VAR_SCALE: Record<PlanetPaletteName, number> = { earth: 0.8, desert: 0.55, ice: 0.5, lava: 0.65, gas: 0.7 };
-const TYPE_VAR_AMOUNT: Record<PlanetPaletteName, number> = { earth: 8, desert: 16, ice: 18, lava: 22, gas: 10 };
-const TYPE_TINT_SEED_OFFSET: Record<PlanetPaletteName, number> = { earth: 310, desert: 311, ice: 312, lava: 313, gas: 316 };
-const TYPE_TINT_STR: Record<PlanetPaletteName, number> = { earth: 4, desert: 14, ice: 10, lava: 12, gas: 5 };
-const TINT_R: Record<PlanetPaletteName, number> = { earth: 1, desert: 1.2, ice: -0.3, lava: 1, gas: 1 };
-const TINT_G: Record<PlanetPaletteName, number> = { earth: 1, desert: 0.6, ice: 1.2, lava: 0.9, gas: 1 };
-const TINT_B: Record<PlanetPaletteName, number> = { earth: 1, desert: -0.2, ice: 1.3, lava: 0.2, gas: 1 };
+const WATER_LEVEL = 48;
+
+const TYPE_VAR: Record<PlanetPaletteName, { seedOffset: number; scale: number; amount: number }> = {
+  earth: { seedOffset: 300, scale: 0.8, amount: 8 },
+  desert: { seedOffset: 301, scale: 0.55, amount: 16 },
+  ice: { seedOffset: 302, scale: 0.5, amount: 18 },
+  lava: { seedOffset: 303, scale: 0.65, amount: 22 },
+  gas: { seedOffset: 306, scale: 0.7, amount: 10 },
+};
+
+const TYPE_TINT: Record<PlanetPaletteName, { seedOffset: number; str: number; r: number; g: number; b: number }> = {
+  earth: { seedOffset: 310, str: 4, r: 1, g: 1, b: 1 },
+  desert: { seedOffset: 311, str: 14, r: 1.2, g: 0.6, b: -0.2 },
+  ice: { seedOffset: 312, str: 10, r: -0.3, g: 1.2, b: 1.3 },
+  lava: { seedOffset: 313, str: 12, r: 1, g: 0.9, b: 0.2 },
+  gas: { seedOffset: 316, str: 5, r: 1, g: 1, b: 1 },
+};
 
 export function generateProceduralPlanetTexture(
   params: ProceduralPlanetParams = {}
@@ -211,7 +224,6 @@ export function generateProceduralPlanetTexture(
   const microSeed = seed + 33333;
   const tintStr = p.tintStr;
   const tintSeed = seed + 11111;
-  const waterLevel = 48;
   const cloudScale = noiseScale * p.cloudScale;
   const cloudSeed = seed + 222223;
   const cloudOpacity = p.clouds ? p.cloudOpacity : 0;
@@ -235,7 +247,7 @@ export function generateProceduralPlanetTexture(
       let n =
         fbmSeamlessX(seed, qx, qy, noiseScale, periodX, octaves, lacunarity, persistence) * (1 - mixAmount) +
         fbmSeamlessX(detailSeed, qx + 100, qy, detailScale, periodX, 3, 2.2, 0.5) * mixAmount;
-      n = Math.max(0, Math.min(1, n - waterBias));
+      n = clamp(n - waterBias, 0, 1);
 
       const ridge = valueNoise2DSeamlessX(ridgeSeed, px, py, ridgeScale, periodX);
       const ridgeVal = 1 - Math.abs(ridge * 2 - 1);
@@ -243,43 +255,45 @@ export function generateProceduralPlanetTexture(
 
       const speckle = valueNoise2DSeamlessX(speckleSeed, px, py, speckleScale, periodX);
       const micro = valueNoise2DSeamlessX(microSeed, px, py, microScale, periodX);
-      let t = Math.pow(Math.max(0, Math.min(1, n)), remapPower) * 100;
-      t = Math.max(0, Math.min(100, t + (speckle - 0.5) * 10 + (micro - 0.5) * 4));
+      let t = Math.pow(clamp(n, 0, 1), remapPower) * 100;
+      t = clamp(t + (speckle - 0.5) * 10 + (micro - 0.5) * 4, 0, 100);
 
-      if (palette === 'earth' && t > waterLevel) {
+      if (palette === 'earth' && t > WATER_LEVEL) {
         const elev = fbmSeamlessX(elevationSeed, px * 1.1, py, elevationScale, periodX, 4, 2.0, 0.55);
         const ridgeElev = 1 - Math.abs(valueNoise2DSeamlessX(elevationSeed + 1, px, py, elevationScale * 1.5, periodX) * 2 - 1);
         t = Math.min(100, t + (elev * 0.6 + ridgeElev * 0.4) * mountainStrength);
       }
 
+      const typeVarCfg = TYPE_VAR[palette];
       const typeVar = fbmSeamlessX(
-        seed + TYPE_VAR_SEED_OFFSET[palette],
+        seed + typeVarCfg.seedOffset,
         px,
         py,
-        TYPE_VAR_SCALE[palette] * noiseScale,
+        typeVarCfg.scale * noiseScale,
         periodX,
         3,
         2.1,
         0.5
       );
-      t = Math.max(0, Math.min(100, t + (typeVar - 0.5) * TYPE_VAR_AMOUNT[palette]));
+      t = clamp(t + (typeVar - 0.5) * typeVarCfg.amount, 0, 100);
 
       if (palette === 'ice') {
         const crack = 1 - Math.abs(valueNoise2DSeamlessX(seed + 304, px, py, noiseScale * 2.2, periodX) * 2 - 1);
-        t = Math.max(0, Math.min(100, t - crack * 8));
+        t = clamp(t - crack * 8, 0, 100);
       }
       if (palette === 'lava') {
         const flow = 1 - Math.abs(valueNoise2DSeamlessX(seed + 305, px, py, noiseScale * 1.1, periodX) * 2 - 1);
-        t = Math.max(0, Math.min(100, t + flow * 12));
+        t = clamp(t + flow * 12, 0, 100);
       }
 
       let [r, g, b] = samplePaletteRGB(palette, t);
+      const tintCfg = TYPE_TINT[palette];
       const tint = valueNoise2DSeamlessX(tintSeed, px, py, noiseScale * 3, periodX) * 2 - 1;
-      const typeTint = valueNoise2DSeamlessX(seed + TYPE_TINT_SEED_OFFSET[palette], px, py, noiseScale * 1.2, periodX) * 2 - 1;
-      const tt = tint * tintStr + typeTint * TYPE_TINT_STR[palette];
-      r = Math.max(0, Math.min(255, Math.round(r + tt * TINT_R[palette])));
-      g = Math.max(0, Math.min(255, Math.round(g + tt * TINT_G[palette])));
-      b = Math.max(0, Math.min(255, Math.round(b + tt * TINT_B[palette])));
+      const typeTint = valueNoise2DSeamlessX(seed + tintCfg.seedOffset, px, py, noiseScale * 1.2, periodX) * 2 - 1;
+      const tt = tint * tintStr + typeTint * tintCfg.str;
+      r = Math.round(r + tt * tintCfg.r);
+      g = Math.round(g + tt * tintCfg.g);
+      b = Math.round(b + tt * tintCfg.b);
 
       if (cloudOpacity > 0) {
         const cloudNoise = fbmSeamlessX(cloudSeed, px, py, cloudScale, periodX, 4, 2.0, 0.5);
@@ -290,9 +304,9 @@ export function generateProceduralPlanetTexture(
       }
 
       const i = (py * size + px) * 4;
-      data[i] = r;
-      data[i + 1] = g;
-      data[i + 2] = b;
+      data[i] = clamp(r, 0, 255);
+      data[i + 1] = clamp(g, 0, 255);
+      data[i + 2] = clamp(b, 0, 255);
       data[i + 3] = 255;
     }
   }

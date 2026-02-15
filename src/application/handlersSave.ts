@@ -7,14 +7,27 @@ import {
   getExpeditionForSave,
   setExpeditionFromPayload,
   saveLoad,
+  type SavedExpedition,
 } from './gameState.js';
 
+function getSavePayload(): {
+  session: ReturnType<typeof getSession>;
+  runStats: ReturnType<typeof getRunStats>;
+  extras: { discoveredEventIds: string[]; expedition: SavedExpedition | null };
+} {
+  return {
+    session: getSession(),
+    runStats: getRunStats(),
+    extras: {
+      discoveredEventIds: getDiscoveredEventIds(),
+      expedition: getExpeditionForSave(),
+    },
+  };
+}
+
 export function saveSession(): void {
-  const session = getSession();
-  saveLoad.save(session, getRunStats(), {
-    discoveredEventIds: getDiscoveredEventIds(),
-    expedition: getExpeditionForSave(),
-  });
+  const { session, runStats, extras } = getSavePayload();
+  if (session) saveLoad.save(session, runStats, extras);
 }
 
 export function handleExportSave(): void {
@@ -38,9 +51,7 @@ export async function handleImportSave(json: string): Promise<boolean> {
   setSession(session);
   setRunStatsFromPayload(null);
   setExpeditionFromPayload(null);
-  await saveLoad.save(session, getRunStats(), {
-    discoveredEventIds: getDiscoveredEventIds(),
-    expedition: getExpeditionForSave(),
-  });
+  const { runStats, extras } = getSavePayload();
+  await saveLoad.save(session, runStats, extras);
   return true;
 }

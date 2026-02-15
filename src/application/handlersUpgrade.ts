@@ -16,6 +16,17 @@ import { checkAchievements } from './achievements.js';
 import { t } from './strings.js';
 import { saveSession } from './handlersSave.js';
 
+function refreshAfterUpgrade(opts: { flashId?: string } = {}): void {
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderCrewSection();
+  renderPlanetList();
+  renderQuestSection();
+  checkAchievements();
+  if (opts.flashId) flashUpgradeCard(opts.flashId);
+}
+
 /** Whether we need a planet with a raw free slot for this upgrade (effective = after research). */
 function upgradeNeedsSlot(upgradeId: string): boolean {
   return getEffectiveUpgradeUsesSlot(upgradeId);
@@ -66,14 +77,7 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
       showMiniMilestoneToast(t('firstUpgradeToast'));
     }
   }
-  saveSession();
-  updateStats();
-  renderUpgradeList();
-  renderCrewSection();
-  renderPlanetList();
-  flashUpgradeCard(upgradeId);
-  renderQuestSection();
-  checkAchievements();
+  refreshAfterUpgrade({ flashId: upgradeId });
 }
 
 export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): void {
@@ -111,16 +115,7 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): void 
     ownedCount++;
   }
 
-  if (bought > 0) {
-    saveSession();
-    updateStats();
-    renderUpgradeList();
-    renderCrewSection();
-    renderPlanetList();
-    renderQuestSection();
-    checkAchievements();
-  }
-  renderPlanetList();
+  if (bought > 0) refreshAfterUpgrade();
 }
 
 function resolveTargetPlanet(

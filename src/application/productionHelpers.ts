@@ -22,7 +22,7 @@ export function getPlanetEffectiveProduction(
   const totalBase = session.player.productionRate.value;
   if (totalBase.lte(0)) return new Decimal(0);
   const planetBase = getPlanetBaseProduction(planet);
-  const ratio = totalBase.gt(0) ? planetBase.div(totalBase) : new Decimal(0);
+  const ratio = planetBase.div(totalBase);
   const researchMult = getResearchProductionMultiplier();
   return session.player.effectiveProductionRate.mul(ratio).mul(researchMult);
 }

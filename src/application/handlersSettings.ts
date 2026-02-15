@@ -15,6 +15,22 @@ import {
   COMBO_MASTER_KEY,
   PRESTIGES_TODAY_KEY,
 } from './catalogs.js';
+
+const RESET_LOCAL_STORAGE_KEYS: string[] = [
+  QUEST_STORAGE_KEY,
+  QUEST_STREAK_KEY,
+  QUEST_LAST_CLAIM_KEY,
+  MILESTONES_STORAGE_KEY,
+  TOTAL_CLICKS_KEY,
+  LAST_DAILY_BONUS_KEY,
+  ACHIEVEMENTS_KEY,
+  COMBO_MASTER_KEY,
+  PRESTIGES_TODAY_KEY,
+  'stellar-miner-first-upgrade-toast',
+  'stellar-miner-first-planet-toast',
+  'stellar-miner-first-astronaut-toast',
+  'stellar-miner-first-prestige-toast',
+];
 import { updateStats } from '../presentation/statsView.js';
 import { renderUpgradeList } from '../presentation/upgradeListView.js';
 import { renderPlanetList } from '../presentation/planetListView.js';
@@ -69,16 +85,7 @@ export function handleResetProgress(): void {
   saveLoad.clearProgress();
   clearProgression();
   if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem(QUEST_STORAGE_KEY);
-    localStorage.removeItem(QUEST_STREAK_KEY);
-    localStorage.removeItem(QUEST_LAST_CLAIM_KEY);
-    localStorage.removeItem(MILESTONES_STORAGE_KEY);
-    localStorage.removeItem(TOTAL_CLICKS_KEY);
-    localStorage.removeItem(LAST_DAILY_BONUS_KEY);
-    localStorage.removeItem(ACHIEVEMENTS_KEY);
-    localStorage.removeItem(COMBO_MASTER_KEY);
-    localStorage.removeItem(PRESTIGES_TODAY_KEY);
-    ['stellar-miner-first-upgrade-toast', 'stellar-miner-first-planet-toast', 'stellar-miner-first-astronaut-toast', 'stellar-miner-first-prestige-toast'].forEach((k) => localStorage.removeItem(k));
+    RESET_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
   }
   const currentSession = getSession();
   const freshPlayer = Player.create('player-1');

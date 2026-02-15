@@ -31,17 +31,22 @@ import { getUpgradeCardState } from './components/upgradeCard.js';
 import { PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
 import { getMaxBuyCount } from './upgradeListView.js';
 
+/** Ordered upgrade defs (by tier) the player can see. */
+function getOrderedUpgradeDefs(player: { upgrades: { id: string }[] }) {
+  const ownedIds = player.upgrades.map((u) => u.id);
+  const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
+  return UPGRADE_CATALOG.filter((d) => unlockedTiers.has(d.tier)).sort((a, b) => a.tier - b.tier);
+}
+
 /** First affordable upgrade (by tier order), or null. */
 function getNextAffordableUpgrade(): { def: { id: string }; cost: string; planetId?: string } | null {
   const session = getSession();
   if (!session) return null;
   const player = session.player;
   const settings = getSettings();
-  const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
   const planetWithSlot = player.getPlanetWithFreeSlot();
-  const ownedIds = player.upgrades.map((u) => u.id);
-  const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
-  const defs = UPGRADE_CATALOG.filter((d) => unlockedTiers.has(d.tier)).sort((a, b) => a.tier - b.tier);
+  const hasFreeSlot = planetWithSlot !== null;
+  const defs = getOrderedUpgradeDefs(player);
   for (const def of defs) {
     const maxCount = getMaxBuyCount(def.id);
     const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
@@ -62,10 +67,9 @@ function getNextUpgradeGoal(): { def: { id: string }; cost: Decimal; name: strin
   if (!session) return null;
   const player = session.player;
   const settings = getSettings();
-  const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
-  const ownedIds = player.upgrades.map((u) => u.id);
-  const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
-  const defs = UPGRADE_CATALOG.filter((d) => unlockedTiers.has(d.tier)).sort((a, b) => a.tier - b.tier);
+  const planetWithSlot = player.getPlanetWithFreeSlot();
+  const hasFreeSlot = planetWithSlot !== null;
+  const defs = getOrderedUpgradeDefs(player);
   for (const def of defs) {
     const maxCount = getMaxBuyCount(def.id);
     const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);

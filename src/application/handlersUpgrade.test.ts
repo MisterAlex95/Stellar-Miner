@@ -39,19 +39,16 @@ describe('handlersUpgrade', () => {
       expect(player.coins.value.toNumber()).toBe(beforeCoins - 45);
     });
 
-    it('purchases drill-mk1 when player has coins and crew and planet has slot', () => {
+    it('purchases drill-mk1 when player has coins and planet has slot (tier 2 needs no crew)', () => {
       const session = getSession();
       const player = session.player;
       player.addCoins(2000);
-      player.addAstronauts(2);
       const beforeCount = player.upgrades.filter((u) => u.id === 'drill-mk1').length;
 
       handleUpgradeBuy('drill-mk1');
 
       expect(player.upgrades.filter((u) => u.id === 'drill-mk1').length).toBe(beforeCount + 1);
-      expect(player.freeCrewCount).toBe(2);
-      expect(player.crewAssignedToEquipment).toBe(1);
-      expect(player.astronautCount).toBe(3);
+      expect(player.crewAssignedToEquipment).toBe(0);
     });
 
     it('does not purchase when insufficient coins', () => {
@@ -69,13 +66,13 @@ describe('handlersUpgrade', () => {
     it('does not purchase when no crew for upgrade that requires it', () => {
       const session = getSession();
       const player = session.player;
-      player.addCoins(2000);
+      player.addCoins(50000);
       expect(player.astronautCount).toBe(0);
 
-      handleUpgradeBuy('drill-mk1');
+      handleUpgradeBuy('drill-mk2');
 
-      expect(player.upgrades.filter((u) => u.id === 'drill-mk1').length).toBe(0);
-      expect(player.coins.value.toNumber()).toBe(2000);
+      expect(player.upgrades.filter((u) => u.id === 'drill-mk2').length).toBe(0);
+      expect(player.coins.value.toNumber()).toBe(50000);
     });
 
     it('does not purchase when no free slot for slot-using upgrade', () => {
@@ -84,7 +81,6 @@ describe('handlersUpgrade', () => {
       const planet = player.planets[0];
       while (planet.usedSlots < planet.maxUpgrades) {
         player.addCoins(10000);
-        player.addAstronauts(1);
         handleUpgradeBuy('drill-mk1');
       }
       const coinsBefore = player.coins.value.toNumber();

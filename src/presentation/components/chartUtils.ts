@@ -2,7 +2,16 @@
  * Shared line chart drawing for statistics. Used by statisticsView.
  */
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
 export const CHART_PADDING = { top: 16, right: 14, bottom: 12, left: 14 };
+
+const CHART_GRID_LINES = 4;
+const CHART_Y_PADDING_RATIO = 0.05;
+const HOVER_LINE_DASH = [3, 3];
+const HOVER_DOT_RADIUS = 3.5;
 
 export const CHART_COLORS = {
   stroke: '#f59e0b',
@@ -31,9 +40,8 @@ export function getChartIndexAtOffsetX(
   if (rect.width <= 0 || valueCount < 2) return 0;
   const chartW = rect.width - CHART_PADDING.left - CHART_PADDING.right;
   const stepX = chartW / (valueCount - 1);
-  let index = Math.round((offsetX - CHART_PADDING.left) / stepX);
-  index = Math.max(0, Math.min(valueCount - 1, index));
-  return index;
+  const index = Math.round((offsetX - CHART_PADDING.left) / stepX);
+  return clamp(index, 0, valueCount - 1);
 }
 
 export type ChartOptions = {
@@ -76,15 +84,14 @@ export function drawLineChart(
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const yMin = min - range * 0.05;
-  const yMax = max + range * 0.05;
+  const yMin = min - range * CHART_Y_PADDING_RATIO;
+  const yMax = max + range * CHART_Y_PADDING_RATIO;
   const yRange = yMax - yMin;
 
-  const gridLines = 4;
   ctx.strokeStyle = 'rgba(42, 47, 61, 0.5)';
   ctx.lineWidth = 1;
-  for (let g = 0; g <= gridLines; g++) {
-    const gy = chartTop + (chartH * g) / gridLines;
+  for (let g = 0; g <= CHART_GRID_LINES; g++) {
+    const gy = chartTop + (chartH * g) / CHART_GRID_LINES;
     ctx.beginPath();
     ctx.moveTo(padding.left, gy);
     ctx.lineTo(padding.left + chartW, gy);
@@ -115,9 +122,6 @@ export function drawLineChart(
   ctx.lineTo(points[0].x, chartBottom);
   ctx.closePath();
   ctx.fill();
-
-  ctx.strokeStyle = options.colorStroke;
-  ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
   for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
@@ -127,7 +131,7 @@ export function drawLineChart(
     const pt = points[hoveredIndex];
     ctx.strokeStyle = 'rgba(255,255,255,0.7)';
     ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
+    ctx.setLineDash(HOVER_LINE_DASH);
     ctx.beginPath();
     ctx.moveTo(pt.x, chartBottom);
     ctx.lineTo(pt.x, pt.y);
@@ -137,7 +141,7 @@ export function drawLineChart(
     ctx.strokeStyle = 'rgba(255,255,255,0.9)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(pt.x, pt.y, 3.5, 0, Math.PI * 2);
+    ctx.arc(pt.x, pt.y, HOVER_DOT_RADIUS, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }

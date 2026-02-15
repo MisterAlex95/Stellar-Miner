@@ -21,7 +21,7 @@ export function showMiniMilestoneToast(message: string): void {
 export function showEventToast(gameEvent: GameEvent): void {
   const isNegative = gameEvent.effect.multiplier < 1;
   const name = getCatalogEventName(gameEvent.id);
-  const multStr = gameEvent.effect.multiplier >= 1 ? `×${gameEvent.effect.multiplier}` : `×${gameEvent.effect.multiplier}`;
+  const multStr = `×${gameEvent.effect.multiplier}`;
   const durationSec = gameEvent.effect.durationMs / 1000;
   const message = `${name} — ${multStr} production for ${durationSec}s`;
   const variant = isNegative ? 'negative' : 'event-positive';

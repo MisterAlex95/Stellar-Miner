@@ -2,10 +2,14 @@
  * Shared DOM helpers for safe attribute and HTML string building.
  */
 
+function escapeAmpLt(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
 export function escapeAttr(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return escapeAmpLt(s).replace(/"/g, '&quot;');
 }
 
 export function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return escapeAmpLt(s).replace(/>/g, '&gt;');
 }

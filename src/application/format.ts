@@ -23,7 +23,11 @@ function formatDecimalCompact(d: Decimal): string {
   const exp = Math.floor(log10);
   if (exp < 3) {
     const num = d.toNumber();
-    return Number.isFinite(num) ? Math.floor(num).toLocaleString() : d.toString();
+    if (Number.isFinite(num)) {
+      if (num > 0 && num < 1) return num.toFixed(1);
+      return Math.floor(num).toLocaleString();
+    }
+    return d.toString();
   }
   const suffixIndex = Math.floor(exp / 3) - 1;
   if (suffixIndex < 0 || suffixIndex >= SUFFIXES.length) {
@@ -41,7 +45,11 @@ export function formatNumber(n: number | DecimalSource, compact: boolean = true)
   const d = n instanceof Decimal ? n : new Decimal(n);
   if (!compact) {
     const num = d.toNumber();
-    return Number.isFinite(num) ? Math.floor(num).toLocaleString() : d.toString();
+    if (Number.isFinite(num)) {
+      if (num > 0 && num < 1) return num.toFixed(1);
+      return Math.floor(num).toLocaleString();
+    }
+    return d.toString();
   }
   return formatDecimalCompact(d);
 }

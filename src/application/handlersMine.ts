@@ -44,9 +44,34 @@ import {
 import { getResearchClickMultiplier } from './research.js';
 import { saveSession } from './handlersSave.js';
 
+const SHAKE_DURATION_MS = 400;
+
 function checkQuestProgress(): void {
   const p = getQuestProgress();
   if (p?.done) renderQuestSection();
+}
+
+function refreshAfterMine(): void {
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderQuestSection();
+}
+
+function triggerShake(): void {
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.classList.remove('app--shake');
+  void app.offsetWidth;
+  app.classList.add('app--shake');
+  setTimeout(() => app.classList.remove('app--shake'), SHAKE_DURATION_MS);
+}
+
+function getMineZoneCenter(): { x: number; y: number } {
+  const zone = document.getElementById('mine-zone');
+  if (!zone) return { x: 0, y: 0 };
+  const rect = zone.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
 export function handleMineClick(e?: MouseEvent): void {
@@ -107,36 +132,20 @@ export function handleMineClick(e?: MouseEvent): void {
   let clientX = e?.clientX;
   let clientY = e?.clientY;
   if (clientX == null || clientY == null) {
-    const zone = document.getElementById('mine-zone');
-    if (zone) {
-      const rect = zone.getBoundingClientRect();
-      clientX = rect.left + rect.width / 2;
-      clientY = rect.top + rect.height / 2;
-    } else {
-      clientX = 0;
-      clientY = 0;
-    }
+    const center = getMineZoneCenter();
+    clientX = clientX ?? center.x;
+    clientY = clientY ?? center.y;
   }
+
   showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical, comboMult: comboMult > 1 ? comboMult : undefined });
   if (superLucky) showSuperLuckyToast(coins);
   if (isCritical) showCriticalToast(coins);
   mineZoneCanvasApi?.onMineClick(clientX, clientY);
-  if (superLucky || isCritical) {
-    const app = document.getElementById('app');
-    if (app) {
-      app.classList.remove('app--shake');
-      void app.offsetWidth;
-      app.classList.add('app--shake');
-      setTimeout(() => app.classList.remove('app--shake'), 400);
-    }
-  }
+  if (superLucky || isCritical) triggerShake();
   updateComboIndicator();
   checkAndShowMilestones();
   checkAchievements();
-  saveSession();
-  updateStats();
-  renderUpgradeList();
-  renderQuestSection();
+  refreshAfterMine();
   const progress = getQuestProgress();
   if (progress?.done) checkQuestProgress();
 }

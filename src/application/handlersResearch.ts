@@ -19,6 +19,15 @@ import { checkAchievements } from './achievements.js';
 
 const RESEARCH_PROGRESS_DURATION_MS = 2500;
 
+function refreshAfterResearch(opts: { crew?: boolean } = {}): void {
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderResearchSection();
+  setResearchInProgress(false);
+  if (opts.crew) renderCrewSection();
+}
+
 export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?: boolean }): void {
   const session = getSession();
   if (!session) return;
@@ -35,26 +44,27 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
       };
   const scientistCount = session.player.crewByRole?.scientist ?? 0;
   const result = attemptResearch(id, spendCoins, getUpgradeDisplayLine, scientistCount);
-  saveSession();
-  updateStats();
-  renderUpgradeList();
-  renderResearchSection();
-  setResearchInProgress(false);
+
   if (result.success) {
     const node = RESEARCH_CATALOG.find((n) => n.id === id);
+    let needsCrewRefresh = false;
     if (node) {
       const freed = getCrewFreedByUnlockingNode(node, session.player.upgrades);
       if (freed > 0) {
         session.player.unassignCrewFromEquipment(freed);
         session.player.addAstronauts(freed, 'miner');
-        saveSession();
-        renderCrewSection();
+        needsCrewRefresh = true;
       }
     }
+    refreshAfterResearch({ crew: needsCrewRefresh });
     showMiniMilestoneToast(result.message);
     checkAchievements();
-  } else if (result.message.includes('failed')) {
-    showMiniMilestoneToast(result.message.includes('Coins spent') ? t('researchFailedCoinsSpent') : t('researchFailedTryAgain'));
+  } else {
+    refreshAfterResearch();
+    if (result.message.includes('failed')) {
+      const msg = result.message.includes('Coins spent') ? t('researchFailedCoinsSpent') : t('researchFailedTryAgain');
+      showMiniMilestoneToast(msg);
+    }
   }
 }
 
