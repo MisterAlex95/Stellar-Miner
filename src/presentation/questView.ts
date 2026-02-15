@@ -26,7 +26,8 @@ export function renderQuestSection(): void {
   container.classList.toggle('quest-section--complete', p.done);
   const progressBar = document.getElementById('quest-progress-bar');
   if (progressBar) {
-    const pct = p.target > 0 ? Math.min(100, (p.current / p.target) * 100) : 0;
+    const currentNum = typeof p.current === 'number' ? p.current : p.current.toNumber();
+    const pct = p.target > 0 ? Math.min(100, (currentNum / p.target) * 100) : 0;
     progressBar.style.width = `${pct}%`;
     progressBar.setAttribute('aria-valuenow', String(Math.round(pct)));
   }
