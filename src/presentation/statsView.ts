@@ -12,7 +12,7 @@ import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { EVENT_INTERVAL_MS } from '../application/catalogs.js';
-import { getNextMilestone } from '../application/progression.js';
+import { getNextMilestone, getUnlockedBlocks } from '../application/progression.js';
 import { getResearchProductionMultiplier, getResearchProductionPercent } from '../application/research.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogEventName } from '../application/i18nCatalogs.js';
@@ -135,49 +135,54 @@ export function updateStats(): void {
     }
   }
 
+  const eventsUnlocked = getUnlockedBlocks(session).has('events');
   const activeEventInstances = getActiveEventInstances();
   const nextEventAt = getNextEventAt();
   const activeEl = document.getElementById('active-events');
-  if (activeEl) {
-    const now = Date.now();
-    const active = activeEventInstances.filter((a) => a.endsAt > now);
-    if (active.length === 0) {
-      activeEl.innerHTML = '';
-      activeEl.style.display = 'none';
-    } else {
-      activeEl.style.display = 'block';
-      activeEl.innerHTML = active
-        .map(
-          (a) => {
-            const name = getCatalogEventName(a.event.id);
-            return `<span class="event-badge" title="${tParam('eventBadgeTitle', { name, mult: String(a.event.effect.multiplier) })}">${name} (${Math.ceil((a.endsAt - now) / 1000)}s)</span>`;
-          }
-        )
-        .join('');
-    }
-  }
   const nextEventEl = document.getElementById('next-event-countdown');
   const nextEventProgressWrap = document.getElementById('next-event-progress-wrap');
   const nextEventProgressBar = document.getElementById('next-event-progress-bar');
-  const now = Date.now();
-  const active = activeEventInstances.filter((a) => a.endsAt > now);
-  if (nextEventEl) {
-    if (active.length > 0) {
-      nextEventEl.textContent = '';
-      nextEventEl.style.display = 'none';
-    } else {
-      const secs = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
-      const m = Math.floor(secs / 60);
-      const s = secs % 60;
-      nextEventEl.textContent = m > 0 ? tParam('nextEventInFormat', { time: `${m}:${s.toString().padStart(2, '0')}` }) : tParam('nextEventInFormat', { time: `${secs}s` });
-      nextEventEl.style.display = 'block';
+  if (!eventsUnlocked) {
+    if (activeEl) activeEl.style.display = 'none';
+    if (nextEventEl) nextEventEl.style.display = 'none';
+    if (nextEventProgressWrap) nextEventProgressWrap.style.display = 'none';
+  } else {
+    const now = Date.now();
+    const active = activeEventInstances.filter((a) => a.endsAt > now);
+    if (activeEl) {
+      if (active.length === 0) {
+        activeEl.innerHTML = '';
+        activeEl.style.display = 'none';
+      } else {
+        activeEl.style.display = 'block';
+        activeEl.innerHTML = active
+          .map(
+            (a) => {
+              const name = getCatalogEventName(a.event.id);
+              return `<span class="event-badge" title="${tParam('eventBadgeTitle', { name, mult: String(a.event.effect.multiplier) })}">${name} (${Math.ceil((a.endsAt - now) / 1000)}s)</span>`;
+            }
+          )
+          .join('');
+      }
     }
-  }
-  if (nextEventProgressWrap && nextEventProgressBar && active.length === 0) {
-    const progress = Math.max(0, Math.min(1, 1 - (nextEventAt - now) / EVENT_INTERVAL_MS));
-    nextEventProgressWrap.style.display = 'block';
-    nextEventProgressBar.style.width = `${progress * 100}%`;
-  } else if (nextEventProgressWrap) {
-    nextEventProgressWrap.style.display = active.length > 0 ? 'none' : 'block';
+    if (nextEventEl) {
+      if (active.length > 0) {
+        nextEventEl.textContent = '';
+        nextEventEl.style.display = 'none';
+      } else {
+        const secs = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        nextEventEl.textContent = m > 0 ? tParam('nextEventInFormat', { time: `${m}:${s.toString().padStart(2, '0')}` }) : tParam('nextEventInFormat', { time: `${secs}s` });
+        nextEventEl.style.display = 'block';
+      }
+    }
+    if (nextEventProgressWrap && nextEventProgressBar && active.length === 0) {
+      const progress = Math.max(0, Math.min(1, 1 - (nextEventAt - now) / EVENT_INTERVAL_MS));
+      nextEventProgressWrap.style.display = 'block';
+      nextEventProgressBar.style.width = `${progress * 100}%`;
+    } else if (nextEventProgressWrap) {
+      nextEventProgressWrap.style.display = active.length > 0 ? 'none' : 'block';
+    }
   }
 }

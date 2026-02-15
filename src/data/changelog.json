@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.2.1",
+    "date": "2026-02-15",
+    "changes": [
+      "Random events are now unlocked by progression at 2,000 coins (intro modal + first event after a short delay)."
+    ]
+  },
+  {
     "version": "0.2.0",
     "date": "2026-02-15",
     "changes": [

@@ -26,6 +26,7 @@ import { renderPlanetList } from './presentation/planetListView.js';
 import { renderResearchSection } from './presentation/researchView.js';
 import { renderQuestSection } from './presentation/questView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
+import { getUnlockedBlocks } from './application/progression.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
 import { switchTab } from './presentation/mount.js';
 import { updateDebugPanel } from './application/handlers.js';
@@ -36,6 +37,7 @@ import { showOfflineToast } from './presentation/toasts.js';
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 150;
 let lastQuestRenderMs = 0;
+let lastEventsUnlocked = false;
 
 function gameLoop(now: number): void {
   if (typeof performance !== 'undefined' && performance.mark) performance.mark('game-loop-start');
@@ -48,9 +50,18 @@ function gameLoop(now: number): void {
   lastTime = now;
 
   const nowMs = Date.now();
-  if (nowMs >= getNextEventAt()) {
-    triggerRandomEvent();
-    setNextEventAt(nowMs + EVENT_INTERVAL_MS);
+  const eventsUnlocked = getUnlockedBlocks(session).has('events');
+  if (eventsUnlocked) {
+    if (!lastEventsUnlocked) {
+      setNextEventAt(nowMs + MIN_EVENT_DELAY_MS);
+    }
+    lastEventsUnlocked = true;
+    if (nowMs >= getNextEventAt()) {
+      triggerRandomEvent();
+      setNextEventAt(nowMs + EVENT_INTERVAL_MS);
+    }
+  } else {
+    lastEventsUnlocked = false;
   }
 
   const eventMult = getEventMultiplier();

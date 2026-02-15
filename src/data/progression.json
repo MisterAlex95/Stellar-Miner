@@ -35,6 +35,13 @@
     "sectionId": "planets-section"
   },
   {
+    "id": "events",
+    "coinsThreshold": 2000,
+    "title": "Random events",
+    "body": "Space is full of surprises. Random events will now occasionally boost or reduce your production for a short time. Watch the event badges and plan around them!",
+    "sectionId": null
+  },
+  {
     "id": "research",
     "coinsThreshold": 1000,
     "title": "Scientific Research",

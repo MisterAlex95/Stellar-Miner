@@ -9,7 +9,7 @@ type ProgressionData = {
   unlockedBlocks: string[];
 };
 
-export type BlockId = 'welcome' | 'upgrades' | 'crew' | 'quest' | 'planets' | 'research' | 'prestige';
+export type BlockId = 'welcome' | 'upgrades' | 'crew' | 'events' | 'quest' | 'planets' | 'research' | 'prestige';
 
 export type BlockDef = {
   id: BlockId;

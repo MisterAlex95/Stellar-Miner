@@ -492,6 +492,7 @@ export function updateStatisticsSection(): void {
   if (!session) return;
 
   const unlocked = getUnlockedBlocks(session);
+  const eventsUnlocked = unlocked.has('events');
   const container = document.getElementById('statistics-container');
   if (container) {
     container.querySelectorAll<HTMLElement>('.statistics-group[data-stat-group]').forEach((el) => {
@@ -499,6 +500,10 @@ export function updateStatisticsSection(): void {
       const block = group ? STAT_GROUP_UNLOCK[group] : undefined;
       const show = block ? unlocked.has(block) : true;
       el.style.display = show ? '' : 'none';
+    });
+    ['active-events-count', 'next-event-in', 'event-mult'].forEach((statId) => {
+      const card = container.querySelector<HTMLElement>(`[data-stat-id="${statId}"]`)?.closest('.statistics-card');
+      if (card) card.style.display = eventsUnlocked ? '' : 'none';
     });
   }
 
@@ -532,7 +537,7 @@ export function updateStatisticsSection(): void {
   setStat('planet-bonus', planetBonusPct > 0 ? `+${planetBonusPct.toFixed(0)}%` : '—');
   setStat('prestige-bonus', prestigeBonusPct > 0 ? `+${prestigeBonusPct.toFixed(0)}%` : '—');
   setStat('crew-bonus', crewBonusPct > 0 ? `+${crewBonusPct.toFixed(0)}%` : '—');
-  setStat('event-mult', eventMult > 1 ? `×${eventMult.toFixed(2)}` : '×1');
+  if (eventsUnlocked) setStat('event-mult', eventMult > 1 ? `×${eventMult.toFixed(2)}` : '×1');
   const researchProdPct = getResearchProductionPercent();
   const prestigeLevel = player.prestigeLevel;
   const effectiveResearchClickPct = prestigeLevel >= 1 ? getResearchClickPercent() : 0;
@@ -557,14 +562,16 @@ export function updateStatisticsSection(): void {
   setStat('play-time', formatDuration(playTime.totalPlayTimeMs));
   setStat('session-duration', formatDuration(sessionDurationMs));
   setStat('quest-streak', String(getQuestStreak()));
-  setStat('active-events-count', String(activeEvents.length));
-  if (activeEvents.length > 0) {
-    setStat('next-event-in', '—');
-  } else {
-    const secs = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    setStat('next-event-in', m > 0 ? `${m}:${s.toString().padStart(2, '0')}` : `${secs}s`);
+  if (eventsUnlocked) {
+    setStat('active-events-count', String(activeEvents.length));
+    if (activeEvents.length > 0) {
+      setStat('next-event-in', '—');
+    } else {
+      const secs = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      setStat('next-event-in', m > 0 ? `${m}:${s.toString().padStart(2, '0')}` : `${secs}s`);
+    }
   }
   setStat('achievements-unlocked', String(getUnlockedAchievements().size));
   setStat('achievements-total', String(ACHIEVEMENTS.length));
