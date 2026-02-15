@@ -411,14 +411,16 @@ export function mount(): void {
   }
 
   function onCollapseToggle(e: Event): void {
-    const target = (e.target as HTMLElement).closest('.gameplay-block-toggle');
-    if (!target) return;
-    const section = (target as HTMLElement).closest('.gameplay-block');
+    const header = (e.target as HTMLElement).closest('.gameplay-block-header');
+    if (!header) return;
+    const section = header.closest('.gameplay-block');
     if (!section || !section.id) return;
+    const btn = section.querySelector('.gameplay-block-toggle');
+    if (!btn) return;
     const isCollapsed = section.classList.toggle('gameplay-block--collapsed');
-    (target as HTMLElement).setAttribute('aria-expanded', String(!isCollapsed));
-    (target as HTMLElement).setAttribute('title', isCollapsed ? t('expandSection') : t('collapseSection'));
-    (target as HTMLElement).setAttribute('aria-label', isCollapsed ? t('expandSection') : t('collapseSection'));
+    (btn as HTMLElement).setAttribute('aria-expanded', String(!isCollapsed));
+    (btn as HTMLElement).setAttribute('title', isCollapsed ? t('expandSection') : t('collapseSection'));
+    (btn as HTMLElement).setAttribute('aria-label', isCollapsed ? t('expandSection') : t('collapseSection'));
     try {
       localStorage.setItem(COLLAPSED_STORAGE_PREFIX + section.id, isCollapsed ? '1' : '0');
     } catch {

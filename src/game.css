@@ -1301,6 +1301,8 @@ h1 {
   justify-content: space-between;
   gap: 0.5rem;
   margin-bottom: 0.35rem;
+  cursor: pointer;
+  user-select: none;
 }
 
 .gameplay-block .gameplay-block-header h2 {
@@ -1352,14 +1354,6 @@ h1 {
 
 .gameplay-block--collapsed .gameplay-block-toggle-icon {
   transform: rotate(-90deg);
-}
-
-.prestige-section h2 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-  margin: 0 0 0.35rem 0;
 }
 
 .prestige-hint {
@@ -2013,13 +2007,16 @@ h1 {
 .crew-section h2,
 .planets-section h2,
 .housing-section h2,
+.research-section h2,
+.upgrades-section h2,
+.prestige-section h2,
+.quest-section h2,
 .statistics-section h2 {
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--text-dim);
-  margin: 0 0 0.5rem 0;
+  color: var(--text);
+  margin: 0 0 0.35rem 0;
 }
 
 .planets-hint,
@@ -2032,15 +2029,6 @@ h1 {
 
 .housing-empty {
   font-size: 0.8rem;
-  color: var(--text-dim);
-  margin: 0 0 0.5rem 0;
-}
-
-.research-section h2 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
   color: var(--text-dim);
   margin: 0 0 0.5rem 0;
 }
@@ -2692,15 +2680,6 @@ h1 {
 .buy-planet-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.upgrades-section h2 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--text-dim);
-  margin: 0 0 0.5rem 0;
 }
 
 .upgrades-hint {
