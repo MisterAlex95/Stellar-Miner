@@ -1,3 +1,7 @@
+Backlog of gameplay ideas for future features (text below in French).
+
+---
+
 Mécaniques de Gameplay Innovantes
 
 

@@ -12,7 +12,8 @@ Simplified Domain-Driven Design for the idle game "Stellar Miner": domain and su
 |------------------|-------------------------------------------|
 | **Mining (Core)** | Resources, upgrades, and production       |
 | **Economy (Supporting)** | Transactions, costs, and revenue   |
-| **Progression (Generic)** | Save/load and prestige             |
+| **Progression (Supporting)** | Save/load, prestige, quests, milestones, achievements |
+| **Progression (Generic)** | Settings, stats history, offline progress |
 
 ---
 
@@ -22,7 +23,8 @@ Entities have identity and a lifecycle.
 
 | Entity     | Description                                      | Main attributes (examples)        |
 |------------|--------------------------------------------------|----------------------------------|
-| **Player** | Player and their progression                     | id, coins, prestigeLevel, totalCoinsEver |
+| **Player** | Player and their progression (planets, crew, coins) | id, coins, planets, prestigeLevel, totalCoinsEver, astronautCount |
+| **Planet** | Mining outpost with upgrade slots and production bonus | id, name, maxUpgrades, upgrades |
 | **Upgrade**| Purchasable improvement (e.g. mining robot)      | id, name, cost, effect (UpgradeEffect)   |
 | **GameEvent** | Random event (e.g. meteor storm)             | id, name, effect, duration       |
 | **Artifact** | Special item with permanent or temporary bonus | id, name, effect, isActive       |
@@ -48,8 +50,8 @@ An aggregate is a cluster of objects treated as a single unit.
 
 | Aggregate   | Root        | Description                                      |
 |-------------|-------------|--------------------------------------------------|
-| **Player**  | Player      | Holds upgrades, artifacts, and coins            |
-| **GameSession** | GameSession | Holds the player, active events, and global state |
+| **Player**  | Player      | Holds planets (each with upgrades), artifacts, coins, crew (astronauts) |
+| **GameSession** | GameSession | Holds the player, active events (with end times), and global state |
 
 ---
 
@@ -59,10 +61,11 @@ Domain logic that does not belong to a single entity or value object.
 
 | Service           | Responsibility                                  |
 |-------------------|-------------------------------------------------|
-| **UpgradeService**| Purchase and apply upgrades                     |
+| **UpgradeService**| Purchase and apply upgrades (with astronaut requirements) |
+| **PlanetService** | Buy new planets, add upgrade slots              |
 | **EventService**  | Trigger and handle random events                |
 | **PrestigeService** | Compute prestige bonuses and reset the run   |
-| **SaveLoadService** (infra) | Save and load game state (e.g. localStorage) |
+| **SaveLoadService** (infra) | Save/load game state, export/import, offline progress (localStorage) |
 
 ---
 
@@ -116,15 +119,41 @@ Events that occur in the domain and can trigger side effects.
 
 ## 9. Code References (TypeScript)
 
-- **Player**: `src/domain/entities/Player.ts` — `Player.create(id)`, `addCoins`, `spendCoins`, `addUpgrade`, `setProductionRate`.
-- **UpgradeService**: `src/domain/services/UpgradeService.ts` — `purchaseUpgrade(player, upgrade)`.
-- **GameSession**: `src/domain/aggregates/GameSession.ts` — aggregate root for current session.
+- **Player**: `src/domain/entities/Player.ts` — `Player.create(id)`, `addCoins`, `spendCoins`, `setProductionRate`, `planets`, `effectiveProductionRate`, `hireAstronaut`, `spendAstronauts`, `Player.createAfterPrestige`.
+- **Planet**: `src/domain/entities/Planet.ts` — `Planet.create`, `addUpgrade`, `hasFreeSlot`, `usedSlots`, `maxUpgrades`.
+- **UpgradeService**: `src/domain/services/UpgradeService.ts` — `purchaseUpgrade`, `canAfford`, `getRequiredAstronauts`.
+- **PlanetService**: `src/domain/services/PlanetService.ts` — `buyNewPlanet`, `addSlot`.
+- **GameSession**: `src/domain/aggregates/GameSession.ts` — aggregate root; holds `player`, `activeEvents`.
 - **Value objects**: `src/domain/value-objects/` — Coins, ProductionRate, UpgradeEffect, EventEffect.
+- **Application state**: `src/application/gameState.ts` — session, active event instances, next event time, settings, quest state; `getOrCreateSession`, `saveLoad`, `getEventMultiplier`.
+- **Catalogs & config**: `src/application/catalogs.ts` — UPGRADE_CATALOG, EVENT_CATALOG, combo/lucky/quest constants, storage keys.
+- **Handlers**: `src/application/handlers.ts` — mine click, buy upgrade/planet/slot, hire astronaut, prestige, quest claim, export/import save, settings, debug.
+- **Presentation**: `src/presentation/` — mount, statsView, upgradeListView, planetListView, questView, comboView, progressionView, prestigeView, crewView, statisticsView, toasts, StarfieldCanvas, MineZoneCanvas.
+- **Persistence**: `src/infrastructure/SaveLoadService.ts` — save/load/export/import, offline progress (capped); `src/settings.ts` — user settings (starfield, layout, pause when background, etc.).
 
 ---
 
-## 10. Next Steps
+## 10. Current Flows (Summary)
 
-- Implement application layer use cases (click handlers, purchase flows).
-- Wire presentation (UI) to domain and application.
-- Extend persistence (localStorage or backend) via `ISaveLoadService`.
+- **Mine click**: Handlers → mine click (lucky/critical), combo tracking, coins, toasts; game loop applies passive production and event multiplier.
+- **Buy upgrade**: Handlers → PlanetService/UpgradeService (planet choice if multiple slots); persistence on interval.
+- **Planets & crew**: Buy new planet (PlanetService), add slot (cost scaling), hire astronauts (Player); production = upgrades × planet bonus × prestige × crew bonus.
+- **Quests**: Quest state in gameState; generate/claim in handlers; streak bonus; render in questView.
+- **Prestige**: PrestigeService + handlers; reset to one planet, prestige level +1, bonus to production.
+- **Events**: Game loop checks `nextEventAt`; handlers trigger random event from catalog; active events multiply production until they expire.
+- **Save/load**: SaveLoadService every 3s; on load, offline progress applied (capped 12h); export/import in settings UI.
+
+---
+
+## 11. Planned Improvements (Roadmap)
+
+1. **Accessibility (a11y)** — ARIA labels on interactive elements, keyboard navigation for tabs and buttons, focus management in modals, optional reduced-motion support for starfield and animations.
+2. **Error handling and resilience** — Centralized handling for save/load failures; validate save payload schema before deserialize; optional retry on localStorage quota; clear offline indicator when appropriate.
+3. **Performance** — Throttle stats history writes; debounce or batch DOM updates in the game loop where safe; consider `requestIdleCallback` for non-critical UI (e.g. statistics section).
+4. **Testing** — Add E2E tests (e.g. Playwright) for critical paths: load → mine → buy upgrade → prestige; increase unit coverage for application layer (handlers, gameState, quests).
+5. **Internationalization (i18n)** — Extract UI strings into a single module or key-value map so future i18n is straightforward; keep catalog data (upgrade names, event names) in one place.
+6. **Settings** — All settings already persisted in `settings.ts`; document in README; consider sound toggle and theme (dark/light) if not present.
+7. **Save format versioning and validation** — Add a version field to the saved payload; on load, migrate old versions or reject invalid/unknown; validate structure (e.g. type guard) before deserializing.
+8. **Developer experience** — Add ESLint and Prettier; optional pre-commit hook (lint-staged + husky) for typecheck and lint; document in README.
+9. **Documentation** — Keep this file and README in sync with code (planets, crew, quests, combo, stats, progression); reference IDEAS.md for future gameplay ideas.
+10. **Observability and debugging** — Optional performance marks for game loop and save; or a simple event bus for key actions (upgrade purchased, prestige) for future analytics without coupling to UI.
