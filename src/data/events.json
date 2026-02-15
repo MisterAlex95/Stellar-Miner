@@ -1,0 +1,17 @@
+[
+  { "id": "meteor-storm", "name": "Meteor Storm", "effect": { "multiplier": 2, "durationMs": 30000 } },
+  { "id": "solar-flare", "name": "Solar Flare", "effect": { "multiplier": 1.5, "durationMs": 45000 } },
+  { "id": "rich-vein", "name": "Rich Vein", "effect": { "multiplier": 2.5, "durationMs": 20000 } },
+  { "id": "void-bonus", "name": "Void Bonus", "effect": { "multiplier": 1.25, "durationMs": 60000 } },
+  { "id": "lucky-strike", "name": "Lucky Strike", "effect": { "multiplier": 3, "durationMs": 15000 } },
+  { "id": "asteroid-rush", "name": "Asteroid Rush", "effect": { "multiplier": 1.8, "durationMs": 25000 } },
+  { "id": "solar-wind", "name": "Solar Wind", "effect": { "multiplier": 1.15, "durationMs": 90000 } },
+  { "id": "comet-tail", "name": "Comet Tail", "effect": { "multiplier": 1.4, "durationMs": 40000 } },
+  { "id": "nebula-bloom", "name": "Nebula Bloom", "effect": { "multiplier": 1.2, "durationMs": 75000 } },
+  { "id": "dust-storm", "name": "Dust Storm", "effect": { "multiplier": 0.6, "durationMs": 25000 } },
+  { "id": "solar-eclipse", "name": "Solar Eclipse", "effect": { "multiplier": 0.5, "durationMs": 35000 } },
+  { "id": "equipment-malfunction", "name": "Equipment Malfunction", "effect": { "multiplier": 0.55, "durationMs": 30000 } },
+  { "id": "power-drain", "name": "Power Drain", "effect": { "multiplier": 0.65, "durationMs": 40000 } },
+  { "id": "communications-blackout", "name": "Communications Blackout", "effect": { "multiplier": 0.7, "durationMs": 20000 } },
+  { "id": "debris-field", "name": "Debris Field", "effect": { "multiplier": 0.6, "durationMs": 28000 } }
+]

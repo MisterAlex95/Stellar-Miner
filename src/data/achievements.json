@@ -1,0 +1,22 @@
+[
+  { "id": "first-click", "name": "First steps", "type": "totalClicks", "value": 1 },
+  { "id": "clicks-100", "name": "Clicker", "type": "totalClicks", "value": 100 },
+  { "id": "clicks-1k", "name": "Dedicated miner", "type": "totalClicks", "value": 1000 },
+  { "id": "first-upgrade", "name": "Automation", "type": "upgradesCount", "value": 1 },
+  { "id": "upgrades-10", "name": "Expansion", "type": "upgradesCount", "value": 10 },
+  { "id": "first-astronaut", "name": "Crew recruit", "type": "astronautsCount", "value": 1 },
+  { "id": "astronauts-5", "name": "Squad", "type": "astronautsCount", "value": 5 },
+  { "id": "first-prestige", "name": "Rebirth", "type": "prestigeLevel", "value": 1 },
+  { "id": "prestige-5", "name": "Veteran", "type": "prestigeLevel", "value": 5 },
+  { "id": "planets-3", "name": "Multi-world", "type": "planetsCount", "value": 3 },
+  { "id": "coins-10k", "name": "Wealthy", "type": "totalCoinsEver", "value": 10000 },
+  { "id": "quest-streak-3", "name": "Quest master", "type": "questStreak", "value": 3 },
+  { "id": "first-quest", "name": "First quest", "type": "questClaimed", "value": 1 },
+  { "id": "prestige-10", "name": "Legend", "type": "prestigeLevel", "value": 10 },
+  { "id": "coins-1m", "name": "Millionaire", "type": "totalCoinsEver", "value": 1000000 },
+  { "id": "planets-10", "name": "Empire", "type": "planetsCount", "value": 10 },
+  { "id": "clicks-50k", "name": "Relentless", "type": "totalClicks", "value": 50000 },
+  { "id": "upgrades-25", "name": "Factory", "type": "upgradesCount", "value": 25 },
+  { "id": "combo-master", "name": "Combo master", "type": "comboMaster", "value": 1 },
+  { "id": "first-slot", "name": "Expander", "type": "totalSlotsGreaterThan", "value": 6 }
+]

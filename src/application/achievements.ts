@@ -1,33 +1,48 @@
-import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, QUEST_LAST_CLAIM_KEY, COMBO_MASTER_KEY } from './catalogs.js';
+import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs.js';
 import { getSession } from './gameState.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { getQuestStreak, getQuestLastClaimAt } from './quests.js';
 import { showAchievementToast } from '../presentation/toasts.js';
+import achievementsData from '../data/achievements.json';
 
 export type Achievement = { id: string; name: string; check: () => boolean };
 
-export const ACHIEVEMENTS: Achievement[] = [
-  { id: 'first-click', name: 'First steps', check: () => getTotalClicksEver() >= 1 },
-  { id: 'clicks-100', name: 'Clicker', check: () => getTotalClicksEver() >= 100 },
-  { id: 'clicks-1k', name: 'Dedicated miner', check: () => getTotalClicksEver() >= 1000 },
-  { id: 'first-upgrade', name: 'Automation', check: () => getSession()?.player.upgrades.length >= 1 },
-  { id: 'upgrades-10', name: 'Expansion', check: () => (getSession()?.player.upgrades.length ?? 0) >= 10 },
-  { id: 'first-astronaut', name: 'Crew recruit', check: () => (getSession()?.player.astronautCount ?? 0) + getAssignedAstronauts(getSession()) >= 1 },
-  { id: 'astronauts-5', name: 'Squad', check: () => (getSession()?.player.astronautCount ?? 0) + getAssignedAstronauts(getSession()) >= 5 },
-  { id: 'first-prestige', name: 'Rebirth', check: () => (getSession()?.player.prestigeLevel ?? 0) >= 1 },
-  { id: 'prestige-5', name: 'Veteran', check: () => (getSession()?.player.prestigeLevel ?? 0) >= 5 },
-  { id: 'planets-3', name: 'Multi-world', check: () => (getSession()?.player.planets.length ?? 0) >= 3 },
-  { id: 'coins-10k', name: 'Wealthy', check: () => (getSession()?.player.totalCoinsEver ?? 0) >= 10000 },
-  { id: 'quest-streak-3', name: 'Quest master', check: () => getQuestStreak() >= 3 },
-  { id: 'first-quest', name: 'First quest', check: () => getQuestLastClaimAt() > 0 },
-  { id: 'prestige-10', name: 'Legend', check: () => (getSession()?.player.prestigeLevel ?? 0) >= 10 },
-  { id: 'coins-1m', name: 'Millionaire', check: () => (getSession()?.player.totalCoinsEver ?? 0) >= 1_000_000 },
-  { id: 'planets-10', name: 'Empire', check: () => (getSession()?.player.planets.length ?? 0) >= 10 },
-  { id: 'clicks-50k', name: 'Relentless', check: () => getTotalClicksEver() >= 50000 },
-  { id: 'upgrades-25', name: 'Factory', check: () => (getSession()?.player.upgrades.length ?? 0) >= 25 },
-  { id: 'combo-master', name: 'Combo master', check: () => typeof localStorage !== 'undefined' && localStorage.getItem(COMBO_MASTER_KEY) === '1' },
-  { id: 'first-slot', name: 'Expander', check: () => (getSession()?.player.planets.reduce((s, p) => s + p.maxUpgrades, 0) ?? 0) > 6 },
-];
+type AchievementDef = { id: string; name: string; type: string; value: number };
+
+function buildCheck(def: AchievementDef): () => boolean {
+  const session = () => getSession();
+  const value = def.value;
+  switch (def.type) {
+    case 'totalClicks':
+      return () => getTotalClicksEver() >= value;
+    case 'upgradesCount':
+      return () => (session()?.player.upgrades.length ?? 0) >= value;
+    case 'astronautsCount':
+      return () => (session()?.player.astronautCount ?? 0) + getAssignedAstronauts(session()) >= value;
+    case 'prestigeLevel':
+      return () => (session()?.player.prestigeLevel ?? 0) >= value;
+    case 'planetsCount':
+      return () => (session()?.player.planets.length ?? 0) >= value;
+    case 'totalCoinsEver':
+      return () => (session()?.player.totalCoinsEver ?? 0) >= value;
+    case 'questStreak':
+      return () => getQuestStreak() >= value;
+    case 'questClaimed':
+      return () => getQuestLastClaimAt() > 0;
+    case 'comboMaster':
+      return () => typeof localStorage !== 'undefined' && localStorage.getItem(COMBO_MASTER_KEY) === '1';
+    case 'totalSlotsGreaterThan':
+      return () => (session()?.player.planets.reduce((s, p) => s + p.maxUpgrades, 0) ?? 0) > value;
+    default:
+      return () => false;
+  }
+}
+
+export const ACHIEVEMENTS: Achievement[] = (achievementsData as AchievementDef[]).map((def) => ({
+  id: def.id,
+  name: def.name,
+  check: buildCheck(def),
+}));
 
 export function getTotalClicksEver(): number {
   if (typeof localStorage === 'undefined') return 0;

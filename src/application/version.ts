@@ -1,10 +1,10 @@
 /**
- * App version. In build, can be injected via Vite define from package.json.
+ * App version from package.json so the UI always shows the current version (no dev-server restart needed).
  * Compare with last seen version to show "What's new" when the user gets an update.
  */
-declare const __APP_VERSION__: string | undefined;
+import pkg from '../../package.json' with { type: 'json' };
 
-export const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.1.0';
+export const APP_VERSION = (pkg as { version: string }).version;
 
 const LAST_SEEN_VERSION_KEY = 'stellar-miner-last-seen-version';
 

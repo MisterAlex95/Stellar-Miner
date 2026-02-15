@@ -1,72 +1,95 @@
+import balance from '../data/balance.json';
+
+const B = balance as {
+  newPlanetBaseCost: number;
+  newPlanetCostGrowth: number;
+  expeditionMinAstronauts: number;
+  expeditionMaxAstronauts: number;
+  expeditionDeathChance: number;
+  planetProductionBonus: number;
+  prestigeBonusPerLevel: number;
+  prestigeClickBonusPercentPerLevel: number;
+  prestigeCoinThreshold: number;
+  defaultBaseSlots: number;
+  addSlotBaseMultiplier: number;
+  addSlotExponent: number;
+  addSlotFirstExpansionDiscount: number;
+  planetNames: string[];
+  astronautProductionBonus: number;
+  housingAstronautCapacity: number;
+  maxAstronautsBase: number;
+  housingBaseCost: number;
+  housingCostGrowth: number;
+  astronautBaseCost: number;
+  astronautCostGrowth: number;
+};
+
 /** Cost in coins to launch an expedition to discover a new planet. Scales with count. */
-export const NEW_PLANET_BASE_COST = 2500;
+export const NEW_PLANET_BASE_COST = B.newPlanetBaseCost;
 
 export function getNewPlanetCost(planetCount: number): number {
-  return Math.floor(NEW_PLANET_BASE_COST * (planetCount + 1) * Math.pow(1.15, planetCount));
+  return Math.floor(B.newPlanetBaseCost * (planetCount + 1) * Math.pow(B.newPlanetCostGrowth, planetCount));
 }
 
 /** Astronauts required to send on expedition (risk: some may die; if all die, planet not discovered). */
 export function getExpeditionAstronautsRequired(planetCount: number): number {
-  return Math.min(2 + Math.floor(planetCount / 2), 6);
+  return Math.min(B.expeditionMinAstronauts + Math.floor(planetCount / 2), B.expeditionMaxAstronauts);
 }
 
 /** Per-astronaut death chance during expedition (0–1). Each rolls independently. */
-export const EXPEDITION_DEATH_CHANCE = 0.25;
+export const EXPEDITION_DEATH_CHANCE = B.expeditionDeathChance;
 
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */
-export const PLANET_PRODUCTION_BONUS = 0.05;
+export const PLANET_PRODUCTION_BONUS = B.planetProductionBonus;
 
 /** Production bonus per prestige level (e.g. 0.05 = +5% per level). Applied after planet bonus. */
-export const PRESTIGE_BONUS_PER_LEVEL = 0.05;
+export const PRESTIGE_BONUS_PER_LEVEL = B.prestigeBonusPerLevel;
 
 /** Click bonus per prestige level (from prestige 2 onward). Prestige 1 unlocks research click; each further level adds this % to click reward. */
-export const PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL = 5;
+export const PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL = B.prestigeClickBonusPercentPerLevel;
 
 /** Coins required to unlock the Prestige button. Resets run; keeps prestige level. */
-export const PRESTIGE_COIN_THRESHOLD = 50_000;
+export const PRESTIGE_COIN_THRESHOLD = B.prestigeCoinThreshold;
 
 /** Base slot count (from Planet.UPGRADES_PER_PLANET) for "first expansion" discount. */
-const DEFAULT_BASE_SLOTS = 6;
+const DEFAULT_BASE_SLOTS = B.defaultBaseSlots;
 
 /** Cost to add one upgrade slot. Steeper curve so expanding slots is a real milestone. */
 export function getAddSlotCost(currentMaxSlots: number, baseSlots: number = DEFAULT_BASE_SLOTS): number {
-  const raw = Math.floor(150 * Math.pow(currentMaxSlots, 1.25));
+  const raw = Math.floor(B.addSlotBaseMultiplier * Math.pow(currentMaxSlots, B.addSlotExponent));
   const isFirstExpansion = currentMaxSlots === baseSlots;
-  return isFirstExpansion ? Math.floor(raw * 0.85) : raw;
+  return isFirstExpansion ? Math.floor(raw * B.addSlotFirstExpansionDiscount) : raw;
 }
 
 /** Themed names for planets (index 0 = first planet). Falls back to "Planet N" if index >= length. */
-export const PLANET_NAMES = [
-  'Titan', 'Nova Prime', 'Dust Haven', 'Iron Vein', 'Crimson Drift',
-  'Frost Ring', 'Solar Forge', "Void's Edge", 'Stellar Rest', 'Last Light',
-];
+export const PLANET_NAMES = B.planetNames;
 
 export function getPlanetName(index: number): string {
   return PLANET_NAMES[index] ?? `Planet ${index + 1}`;
 }
 
 /** Crew: astronauts. Production bonus per astronaut (e.g. 0.02 = +2% each). */
-export const ASTRONAUT_PRODUCTION_BONUS = 0.02;
+export const ASTRONAUT_PRODUCTION_BONUS = B.astronautProductionBonus;
 
 /** Crew capacity added per housing module built on any planet. */
-export const HOUSING_ASTRONAUT_CAPACITY = 2;
+export const HOUSING_ASTRONAUT_CAPACITY = B.housingAstronautCapacity;
 
 /** Max total astronauts (free + assigned) from planets and housing. housingCount = sum of housing on all planets. */
 export function getMaxAstronauts(planetCount: number, housingCount: number = 0): number {
-  const base = Math.max(2, 2 * planetCount);
-  return base + housingCount * HOUSING_ASTRONAUT_CAPACITY;
+  const base = Math.max(B.maxAstronautsBase, B.maxAstronautsBase * planetCount);
+  return base + housingCount * B.housingAstronautCapacity;
 }
 
 /** Base cost for first housing on a planet. Each additional housing on that planet costs more. */
-export const HOUSING_BASE_COST = 500;
+export const HOUSING_BASE_COST = B.housingBaseCost;
 
 export function getHousingCost(planetHousingCount: number): number {
-  return Math.floor(HOUSING_BASE_COST * Math.pow(1.15, planetHousingCount));
+  return Math.floor(B.housingBaseCost * Math.pow(B.housingCostGrowth, planetHousingCount));
 }
 
 /** Base cost to hire the first astronaut. Each additional costs more. */
-export const ASTRONAUT_BASE_COST = 75;
+export const ASTRONAUT_BASE_COST = B.astronautBaseCost;
 
 export function getAstronautCost(currentCount: number): number {
-  return Math.floor(ASTRONAUT_BASE_COST * Math.pow(1.12, currentCount));
+  return Math.floor(B.astronautBaseCost * Math.pow(B.astronautCostGrowth, currentCount));
 }

@@ -1,0 +1,26 @@
+{
+  "newPlanetBaseCost": 2500,
+  "newPlanetCostGrowth": 1.15,
+  "expeditionMinAstronauts": 2,
+  "expeditionMaxAstronauts": 6,
+  "expeditionDeathChance": 0.25,
+  "planetProductionBonus": 0.05,
+  "prestigeBonusPerLevel": 0.05,
+  "prestigeClickBonusPercentPerLevel": 5,
+  "prestigeCoinThreshold": 50000,
+  "defaultBaseSlots": 6,
+  "addSlotBaseMultiplier": 150,
+  "addSlotExponent": 1.25,
+  "addSlotFirstExpansionDiscount": 0.85,
+  "planetNames": [
+    "Titan", "Nova Prime", "Dust Haven", "Iron Vein", "Crimson Drift",
+    "Frost Ring", "Solar Forge", "Void's Edge", "Stellar Rest", "Last Light"
+  ],
+  "astronautProductionBonus": 0.02,
+  "housingAstronautCapacity": 2,
+  "maxAstronautsBase": 2,
+  "housingBaseCost": 500,
+  "housingCostGrowth": 1.15,
+  "astronautBaseCost": 75,
+  "astronautCostGrowth": 1.12
+}

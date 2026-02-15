@@ -1,7 +1,15 @@
 [
   {
+    "version": "0.2.0",
+    "date": "2026-02-15",
+    "changes": [
+      "Data and logic refactor: game data moved to config files (upgrades, events, research, achievements, balance, progression, quest generation) in src/data/. Easier to tune and extend without touching code.",
+      "Changelog and version: settings panel shows current version and what's new when an update is available."
+    ]
+  },
+  {
     "version": "0.1.0",
-    "date": "2025-02",
+    "date": "2026-01-15",
     "changes": [
       "Version and changelog: see if there's been an update and read what's new.",
       "Housing: build housing on planets to increase crew capacity (+2 astronauts per module).",

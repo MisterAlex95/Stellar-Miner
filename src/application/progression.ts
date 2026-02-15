@@ -1,4 +1,5 @@
 import type { GameSession } from '../domain/aggregates/GameSession.js';
+import progressionData from '../data/progression.json';
 
 const PROGRESSION_KEY = 'stellar-miner-progression';
 
@@ -20,57 +21,15 @@ export type BlockDef = {
   sectionId?: string;
 };
 
-export const PROGRESSION_BLOCKS: BlockDef[] = [
-  {
-    id: 'welcome',
-    coinsThreshold: 0,
-    title: 'Welcome to Stellar Miner',
-    body: 'Click the asteroid (or press Space) to mine coins. Your goal: grow your mining operation by buying upgrades, hiring crew, and expanding to new planets. Start by mining until you can afford your first upgrade!',
-    sectionId: undefined,
-  },
-  {
-    id: 'upgrades',
-    coinsThreshold: 50,
-    title: 'Upgrades',
-    body: 'Spend coins to buy equipment that produces coins automatically. Each upgrade adds production per second. You can buy the same upgrade multiple times—each goes on a planet slot. Start with a Mining Robot (100 ⬡).',
-    sectionId: 'upgrades-section',
-  },
-  {
-    id: 'crew',
-    coinsThreshold: 75,
-    title: 'Crew',
-    body: 'Hire astronauts to boost your production (+2% per astronaut). Better upgrades require crew to operate—you spend astronauts when you buy those upgrades. Hire your first astronaut when you can afford it (75 ⬡).',
-    sectionId: 'crew-section',
-  },
-  {
-    id: 'quest',
-    coinsThreshold: 5000,
-    title: 'Quests',
-    body: 'Complete quests for bonus coins and rewards. Each quest has a target (e.g. mine X coins, buy upgrades). Claim within 5 minutes of completion for a streak bonus. Check the Quest section above.',
-    sectionId: 'quest-section',
-  },
-  {
-    id: 'planets',
-    coinsThreshold: 2000,
-    title: 'Planets',
-    body: 'Send astronauts on expeditions to discover new planets (+5% production each). Some may die during the mission; if all die, the planet is not discovered. You can also add slots to existing planets.',
-    sectionId: 'planets-section',
-  },
-  {
-    id: 'research',
-    coinsThreshold: 1000,
-    title: 'Scientific Research',
-    body: 'Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt can succeed or fail (coins lost on failure). Resets on Prestige.',
-    sectionId: 'research-section',
-  },
-  {
-    id: 'prestige',
-    coinsThreshold: 50000,
-    title: 'Prestige',
-    body: 'When you reach 50,000 coins you can Prestige: reset coins and planets to gain +5% production per prestige level forever. Use it to progress faster on each new run.',
-    sectionId: 'prestige-section',
-  },
-];
+type ProgressionBlockRaw = { id: string; coinsThreshold: number; title: string; body: string; sectionId: string | null };
+
+export const PROGRESSION_BLOCKS: BlockDef[] = (progressionData as ProgressionBlockRaw[]).map((b) => ({
+  id: b.id as BlockId,
+  coinsThreshold: b.coinsThreshold,
+  title: b.title,
+  body: b.body,
+  ...(b.sectionId != null ? { sectionId: b.sectionId } : {}),
+}));
 
 function loadProgression(): ProgressionData {
   if (typeof localStorage === 'undefined') return { seenModals: [], unlockedBlocks: [] };

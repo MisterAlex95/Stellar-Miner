@@ -11,48 +11,59 @@ import {
 import { getSession, getQuestState, setQuestState } from './gameState.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { getResearchProductionMultiplier } from './research.js';
+import gameConfig from '../data/gameConfig.json';
 
 export type { QuestState, Quest };
 
+const Q = (gameConfig as { questGeneration: QuestGenerationConfig }).questGeneration;
+
+type QuestGenerationConfig = {
+  typeWeights: number[];
+  coins: { targets: number[]; rewardMult: number; rewardBase: number };
+  production: { targets: number[]; rewardMult: number; rewardBase: number };
+  upgrade: { maxUpgradeIndex: number; countMin: number; countMax: number; rewardCostMult: number; rewardBase: number };
+  astronauts: { targets: number[]; rewardBase: number; rewardPerTarget: number };
+};
+
 export function generateQuest(): Quest {
   const roll = Math.random();
-  if (roll < 0.35) {
-    const targets = [100, 500, 1000, 5000, 10000];
+  if (roll < Q.typeWeights[0]) {
+    const targets = Q.coins.targets;
     const target = targets[Math.floor(Math.random() * targets.length)];
     return {
       type: 'coins',
       target,
-      reward: Math.floor(target * 0.35) + 25,
+      reward: Math.floor(target * Q.coins.rewardMult) + Q.coins.rewardBase,
       description: `Reach ${target.toLocaleString()} coins`,
     };
   }
-  if (roll < 0.6) {
-    const targets = [5, 10, 25, 50, 100];
+  if (roll < Q.typeWeights[1]) {
+    const targets = Q.production.targets;
     const target = targets[Math.floor(Math.random() * targets.length)];
     return {
       type: 'production',
       target,
-      reward: target * 2 + 40,
+      reward: target * Q.production.rewardMult + Q.production.rewardBase,
       description: `Reach ${target}/s production`,
     };
   }
-  if (roll < 0.8) {
-    const def = UPGRADE_CATALOG[Math.floor(Math.random() * Math.min(5, UPGRADE_CATALOG.length))];
-    const n = Math.floor(Math.random() * 2) + 1;
+  if (roll < Q.typeWeights[2]) {
+    const def = UPGRADE_CATALOG[Math.floor(Math.random() * Math.min(Q.upgrade.maxUpgradeIndex, UPGRADE_CATALOG.length))];
+    const n = Math.floor(Math.random() * (Q.upgrade.countMax - Q.upgrade.countMin + 1)) + Q.upgrade.countMin;
     return {
       type: 'upgrade',
       target: n,
       targetId: def.id,
-      reward: Math.floor(def.cost * 0.25) + 60,
+      reward: Math.floor(def.cost * Q.upgrade.rewardCostMult) + Q.upgrade.rewardBase,
       description: `Own ${n}× ${def.name}`,
     };
   }
-  const targets = [1, 2, 3, 5, 8];
+  const targets = Q.astronauts.targets;
   const target = targets[Math.floor(Math.random() * targets.length)];
   return {
     type: 'astronauts',
     target,
-    reward: 80 + target * 25,
+    reward: Q.astronauts.rewardBase + target * Q.astronauts.rewardPerTarget,
     description: `Have ${target} astronaut${target > 1 ? 's' : ''}`,
   };
 }
