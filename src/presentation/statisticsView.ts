@@ -502,7 +502,7 @@ export function updateStatisticsSection(): void {
       el.style.display = show ? '' : 'none';
     });
     ['active-events-count', 'next-event-in', 'event-mult'].forEach((statId) => {
-      const card = container.querySelector<HTMLElement>(`[data-stat-id="${statId}"]`)?.closest('.statistics-card');
+      const card = container.querySelector<HTMLElement>(`[data-stat-id="${statId}"]`)?.closest('.statistics-card') as HTMLElement | null;
       if (card) card.style.display = eventsUnlocked ? '' : 'none';
     });
   }
