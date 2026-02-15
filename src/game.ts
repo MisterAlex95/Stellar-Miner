@@ -32,6 +32,8 @@ import { triggerRandomEvent } from './application/handlers.js';
 import { showOfflineToast } from './presentation/toasts.js';
 
 let lastTime = performance.now();
+const QUEST_RENDER_INTERVAL_MS = 150;
+let lastQuestRenderMs = 0;
 
 function gameLoop(now: number): void {
   const session = getSession();
@@ -58,7 +60,10 @@ function gameLoop(now: number): void {
   recordStatsIfDue(nowMs, session.player.coins.value, rate, session.player.totalCoinsEver);
   updateCoinDisplay(dt);
   updateProductionDisplay(dt);
-  renderQuestSection();
+  if (nowMs - lastQuestRenderMs >= QUEST_RENDER_INTERVAL_MS) {
+    lastQuestRenderMs = nowMs;
+    renderQuestSection();
+  }
   const planetViews = session.player.planets.map((p) => {
     const upgradeCounts: Record<string, number> = {};
     for (const u of p.upgrades) {
