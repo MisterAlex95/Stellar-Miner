@@ -92,8 +92,96 @@ const LUCKY_MAX = 22;
 const SUPER_LUCKY_CHANCE = 0.006;
 const SUPER_LUCKY_MIN = 40;
 const SUPER_LUCKY_MAX = 85;
+const CRITICAL_CLICK_CHANCE = 0.0015;
+
+const DAILY_BONUS_COINS = 5;
+const TOTAL_CLICKS_KEY = 'stellar-miner-total-clicks';
+const LAST_DAILY_BONUS_KEY = 'stellar-miner-daily-bonus-date';
+const ACHIEVEMENTS_KEY = 'stellar-miner-achievements';
 
 const MILESTONES = [100, 500, 1000, 5000, 10000, 25000, 50000, 100000, 500000, 1000000];
+
+type Achievement = { id: string; name: string; check: () => boolean };
+const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first-click', name: 'First steps', check: () => getTotalClicksEver() >= 1 },
+  { id: 'clicks-100', name: 'Clicker', check: () => getTotalClicksEver() >= 100 },
+  { id: 'clicks-1k', name: 'Dedicated miner', check: () => getTotalClicksEver() >= 1000 },
+  { id: 'first-upgrade', name: 'Automation', check: () => session?.player.upgrades.length >= 1 },
+  { id: 'upgrades-10', name: 'Expansion', check: () => (session?.player.upgrades.length ?? 0) >= 10 },
+  { id: 'first-astronaut', name: 'Crew recruit', check: () => (session?.player.astronautCount ?? 0) + getAssignedAstronauts() >= 1 },
+  { id: 'astronauts-5', name: 'Squad', check: () => (session?.player.astronautCount ?? 0) + getAssignedAstronauts() >= 5 },
+  { id: 'first-prestige', name: 'Rebirth', check: () => (session?.player.prestigeLevel ?? 0) >= 1 },
+  { id: 'prestige-5', name: 'Veteran', check: () => (session?.player.prestigeLevel ?? 0) >= 5 },
+  { id: 'planets-3', name: 'Multi-world', check: () => (session?.player.planets.length ?? 0) >= 3 },
+  { id: 'coins-10k', name: 'Wealthy', check: () => (session?.player.totalCoinsEver ?? 0) >= 10000 },
+  { id: 'quest-streak-3', name: 'Quest master', check: () => getQuestStreak() >= 3 },
+];
+
+function getTotalClicksEver(): number {
+  if (typeof localStorage === 'undefined') return 0;
+  try {
+    return parseInt(localStorage.getItem(TOTAL_CLICKS_KEY) ?? '0', 10) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function incrementTotalClicksEver(): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const n = getTotalClicksEver() + 1;
+    localStorage.setItem(TOTAL_CLICKS_KEY, String(n));
+  } catch {}
+}
+
+function getUnlockedAchievements(): Set<string> {
+  if (typeof localStorage === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+function unlockAchievement(id: string): void {
+  const set = getUnlockedAchievements();
+  if (set.has(id)) return;
+  set.add(id);
+  if (typeof localStorage !== 'undefined') localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify([...set]));
+  const a = ACHIEVEMENTS.find((x) => x.id === id);
+  if (a) showAchievementToast(a.name);
+}
+
+function checkAchievements(): void {
+  for (const a of ACHIEVEMENTS) {
+    if (getUnlockedAchievements().has(a.id)) continue;
+    if (a.check()) unlockAchievement(a.id);
+  }
+}
+
+function showAchievementToast(name: string): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--achievement';
+  el.setAttribute('role', 'status');
+  el.textContent = `Achievement: ${name}`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 4000);
+}
+
+function renderAchievementsList(container: HTMLElement): void {
+  const unlocked = getUnlockedAchievements();
+  container.innerHTML = ACHIEVEMENTS.map(
+    (a) => `<div class="achievement-item achievement-item--${unlocked.has(a.id) ? 'unlocked' : 'locked'}" title="${unlocked.has(a.id) ? a.name : '???'}">${unlocked.has(a.id) ? '✓' : '?'} ${unlocked.has(a.id) ? a.name : 'Locked'}</div>`
+  ).join('');
+}
 
 let clickTimestamps: number[] = [];
 let sessionClickCount = 0;
@@ -241,6 +329,7 @@ function claimQuest(): void {
   const claimBtn = document.getElementById('quest-claim');
   if (claimBtn) showFloatingReward(reward, claimBtn);
   if (streak > 1) showQuestStreakToast(streak, bonusMult);
+  checkAchievements();
 }
 
 function showQuestStreakToast(streak: number, mult: number): void {
@@ -398,8 +487,12 @@ function updateStats() {
   }
   const sessionEl = document.getElementById('session-stats');
   if (sessionEl) {
-    if (sessionClickCount > 0 || sessionCoinsFromClicks > 0) {
-      sessionEl.textContent = `Session: ${sessionClickCount} clicks · ${formatNumber(sessionCoinsFromClicks, settings.compactNumbers)} ⬡ from clicks`;
+    const totalClicks = getTotalClicksEver();
+    if (sessionClickCount > 0 || sessionCoinsFromClicks > 0 || totalClicks > 0) {
+      const parts = [];
+      if (sessionClickCount > 0 || sessionCoinsFromClicks > 0) parts.push(`Session: ${sessionClickCount} clicks · ${formatNumber(sessionCoinsFromClicks, settings.compactNumbers)} ⬡`);
+      if (totalClicks > 0) parts.push(`Lifetime: ${formatNumber(totalClicks, settings.compactNumbers)} clicks`);
+      sessionEl.textContent = parts.join(' · ');
       sessionEl.style.display = 'block';
     } else {
       sessionEl.style.display = 'none';
@@ -664,6 +757,7 @@ function handleUpgradeBuy(upgradeId: string, planetId?: string) {
   renderPlanetList();
   flashUpgradeCard(upgradeId);
   renderQuestSection();
+  checkAchievements();
 }
 
 /** Buy as many as possible (limited by coins, free slots, and astronauts). */
@@ -692,6 +786,7 @@ function handleUpgradeBuyMax(upgradeId: string, planetId?: string) {
     renderCrewSection();
     renderPlanetList();
     renderQuestSection();
+    checkAchievements();
   }
   renderPlanetList();
 }
@@ -815,6 +910,7 @@ function handleHireAstronaut(): void {
   renderUpgradeList();
   renderPlanetList();
   renderCrewSection();
+  checkAchievements();
 }
 
 function openDebugMenu(): void {
@@ -906,13 +1002,32 @@ function applySettingsToUI() {
   renderPlanetList();
 }
 
+function openResetConfirmModal() {
+  const overlay = document.getElementById('reset-confirm-overlay');
+  if (overlay) {
+    overlay.classList.add('reset-confirm-overlay--open');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function closeResetConfirmModal() {
+  const overlay = document.getElementById('reset-confirm-overlay');
+  if (overlay) {
+    overlay.classList.remove('reset-confirm-overlay--open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+}
+
 function handleResetProgress() {
-  if (!confirm('Reset all progress? Coins, planets and upgrades will be lost. This cannot be undone.')) return;
   saveLoad.clearProgress();
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(QUEST_STORAGE_KEY);
     localStorage.removeItem(MILESTONES_STORAGE_KEY);
+    localStorage.removeItem(TOTAL_CLICKS_KEY);
+    localStorage.removeItem(LAST_DAILY_BONUS_KEY);
+    localStorage.removeItem(ACHIEVEMENTS_KEY);
   }
+  closeResetConfirmModal();
   closeSettings();
   location.reload();
 }
@@ -968,18 +1083,18 @@ function showSuperLuckyToast(coins: number): void {
   }, 2800);
 }
 
-function showFloatingCoin(amount: number, clientX: number, clientY: number, options?: { lucky?: boolean; superLucky?: boolean; comboMult?: number }): void {
+function showFloatingCoin(amount: number, clientX: number, clientY: number, options?: { lucky?: boolean; superLucky?: boolean; critical?: boolean; comboMult?: number }): void {
   const zone = document.getElementById('mine-zone');
   const floats = document.getElementById('mine-zone-floats');
   if (!zone || !floats) return;
   const rect = zone.getBoundingClientRect();
   const el = document.createElement('span');
-  el.className = 'float-coin' + (options?.superLucky ? ' float-coin--super-lucky' : options?.lucky ? ' float-coin--lucky' : '');
-  el.textContent = options?.superLucky ? `★ +${amount}` : `+${amount}`;
+  el.className = 'float-coin' + (options?.critical ? ' float-coin--critical' : options?.superLucky ? ' float-coin--super-lucky' : options?.lucky ? ' float-coin--lucky' : '');
+  el.textContent = options?.critical ? `✧ CRITICAL +${amount}` : options?.superLucky ? `★ +${amount}` : `+${amount}`;
   el.style.left = `${clientX - rect.left}px`;
   el.style.top = `${clientY - rect.top}px`;
   floats.appendChild(el);
-  if (options?.comboMult && options.comboMult > 1) {
+  if (options?.comboMult && options.comboMult > 1 && !options?.critical) {
     const comboEl = document.createElement('span');
     comboEl.className = 'float-coin-combo';
     comboEl.textContent = `${getComboName(options.comboMult)} ×${options.comboMult.toFixed(1)}`;
@@ -1080,28 +1195,73 @@ function handleMineClick(e?: MouseEvent) {
       ? Math.min(COMBO_MAX_MULT, 1 + (comboCount - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL)
       : 1;
 
+  const today = new Date().toISOString().slice(0, 10);
+  if (typeof localStorage !== 'undefined') {
+    const last = localStorage.getItem(LAST_DAILY_BONUS_KEY);
+    if (last !== today) {
+      session.player.addCoins(DAILY_BONUS_COINS);
+      localStorage.setItem(LAST_DAILY_BONUS_KEY, today);
+      showDailyBonusToast();
+    }
+  }
+
   const superLucky = Math.random() < SUPER_LUCKY_CHANCE;
   const isLucky = !superLucky && Math.random() < LUCKY_CLICK_CHANCE;
+  const isCritical = Math.random() < CRITICAL_CLICK_CHANCE;
   let baseCoins = 1;
   if (superLucky) baseCoins = SUPER_LUCKY_MIN + Math.floor(Math.random() * (SUPER_LUCKY_MAX - SUPER_LUCKY_MIN + 1));
   else if (isLucky) baseCoins = LUCKY_MIN + Math.floor(Math.random() * (LUCKY_MAX - LUCKY_MIN + 1));
-  const coins = Math.max(1, Math.round(baseCoins * comboMult));
+  let coins = Math.max(1, Math.round(baseCoins * comboMult));
+  if (isCritical) coins *= 2;
 
   session.player.addCoins(coins);
   sessionClickCount++;
   sessionCoinsFromClicks += coins;
+  incrementTotalClicksEver();
 
   const clientX = e?.clientX ?? 0;
   const clientY = e?.clientY ?? 0;
-  if (e) showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, comboMult: comboMult > 1 ? comboMult : undefined });
+  if (e) showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical, comboMult: comboMult > 1 ? comboMult : undefined });
   if (superLucky) showSuperLuckyToast(coins);
+  if (isCritical) showCriticalToast(coins);
   mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY);
   updateComboIndicator();
   checkAndShowMilestones();
+  checkAchievements();
   saveSession();
   updateStats();
   renderUpgradeList();
   if (questState.quest) checkQuestProgress();
+}
+
+function showDailyBonusToast(): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--daily';
+  el.setAttribute('role', 'status');
+  el.textContent = `Daily bonus: +${DAILY_BONUS_COINS} ⬡`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
+function showCriticalToast(coins: number): void {
+  const container = document.getElementById('event-toasts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'event-toast event-toast--critical';
+  el.setAttribute('role', 'status');
+  el.textContent = `CRITICAL! +${formatNumber(coins, false)} ⬡`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('event-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('event-toast--visible');
+    setTimeout(() => el.remove(), 300);
+  }, 2500);
 }
 
 function handlePrestige(): void {
@@ -1128,6 +1288,7 @@ function handlePrestige(): void {
   renderPrestigeSection();
   renderCrewSection();
   renderQuestSection();
+  checkAchievements();
 }
 
 function showPrestigeMilestoneToast(level: number): void {
@@ -1193,9 +1354,23 @@ function mount() {
               <span>Compact numbers (1.2K)</span>
             </label>
           </div>
+          <div class="settings-option settings-achievements">
+            <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false">Achievements</button>
+            <div class="achievements-list" id="achievements-list" aria-hidden="true"></div>
+          </div>
           <div class="settings-option settings-reset">
             <button type="button" class="reset-btn" id="settings-reset-btn">Reset progress</button>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="reset-confirm-overlay" id="reset-confirm-overlay" aria-hidden="true">
+      <div class="reset-confirm-modal" role="alertdialog" aria-labelledby="reset-confirm-title" aria-describedby="reset-confirm-desc">
+        <h2 id="reset-confirm-title">Reset progress?</h2>
+        <p id="reset-confirm-desc">Coins, planets, upgrades, crew, achievements and all progress will be lost. This cannot be undone.</p>
+        <div class="reset-confirm-actions">
+          <button type="button" class="reset-confirm-cancel" id="reset-confirm-cancel">Cancel</button>
+          <button type="button" class="reset-confirm-reset" id="reset-confirm-reset">Reset all</button>
         </div>
       </div>
     </div>
@@ -1269,7 +1444,10 @@ function mount() {
       if (e.target === settingsOverlay) closeSettings();
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && settingsOverlay.classList.contains('settings-overlay--open')) closeSettings();
+      if (e.key !== 'Escape') return;
+      const resetOverlay = document.getElementById('reset-confirm-overlay');
+      if (resetOverlay?.classList.contains('reset-confirm-overlay--open')) closeResetConfirmModal();
+      else if (settingsOverlay.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
   if (settingsClose) settingsClose.addEventListener('click', closeSettings);
@@ -1288,7 +1466,28 @@ function mount() {
   if (compactNumbersEl) compactNumbersEl.addEventListener('change', () => { settings.compactNumbers = compactNumbersEl.checked; saveSettings(settings); applySettingsToUI(); });
 
   const resetBtn = document.getElementById('settings-reset-btn');
-  if (resetBtn) resetBtn.addEventListener('click', handleResetProgress);
+  if (resetBtn) resetBtn.addEventListener('click', openResetConfirmModal);
+
+  const resetConfirmCancel = document.getElementById('reset-confirm-cancel');
+  const resetConfirmReset = document.getElementById('reset-confirm-reset');
+  const resetConfirmOverlay = document.getElementById('reset-confirm-overlay');
+  if (resetConfirmCancel) resetConfirmCancel.addEventListener('click', closeResetConfirmModal);
+  if (resetConfirmReset) resetConfirmReset.addEventListener('click', handleResetProgress);
+  if (resetConfirmOverlay) {
+    resetConfirmOverlay.addEventListener('click', (e) => { if (e.target === resetConfirmOverlay) closeResetConfirmModal(); });
+  }
+
+  const achievementsToggle = document.getElementById('achievements-toggle-btn');
+  const achievementsList = document.getElementById('achievements-list');
+  if (achievementsToggle && achievementsList) {
+    achievementsToggle.addEventListener('click', () => {
+      const isOpen = achievementsList.getAttribute('aria-hidden') !== 'true';
+      achievementsList.setAttribute('aria-hidden', String(isOpen));
+      achievementsToggle.setAttribute('aria-expanded', String(!isOpen));
+      achievementsList.classList.toggle('achievements-list--open', !isOpen);
+      if (!isOpen) renderAchievementsList(achievementsList);
+    });
+  }
 
   const mineZone = document.getElementById('mine-zone');
   if (mineZone) {
