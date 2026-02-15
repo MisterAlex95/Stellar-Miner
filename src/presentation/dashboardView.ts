@@ -182,7 +182,7 @@ function buildDashboardHeroHtml(): string {
         const target = t(titleKey);
         timeEstimateHtml = `<p class="dashboard-hero-time">${tParam('dashboardTimeTo', { min: min === Infinity ? '…' : String(min), target })}</p>`;
       }
-    } else if (!canPrestige) {
+    } else if (unlocked.has('prestige') && !canPrestige) {
       const remaining = new Decimal(PRESTIGE_COIN_THRESHOLD).sub(player.coins.value);
       if (remaining.gt(0)) {
         const min = minutesUntil(remaining, effectiveRate);
@@ -287,7 +287,7 @@ function updateDashboardHeroInPlace(): void {
         const titleKey = ('progression' + milestone.block.id.charAt(0).toUpperCase() + milestone.block.id.slice(1) + 'Title') as StringKey;
         timeText = tParam('dashboardTimeTo', { min: min === Infinity ? '…' : String(min), target: t(titleKey) });
       }
-    } else if (!canPrestige) {
+    } else if (unlocked.has('prestige') && !canPrestige) {
       const remaining = new Decimal(PRESTIGE_COIN_THRESHOLD).sub(player.coins.value);
       if (remaining.gt(0)) {
         const min = minutesUntil(remaining, effectiveRate);
