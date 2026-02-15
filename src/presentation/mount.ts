@@ -414,6 +414,7 @@ const APP_HTML = `
         <div class="stat-value" id="production-value">0/s</div>
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
         <div class="active-events" id="active-events" aria-live="polite"></div>
+        <span class="next-event-label" id="next-event-label" data-i18n="nextEventLabel" aria-hidden="true">Next event</span>
         ${createProgressBarWithWrap('next-event-progress-wrap', 'next-event-progress-wrap', 'next-event-progress-bar', 'next-event-progress-bar', true)}
         <div class="next-event-countdown" id="next-event-countdown" aria-live="polite"></div>
       </div>

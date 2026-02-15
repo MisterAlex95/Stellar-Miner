@@ -7,6 +7,7 @@ export type ToastVariant =
   | 'achievement'
   | 'milestone'
   | 'negative'
+  | 'event-positive'
   | 'offline'
   | 'super-lucky'
   | 'streak'

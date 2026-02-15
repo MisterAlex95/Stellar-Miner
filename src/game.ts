@@ -17,7 +17,7 @@ import {
   mineZoneCanvasApi,
   addRunCoins,
 } from './application/gameState.js';
-import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS } from './application/catalogs.js';
+import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory } from './application/statsHistory.js';
 import { getResearchProductionMultiplier } from './application/research.js';
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
@@ -54,7 +54,7 @@ function gameLoop(now: number): void {
   const eventsUnlocked = getUnlockedBlocks(session).has('events');
   if (eventsUnlocked) {
     if (!lastEventsUnlocked) {
-      setNextEventAt(nowMs + MIN_EVENT_DELAY_MS);
+      setNextEventAt(nowMs + FIRST_EVENT_DELAY_MS);
     }
     lastEventsUnlocked = true;
     if (nowMs >= getNextEventAt()) {

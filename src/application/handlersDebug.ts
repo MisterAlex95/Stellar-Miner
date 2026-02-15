@@ -1,7 +1,8 @@
 import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered } from './gameState.js';
 import { getEventMultiplier } from './gameState.js';
 import { getResearchProductionMultiplier } from './research.js';
-import { EVENT_CATALOG } from './catalogs.js';
+import { getEventPoolForRun } from './catalogs.js';
+import { getRunStats } from './gameState.js';
 import { pushActiveEventInstance } from './gameState.js';
 import { ACHIEVEMENTS, getUnlockedAchievements } from './achievements.js';
 import { getCatalogAchievementName } from './i18nCatalogs.js';
@@ -14,7 +15,8 @@ import { saveSession } from './handlersSave.js';
 import { showEventToast } from '../presentation/toasts.js';
 
 export function triggerRandomEvent(): void {
-  const event = EVENT_CATALOG[Math.floor(Math.random() * EVENT_CATALOG.length)];
+  const pool = getEventPoolForRun(getRunStats().runEventsTriggered);
+  const event = pool[Math.floor(Math.random() * pool.length)];
   pushActiveEventInstance({ event, endsAt: Date.now() + event.effect.durationMs });
   incrementRunEventsTriggered();
   showEventToast(event);

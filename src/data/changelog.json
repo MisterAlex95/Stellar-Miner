@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.1",
+    "date": "2026-02-15",
+    "changes": [
+      "Events: better display (positive/negative badges with ×mult and time), clearer next-event progress with label, event-positive toast variant. First event after unlock triggers sooner (18s). Negative events unlock after 3 triggers in a run (positive-only at first)."
+    ]
+  },
+  {
     "version": "0.4.0",
     "date": "2026-02-15",
     "changes": [

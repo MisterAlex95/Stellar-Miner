@@ -167,11 +167,13 @@ export function updateStats(): void {
   const activeEventInstances = getActiveEventInstances();
   const nextEventAt = getNextEventAt();
   const activeEl = document.getElementById('active-events');
+  const nextEventLabel = document.getElementById('next-event-label');
   const nextEventEl = document.getElementById('next-event-countdown');
   const nextEventProgressWrap = document.getElementById('next-event-progress-wrap');
   const nextEventProgressBar = document.getElementById('next-event-progress-bar');
   if (!eventsUnlocked) {
     if (activeEl) activeEl.style.display = 'none';
+    if (nextEventLabel) nextEventLabel.style.display = 'none';
     if (nextEventEl) nextEventEl.style.display = 'none';
     if (nextEventProgressWrap) nextEventProgressWrap.style.display = 'none';
   } else {
@@ -188,7 +190,8 @@ export function updateStats(): void {
             const name = getCatalogEventName(a.event.id);
             const secondsLeft = Math.ceil((a.endsAt - now) / 1000);
             const title = tParam('eventBadgeTitle', { name, mult: String(a.event.effect.multiplier) });
-            return createEventBadgeHtml(name, secondsLeft, title);
+            const modifier = a.event.effect.multiplier >= 1 ? 'positive' : 'negative';
+            return createEventBadgeHtml(name, secondsLeft, title, { modifier, mult: a.event.effect.multiplier });
           })
           .join('');
       }
@@ -209,8 +212,16 @@ export function updateStats(): void {
       const progress = Math.max(0, Math.min(1, 1 - (nextEventAt - now) / EVENT_INTERVAL_MS));
       nextEventProgressWrap.style.display = 'block';
       nextEventProgressBar.style.width = `${progress * 100}%`;
-    } else if (nextEventProgressWrap) {
-      nextEventProgressWrap.style.display = active.length > 0 ? 'none' : 'block';
+      if (nextEventLabel) {
+        nextEventLabel.style.display = 'block';
+        nextEventLabel.setAttribute('aria-hidden', 'false');
+      }
+    } else {
+      if (nextEventProgressWrap) nextEventProgressWrap.style.display = active.length > 0 ? 'none' : 'block';
+      if (nextEventLabel) {
+        nextEventLabel.style.display = active.length > 0 ? 'none' : 'block';
+        nextEventLabel.setAttribute('aria-hidden', active.length > 0 ? 'true' : 'false');
+      }
     }
   }
 }

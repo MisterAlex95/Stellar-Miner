@@ -21,8 +21,11 @@ export function showMiniMilestoneToast(message: string): void {
 export function showEventToast(gameEvent: GameEvent): void {
   const isNegative = gameEvent.effect.multiplier < 1;
   const name = getCatalogEventName(gameEvent.id);
-  const message = `${name}: ×${gameEvent.effect.multiplier} production for ${gameEvent.effect.durationMs / 1000}s`;
-  showToast(message, isNegative ? 'negative' : '', { duration: 4000 });
+  const multStr = gameEvent.effect.multiplier >= 1 ? `×${gameEvent.effect.multiplier}` : `×${gameEvent.effect.multiplier}`;
+  const durationSec = gameEvent.effect.durationMs / 1000;
+  const message = `${name} — ${multStr} production for ${durationSec}s`;
+  const variant = isNegative ? 'negative' : 'event-positive';
+  showToast(message, variant, { duration: isNegative ? 5000 : 4000 });
 }
 
 export function showOfflineToast(coins: number, capped?: boolean): void {

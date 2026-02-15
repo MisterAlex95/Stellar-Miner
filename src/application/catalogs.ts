@@ -16,6 +16,10 @@ const Q = gameConfig.quest;
 export const SAVE_INTERVAL_MS = T.saveIntervalMs;
 export const EVENT_INTERVAL_MS = T.eventIntervalMs;
 export const MIN_EVENT_DELAY_MS = T.minEventDelayMs;
+/** Shorter delay for the first event after events unlock (so player sees one quickly). */
+export const FIRST_EVENT_DELAY_MS = (T as { firstEventDelayMs?: number }).firstEventDelayMs ?? 18000;
+/** After this many events triggered in the run, negative events can appear. Before that, only positive. */
+export const EVENT_NEGATIVE_UNLOCK_AFTER = (gameConfig as { events?: { negativeUnlockAfterTriggers?: number } }).events?.negativeUnlockAfterTriggers ?? 3;
 export const STATS_HISTORY_INTERVAL_MS = T.statsHistoryIntervalMs;
 export const STATS_HISTORY_MAX_POINTS = T.statsHistoryMaxPoints;
 export const STATS_LONG_TERM_INTERVAL_MS = T.statsLongTermIntervalMs;
@@ -78,6 +82,12 @@ export function getUnlockedUpgradeTiers(ownedUpgradeIds: string[]): Set<number> 
 export const EVENT_CATALOG: GameEvent[] = (eventsData as { id: string; name: string; effect: { multiplier: number; durationMs: number } }[]).map(
   (e) => new GameEvent(e.id, e.name, new EventEffect(e.effect.multiplier, e.effect.durationMs))
 );
+
+/** Events available for this run: only positive until EVENT_NEGATIVE_UNLOCK_AFTER triggers. */
+export function getEventPoolForRun(runEventsTriggered: number): GameEvent[] {
+  if (runEventsTriggered >= EVENT_NEGATIVE_UNLOCK_AFTER) return EVENT_CATALOG;
+  return EVENT_CATALOG.filter((e) => e.effect.multiplier >= 1);
+}
 
 export const UPGRADE_GROUPS: { label: string; minTier: number; maxTier: number }[] = gameConfig.upgradeGroups;
 

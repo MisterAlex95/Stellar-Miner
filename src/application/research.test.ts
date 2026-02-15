@@ -6,8 +6,16 @@ import {
   getResearchClickMultiplier,
   getResearchProductionPercent,
   getResearchClickPercent,
+  getResearchSuccessChanceMultiplier,
   getSlotFreeUpgradeIdsFromResearch,
   getCrewFreeUpgradeIdsFromResearch,
+  getSlotReductionFromResearch,
+  getCrewReductionFromResearch,
+  getEffectiveSlotCost,
+  getEffectiveUsedSlots,
+  hasEffectiveFreeSlot,
+  getPlanetsWithEffectiveFreeSlot,
+  getPlanetWithEffectiveFreeSlot,
   getEffectiveUpgradeUsesSlot,
   getEffectiveRequiredAstronauts,
   getResearchTreeRows,
@@ -22,6 +30,10 @@ import {
   setResearchInProgress,
   RESEARCH_STORAGE_KEY,
 } from './research.js';
+import { Player } from '../domain/entities/Player.js';
+import { Planet } from '../domain/entities/Planet.js';
+import { Coins } from '../domain/value-objects/Coins.js';
+import { ProductionRate } from '../domain/value-objects/ProductionRate.js';
 
 describe('research', () => {
   let storage: Record<string, string>;
@@ -64,6 +76,67 @@ describe('research', () => {
   it('getResearchProductionPercent returns percent when unlocked', () => {
     storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory']);
     expect(getResearchProductionPercent()).toBeCloseTo(5, 1);
+  });
+
+  it('getResearchSuccessChanceMultiplier returns 1 when no scientists', () => {
+    expect(getResearchSuccessChanceMultiplier(0)).toBe(1);
+  });
+
+  it('getResearchSuccessChanceMultiplier scales with scientist count and caps', () => {
+    expect(getResearchSuccessChanceMultiplier(1)).toBeGreaterThan(1);
+    expect(getResearchSuccessChanceMultiplier(100)).toBeLessThanOrEqual(2);
+  });
+
+  it('getSlotReductionFromResearch returns 0 when none unlocked', () => {
+    expect(getSlotReductionFromResearch('drill-mk1')).toBe(0);
+  });
+
+  it('getSlotReductionFromResearch returns 1 when slot-free from automation', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    expect(getSlotReductionFromResearch('drill-mk1')).toBe(1);
+  });
+
+  it('getCrewReductionFromResearch returns 0 for unknown upgrade', () => {
+    expect(getCrewReductionFromResearch('unknown-id')).toBe(0);
+  });
+
+  it('getEffectiveSlotCost returns 0 for mining-robot', () => {
+    expect(getEffectiveSlotCost('mining-robot')).toBe(0);
+  });
+
+  it('getEffectiveSlotCost returns 0 when research grants slot-free', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    expect(getEffectiveSlotCost('drill-mk1')).toBe(0);
+  });
+
+  it('getEffectiveUsedSlots and hasEffectiveFreeSlot', () => {
+    const player = Player.create('p1');
+    const planet = player.planets[0];
+    expect(getEffectiveUsedSlots(planet)).toBe(0);
+    expect(hasEffectiveFreeSlot(planet)).toBe(true);
+  });
+
+  it('getPlanetsWithEffectiveFreeSlot and getPlanetWithEffectiveFreeSlot', () => {
+    const player = Player.create('p1');
+    const planets = getPlanetsWithEffectiveFreeSlot(player);
+    expect(planets.length).toBeGreaterThan(0);
+    const first = getPlanetWithEffectiveFreeSlot(player);
+    expect(first).not.toBeNull();
+    expect(first?.id).toBe(player.planets[0].id);
+  });
+
+  it('getPlanetWithEffectiveFreeSlot returns null when no planets have free slot', () => {
+    const fullPlanet = new Planet('p1', 'Full', 0, [], 0, 0);
+    const player = new Player(
+      'p1',
+      Coins.from(0),
+      ProductionRate.from(0),
+      [fullPlanet],
+      [],
+      0,
+      0
+    );
+    expect(getPlanetWithEffectiveFreeSlot(player)).toBeNull();
   });
 
   it('getSlotFreeUpgradeIdsFromResearch returns empty when none unlocked', () => {

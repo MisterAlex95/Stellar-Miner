@@ -23,6 +23,15 @@ import {
   setSessionClickCount,
   getSessionCoinsFromClicks,
   setSessionCoinsFromClicks,
+  getRunStats,
+  setRunStatsFromPayload,
+  resetRunStatsOnPrestige,
+  addRunCoins,
+  incrementRunQuestsClaimed,
+  incrementRunEventsTriggered,
+  updateRunMaxComboMult,
+  getPrestigesToday,
+  incrementPrestigesToday,
   getOrCreateSession,
   saveLoad,
   setStarfieldApi,
@@ -161,5 +170,146 @@ describe('gameState', () => {
     const session = await getOrCreateSession();
     expect(session.id).toBe('loaded-1');
     expect(session.player.coins.value.toNumber()).toBe(200);
+  });
+
+  it('getRunStats returns current run stats', () => {
+    const stats = getRunStats();
+    expect(stats).toHaveProperty('runStartTime');
+    expect(stats).toHaveProperty('runCoinsEarned', 0);
+    expect(stats).toHaveProperty('runQuestsClaimed', 0);
+    expect(stats).toHaveProperty('runEventsTriggered', 0);
+    expect(stats).toHaveProperty('runMaxComboMult', 0);
+  });
+
+  it('setRunStatsFromPayload resets to defaults when null', () => {
+    setRunStatsFromPayload({ runCoinsEarned: 100 });
+    expect(getRunStats().runCoinsEarned).toBe(100);
+    setRunStatsFromPayload(null);
+    expect(getRunStats().runCoinsEarned).toBe(0);
+    expect(getRunStats().runQuestsClaimed).toBe(0);
+  });
+
+  it('setRunStatsFromPayload merges partial payload with defaults', () => {
+    setRunStatsFromPayload({ runEventsTriggered: 5, runMaxComboMult: 2 });
+    const stats = getRunStats();
+    expect(stats.runEventsTriggered).toBe(5);
+    expect(stats.runMaxComboMult).toBe(2);
+  });
+
+  it('resetRunStatsOnPrestige zeroes run stats', () => {
+    setRunStatsFromPayload({ runCoinsEarned: 50, runQuestsClaimed: 1 });
+    resetRunStatsOnPrestige();
+    expect(getRunStats().runCoinsEarned).toBe(0);
+    expect(getRunStats().runQuestsClaimed).toBe(0);
+  });
+
+  it('addRunCoins increments runCoinsEarned', () => {
+    resetRunStatsOnPrestige();
+    addRunCoins(100);
+    expect(getRunStats().runCoinsEarned).toBe(100);
+    addRunCoins(50);
+    expect(getRunStats().runCoinsEarned).toBe(150);
+  });
+
+  it('incrementRunQuestsClaimed and incrementRunEventsTriggered', () => {
+    resetRunStatsOnPrestige();
+    incrementRunQuestsClaimed();
+    incrementRunQuestsClaimed();
+    expect(getRunStats().runQuestsClaimed).toBe(2);
+    incrementRunEventsTriggered();
+    expect(getRunStats().runEventsTriggered).toBe(1);
+  });
+
+  it('updateRunMaxComboMult updates only when greater', () => {
+    resetRunStatsOnPrestige();
+    updateRunMaxComboMult(2);
+    expect(getRunStats().runMaxComboMult).toBe(2);
+    updateRunMaxComboMult(1);
+    expect(getRunStats().runMaxComboMult).toBe(2);
+    updateRunMaxComboMult(3);
+    expect(getRunStats().runMaxComboMult).toBe(3);
+  });
+
+  it('getPrestigesToday returns 0 when no localStorage', () => {
+    const orig = globalThis.localStorage;
+    vi.stubGlobal('localStorage', undefined);
+    expect(getPrestigesToday()).toBe(0);
+    vi.stubGlobal('localStorage', orig);
+  });
+
+  it('getPrestigesToday returns stored count when date is today', () => {
+    const today = new Date().toISOString().slice(0, 10);
+    vi.stubGlobal('localStorage', {
+      getItem: () => JSON.stringify({ date: today, count: 2 }),
+      setItem: () => {},
+    });
+    expect(getPrestigesToday()).toBe(2);
+  });
+
+  it('getPrestigesToday returns 0 when date is not today or invalid', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => JSON.stringify({ date: '2000-01-01', count: 5 }),
+      setItem: () => {},
+    });
+    expect(getPrestigesToday()).toBe(0);
+    vi.stubGlobal('localStorage', {
+      getItem: () => JSON.stringify({}),
+      setItem: () => {},
+    });
+    expect(getPrestigesToday()).toBe(0);
+  });
+
+  it('incrementPrestigesToday sets count to 1 when no prior data', () => {
+    const storage: Record<string, string> = {};
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => storage[k] ?? null,
+      setItem: (k: string, v: string) => {
+        storage[k] = v;
+      },
+    });
+    incrementPrestigesToday();
+    const data = JSON.parse(storage['stellar-miner-prestiges-today'] ?? '{}');
+    expect(data.count).toBe(1);
+    expect(data.date).toBe(new Date().toISOString().slice(0, 10));
+  });
+
+  it('incrementPrestigesToday increments when date is today', () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const storage: Record<string, string> = {
+      'stellar-miner-prestiges-today': JSON.stringify({ date: today, count: 1 }),
+    };
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => storage[k] ?? null,
+      setItem: (k: string, v: string) => {
+        storage[k] = v;
+      },
+    });
+    incrementPrestigesToday();
+    const data = JSON.parse(storage['stellar-miner-prestiges-today'] ?? '{}');
+    expect(data.count).toBe(2);
+  });
+
+  it('getPrestigesToday returns 0 when JSON.parse throws', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => 'invalid-json',
+      setItem: () => {},
+    });
+    expect(getPrestigesToday()).toBe(0);
+  });
+
+  it('incrementPrestigesToday no-ops when getItem throws', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('storage error');
+      },
+      setItem: () => {},
+    });
+    expect(() => incrementPrestigesToday()).not.toThrow();
+  });
+
+  it('getEventContext excludes expired events', () => {
+    const evt = new GameEvent('e1', 'E1', new EventEffect(1, 0));
+    setActiveEventInstances([{ event: evt, endsAt: Date.now() - 1000 }]);
+    expect(getEventContext().activeEventIds).not.toContain('e1');
   });
 });

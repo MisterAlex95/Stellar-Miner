@@ -4,6 +4,8 @@ import {
   getUnlockedUpgradeTiers,
   getUpgradeUsesSlot,
   getComboName,
+  getEventPoolForRun,
+  EVENT_NEGATIVE_UNLOCK_AFTER,
   UPGRADE_CATALOG,
   EVENT_CATALOG,
   COMBO_NAMES,
@@ -56,5 +58,18 @@ describe('catalogs', () => {
   it('EVENT_CATALOG has events', () => {
     expect(EVENT_CATALOG.length).toBeGreaterThan(0);
     expect(EVENT_CATALOG[0].id).toBeDefined();
+  });
+
+  it('getEventPoolForRun returns only positive events before negative unlock', () => {
+    const pool = getEventPoolForRun(0);
+    expect(pool.length).toBeLessThanOrEqual(EVENT_CATALOG.length);
+    pool.forEach((e) => expect(e.effect.multiplier).toBeGreaterThanOrEqual(1));
+  });
+
+  it('getEventPoolForRun returns full catalog when run events >= threshold', () => {
+    const pool = getEventPoolForRun(EVENT_NEGATIVE_UNLOCK_AFTER);
+    expect(pool).toEqual(EVENT_CATALOG);
+    const poolAbove = getEventPoolForRun(EVENT_NEGATIVE_UNLOCK_AFTER + 1);
+    expect(poolAbove).toEqual(EVENT_CATALOG);
   });
 });

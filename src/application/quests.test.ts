@@ -6,7 +6,7 @@ import {
   getQuestLastClaimAt,
   claimQuest,
 } from './quests.js';
-import { setSession, setQuestState, getQuestState } from './gameState.js';
+import { setSession, setQuestState, getQuestState, setRunStatsFromPayload } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { QUEST_STREAK_KEY, QUEST_LAST_CLAIM_KEY } from './catalogs.js';
@@ -28,7 +28,7 @@ describe('quests', () => {
 
   it('generateQuest returns quest with valid shape', () => {
     const q = generateQuest();
-    expect(q.type).toMatch(/^(coins|production|upgrade|astronauts)$/);
+    expect(q.type).toMatch(/^(coins|production|upgrade|astronauts|combo_tier|events_triggered|tier1_set|prestige_today)$/);
     expect(q.target).toBeGreaterThan(0);
     expect(q.reward).toBeGreaterThan(0);
     expect(typeof q.description).toBe('string');
@@ -111,6 +111,46 @@ describe('quests', () => {
     setQuestState({ quest: { type: 'astronauts', target: 1, reward: 50, description: 'Have 1 astronaut' } });
     const p = getQuestProgress();
     expect(p).not.toBeNull();
+    expect(p!.done).toBe(true);
+  });
+
+  it('getQuestProgress returns progress for combo_tier quest', () => {
+    setSession(new GameSession('s1', Player.create('p1')));
+    setRunStatsFromPayload({ runMaxComboMult: 1.5 });
+    setQuestState({ quest: { type: 'combo_tier', target: 150, reward: 100, description: 'Reach ×1.5 combo' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.current).toBe(150);
+    expect(p!.done).toBe(true);
+  });
+
+  it('getQuestProgress returns progress for events_triggered quest', () => {
+    setSession(new GameSession('s1', Player.create('p1')));
+    setRunStatsFromPayload({ runEventsTriggered: 5 });
+    setQuestState({ quest: { type: 'events_triggered', target: 5, reward: 100, description: 'Trigger 5 events' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.current).toBe(5);
+    expect(p!.done).toBe(true);
+  });
+
+  it('getQuestProgress returns progress for tier1_set quest', () => {
+    const player = Player.create('p1');
+    setSession(new GameSession('s1', player));
+    setQuestState({ quest: { type: 'tier1_set', target: 1, reward: 1500, description: 'Own one of every tier-1' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(typeof p!.current).toBe('number');
+  });
+
+  it('getQuestProgress returns progress for prestige_today quest when storage has count', () => {
+    setSession(new GameSession('s1', Player.create('p1')));
+    const today = new Date().toISOString().slice(0, 10);
+    storage['stellar-miner-prestiges-today'] = JSON.stringify({ date: today, count: 2 });
+    setQuestState({ quest: { type: 'prestige_today', target: 2, reward: 200, description: 'Prestige 2 times today' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.current).toBe(2);
     expect(p!.done).toBe(true);
   });
 
