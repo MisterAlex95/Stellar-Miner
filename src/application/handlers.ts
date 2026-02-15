@@ -25,6 +25,7 @@ import {
   UPGRADE_CATALOG,
   EVENT_CATALOG,
   createUpgrade,
+  getUpgradeCost,
   LAST_DAILY_BONUS_KEY,
   DAILY_BONUS_COINS,
   COMBO_WINDOW_MS,
@@ -77,7 +78,7 @@ import {
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { claimQuest } from './quests.js';
 import { emit } from './eventBus.js';
-import { attemptResearch, clearResearch, getResearchProductionMultiplier, getResearchClickMultiplier, setResearchInProgress, isResearchInProgress, RESEARCH_CATALOG } from './research.js';
+import { attemptResearch, canAttemptResearch, clearResearch, getResearchProductionMultiplier, getResearchClickMultiplier, setResearchInProgress, isResearchInProgress, RESEARCH_CATALOG } from './research.js';
 import { getPlanetType, getPlanetTypeMultiplier } from './planetAffinity.js';
 import {
   getEffectiveUpgradeUsesSlot,
@@ -125,7 +126,8 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
   const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
   if (!def) return;
   const player = session.player;
-  const upgrade = createUpgrade(def);
+  const ownedCount = player.upgrades.filter((u) => u.id === upgradeId).length;
+  const upgrade = createUpgrade(def, ownedCount);
   const targetPlanet = planetId ? player.planets.find((p) => p.id === planetId) : undefined;
   const needsSlot = getEffectiveUpgradeUsesSlot(def.id);
   if (!player.coins.gte(upgrade.cost)) return;
@@ -167,7 +169,10 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): void 
   const needsSlot = getEffectiveUpgradeUsesSlot(def.id);
   let bought = 0;
   const crewRequired = getEffectiveRequiredAstronauts(def.id);
-  while (player.coins.gte(def.cost) && player.astronautCount >= crewRequired) {
+  let ownedCount = player.upgrades.filter((u) => u.id === upgradeId).length;
+  while (true) {
+    const nextCost = getUpgradeCost(def, ownedCount);
+    if (!player.coins.gte(nextCost) || player.astronautCount < crewRequired) break;
     let target: typeof player.planets[0] | null = planetId ? player.planets.find((p) => p.id === planetId) ?? null : null;
     if (needsSlot) {
       const withSlot = getPlanetsWithEffectiveFreeSlot(player);
@@ -177,10 +182,11 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): void 
     }
     if (!target) break;
     if (!player.spendAstronauts(crewRequired)) break;
-    const upgrade = createUpgrade(def);
+    const upgrade = createUpgrade(def, ownedCount);
     const mult = getPlanetTypeMultiplier(def.id, getPlanetType(target.id));
     upgradeService.purchaseUpgrade(player, upgrade, target, mult, hasEffectiveFreeSlot);
     bought++;
+    ownedCount++;
   }
   if (bought > 0) {
     saveSession();
@@ -453,18 +459,21 @@ export function confirmPrestige(): void {
   checkAchievements();
 }
 
-export function handleResearchAttempt(id: string): void {
+export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?: boolean }): void {
   const session = getSession();
   if (!session) return;
   const getUpgradeDisplayLine = (upgradeId: string, kind: 'slot' | 'crew', n: number) =>
     kind === 'slot'
       ? tParam('researchUpgradeLessSlot', { name: getCatalogUpgradeName(upgradeId), n })
       : tParam('researchUpgradeLessCrew', { name: getCatalogUpgradeName(upgradeId), n });
-  const result = attemptResearch(id, (amount) => {
-    if (!session.player.coins.gte(amount)) return false;
-    session.player.spendCoins(amount);
-    return true;
-  }, getUpgradeDisplayLine);
+  const spendCoins = options?.coinsAlreadySpent
+    ? () => true
+    : (amount: number) => {
+        if (!session.player.coins.gte(amount)) return false;
+        session.player.spendCoins(amount);
+        return true;
+      };
+  const result = attemptResearch(id, spendCoins, getUpgradeDisplayLine);
   saveSession();
   updateStats();
   renderUpgradeList();
@@ -479,6 +488,15 @@ export function handleResearchAttempt(id: string): void {
 
 export function startResearchWithProgress(cardEl: HTMLElement, id: string): void {
   if (isResearchInProgress()) return;
+  const session = getSession();
+  if (!session) return;
+  const node = RESEARCH_CATALOG.find((n) => n.id === id);
+  if (!node || !canAttemptResearch(id) || !session.player.coins.gte(node.cost)) return;
+
+  session.player.spendCoins(node.cost);
+  saveSession();
+  updateStats();
+
   const durationMs = RESEARCH_PROGRESS_DURATION_MS;
   const overlay = document.createElement('div');
   overlay.className = 'research-progress-overlay';
@@ -495,7 +513,7 @@ export function startResearchWithProgress(cardEl: HTMLElement, id: string): void
   }
   setResearchInProgress(true);
   setTimeout(() => {
-    handleResearchAttempt(id);
+    handleResearchAttempt(id, { coinsAlreadySpent: true });
   }, durationMs);
 }
 

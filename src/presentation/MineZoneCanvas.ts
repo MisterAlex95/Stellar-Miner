@@ -47,36 +47,6 @@ export type EventContext = { activeEventIds: string[] };
 let getMineZoneSettings: (() => MineZoneSettings) | null = null;
 let getMineZoneEventContext: (() => EventContext) | null = null;
 
-const SURFACE_IDS = [
-  'mining-robot', 'drill-mk1', 'drill-mk2', 'asteroid-rig',
-  'orbital-station', 'deep-core-drill', 'stellar-harvester', 'quantum-extractor',
-  'void-crusher', 'nexus-collector',
-];
-const SURFACE_COLORS: Record<string, string> = {
-  'mining-robot': '#f59e0b',
-  'drill-mk1': '#22c55e',
-  'drill-mk2': '#3b82f6',
-  'asteroid-rig': '#a78bfa',
-  'orbital-station': '#06b6d4',
-  'deep-core-drill': '#ec4899',
-  'stellar-harvester': '#eab308',
-  'quantum-extractor': '#8b5cf6',
-  'void-crusher': '#7c3aed',
-  'nexus-collector': '#4f46e5',
-};
-const SURFACE_SIZES: Record<string, number> = {
-  'mining-robot': 2.5,
-  'drill-mk1': 3,
-  'drill-mk2': 3.5,
-  'asteroid-rig': 4,
-  'orbital-station': 4.5,
-  'deep-core-drill': 5,
-  'stellar-harvester': 5.5,
-  'quantum-extractor': 6,
-  'void-crusher': 6.5,
-  'nexus-collector': 7,
-};
-
 function getThemeColor(name: string, fallback: string): string {
   if (typeof document === 'undefined') return fallback;
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -133,12 +103,6 @@ function emitBurst(
       critical: options.critical,
     };
   }
-}
-
-function unitAngle(id: string, index: number): number {
-  let n = 0;
-  for (let i = 0; i < id.length; i++) n += id.charCodeAt(i);
-  return ((n + index) * 0.618) % 1 * Math.PI * 2;
 }
 
 /** Deterministic hash from string for variety. */
@@ -583,27 +547,6 @@ function drawOnePlanet(
   if (extra === 'rings' || extra === 'rings_and_belt') drawPlanetRings(cx, cy, r, view.id);
   if (extra === 'belt' || extra === 'rings_and_belt') drawPlanetBelt(cx, cy, r, view.id);
 
-  const accent = getThemeColor('--accent', '#f59e0b');
-  const counts = view.upgradeCounts;
-  const distFromCenter = r * 0.72;
-  for (const id of SURFACE_IDS) {
-    const count = counts[id] ?? 0;
-    const color = SURFACE_COLORS[id] ?? accent;
-    const size = Math.max(1.2, (SURFACE_SIZES[id] ?? 2.5) * (r / 28));
-    for (let i = 0; i < count; i++) {
-      const angle = unitAngle(view.id + id, i);
-      const x = cx + Math.cos(angle) * distFromCenter;
-      const y = cy + Math.sin(angle) * distFromCenter;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = border;
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
-    }
-  }
-
   const labelY = cy - r - 6;
   const fontSize = Math.max(10, Math.min(14, r * 0.5));
   ctx.font = `${fontSize}px system-ui, sans-serif`;
@@ -611,29 +554,6 @@ function drawOnePlanet(
   ctx.textBaseline = 'bottom';
   ctx.fillStyle = getThemeColor('--text-dim', '#8b909a');
   ctx.fillText(view.name, cx, labelY);
-
-  const stationCount = counts['orbital-station'] ?? 0;
-  const orbitRadius = r + 10;
-  if (stationCount > 0) {
-    ctx.strokeStyle = accent;
-    ctx.globalAlpha = 0.5;
-    ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.arc(cx, cy, orbitRadius, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-  for (let i = 0; i < stationCount; i++) {
-    const angle = orbitTime * 0.4 + (planetIndex * 0.7) + (i / Math.max(stationCount, 1)) * Math.PI * 2;
-    const x = cx + Math.cos(angle) * orbitRadius;
-    const y = cy + Math.sin(angle) * orbitRadius;
-    ctx.fillStyle = accent;
-    ctx.strokeStyle = border;
-    ctx.beginPath();
-    ctx.arc(x, y, Math.max(2.5, r * 0.2), 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  }
 }
 
 /** Draw only the planet sphere (texture + border) to a small canvas, e.g. for Base/Planets list tiles. */

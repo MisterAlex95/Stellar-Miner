@@ -16,21 +16,21 @@ let progressionInitialized = false;
 let introCanClose = false;
 let introReadyTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let introProgressStartTs = 0;
-let introProgressRafId: number | null = null;
+let introProgressIntervalId: ReturnType<typeof setInterval> | null = null;
+
+const INTRO_PROGRESS_TICK_MS = 50;
 
 function getBlockById(id: BlockId) {
   return PROGRESSION_BLOCKS.find((b) => b.id === id);
 }
 
 function tickIntroProgress(): void {
-  const wrap = document.getElementById('intro-progress-wrap');
   const bar = document.getElementById('intro-progress-bar');
-  if (!wrap || !bar) return;
+  if (!bar) return;
   const elapsed = Date.now() - introProgressStartTs;
   const pct = Math.min(100, (elapsed / INTRO_READY_DELAY_MS) * 100);
   bar.style.width = `${pct}%`;
   bar.setAttribute('aria-valuenow', String(Math.round(pct)));
-  if (pct < 100) introProgressRafId = requestAnimationFrame(tickIntroProgress);
 }
 
 export function showIntroModal(blockId: BlockId): void {
@@ -48,9 +48,9 @@ export function showIntroModal(blockId: BlockId): void {
     clearTimeout(introReadyTimeoutId);
     introReadyTimeoutId = null;
   }
-  if (introProgressRafId) {
-    cancelAnimationFrame(introProgressRafId);
-    introProgressRafId = null;
+  if (introProgressIntervalId) {
+    clearInterval(introProgressIntervalId);
+    introProgressIntervalId = null;
   }
 
   introCanClose = false;
@@ -74,7 +74,8 @@ export function showIntroModal(blockId: BlockId): void {
   }
 
   introProgressStartTs = Date.now();
-  introProgressRafId = requestAnimationFrame(tickIntroProgress);
+  tickIntroProgress();
+  introProgressIntervalId = setInterval(tickIntroProgress, INTRO_PROGRESS_TICK_MS);
 
   introReadyTimeoutId = setTimeout(() => {
     introReadyTimeoutId = null;
@@ -84,9 +85,9 @@ export function showIntroModal(blockId: BlockId): void {
       progressWrap.style.display = 'none';
       progressWrap.setAttribute('aria-hidden', 'true');
     }
-    if (introProgressRafId) {
-      cancelAnimationFrame(introProgressRafId);
-      introProgressRafId = null;
+    if (introProgressIntervalId) {
+      clearInterval(introProgressIntervalId);
+      introProgressIntervalId = null;
     }
     gotItBtn?.focus();
   }, INTRO_READY_DELAY_MS);
@@ -97,9 +98,9 @@ export function closeIntroModal(): void {
     clearTimeout(introReadyTimeoutId);
     introReadyTimeoutId = null;
   }
-  if (introProgressRafId) {
-    cancelAnimationFrame(introProgressRafId);
-    introProgressRafId = null;
+  if (introProgressIntervalId) {
+    clearInterval(introProgressIntervalId);
+    introProgressIntervalId = null;
   }
   const overlay = document.getElementById('intro-overlay');
   const progressWrap = document.getElementById('intro-progress-wrap');

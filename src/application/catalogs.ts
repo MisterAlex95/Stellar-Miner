@@ -1,4 +1,4 @@
-import { toDecimal } from '../domain/bigNumber.js';
+import { toDecimal, Decimal } from '../domain/bigNumber.js';
 import { Upgrade } from '../domain/entities/Upgrade.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
 import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
@@ -35,12 +35,22 @@ export type UpgradeDef = {
 
 export const UPGRADE_CATALOG: UpgradeDef[] = upgradesData as UpgradeDef[];
 
-export function createUpgrade(def: UpgradeDef): Upgrade {
+const UPGRADES_CONFIG = (gameConfig as { upgrades?: { costMultiplierPerOwned?: number; displayCount?: number } }).upgrades ?? {};
+const UPGRADE_COST_MULT = UPGRADES_CONFIG.costMultiplierPerOwned ?? 1.15;
+/** Max number of upgrade cards shown in the list at once. */
+export const UPGRADE_DISPLAY_COUNT = UPGRADES_CONFIG.displayCount ?? 5;
+
+/** Cost for the next copy of this upgrade (baseCost * multiplier^ownedCount). */
+export function getUpgradeCost(def: UpgradeDef, ownedCount: number): Decimal {
+  return toDecimal(def.cost).mul(Decimal.pow(UPGRADE_COST_MULT, ownedCount));
+}
+
+export function createUpgrade(def: UpgradeDef, ownedCount: number = 0): Upgrade {
   const usesSlot = def.usesSlot !== false;
   return new Upgrade(
     def.id,
     def.name,
-    toDecimal(def.cost),
+    getUpgradeCost(def, ownedCount),
     new UpgradeEffect(toDecimal(def.coinsPerSecond)),
     usesSlot
   );

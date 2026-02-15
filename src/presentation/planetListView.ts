@@ -4,7 +4,7 @@ import { getPlanetEffectiveProduction } from '../application/productionHelpers.j
 import { getPlanetType } from '../application/planetAffinity.js';
 import { getEffectiveUsedSlots } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
-import { getCatalogPlanetNameById, getCatalogUpgradeName } from '../application/i18nCatalogs.js';
+import { getCatalogPlanetNameById } from '../application/i18nCatalogs.js';
 import { drawPlanetSphereToCanvas } from './MineZoneCanvas.js';
 
 export function renderPlanetList(): void {
@@ -42,17 +42,6 @@ export function renderPlanetList(): void {
       if (p.housingCount > 0) {
         const crewCap = p.housingCount * 2;
         lines.push(`${t('planetInfoHousing')}: ${tParam('planetInfoHousingLine', { n: String(p.housingCount), crew: String(crewCap) })}`);
-      }
-      const upgradeCounts: Record<string, number> = {};
-      for (const u of p.upgrades) {
-        upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
-      }
-      const upgradeEntries = Object.entries(upgradeCounts)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([id, n]) => `${getCatalogUpgradeName(id)} ×${n}`);
-      if (upgradeEntries.length > 0) {
-        lines.push(`${t('planetInfoEquipment')}:`);
-        lines.push(upgradeEntries.join('\n'));
       }
       const planetInfoTooltip = lines.join('\n');
       return `<div class="planet-card" data-planet-id="${p.id}" title="${cardTitle}">
