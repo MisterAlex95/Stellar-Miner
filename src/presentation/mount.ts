@@ -94,6 +94,9 @@ export function applyLayout(): void {
     });
   } else {
     if (tabsNav) tabsNav.style.display = '';
+    panels.forEach((p) => {
+      p.style.display = '';
+    });
     const activeId =
       document.querySelector('.app-tab--active')?.getAttribute('data-tab') ||
       localStorage.getItem(TAB_STORAGE_KEY) ||
