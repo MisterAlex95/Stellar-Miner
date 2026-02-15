@@ -57,7 +57,7 @@ export function getUpgradeCardState(
   const buyLabel = t('buyLabel');
   const maxLabel = maxCount > 1 ? tParam('maxLabelCount', { n: maxCount }) : t('maxLabel');
   const costCoins = `${formatNumber(upgrade.cost, settings.compactNumbers)} ⬡`;
-  const costCrewLine = crewReq > 0 ? `${crewReq} crew` : '';
+  const costCrewLine = crewReq > 0 ? tParam('crewCostShort', { n: crewReq }) : '';
 
   let buyTitle = '';
   if (!canBuy) {

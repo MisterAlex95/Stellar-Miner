@@ -25,7 +25,12 @@ const PROGRESSION_KEY = 'stellar-miner-progression';
 const STATS_STORAGE_KEY = 'stellar-miner-stats';
 const STATS_HISTORY_STORAGE_KEY = 'stellar-miner-stats-history';
 const MIN_OFFLINE_MS = 60_000; // 1 min before offline progress counts
-const MAX_OFFLINE_MS = 12 * 60 * 60 * 1000; // cap 12h
+const FULL_CAP_OFFLINE_MS = 12 * 60 * 60 * 1000; // full rate up to 12h
+// Soft decay after 12h: 12–14h at 80% rate, 14–24h linear 80%→50%, 24h+ at 50%
+const DECAY_12_14H_MS = 2 * 60 * 60 * 1000;
+const DECAY_12_14H_MULT = 0.8;
+const DECAY_14_24H_MS = 10 * 60 * 60 * 1000;
+const DECAY_24H_PLUS_MULT = 0.5;
 
 type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
 type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number };
@@ -131,13 +136,36 @@ export class SaveLoadService implements ISaveLoadService {
       const lastSave = parseInt(lastSaveRaw, 10);
       const elapsed = Date.now() - lastSave;
       if (elapsed >= MIN_OFFLINE_MS && session.player.productionRate.value.gt(0)) {
-        const cappedMs = Math.min(elapsed, MAX_OFFLINE_MS);
         const researchMult = getResearchProductionMultiplier();
-        const offlineCoins = session.player.effectiveProductionRate.mul(cappedMs / 1000).mul(researchMult);
+        let effectiveSeconds = 0;
+        const elapsedSec = elapsed / 1000;
+        const cap12hSec = FULL_CAP_OFFLINE_MS / 1000;
+        const decay12_14Sec = DECAY_12_14H_MS / 1000;
+        const decay14_24Sec = DECAY_14_24H_MS / 1000;
+        if (elapsedSec <= cap12hSec) {
+          effectiveSeconds = elapsedSec;
+        } else if (elapsedSec <= cap12hSec + decay12_14Sec) {
+          effectiveSeconds = cap12hSec + (elapsedSec - cap12hSec) * DECAY_12_14H_MULT;
+        } else if (elapsedSec <= cap12hSec + decay12_14Sec + decay14_24Sec) {
+          const in14_24 = elapsedSec - cap12hSec - decay12_14Sec;
+          const t = in14_24 / decay14_24Sec;
+          const avgMult = 0.8 - (0.3 * t);
+          effectiveSeconds = cap12hSec + decay12_14Sec * DECAY_12_14H_MULT + in14_24 * avgMult;
+        } else {
+          const extra = elapsedSec - cap12hSec - decay12_14Sec - decay14_24Sec;
+          effectiveSeconds =
+            cap12hSec +
+            decay12_14Sec * DECAY_12_14H_MULT +
+            decay14_24Sec * 0.65 +
+            extra * DECAY_24H_PLUS_MULT;
+        }
+        const offlineCoins = session.player.effectiveProductionRate
+          .mul(effectiveSeconds)
+          .mul(researchMult);
         session.player.addCoins(offlineCoins);
         const n = offlineCoins.toNumber();
         this.lastOfflineCoinsApplied = Number.isFinite(n) ? n : Number.MAX_VALUE;
-        this.lastOfflineWasCapped = elapsed > MAX_OFFLINE_MS;
+        this.lastOfflineWasCapped = elapsed > FULL_CAP_OFFLINE_MS;
       }
     }
     return session;

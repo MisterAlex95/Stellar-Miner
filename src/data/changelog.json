@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.3.9",
+    "date": "2026-02-15",
+    "changes": [
+      "Handlers split by domain (save, mine, upgrade, planet, quest, prestige, research, settings, debug) for easier maintenance.",
+      "Chart drawing extracted to presentation/components/chartUtils.ts.",
+      "Offline progress: soft cap after 12h (80% at 14h, 50% at 24h) instead of hard cap.",
+      "i18n: first-time toasts, expedition messages, chart legends, and crew cost use strings.ts."
+    ]
+  },
+  {
     "version": "0.3.8",
     "date": "2026-02-15",
     "changes": [
