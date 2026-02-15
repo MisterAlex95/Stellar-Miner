@@ -162,10 +162,11 @@ describe('research', () => {
 
   it('getEffectiveRequiredAstronauts returns 0 for crew-free research, else base value', () => {
     expect(getEffectiveRequiredAstronauts('mining-robot')).toBe(0);
-    expect(getEffectiveRequiredAstronauts('drill-mk1')).toBe(1);
+    expect(getEffectiveRequiredAstronauts('drill-mk1')).toBe(0); // base 0 in catalog
+    expect(getEffectiveRequiredAstronauts('drill-mk2')).toBe(1); // base 1
     storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation', 'ai-assist']);
     expect(getEffectiveRequiredAstronauts('drill-mk1')).toBe(0);
-    expect(getEffectiveRequiredAstronauts('drill-mk2')).toBe(2);
+    expect(getEffectiveRequiredAstronauts('drill-mk2')).toBe(1); // ai-assist grants crew-free for drill-mk1 only
   });
 
   it('getResearchTreeRows returns rows', () => {

@@ -71,7 +71,7 @@ function buildPlanetCardHtml(
     `${t('planetInfoProduction')}: ${prodStr}/s`,
   ];
   if (p.housingCount > 0) {
-    const crewCap = p.housingCount * 2;
+    const crewCap = p.housingCount * HOUSING_ASTRONAUT_CAPACITY;
     lines.push(`${t('planetInfoHousing')}: ${tParam('planetInfoHousingLine', { n: String(p.housingCount), crew: String(crewCap) })}`);
   }
   const planetInfoTooltip = lines.join('\n');

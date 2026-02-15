@@ -68,28 +68,27 @@ export function getUnlockedResearch(): string[] {
   return loadUnlocked();
 }
 
-/** Production multiplier from all unlocked research (1 + sum of productionPercent / 100). */
-export function getResearchProductionMultiplier(): number {
+/** Sum of a percent modifier from all unlocked nodes (e.g. productionPercent or clickPercent). */
+function sumUnlockedModifierPercent(key: 'productionPercent' | 'clickPercent'): number {
   const unlocked = loadUnlocked();
   let total = 0;
   for (const node of RESEARCH_CATALOG) {
-    if (unlocked.includes(node.id) && node.modifiers.productionPercent != null) {
-      total += node.modifiers.productionPercent;
+    if (unlocked.includes(node.id)) {
+      const value = node.modifiers[key];
+      if (value != null) total += value;
     }
   }
-  return 1 + total / 100;
+  return total;
+}
+
+/** Production multiplier from all unlocked research (1 + sum of productionPercent / 100). */
+export function getResearchProductionMultiplier(): number {
+  return 1 + sumUnlockedModifierPercent('productionPercent') / 100;
 }
 
 /** Click reward multiplier from all unlocked research (1 + sum of clickPercent / 100). */
 export function getResearchClickMultiplier(): number {
-  const unlocked = loadUnlocked();
-  let total = 0;
-  for (const node of RESEARCH_CATALOG) {
-    if (unlocked.includes(node.id) && node.modifiers.clickPercent != null) {
-      total += node.modifiers.clickPercent;
-    }
-  }
-  return 1 + total / 100;
+  return 1 + sumUnlockedModifierPercent('clickPercent') / 100;
 }
 
 /** Total +% production from research (e.g. 15 for +15%). */

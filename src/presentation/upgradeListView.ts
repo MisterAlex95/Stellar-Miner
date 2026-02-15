@@ -14,6 +14,8 @@ import { updateStats } from './statsView.js';
 import { updateTooltipForButton } from './components/buttonTooltip.js';
 import { getUpgradeCardState, buildUpgradeCardHtml } from './components/upgradeCard.js';
 
+const UPGRADE_LIST_ID = 'upgrade-list';
+
 export function getMaxBuyCount(upgradeId: string): number {
   const session = getSession();
   if (!session) return 0;
@@ -45,7 +47,7 @@ export function renderUpgradeList(): void {
   if (!session) return;
   const player = session.player;
   const settings = getSettings();
-  const listEl = document.getElementById('upgrade-list');
+  const listEl = document.getElementById(UPGRADE_LIST_ID);
   if (!listEl) return;
   listEl.innerHTML = '';
 
@@ -89,7 +91,7 @@ export function updateUpgradeListInPlace(): void {
   if (!session) return;
   const player = session.player;
   const settings = getSettings();
-  const listEl = document.getElementById('upgrade-list');
+  const listEl = document.getElementById(UPGRADE_LIST_ID);
   if (!listEl) return;
 
   const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
@@ -154,7 +156,7 @@ export function updateUpgradeListInPlace(): void {
 }
 
 export function flashUpgradeCard(upgradeId: string): void {
-  const listEl = document.getElementById('upgrade-list');
+  const listEl = document.getElementById(UPGRADE_LIST_ID);
   if (!listEl) return;
   const card = listEl.querySelector(`.upgrade-card .upgrade-btn--buy[data-upgrade-id="${upgradeId}"]`)?.closest('.upgrade-card');
   if (card instanceof HTMLElement) {

@@ -7,6 +7,9 @@ import {
   setLastCoinsForBump,
   getNextEventAt,
   getActiveEventInstances,
+  getClickTimestamps,
+  getSessionClickCount,
+  getSessionCoinsFromClicks,
 } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
@@ -19,6 +22,7 @@ import { getNextMilestone, getUnlockedBlocks } from '../application/progression.
 import { getResearchProductionMultiplier, getResearchProductionPercent } from '../application/research.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogEventName } from '../application/i18nCatalogs.js';
+import { formatDuration } from '../application/playTimeStats.js';
 import { createEventBadgeHtml } from './components/eventBadge.js';
 
 let displayedCoins = -1;
@@ -53,13 +57,20 @@ export function updateCoinDisplay(dt: number): void {
   }
 }
 
-/** Call from game loop with dt to animate production rate toward target. */
+/** Call from game loop with dt to animate production rate toward target. Total = passive production/s + estimated coins/s from clicks. */
 export function updateProductionDisplay(dt: number): void {
   const session = getSession();
   if (!session) return;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const target = session.player.effectiveProductionRate.mul(eventMult * researchMult);
+  const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
+  const now = Date.now();
+  const clicksLastSecond = getClickTimestamps().filter((t) => t > now - 1000).length;
+  const sessionClicks = getSessionClickCount();
+  const sessionCoinsFromClicks = getSessionCoinsFromClicks();
+  const avgCoinsPerClick = sessionClicks > 0 ? sessionCoinsFromClicks / sessionClicks : 1;
+  const clickRate = clicksLastSecond * avgCoinsPerClick;
+  const target = productionRate.add(clickRate);
   const settings = getSettings();
   const rateEl = document.getElementById('production-value');
   if (!rateEl) return;
@@ -97,7 +108,13 @@ export function syncProductionDisplay(): void {
   if (!session) return;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const target = session.player.effectiveProductionRate.mul(eventMult * researchMult);
+  const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
+  const now = Date.now();
+  const clicksLastSecond = getClickTimestamps().filter((t) => t > now - 1000).length;
+  const sessionClicks = getSessionClickCount();
+  const sessionCoinsFromClicks = getSessionCoinsFromClicks();
+  const avgCoinsPerClick = sessionClicks > 0 ? sessionCoinsFromClicks / sessionClicks : 1;
+  const target = productionRate.add(clicksLastSecond * avgCoinsPerClick);
   displayedProduction = target.toNumber();
   const rateEl = document.getElementById('production-value');
   if (rateEl) {
@@ -182,6 +199,9 @@ export function updateStats(): void {
     const researchPct = getResearchProductionPercent();
     if (researchPct > 0) parts.push(`+${Math.round(researchPct)}% ${t('breakdownResearch')}`);
     if (eventMult > 1) parts.push(`×${eventMult.toFixed(1)} ${t('breakdownEvent')}`);
+    const now = Date.now();
+    const clicksLastSecond = getClickTimestamps().filter((ts) => ts > now - 1000).length;
+    if (clicksLastSecond > 0) parts.push(tParam('productionClicksEstimate', { n: String(clicksLastSecond) }));
     breakdownEl.textContent = parts.length > 0 ? parts.join(' · ') : '';
     breakdownEl.style.display = parts.length > 0 ? '' : 'none';
   }
@@ -195,7 +215,24 @@ export function updateStats(): void {
       const remaining = new Decimal(milestone.coinsNeeded).sub(session.player.coins.value);
       const remainingFormatted = remaining.lte(0) ? formatNumber(0, settings.compactNumbers) : formatNumber(remaining, settings.compactNumbers);
       const titleKey = ('progression' + milestone.block.id.charAt(0).toUpperCase() + milestone.block.id.slice(1) + 'Title') as StringKey;
-      nextMilestoneEl.textContent = tParam('nextMilestoneFormat', { remaining: remainingFormatted, title: t(titleKey) });
+      let text = tParam('nextMilestoneFormat', { remaining: remainingFormatted, title: t(titleKey) });
+      if (remaining.gt(0)) {
+        const eventMult = getEventMultiplier();
+        const researchMult = getResearchProductionMultiplier();
+        const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
+        const now = Date.now();
+        const clicksLastSecond = getClickTimestamps().filter((t) => t > now - 1000).length;
+        const sessionClicks = getSessionClickCount();
+        const sessionCoinsFromClicks = getSessionCoinsFromClicks();
+        const avgCoinsPerClick = sessionClicks > 0 ? sessionCoinsFromClicks / sessionClicks : 1;
+        const totalRate = productionRate.add(clicksLastSecond * avgCoinsPerClick);
+        if (totalRate.gt(0)) {
+          const secs = remaining.div(totalRate).toNumber();
+          const ms = Number.isFinite(secs) && secs >= 0 ? secs * 1000 : 0;
+          text += ' ' + tParam('nextMilestoneTime', { time: formatDuration(ms) });
+        }
+      }
+      nextMilestoneEl.textContent = text;
       nextMilestoneEl.style.display = 'block';
     } else {
       nextMilestoneEl.textContent = '';
