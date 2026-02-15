@@ -1206,12 +1206,6 @@ h1 {
   font-weight: 700;
 }
 
-.session-stats {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  margin-top: 0.35rem;
-}
-
 /* Card panel for all gameplay sections (Quest, Prestige, Crew, Planets, Upgrades) */
 .prestige-section,
 .crew-section,

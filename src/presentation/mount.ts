@@ -136,7 +136,6 @@ const APP_HTML = `
         <div class="stat-label">Production <span class="production-live" id="production-live" aria-hidden="true"></span></div>
         <div class="stat-value" id="production-value">0/s</div>
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
-        <div class="session-stats" id="session-stats" aria-live="polite"></div>
         <div class="active-events" id="active-events" aria-live="polite"></div>
         <div class="next-event-progress-wrap" id="next-event-progress-wrap" aria-hidden="true">
           <div class="next-event-progress-bar" id="next-event-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>

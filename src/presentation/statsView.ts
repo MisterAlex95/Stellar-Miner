@@ -6,11 +6,8 @@ import {
   setLastCoinsForBump,
   getNextEventAt,
   getActiveEventInstances,
-  getSessionClickCount,
-  getSessionCoinsFromClicks,
 } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
-import { getTotalClicksEver } from '../application/achievements.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
@@ -111,22 +108,6 @@ export function updateStats(): void {
     if (eventMult > 1) parts.push(`×${eventMult.toFixed(1)} event`);
     breakdownEl.textContent = parts.length > 0 ? parts.join(' · ') : '';
     breakdownEl.style.display = parts.length > 0 ? '' : 'none';
-  }
-  const sessionEl = document.getElementById('session-stats');
-  if (sessionEl) {
-    const totalClicks = getTotalClicksEver();
-    const sessionClickCount = getSessionClickCount();
-    const sessionCoinsFromClicks = getSessionCoinsFromClicks();
-    if (sessionClickCount > 0 || sessionCoinsFromClicks > 0 || totalClicks > 0) {
-      const parts: string[] = [];
-      if (sessionClickCount > 0 || sessionCoinsFromClicks > 0)
-        parts.push(`Session: ${sessionClickCount} clicks · ${formatNumber(sessionCoinsFromClicks, settings.compactNumbers)} ⬡`);
-      if (totalClicks > 0) parts.push(`Lifetime: ${formatNumber(totalClicks, settings.compactNumbers)} clicks`);
-      sessionEl.textContent = parts.join(' · ');
-      sessionEl.style.display = 'block';
-    } else {
-      sessionEl.style.display = 'none';
-    }
   }
   renderPrestigeSection();
   renderCrewSection();
