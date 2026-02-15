@@ -914,8 +914,12 @@ export function mount(): void {
     document.getElementById('mine-zone')?.classList.remove('mine-zone--active');
   });
 
-  const buyPlanetBtn = document.getElementById('buy-planet-btn');
-  if (buyPlanetBtn) buyPlanetBtn.addEventListener('click', handleBuyNewPlanet);
+  const expeditionArea = document.getElementById('expedition-area');
+  if (expeditionArea) {
+    expeditionArea.addEventListener('click', (e: Event) => {
+      if ((e.target as HTMLElement).closest('.buy-planet-btn')) handleBuyNewPlanet();
+    });
+  }
 
   const planetList = document.getElementById('planet-list');
   if (planetList) {
