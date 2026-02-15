@@ -46,10 +46,10 @@ export function renderCrewSection(): void {
   if (!crewSummaryEl) return;
 
   const assigned = getAssignedAstronauts(session);
-  const free = player.astronautCount;
+  const free = player.freeCrewCount;
   const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
   const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
-  const totalCrew = free + assigned;
+  const totalCrew = player.astronautCount;
   const atCap = totalCrew >= maxCrew;
   const cost = getAstronautCost(free);
   const canHire = player.coins.gte(cost) && !atCap;
@@ -62,17 +62,28 @@ export function renderCrewSection(): void {
     ) + Math.round(player.veteranCount * VETERAN_PRODUCTION_BONUS * 100);
 
   if (crewCapacityFill && crewCapacityWrap) {
+    crewCapacityFill.style.width = '100%';
     const capacityPct = maxCrew > 0 ? Math.min(100, (totalCrew / maxCrew) * 100) : 0;
-    crewCapacityFill.style.width = `${capacityPct.toFixed(1)}%`;
     crewCapacityWrap.setAttribute('aria-valuenow', String(Math.round(capacityPct)));
+    const pctOfMax = (n: number) => (maxCrew > 0 ? (n / maxCrew) * 100 : 0);
+    const setSegment = (el: HTMLElement | null, value: number, title: string) => {
+      if (!el) return;
+      const pct = pctOfMax(value);
+      el.style.width = `${pct.toFixed(1)}%`;
+      el.style.minWidth = pct === 0 && maxCrew > 0 ? '4px' : '';
+      el.setAttribute('title', title);
+    };
     CREW_ROLES.forEach((role) => {
       const segmentEl = document.getElementById(`crew-capacity-segment-${role}`);
-      if (segmentEl) {
-        const n = player.crewByRole[role];
-        const segmentPct = totalCrew > 0 ? (n / totalCrew) * 100 : 0;
-        segmentEl.style.width = `${segmentPct.toFixed(1)}%`;
-      }
+      const n = player.crewByRole[role];
+      const roleLabel = t(ROLE_KEYS[role]);
+      setSegment(segmentEl, n, tParam('crewSegmentRole', { n: String(n), role: roleLabel }));
     });
+    const equipmentSegmentEl = document.getElementById('crew-capacity-segment-equipment');
+    setSegment(equipmentSegmentEl, assigned, tParam('crewSegmentEquipment', { n: String(assigned) }));
+    const freeSegmentEl = document.getElementById('crew-capacity-segment-free');
+    const freeSlots = Math.max(0, maxCrew - totalCrew);
+    setSegment(freeSegmentEl, freeSlots, tParam('crewSegmentFree', { n: String(freeSlots) }));
   }
 
   crewSummaryEl.title = tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length });

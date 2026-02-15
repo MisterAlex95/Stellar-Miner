@@ -16,6 +16,8 @@ html[data-theme="light"] {
   --crew-scientist-bg: rgba(2, 132, 199, 0.1);
   --crew-pilot: #7c3aed;
   --crew-pilot-bg: rgba(124, 58, 237, 0.1);
+  --crew-equipment: #475569;
+  --crew-free: rgba(0, 0, 0, 0.06);
 }
 
 html[data-theme="light"] body {

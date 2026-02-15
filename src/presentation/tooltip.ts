@@ -1,6 +1,6 @@
 /**
  * Custom tooltips so they show reliably on hover (including when the button inside is disabled).
- * Uses a single floating div and reads title from .btn-tooltip-wrap.
+ * Uses a single floating div. Supports .btn-tooltip-wrap and .crew-capacity-segment (with title).
  */
 
 const SHOW_DELAY_MS = 400;
@@ -102,20 +102,25 @@ function scheduleHide(): void {
   }, HIDE_DELAY_MS);
 }
 
+function getTooltipTarget(el: Element | null): Element | null {
+  if (!el) return null;
+  const wrap = el.closest('.btn-tooltip-wrap');
+  if (wrap && (wrap.getAttribute('title')?.trim() ?? '')) return wrap;
+  const segment = el.closest('.crew-capacity-segment');
+  if (segment && (segment.getAttribute('title')?.trim() ?? '')) return segment;
+  return null;
+}
+
 function handleOver(e: MouseEvent): void {
-  const wrap = (e.target as Element)?.closest?.('.btn-tooltip-wrap');
-  if (!wrap) return;
-  const text = wrap.getAttribute('title')?.trim();
-  if (!text) return;
-  scheduleShow(wrap);
+  const target = getTooltipTarget(e.target as Element);
+  if (!target) return;
+  scheduleShow(target);
 }
 
 function handleOut(e: MouseEvent): void {
-  const wrap = (e.target as Element)?.closest?.('.btn-tooltip-wrap');
-  if (wrap) {
-    const related = e.relatedTarget as Node | null;
-    if (related && wrap.contains(related)) return;
-  }
+  const target = getTooltipTarget(e.target as Element);
+  const related = getTooltipTarget(e.relatedTarget as Element);
+  if (target && related === target) return;
   scheduleHide();
 }
 

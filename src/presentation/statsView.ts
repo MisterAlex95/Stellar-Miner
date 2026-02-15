@@ -115,9 +115,9 @@ export function updateStats(): void {
   const coinsCard = document.getElementById('coins-stat-card');
   const crewLineEl = document.getElementById('crew-stat-line');
   const crewDetailEl = document.getElementById('crew-stat-detail');
-  const freeCrew = player.astronautCount;
   const assignedCrew = session ? getAssignedAstronauts(session) : 0;
-  const totalCrew = freeCrew + assignedCrew;
+  const totalCrew = player.astronautCount;
+  const freeCrew = totalCrew - assignedCrew;
   const showCrew = totalCrew > 0;
   if (crewLineEl) {
     crewLineEl.textContent = showCrew ? tParam('crewStatFormat', { n: freeCrew }) : '';

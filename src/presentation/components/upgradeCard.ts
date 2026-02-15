@@ -48,7 +48,7 @@ export function getUpgradeCardState(
   const owned = player.upgrades.filter((u) => u.id === def.id).length;
   const upgrade = createUpgrade(def, owned);
   const crewReq = getEffectiveRequiredAstronauts(def.id);
-  const hasCrew = player.astronautCount >= crewReq;
+  const hasCrew = player.freeCrewCount >= crewReq;
   const canAfford = player.coins.gte(upgrade.cost);
   const needsSlot = getEffectiveUpgradeUsesSlot(def.id);
   const canPlace = needsSlot ? hasFreeSlot : player.planets.length > 0;

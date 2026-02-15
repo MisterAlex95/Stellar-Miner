@@ -21,18 +21,21 @@ import {
 
 const DEFAULT_CREW_BY_ROLE: CrewByRole = { miner: 0, scientist: 0, pilot: 0 };
 
-/** Order to deduct crew when spending (e.g. for upgrades): miners first to keep pilots for expeditions. */
+/** Order to deduct crew when spending (e.g. for expeditions). Not used for upgrades — upgrades take from free pool only. */
 const SPEND_ORDER: CrewRole[] = ['miner', 'scientist', 'pilot'];
 
-/** Aggregate root: player and their progression. Holds planets, crew (astronauts by role), veterans, artifacts, coins. */
+/** Aggregate root: player and their progression. Holds planets, crew (astronauts by role + assigned to equipment), veterans, artifacts, coins. */
 export class Player {
   /** Mutable array of planets. Each planet has upgrade slots (expandable) and contributes to production bonus. */
   public readonly planets: Planet[];
 
   public readonly totalCoinsEver: Decimal;
 
-  /** Crew count per role (miner, scientist, pilot). Total crew = sum of these. */
+  /** Crew count per role (miner, scientist, pilot). These are the "free" pool — bonuses apply to them; upgrades do not deduct from them. */
   public readonly crewByRole: CrewByRole;
+
+  /** Crew assigned to equipment (upgrades that cost crew). Taken from the free pool when buying; miner/scientist/pilot counts stay unchanged. */
+  public readonly crewAssignedToEquipment: number;
 
   /** Expedition survivors; give production bonus, lost on prestige. */
   public readonly veteranCount: number;
@@ -46,7 +49,8 @@ export class Player {
     public readonly prestigeLevel: number,
     totalCoinsEver: DecimalSource,
     crewByRoleOrAstronautCount?: CrewByRole | number,
-    veteranCount: number = 0
+    veteranCount: number = 0,
+    crewAssignedToEquipment: number = 0
   ) {
     this.planets = planets ? [...planets] : [];
     this.totalCoinsEver = toDecimal(totalCoinsEver);
@@ -57,11 +61,17 @@ export class Player {
       this.crewByRole = { ...DEFAULT_CREW_BY_ROLE, miner: n };
     }
     this.veteranCount = Math.max(0, veteranCount);
+    this.crewAssignedToEquipment = Math.max(0, crewAssignedToEquipment);
   }
 
-  /** Total crew (sum of all roles). Used for capacity and upgrade requirements. */
-  get astronautCount(): number {
+  /** Free crew (miner + scientist + pilot). Used for bonuses and for "can buy upgrade" (need enough free to assign). */
+  get freeCrewCount(): number {
     return CREW_ROLES.reduce((s, r) => s + this.crewByRole[r], 0);
+  }
+
+  /** Total crew = free (by role) + assigned to equipment. Used for capacity and UI total. */
+  get astronautCount(): number {
+    return this.freeCrewCount + this.crewAssignedToEquipment;
   }
 
   /** All upgrades across all planets (for backward compatibility and UI totals). */
@@ -126,10 +136,30 @@ export class Player {
     return true;
   }
 
-  /** Spend astronauts from crew by role (e.g. for upgrades). Deducts in order: miner, scientist, pilot. Returns true if enough. */
+  /**
+   * Assign crew to equipment (when buying an upgrade that costs crew).
+   * Uses the free pool only — does not deduct from miner/scientist/pilot. Returns true if enough free crew.
+   */
+  assignCrewToEquipment(count: number): boolean {
+    if (count <= 0) return true;
+    if (this.freeCrewCount < count) return false;
+    (this as { crewAssignedToEquipment: number }).crewAssignedToEquipment += count;
+    return true;
+  }
+
+  /** Remove crew from equipment (rollback when upgrade purchase fails). */
+  unassignCrewFromEquipment(count: number): void {
+    if (count <= 0) return;
+    (this as { crewAssignedToEquipment: number }).crewAssignedToEquipment = Math.max(
+      0,
+      this.crewAssignedToEquipment - count
+    );
+  }
+
+  /** Spend astronauts from crew by role (e.g. for expeditions). Deducts in order: miner, scientist, pilot. Returns true if enough. */
   spendAstronauts(count: number): boolean {
     if (count <= 0) return true;
-    if (this.astronautCount < count) return false;
+    if (this.freeCrewCount < count) return false;
     const crew = this.crewByRole as CrewByRole;
     let remaining = count;
     for (const r of SPEND_ORDER) {
@@ -177,12 +207,13 @@ export class Player {
       oldPlayer.prestigeLevel + 1,
       oldPlayer.totalCoinsEver,
       DEFAULT_CREW_BY_ROLE,
+      0,
       0
     );
   }
 
   static create(id: string): Player {
     const firstPlanet = Planet.create('planet-1', generatePlanetName('planet-1'));
-    return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, DEFAULT_CREW_BY_ROLE, 0);
+    return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, DEFAULT_CREW_BY_ROLE, 0, 0);
   }
 }

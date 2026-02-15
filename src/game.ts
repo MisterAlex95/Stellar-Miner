@@ -21,7 +21,7 @@ import {
 } from './application/gameState.js';
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory } from './application/statsHistory.js';
-import { getResearchProductionMultiplier } from './application/research.js';
+import { getResearchProductionMultiplier, isResearchInProgress } from './application/research.js';
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
 import { updateStatisticsSection } from './presentation/statisticsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
@@ -124,7 +124,12 @@ function gameLoop(now: number): void {
     renderPrestigeSection();
   }
   const researchPanel = document.getElementById('panel-research');
-  if (researchPanel && !researchPanel.hidden && nowMs - lastResearchRenderMs >= RESEARCH_UPDATE_INTERVAL_MS) {
+  if (
+    researchPanel &&
+    !researchPanel.hidden &&
+    !isResearchInProgress() &&
+    nowMs - lastResearchRenderMs >= RESEARCH_UPDATE_INTERVAL_MS
+  ) {
     lastResearchRenderMs = nowMs;
     renderResearchSection();
   }

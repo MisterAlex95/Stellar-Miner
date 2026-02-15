@@ -331,6 +331,8 @@ function getTabsAndPanelsHtml(): string {
               <div class="crew-capacity-segment crew-capacity-segment--miner" id="crew-capacity-segment-miner"></div>
               <div class="crew-capacity-segment crew-capacity-segment--scientist" id="crew-capacity-segment-scientist"></div>
               <div class="crew-capacity-segment crew-capacity-segment--pilot" id="crew-capacity-segment-pilot"></div>
+              <div class="crew-capacity-segment crew-capacity-segment--equipment" id="crew-capacity-segment-equipment"></div>
+              <div class="crew-capacity-segment crew-capacity-segment--free" id="crew-capacity-segment-free"></div>
             </div>
           </div>
           <div class="crew-summary" id="crew-summary" aria-live="polite">No crew yet</div>

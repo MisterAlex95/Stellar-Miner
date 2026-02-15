@@ -113,9 +113,9 @@ export function handleHireAstronaut(role: CrewRole = 'miner'): void {
   const player = session.player;
   const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
   const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
-  const totalCrew = player.astronautCount + getAssignedAstronauts(session);
+  const totalCrew = player.astronautCount;
   if (totalCrew >= maxCrew) return;
-  const cost = getAstronautCost(player.astronautCount);
+  const cost = getAstronautCost(totalCrew);
   if (!player.hireAstronaut(cost, role)) return;
   emit('astronaut_hired', { count: player.astronautCount });
   if (player.astronautCount === 1 && typeof localStorage !== 'undefined') {

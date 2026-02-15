@@ -259,7 +259,15 @@
   background: var(--crew-pilot);
 }
 
-.crew-capacity-segment--pilot:last-child {
+.crew-capacity-segment--equipment {
+  background: var(--crew-equipment);
+}
+
+.crew-capacity-segment--free {
+  background: var(--crew-free);
+}
+
+.crew-capacity-segment--free:last-child {
   border-radius: 0 4px 4px 0;
 }
 

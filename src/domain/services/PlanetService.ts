@@ -185,7 +185,7 @@ export class PlanetService {
   buildHousing(player: Player, planet: Planet, hasFreeSlot?: (p: Planet) => boolean): boolean {
     if (!this.canBuildHousing(player, planet, hasFreeSlot)) return false;
     player.spendCoins(this.getHousingCost(planet));
-    planet.addHousing();
+    planet.addHousing(!!hasFreeSlot);
     return true;
   }
 }

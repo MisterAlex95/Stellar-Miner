@@ -1,7 +1,6 @@
 import Decimal from 'break_infinity.js';
 import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs.js';
 import { getSession } from './gameState.js';
-import { getAssignedAstronauts } from './crewHelpers.js';
 import { getQuestStreak, getQuestLastClaimAt } from './quests.js';
 import { showAchievementToast } from '../presentation/toasts.js';
 import achievementsData from '../data/achievements.json';
@@ -19,7 +18,7 @@ function buildCheck(def: AchievementDef): () => boolean {
     case 'upgradesCount':
       return () => (session()?.player.upgrades.length ?? 0) >= value;
     case 'astronautsCount':
-      return () => (session()?.player.astronautCount ?? 0) + getAssignedAstronauts(session()) >= value;
+      return () => (session()?.player.astronautCount ?? 0) >= value;
     case 'prestigeLevel':
       return () => (session()?.player.prestigeLevel ?? 0) >= value;
     case 'planetsCount':

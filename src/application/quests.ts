@@ -10,7 +10,6 @@ import {
   QUEST_STREAK_MAX,
 } from './catalogs.js';
 import { getSession, getQuestState, setQuestState, incrementRunQuestsClaimed, addRunCoins, getRunStats, getPrestigesToday } from './gameState.js';
-import { getAssignedAstronauts } from './crewHelpers.js';
 import { getResearchProductionMultiplier } from './research.js';
 import gameConfig from '../data/gameConfig.json';
 
@@ -127,7 +126,7 @@ export function getQuestProgress(): { current: number | Decimal; target: number;
   else if (q.type === 'production') current = session.player.effectiveProductionRate.mul(getResearchProductionMultiplier());
   else if (q.type === 'upgrade' && q.targetId)
     current = session.player.upgrades.filter((u) => u.id === q.targetId).length;
-  else if (q.type === 'astronauts') current = session.player.astronautCount + getAssignedAstronauts(session);
+  else if (q.type === 'astronauts') current = session.player.astronautCount;
   else if (q.type === 'prestige_today') current = getPrestigesToday();
   else if (q.type === 'combo_tier') current = getRunStats().runMaxComboMult >= q.target / 100 ? q.target : Math.round(getRunStats().runMaxComboMult * 100);
   else if (q.type === 'events_triggered') current = getRunStats().runEventsTriggered;

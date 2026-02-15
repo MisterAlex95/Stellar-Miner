@@ -15,7 +15,7 @@ import { getUpgradeUsesSlot } from '../application/catalogs.js';
 import { getBaseProductionRateFromPlanets } from '../application/planetAffinity.js';
 import { toDecimal } from '../domain/bigNumber.js';
 import { emit } from '../application/eventBus.js';
-import { RESEARCH_STORAGE_KEY, getResearchProductionMultiplier } from '../application/research.js';
+import { RESEARCH_STORAGE_KEY, getResearchProductionMultiplier, getEffectiveRequiredAstronauts } from '../application/research.js';
 
 export const SAVE_VERSION = 1;
 
@@ -60,6 +60,7 @@ export type SavedSession = {
     totalCoinsEver: number | string;
     astronautCount?: number;
     crewByRole?: SavedCrewByRole;
+    crewAssignedToEquipment?: number;
     veteranCount?: number;
   };
   activeEvents: Array<{ id: string; name: string; effect: { multiplier: number; durationMs: number } }>;
@@ -293,6 +294,7 @@ export class SaveLoadService implements ISaveLoadService {
         totalCoinsEver: session.player.totalCoinsEver.toString(),
         astronautCount: session.player.astronautCount,
         crewByRole: session.player.crewByRole,
+        crewAssignedToEquipment: session.player.crewAssignedToEquipment,
         veteranCount: session.player.veteranCount,
       },
       activeEvents: session.activeEvents.map((e) => ({
@@ -357,6 +359,9 @@ export class SaveLoadService implements ISaveLoadService {
             pilot: crewByRole.pilot ?? 0,
           }
         : (data.player.astronautCount ?? 0);
+    const crewAssignedToEquipment =
+      data.player.crewAssignedToEquipment ??
+      planets.reduce((sum, p) => sum + p.upgrades.reduce((s, u) => s + getEffectiveRequiredAstronauts(u.id), 0), 0);
     const player = new Player(
       data.player.id,
       Coins.from(data.player.coins),
@@ -366,7 +371,8 @@ export class SaveLoadService implements ISaveLoadService {
       data.player.prestigeLevel,
       new Decimal(data.player.totalCoinsEver),
       crewOrCount,
-      veteranCount
+      veteranCount,
+      crewAssignedToEquipment
     );
     const activeEvents = data.activeEvents.map(
       (e) => new GameEvent(e.id, e.name, new EventEffect(e.effect.multiplier, e.effect.durationMs))

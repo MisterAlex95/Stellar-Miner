@@ -49,7 +49,9 @@ describe('handlersUpgrade', () => {
       handleUpgradeBuy('drill-mk1');
 
       expect(player.upgrades.filter((u) => u.id === 'drill-mk1').length).toBe(beforeCount + 1);
-      expect(player.astronautCount).toBe(1);
+      expect(player.freeCrewCount).toBe(2);
+      expect(player.crewAssignedToEquipment).toBe(1);
+      expect(player.astronautCount).toBe(3);
     });
 
     it('does not purchase when insufficient coins', () => {

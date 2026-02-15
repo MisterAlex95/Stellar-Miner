@@ -41,12 +41,12 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
   if (needsSlot && !player.getPlanetWithFreeSlot()) return;
   if (planetId && targetPlanet && needsSlot && !targetPlanet.hasFreeSlot()) return;
   const crewRequired = getEffectiveRequiredAstronauts(def.id);
-  if (player.astronautCount < crewRequired) return;
-  if (!player.spendAstronauts(crewRequired)) return;
+  if (crewRequired > 0 && player.freeCrewCount < crewRequired) return;
+  if (crewRequired > 0 && !player.assignCrewToEquipment(crewRequired)) return;
 
   const planet = resolveTargetPlanet(player, targetPlanet, needsSlot);
   if (!planet) {
-    player.addAstronauts(crewRequired);
+    if (crewRequired > 0) player.unassignCrewFromEquipment(crewRequired);
     return;
   }
 
@@ -54,7 +54,7 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
   const slotCheck = needsSlot ? (p: { hasFreeSlot: () => boolean }) => p.hasFreeSlot() : undefined;
   const event = upgradeService.purchaseUpgrade(player, upgrade, planet, mult, slotCheck);
   if (!event) {
-    player.addAstronauts(crewRequired);
+    if (crewRequired > 0) player.unassignCrewFromEquipment(crewRequired);
     return;
   }
 
@@ -89,7 +89,7 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): void 
 
   while (true) {
     const nextCost = getUpgradeCost(def, ownedCount);
-    if (!player.coins.gte(nextCost) || player.astronautCount < crewRequired) break;
+    if (!player.coins.gte(nextCost) || (crewRequired > 0 && player.freeCrewCount < crewRequired)) break;
 
     const target = resolveTargetPlanet(
       player,
@@ -97,14 +97,14 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): void 
       needsSlot
     );
     if (!target) break;
-    if (!player.spendAstronauts(crewRequired)) break;
+    if (crewRequired > 0 && !player.assignCrewToEquipment(crewRequired)) break;
 
     const upgrade = createUpgradeForPurchase(def, ownedCount);
     const mult = getPlanetTypeMultiplier(def.id, getPlanetType(target.name));
     const slotCheck = needsSlot ? (p: { hasFreeSlot: () => boolean }) => p.hasFreeSlot() : undefined;
     const event = upgradeService.purchaseUpgrade(player, upgrade, target, mult, slotCheck);
     if (!event) {
-      player.addAstronauts(crewRequired);
+      if (crewRequired > 0) player.unassignCrewFromEquipment(crewRequired);
       break;
     }
     bought++;

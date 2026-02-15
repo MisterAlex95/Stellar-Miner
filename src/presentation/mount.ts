@@ -640,10 +640,18 @@ export function mount(): void {
   const planetList = document.getElementById('planet-list');
   if (planetList) {
     planetList.addEventListener('click', (e: Event) => {
-      const btn = (e.target as HTMLElement).closest('.add-slot-btn');
-      if (btn) {
-        const id = btn.getAttribute('data-planet-id');
+      const clicked = e.target instanceof Element ? e.target : null;
+      if (!clicked) return;
+      const addSlotBtn = clicked.closest('.add-slot-btn');
+      if (addSlotBtn) {
+        const id = (addSlotBtn as HTMLElement).getAttribute('data-planet-id');
         if (id) handleAddSlot(id);
+        return;
+      }
+      const housingBtn = clicked.closest('.build-housing-btn');
+      if (housingBtn && !(housingBtn as HTMLButtonElement).disabled) {
+        const planetId = (housingBtn as HTMLElement).getAttribute('data-planet-id');
+        if (planetId) handleBuildHousing(planetId);
       }
     });
   }
@@ -724,18 +732,7 @@ export function mount(): void {
   renderPlanetList();
   renderResearchSection();
 
-  // --- Upgrades list, housing, research list ---
-  const empirePanel = document.getElementById('panel-empire');
-  if (empirePanel) {
-    empirePanel.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest('.build-housing-btn');
-      if (!btn || (btn as HTMLButtonElement).disabled) return;
-      const planetId = (btn as HTMLElement).getAttribute('data-planet-id');
-      if (!planetId) return;
-      handleBuildHousing(planetId);
-    });
-  }
-
+  // --- Upgrades list, research list ---
   const researchList = document.getElementById('research-list');
   if (researchList) {
     researchList.addEventListener('click', (e) => {

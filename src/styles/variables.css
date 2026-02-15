@@ -26,6 +26,8 @@
   --crew-scientist-bg: rgba(56, 189, 248, 0.12);
   --crew-pilot: #a78bfa;
   --crew-pilot-bg: rgba(167, 139, 250, 0.12);
+  --crew-equipment: #64748b;
+  --crew-free: rgba(255, 255, 255, 0.08);
 }
 
 @media (max-width: 480px) {

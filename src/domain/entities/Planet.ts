@@ -67,9 +67,13 @@ export class Planet {
     this.upgrades.push(upgrade);
   }
 
-  /** Build one housing module (uses 1 slot). Call only when hasFreeSlot() and after paying cost. */
-  addHousing(): void {
-    if (!this.hasFreeSlot()) throw new Error('Planet has no free slot for housing');
+  /**
+   * Build one housing module (uses 1 slot). Call after paying cost.
+   * When the caller has already verified with effective slots (e.g. research slot-free),
+   * pass skipSlotCheck: true to avoid throwing when entity.usedSlots disagrees with effective count.
+   */
+  addHousing(skipSlotCheck?: boolean): void {
+    if (!skipSlotCheck && !this.hasFreeSlot()) throw new Error('Planet has no free slot for housing');
     this._housingCount += 1;
   }
 
