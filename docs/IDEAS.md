@@ -1,4 +1,4 @@
-Backlog of gameplay ideas for future features (text below in French).
+Backlog of gameplay ideas for future features. The first section is in French (original ideas); "Proposed gameplay improvements" at the end lists concrete next steps in English.
 
 ---
 

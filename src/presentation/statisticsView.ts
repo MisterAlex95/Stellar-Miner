@@ -14,7 +14,7 @@ import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { getPlayTimeStats, formatDuration } from '../application/playTimeStats.js';
 import { getStatsHistory, type ChartRange } from '../application/statsHistory.js';
 import { formatNumber } from '../application/format.js';
-import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, ASTRONAUT_PRODUCTION_BONUS } from '../domain/constants.js';
+import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL, ASTRONAUT_PRODUCTION_BONUS } from '../domain/constants.js';
 import {
   STATS_HISTORY_INTERVAL_MS,
   STATS_HISTORY_MAX_POINTS,
@@ -534,10 +534,13 @@ export function updateStatisticsSection(): void {
   setStat('crew-bonus', crewBonusPct > 0 ? `+${crewBonusPct.toFixed(0)}%` : '—');
   setStat('event-mult', eventMult > 1 ? `×${eventMult.toFixed(2)}` : '×1');
   const researchProdPct = getResearchProductionPercent();
-  const researchClickPct = getResearchClickPercent();
+  const prestigeLevel = player.prestigeLevel;
+  const effectiveResearchClickPct = prestigeLevel >= 1 ? getResearchClickPercent() : 0;
+  const prestigeClickPct = prestigeLevel >= 2 ? (prestigeLevel - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL : 0;
+  const totalClickPct = effectiveResearchClickPct + prestigeClickPct;
   const researchBonusText =
-    researchProdPct > 0 || researchClickPct > 0
-      ? [researchProdPct > 0 ? `+${researchProdPct.toFixed(0)}% prod` : '', researchClickPct > 0 ? `+${researchClickPct.toFixed(0)}% click` : '']
+    researchProdPct > 0 || totalClickPct > 0
+      ? [researchProdPct > 0 ? `+${researchProdPct.toFixed(0)}% prod` : '', totalClickPct > 0 ? `+${totalClickPct.toFixed(0)}% click` : '']
           .filter(Boolean)
           .join(', ')
       : '—';

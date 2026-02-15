@@ -19,6 +19,9 @@ export const PLANET_PRODUCTION_BONUS = 0.05;
 /** Production bonus per prestige level (e.g. 0.05 = +5% per level). Applied after planet bonus. */
 export const PRESTIGE_BONUS_PER_LEVEL = 0.05;
 
+/** Click bonus per prestige level (from prestige 2 onward). Prestige 1 unlocks research click; each further level adds this % to click reward. */
+export const PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL = 5;
+
 /** Coins required to unlock the Prestige button. Resets run; keeps prestige level. */
 export const PRESTIGE_COIN_THRESHOLD = 50_000;
 

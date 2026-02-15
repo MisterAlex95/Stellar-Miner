@@ -1,0 +1,13 @@
+---
+description: Stellar Miner project context and conventions for AI
+alwaysApply: true
+---
+
+# Stellar Miner — Project rules
+
+- **Vibecoded for fun**: This is a hobby idle game. Prefer playful, maintainable code; avoid over-engineering. Scope is flexible.
+- **Stack**: TypeScript (ES2022, strict), Vite, Vitest, Playwright. ESLint + Prettier. All code and comments in English.
+- **Architecture**: DDD-style layers. **domain/** (entities, value objects, aggregates, events, services) → **application/** (gameState, handlers, catalogs, quests, research, eventBus, strings, etc.) → **presentation/** (views, toasts, canvases) → **infrastructure/** (SaveLoadService). Do not bypass layers (e.g. presentation must not call domain services directly; use application handlers).
+- **Key entry points**: Game bootstrap in `src/game.ts`; UI mount in `src/presentation/mount.ts`; handlers in `src/application/handlers.ts`. State in `gameState.ts`; persistence in `SaveLoadService`; i18n via `t(key)` from `strings.ts`.
+- **Docs**: See `docs/ARCHITECTURE.md` for DDD and flows; `docs/IDEAS.md` for backlog. Keep README and ARCHITECTURE in sync when adding features.
+- **Tests**: Unit tests next to or in `*.test.ts`; E2E in `e2e/`. Run `yarn test`, `yarn test:e2e`.

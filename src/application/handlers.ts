@@ -1,6 +1,6 @@
 import { Player } from '../domain/entities/Player.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
-import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
+import { PRESTIGE_COIN_THRESHOLD, PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL, getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
 import {
   getSession,
   setSession,
@@ -297,7 +297,10 @@ export function handleMineClick(e?: MouseEvent): void {
   else if (isLucky) baseCoins = LUCKY_MIN + Math.floor(Math.random() * (LUCKY_MAX - LUCKY_MIN + 1));
   let coins = Math.max(1, Math.round(baseCoins * comboMult));
   if (isCritical) coins *= 2;
-  coins = Math.max(1, Math.round(coins * getResearchClickMultiplier()));
+  const prestigeLevel = session.player.prestigeLevel;
+  const researchClickMult = prestigeLevel >= 1 ? getResearchClickMultiplier() : 1;
+  const prestigeClickMult = prestigeLevel >= 2 ? 1 + (prestigeLevel - 1) * (PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL / 100) : 1;
+  coins = Math.max(1, Math.round(coins * researchClickMult * prestigeClickMult));
 
   session.player.addCoins(coins);
   setSessionClickCount(getSessionClickCount() + 1);
@@ -348,6 +351,36 @@ export function closePrestigeConfirmModal(): void {
   const overlay = document.getElementById('prestige-confirm-overlay');
   if (overlay) {
     overlay.classList.remove('prestige-confirm-overlay--open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+}
+
+const PRESTIGE_REWARDS_LIST_MAX_LEVEL = 15;
+
+export function openPrestigeRewardsModal(): void {
+  const overlay = document.getElementById('prestige-rewards-overlay');
+  const listEl = document.getElementById('prestige-rewards-list');
+  if (!overlay || !listEl) return;
+  listEl.innerHTML = '';
+  const li1 = document.createElement('li');
+  li1.textContent = t('prestigeReward1');
+  listEl.appendChild(li1);
+  for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
+    const prod = level * 5;
+    const click = (level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL;
+    const li = document.createElement('li');
+    li.textContent = tParam('prestigeRewardLevelFormat', { level, prod, click });
+    listEl.appendChild(li);
+  }
+  overlay.classList.add('prestige-rewards-overlay--open');
+  overlay.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => document.getElementById('prestige-rewards-close')?.focus());
+}
+
+export function closePrestigeRewardsModal(): void {
+  const overlay = document.getElementById('prestige-rewards-overlay');
+  if (overlay) {
+    overlay.classList.remove('prestige-rewards-overlay--open');
     overlay.setAttribute('aria-hidden', 'true');
   }
 }

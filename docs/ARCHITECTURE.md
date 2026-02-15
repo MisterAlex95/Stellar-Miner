@@ -99,8 +99,8 @@ Events that occur in the domain and can trigger side effects.
 **Modules (src):**
 
 - **domain/** — Entities, value objects, aggregates, events, domain services
-- **application/** — gameState, handlers, catalogs, quests, progression, stats, format, eventBus, strings
-- **presentation/** — mount, views (stats, upgrade, planet, quest, combo, progression, prestige, crew, statistics), toasts, StarfieldCanvas, MineZoneCanvas
+- **application/** — gameState, handlers, catalogs, quests, progression, stats, format, eventBus, strings, research, achievements, milestones, questState, playTimeStats, productionHelpers, crewHelpers, i18nCatalogs
+- **presentation/** — mount, views (stats, upgrade, planet, quest, combo, progression, prestige, crew, statistics, research, housing), toasts, tooltip, StarfieldCanvas, MineZoneCanvas
 - **infrastructure/** — SaveLoadService (save/load/export/import, version, validation)
 - **e2e/** — Playwright E2E tests
 
@@ -129,7 +129,9 @@ Events that occur in the domain and can trigger side effects.
 - **Application state**: `src/application/gameState.ts` — session, active event instances, next event time, settings, quest state; `getOrCreateSession`, `saveLoad`, `getEventMultiplier`.
 - **Catalogs & config**: `src/application/catalogs.ts` — UPGRADE_CATALOG, EVENT_CATALOG, combo/lucky/quest constants, storage keys.
 - **Handlers**: `src/application/handlers.ts` — mine click, buy upgrade/planet/slot, hire astronaut, prestige, quest claim, export/import save, settings, debug.
-- **Presentation**: `src/presentation/` — mount, statsView, upgradeListView, planetListView, questView, comboView, progressionView, prestigeView, crewView, statisticsView, toasts, StarfieldCanvas, MineZoneCanvas.
+- **Presentation**: `src/presentation/` — mount, statsView, upgradeListView, planetListView, questView, comboView, progressionView, prestigeView, crewView, statisticsView, researchView, housingView, toasts, tooltip, StarfieldCanvas, MineZoneCanvas.
+- **Research**: `src/application/research.ts` — tech tree / research unlocks; `researchView` for UI.
+- **Achievements & milestones**: `src/application/achievements.ts`, `src/application/milestones.ts` — progression unlocks and one-off rewards.
 - **Persistence**: `src/infrastructure/SaveLoadService.ts` — save/load/export/import, offline progress (capped), `SAVE_VERSION`, `isSavedSession()`, `validateSavePayload()`; `src/settings.ts` — user settings (starfield, layout, pause when background, theme, soundEnabled, reducedMotion).
 - **Event bus**: `src/application/eventBus.ts` — `subscribe(kind, fn)`, `emit(kind, payload)` for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed.
 - **Strings**: `src/application/strings.ts` — `strings` map and `t(key)` for UI copy (invalid save, offline banner, etc.).

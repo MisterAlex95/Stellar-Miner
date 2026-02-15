@@ -1,0 +1,13 @@
+---
+description: TypeScript and code style for Stellar Miner
+globs: "**/*.ts"
+alwaysApply: false
+---
+
+# TypeScript conventions
+
+- Use strict TypeScript; ES modules with `.js` in imports (e.g. `from './gameState.js'`).
+- Prefer explicit types for public APIs and domain types; infer where obvious.
+- **Error handling**: Log and rethrow or handle; avoid empty catch. For save/load, use `isSavedSession()` before deserializing; retry once on save failure (see SaveLoadService).
+- **New code**: Follow existing patterns in the same layer (e.g. handlers call domain services; views read from gameState/handlers). Add unit tests for new application/domain logic when non-trivial.
+- Format with Prettier (`yarn format`); lint with ESLint (`yarn lint`).

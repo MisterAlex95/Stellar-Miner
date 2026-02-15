@@ -2,6 +2,8 @@
 
 Idle game built with TypeScript and a Domain-Driven Design (DDD) structure. Mine coins, buy upgrades on planets, hire crew, complete quests, trigger random events, and prestige.
 
+**Vibecoded for fun** — this project is built for enjoyment and experimentation; keep the code playful and the scope flexible.
+
 ## Tech stack
 
 - **TypeScript** (ES2022, strict)
@@ -48,9 +50,9 @@ src/
 │   ├── services/     # UpgradeService, PlanetService, EventService, PrestigeService
 │   └── constants.ts  # Planet names, costs, prestige/crew bonuses
 ├── application/      # gameState, handlers, catalogs, quests, progression, stats, format,
-│                     # eventBus (subscribe/emit), strings (i18n t(key))
-├── presentation/     # mount, stats/upgrade/planet/quest/combo/progression/prestige/crew views,
-│                     # toasts, StarfieldCanvas, MineZoneCanvas
+│                     # eventBus, strings (i18n t(key)), research, achievements, milestones
+├── presentation/     # mount, stats/upgrade/planet/quest/combo/progression/prestige/crew/research/housing views,
+│                     # toasts, tooltip, StarfieldCanvas, MineZoneCanvas
 ├── infrastructure/   # SaveLoadService (save/load/export/import, version, validateSavePayload)
 ├── settings.ts       # User settings: starfield, layout, pause when background, theme, sound, reducedMotion
 ├── main.ts           # Domain sanity check / CLI entry
@@ -75,6 +77,7 @@ To use GitHub Pages: in the repo **Settings → Pages**, set **Source** to “Gi
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — DDD overview: domains, entities, value objects, aggregates, services, events, layered architecture, current flows, code references, and implemented improvements.
 - [docs/IDEAS.md](docs/IDEAS.md) — Backlog of gameplay ideas for future features.
+- **AI / Cursor** — Project rules for assistants live in `.cursor/rules/` (stellar-miner-project.mdc, typescript-conventions.mdc).
 
 ## Implemented improvements
 

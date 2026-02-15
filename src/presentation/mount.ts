@@ -10,6 +10,8 @@ import {
   handleResetProgress,
   openPrestigeConfirmModal,
   closePrestigeConfirmModal,
+  openPrestigeRewardsModal,
+  closePrestigeRewardsModal,
   confirmPrestige,
   handleMineClick,
   handleUpgradeBuy,
@@ -54,7 +56,8 @@ function isAnyModalOpen(): boolean {
     isIntroOverlayOpen() ||
     document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open') === true ||
     document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open') === true ||
-    document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open') === true
+    document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open') === true ||
+    document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open') === true
   );
 }
 
@@ -234,6 +237,16 @@ const APP_HTML = `
         </div>
       </div>
     </div>
+    <div class="prestige-rewards-overlay" id="prestige-rewards-overlay" aria-hidden="true">
+      <div class="prestige-rewards-modal" role="dialog" aria-labelledby="prestige-rewards-title" aria-describedby="prestige-rewards-desc">
+        <h2 id="prestige-rewards-title" data-i18n="prestigeRewardsTitle">Prestige rewards</h2>
+        <p id="prestige-rewards-desc" class="prestige-rewards-intro" data-i18n="prestigeRewardsIntro">What you gain at each prestige level:</p>
+        <ul id="prestige-rewards-list" class="prestige-rewards-list" aria-describedby="prestige-rewards-desc"></ul>
+        <div class="prestige-confirm-actions">
+          <button type="button" class="prestige-confirm-cancel" id="prestige-rewards-close" data-i18n="gotIt">Got it</button>
+        </div>
+      </div>
+    </div>
     <div class="intro-overlay" id="intro-overlay" aria-hidden="true">
       <div class="intro-modal" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-body">
         <h2 id="intro-title"></h2>
@@ -334,7 +347,10 @@ const APP_HTML = `
         <div class="gameplay-block-body">
           <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
           <div class="prestige-status" id="prestige-status"></div>
-          <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
+          <div class="prestige-actions">
+            <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
+            <button type="button" class="prestige-rewards-btn" id="prestige-rewards-btn" data-i18n="prestigeRewardsWhatFor">What do I get?</button>
+          </div>
         </div>
       </section>
     </div>
@@ -456,7 +472,9 @@ export function mount(): void {
             ? document.getElementById('reset-confirm-overlay')
             : document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open')
               ? document.getElementById('prestige-confirm-overlay')
-              : null;
+              : document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open')
+                ? document.getElementById('prestige-rewards-overlay')
+                : null;
         if (openOverlay) {
           const focusable = openOverlay.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
           const list = Array.from(focusable).filter((el) => el.offsetParent !== null);
@@ -479,8 +497,10 @@ export function mount(): void {
       if (e.key !== 'Escape') return;
       const resetOverlay = document.getElementById('reset-confirm-overlay');
       const prestigeOverlay = document.getElementById('prestige-confirm-overlay');
+      const prestigeRewardsOverlay = document.getElementById('prestige-rewards-overlay');
       if (resetOverlay?.classList.contains('reset-confirm-overlay--open')) closeResetConfirmModal();
       else if (prestigeOverlay?.classList.contains('prestige-confirm-overlay--open')) closePrestigeConfirmModal();
+      else if (prestigeRewardsOverlay?.classList.contains('prestige-rewards-overlay--open')) closePrestigeRewardsModal();
       else if (isIntroOverlayOpen()) dismissIntroModal();
       else if (settingsOverlay.classList.contains('settings-overlay--open')) closeSettings();
     });
@@ -608,6 +628,15 @@ export function mount(): void {
   if (prestigeConfirmDo) prestigeConfirmDo.addEventListener('click', confirmPrestige);
   if (prestigeConfirmOverlay) {
     prestigeConfirmOverlay.addEventListener('click', (e) => { if (e.target === prestigeConfirmOverlay) closePrestigeConfirmModal(); });
+  }
+
+  const prestigeRewardsBtn = document.getElementById('prestige-rewards-btn');
+  const prestigeRewardsClose = document.getElementById('prestige-rewards-close');
+  const prestigeRewardsOverlayEl = document.getElementById('prestige-rewards-overlay');
+  if (prestigeRewardsBtn) prestigeRewardsBtn.addEventListener('click', openPrestigeRewardsModal);
+  if (prestigeRewardsClose) prestigeRewardsClose.addEventListener('click', closePrestigeRewardsModal);
+  if (prestigeRewardsOverlayEl) {
+    prestigeRewardsOverlayEl.addEventListener('click', (e) => { if (e.target === prestigeRewardsOverlayEl) closePrestigeRewardsModal(); });
   }
 
   const achievementsToggle = document.getElementById('achievements-toggle-btn');
