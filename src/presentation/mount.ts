@@ -47,6 +47,8 @@ import {
   dismissIntroModal,
 } from './progressionView.js';
 import { initTooltips } from './tooltip.js';
+import { APP_VERSION, hasNewUpdate, markUpdateSeen, getLastSeenVersion } from '../application/version.js';
+import { getChangelog, getChangelogSince } from '../application/changelog.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
@@ -55,10 +57,32 @@ function isAnyModalOpen(): boolean {
   return (
     isIntroOverlayOpen() ||
     document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open') === true ||
+    document.getElementById('info-overlay')?.classList.contains('info-overlay--open') === true ||
     document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open') === true ||
     document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open') === true ||
     document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open') === true
   );
+}
+
+function openInfoModal(): void {
+  const overlay = document.getElementById('info-overlay');
+  if (overlay) {
+    overlay.classList.add('info-overlay--open');
+    overlay.setAttribute('aria-hidden', 'false');
+    markUpdateSeen();
+    updateVersionAndChangelogUI();
+    const list = document.getElementById('info-changelog-list');
+    if (list) renderChangelogList(list);
+    requestAnimationFrame(() => document.getElementById('info-close')?.focus());
+  }
+}
+
+function closeInfoModal(): void {
+  const overlay = document.getElementById('info-overlay');
+  if (overlay) {
+    overlay.classList.remove('info-overlay--open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
 }
 
 export function switchTab(tabId: string): void {
@@ -117,9 +141,17 @@ const APP_HTML = `
           <h1 data-i18n="appTitle">STELLAR MINER</h1>
           <p class="subtitle" data-i18n="appSubtitle">Mine coins. Buy upgrades. Conquer the belt.</p>
         </div>
-        <button type="button" class="settings-btn" id="settings-btn" data-i18n-title="settings" data-i18n-aria-label="openSettings">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-1.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v1.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-1.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>
+        <span class="header-actions">
+          <span class="info-btn-wrap">
+            <button type="button" class="info-btn" id="info-btn" data-i18n-title="whatsNew" data-i18n-aria-label="whatsNew" title="What's new">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            </button>
+            <span class="info-update-badge" id="info-update-badge" aria-hidden="true" title="New update"></span>
+          </span>
+          <button type="button" class="settings-btn" id="settings-btn" data-i18n-title="settings" data-i18n-aria-label="openSettings">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-1.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v1.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-1.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </span>
       </div>
     </header>
     <div class="settings-overlay" id="settings-overlay" aria-hidden="true">
@@ -214,6 +246,21 @@ const APP_HTML = `
           <div class="settings-option settings-reset">
             <button type="button" class="reset-btn" id="settings-reset-btn" data-i18n="resetProgress">Reset progress</button>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="info-overlay" id="info-overlay" aria-hidden="true">
+      <div class="info-modal" role="dialog" aria-labelledby="info-title">
+        <div class="info-header">
+          <h2 id="info-title" data-i18n="infoTitle">What's new</h2>
+          <button type="button" class="info-close" id="info-close" data-i18n-aria-label="close">×</button>
+        </div>
+        <div class="info-body">
+          <div class="info-version-row">
+            <span class="info-version-label" data-i18n="infoVersionLabel">Version</span>
+            <span class="info-version-value" id="info-version-value">–</span>
+          </div>
+          <div class="info-changelog-list" id="info-changelog-list"></div>
         </div>
       </div>
     </div>
@@ -398,6 +445,33 @@ function applyThemeAndMotion(): void {
   root.setAttribute('data-reduced-motion', s.reducedMotion ? 'true' : 'false');
 }
 
+function renderChangelogList(container: HTMLElement): void {
+  const entries = getChangelog();
+  container.innerHTML =
+    entries.length === 0
+      ? '<p class="changelog-empty">—</p>'
+      : entries
+          .map(
+            (e, i) =>
+              `<details class="changelog-entry" ${i === 0 ? 'open' : ''}>
+                <summary class="changelog-entry-header">v${e.version} <span class="changelog-date">${e.date}</span></summary>
+                <ul class="changelog-changes">${e.changes.map((c) => `<li>${c}</li>`).join('')}</ul>
+              </details>`
+          )
+          .join('');
+}
+
+export function updateVersionAndChangelogUI(): void {
+  const versionEl = document.getElementById('info-version-value');
+  if (versionEl) versionEl.textContent = APP_VERSION;
+  const badge = document.getElementById('info-update-badge');
+  if (badge) {
+    const show = hasNewUpdate();
+    badge.classList.toggle('info-update-badge--visible', show);
+    badge.setAttribute('aria-hidden', String(!show));
+  }
+}
+
 export function mount(): void {
   const app = document.getElementById('app');
   if (!app) return;
@@ -459,6 +533,17 @@ export function mount(): void {
   const settingsBtn = document.getElementById('settings-btn');
   const settingsOverlay = document.getElementById('settings-overlay');
   const settingsClose = document.getElementById('settings-close');
+  const infoBtn = document.getElementById('info-btn');
+  const infoOverlay = document.getElementById('info-overlay');
+  const infoClose = document.getElementById('info-close');
+  if (infoBtn && infoOverlay) {
+    infoBtn.addEventListener('click', openInfoModal);
+    infoOverlay.addEventListener('click', (e) => {
+      if (e.target === infoOverlay) closeInfoModal();
+    });
+  }
+  if (infoClose) infoClose.addEventListener('click', closeInfoModal);
+
   if (settingsBtn && settingsOverlay) {
     settingsBtn.addEventListener('click', openSettings);
     settingsOverlay.addEventListener('click', (e) => {
@@ -468,13 +553,15 @@ export function mount(): void {
       if (e.key === 'Tab') {
         const openOverlay = settingsOverlay.classList.contains('settings-overlay--open')
           ? settingsOverlay
-          : document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open')
-            ? document.getElementById('reset-confirm-overlay')
-            : document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open')
-              ? document.getElementById('prestige-confirm-overlay')
-              : document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open')
-                ? document.getElementById('prestige-rewards-overlay')
-                : null;
+          : infoOverlay?.classList.contains('info-overlay--open')
+            ? infoOverlay
+            : document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open')
+              ? document.getElementById('reset-confirm-overlay')
+              : document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open')
+                ? document.getElementById('prestige-confirm-overlay')
+                : document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open')
+                  ? document.getElementById('prestige-rewards-overlay')
+                  : null;
         if (openOverlay) {
           const focusable = openOverlay.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
           const list = Array.from(focusable).filter((el) => el.offsetParent !== null);
@@ -502,6 +589,7 @@ export function mount(): void {
       else if (prestigeOverlay?.classList.contains('prestige-confirm-overlay--open')) closePrestigeConfirmModal();
       else if (prestigeRewardsOverlay?.classList.contains('prestige-rewards-overlay--open')) closePrestigeRewardsModal();
       else if (isIntroOverlayOpen()) dismissIntroModal();
+      else if (infoOverlay?.classList.contains('info-overlay--open')) closeInfoModal();
       else if (settingsOverlay.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
@@ -650,6 +738,8 @@ export function mount(): void {
       if (!isOpen) renderAchievementsList(achievementsList);
     });
   }
+
+  updateVersionAndChangelogUI();
 
   const mineZone = document.getElementById('mine-zone');
   if (mineZone) {

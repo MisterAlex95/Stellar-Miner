@@ -289,15 +289,18 @@ export function handleMineClick(e?: MouseEvent): void {
     }
   }
 
-  const superLucky = Math.random() < SUPER_LUCKY_CHANCE;
-  const isLucky = !superLucky && Math.random() < LUCKY_CLICK_CHANCE;
-  const isCritical = Math.random() < CRITICAL_CLICK_CHANCE;
+  const prestigeLevel = session.player.prestigeLevel;
+  const clickBonusesUnlocked = prestigeLevel >= 1;
+
+  const superLucky = clickBonusesUnlocked && Math.random() < SUPER_LUCKY_CHANCE;
+  const isLucky = clickBonusesUnlocked && !superLucky && Math.random() < LUCKY_CLICK_CHANCE;
+  const isCritical = clickBonusesUnlocked && Math.random() < CRITICAL_CLICK_CHANCE;
   let baseCoins = 1;
   if (superLucky) baseCoins = SUPER_LUCKY_MIN + Math.floor(Math.random() * (SUPER_LUCKY_MAX - SUPER_LUCKY_MIN + 1));
   else if (isLucky) baseCoins = LUCKY_MIN + Math.floor(Math.random() * (LUCKY_MAX - LUCKY_MIN + 1));
-  let coins = Math.max(1, Math.round(baseCoins * comboMult));
+  const effectiveComboMult = clickBonusesUnlocked ? comboMult : 1;
+  let coins = Math.max(1, Math.round(baseCoins * effectiveComboMult));
   if (isCritical) coins *= 2;
-  const prestigeLevel = session.player.prestigeLevel;
   const researchClickMult = prestigeLevel >= 1 ? getResearchClickMultiplier() : 1;
   const prestigeClickMult = prestigeLevel >= 2 ? 1 + (prestigeLevel - 1) * (PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL / 100) : 1;
   coins = Math.max(1, Math.round(coins * researchClickMult * prestigeClickMult));

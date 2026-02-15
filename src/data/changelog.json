@@ -1,0 +1,14 @@
+[
+  {
+    "version": "0.1.0",
+    "date": "2025-02",
+    "changes": [
+      "Version and changelog: see if there's been an update and read what's new.",
+      "Housing: build housing on planets to increase crew capacity (+2 astronauts per module).",
+      "Expeditions: send astronauts on expeditions to discover new planets (risk of casualties).",
+      "Research: skill tree for +% production and +% click; resets on Prestige.",
+      "Quests, events, prestige, achievements, milestones.",
+      "Settings: theme, sound, reduce motion, export/import save."
+    ]
+  }
+]

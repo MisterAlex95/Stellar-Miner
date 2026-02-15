@@ -1,10 +1,16 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
+import { readFileSync } from 'fs';
+
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8')) as { version: string };
 
 export default defineConfig({
   root: '.',
   publicDir: 'public',
   base: process.env.BASE_PATH ?? '/',
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   build: {
     outDir: 'dist',
     target: 'es2022',
@@ -25,6 +31,8 @@ export default defineConfig({
         'src/domain/services/ISaveLoadService.ts',
         'src/presentation/**',
         'src/application/handlers.ts',
+        'src/application/version.ts',
+        'src/application/changelog.ts',
       ],
       thresholds: {
         statements: 95,

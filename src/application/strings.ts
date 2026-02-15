@@ -209,7 +209,7 @@ const stringsEn = {
   prestigeConfirmDescLevel: "You'll reset to 0 coins and 1 planet. You keep Prestige level {{level}} (+{{pct}}% production forever).",
   prestigeRewardsTitle: 'Prestige rewards',
   prestigeRewardsIntro: 'What you gain at each prestige level:',
-  prestigeReward1: 'Prestige 1: +5% production forever. Unlocks: Research click bonus — skill tree +% click now applies to your clicks.',
+  prestigeReward1: 'Prestige 1: +5% production forever. Unlocks all click bonuses: Lucky / Super Lucky / Critical clicks, Combo multiplier, and Research +% click (skill tree). Before prestige 1, each click gives only 1 coin.',
   prestigeRewardLevelFormat: 'Prestige {{level}}: +{{prod}}% production. Unlocks: +{{click}}% click forever.',
   prestigeRewardsWhatFor: 'What do I get?',
   eachPerSecond: '+{{n}} /s each',
@@ -241,6 +241,13 @@ const stringsEn = {
   progressionResearchBody: 'Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt can succeed or fail (coins lost on failure). Resets on Prestige.',
   progressionPrestigeTitle: 'Prestige',
   progressionPrestigeBody: 'When you reach 50,000 coins you can Prestige: reset coins and planets to gain +5% production per prestige level forever. Use it to progress faster on each new run.',
+  versionLabel: 'Version',
+  changelog: 'Changelog',
+  whatsNew: "What's new",
+  updateAvailable: 'New update',
+  newUpdateAvailable: 'A new version is available. Open settings to see what\'s new.',
+  infoTitle: "What's new",
+  infoVersionLabel: 'Version',
 } as const;
 
 const stringsFr: Record<keyof typeof stringsEn, string> = {
@@ -448,7 +455,7 @@ const stringsFr: Record<keyof typeof stringsEn, string> = {
   prestigeConfirmDescLevel: 'Vous repartez à 0 pièce et 1 planète. Vous gardez le niveau Prestige {{level}} (+{{pct}} % production pour toujours).',
   prestigeRewardsTitle: 'Récompenses de prestige',
   prestigeRewardsIntro: 'Ce que vous gagnez à chaque niveau de prestige :',
-  prestigeReward1: 'Prestige 1 : +5 % production pour toujours. Débloque : Bonus de clic recherche — le + % clic de l’arbre s’applique à vos clics.',
+  prestigeReward1: 'Prestige 1 : +5 % production pour toujours. Débloque tous les bonus de clic : Lucky / Super Lucky / Critical, multiplicateur Combo, et + % clic recherche (arbre). Avant le prestige 1, chaque clic ne donne qu’1 pièce.',
   prestigeRewardLevelFormat: 'Prestige {{level}} : +{{prod}} % production. Débloque : +{{click}} % clic pour toujours.',
   prestigeRewardsWhatFor: 'Qu’est-ce que je gagne ?',
   eachPerSecond: '+{{n}}/s chacun',
@@ -480,6 +487,13 @@ const stringsFr: Record<keyof typeof stringsEn, string> = {
   progressionResearchBody: 'Arbre de compétences : tentez de débloquer des nœuds pour + % production et + % clic. Chaque tentative peut réussir ou échouer (pièces perdues en cas d’échec). Réinitialisé au Prestige.',
   progressionPrestigeTitle: 'Prestige',
   progressionPrestigeBody: 'À 50 000 pièces vous pouvez Prestige : réinitialiser pièces et planètes pour +5 % de production par niveau de prestige pour toujours. Pour progresser plus vite à chaque run.',
+  versionLabel: 'Version',
+  changelog: 'Journal des modifications',
+  whatsNew: 'Nouveautés',
+  updateAvailable: 'Nouvelle mise à jour',
+  newUpdateAvailable: 'Une nouvelle version est disponible. Ouvrez les paramètres pour voir les nouveautés.',
+  infoTitle: 'Nouveautés',
+  infoVersionLabel: 'Version',
 };
 
 export type StringKey = keyof typeof stringsEn;
