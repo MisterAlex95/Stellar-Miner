@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.17",
+    "date": "2026-02-15",
+    "changes": [
+      "All planets use the full procedural texture algorithm: water bias, ridges, mountains (earth), type variation (desert/ice/lava/gas), cracks (ice), flows (lava), clouds. Richer palettes and seamless-X for future scroll."
+    ]
+  },
+  {
     "version": "0.4.16",
     "date": "2026-02-15",
     "changes": [

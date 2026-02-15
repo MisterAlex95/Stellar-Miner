@@ -12,6 +12,8 @@ export class Planet {
   private _housingCount: number;
   /** Crew assigned to this planet (for production bonus). Cap = housingCount * HOUSING_ASTRONAUT_CAPACITY. */
   private _assignedCrew: number;
+  /** Seed for procedural texture; set at creation so each planet looks different. Omit for legacy saves. */
+  public readonly visualSeed: number | undefined;
 
   constructor(
     public readonly id: string,
@@ -19,12 +21,14 @@ export class Planet {
     maxUpgrades: number,
     upgrades: Upgrade[] = [],
     housingCount: number = 0,
-    assignedCrew: number = 0
+    assignedCrew: number = 0,
+    visualSeed?: number
   ) {
     this._maxUpgrades = maxUpgrades;
     this.upgrades = upgrades ? [...upgrades] : [];
     this._housingCount = Math.max(0, housingCount);
     this._assignedCrew = Math.max(0, assignedCrew);
+    this.visualSeed = visualSeed;
   }
 
   get assignedCrew(): number {
@@ -83,6 +87,7 @@ export class Planet {
   }
 
   static create(id: string, name: string, maxUpgrades: number = UPGRADES_PER_PLANET): Planet {
-    return new Planet(id, name, maxUpgrades, [], 0, 0);
+    const visualSeed = Math.floor(Math.random() * 0xffff_ffff);
+    return new Planet(id, name, maxUpgrades, [], 0, 0, visualSeed);
   }
 }

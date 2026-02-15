@@ -33,7 +33,7 @@ const DECAY_14_24H_MS = 10 * 60 * 60 * 1000;
 const DECAY_24H_PLUS_MULT = 0.5;
 
 type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
-type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number; assignedCrew?: number };
+type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number; assignedCrew?: number; visualSeed?: number };
 type SavedCrewByRole = { miner?: number; scientist?: number; medic?: number; pilot?: number };
 
 export type SavedRunStats = {
@@ -283,6 +283,7 @@ export class SaveLoadService implements ISaveLoadService {
           })),
           housing: p.housingCount,
           assignedCrew: p.assignedCrew,
+          visualSeed: p.visualSeed,
         })),
         artifacts: session.player.artifacts.map((a) => ({
           id: a.id,
@@ -329,20 +330,23 @@ export class SaveLoadService implements ISaveLoadService {
     };
     if (data.player.planets && data.player.planets.length > 0) {
       planets = data.player.planets.map((p) => {
+        const visualSeed = p.visualSeed ?? Math.floor(Math.random() * 0xffff_ffff);
         const planet = new Planet(
           p.id,
           p.name,
           p.maxUpgrades,
           p.upgrades.map(mapUpgrade),
           p.housing ?? 0,
-          p.assignedCrew ?? 0
+          p.assignedCrew ?? 0,
+          visualSeed
         );
         return planet;
       });
     } else {
       // Migration: old save had flat upgrades → put them on one planet
       const upgrades = (data.player.upgrades ?? []).map(mapUpgrade);
-      const first = new Planet('planet-1', generatePlanetName('planet-1'), 6, upgrades, 0, 0);
+      const firstVisualSeed = Math.floor(Math.random() * 0xffff_ffff);
+      const first = new Planet('planet-1', generatePlanetName('planet-1'), 6, upgrades, 0, 0, firstVisualSeed);
       planets = [first];
     }
     const artifacts = data.player.artifacts.map(

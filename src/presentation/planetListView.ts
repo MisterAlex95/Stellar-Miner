@@ -22,6 +22,27 @@ import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
 /** Which solar system indices are collapsed (persisted for the session across re-renders). */
 const collapsedSolarSystems = new Set<number>();
 
+let planetThumbnailRafId: number | null = null;
+
+function planetThumbnailTick(): void {
+  const listEl = document.getElementById('planet-list');
+  if (listEl) {
+    const timeMs = Date.now();
+    listEl.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
+      const planetName = canvas.getAttribute('data-planet-name');
+      const seedAttr = canvas.getAttribute('data-planet-visual-seed');
+      const visualSeed = seedAttr !== null && seedAttr !== '' ? parseInt(seedAttr, 10) : undefined;
+      if (planetName) drawPlanetSphereToCanvas(canvas, planetName, timeMs, visualSeed);
+    });
+  }
+  planetThumbnailRafId = requestAnimationFrame(planetThumbnailTick);
+}
+
+function startPlanetThumbnailLoop(): void {
+  if (planetThumbnailRafId !== null) return;
+  planetThumbnailRafId = requestAnimationFrame(planetThumbnailTick);
+}
+
 function buildPlanetCardHtml(
   p: Planet,
   index: number,
@@ -65,7 +86,7 @@ function buildPlanetCardHtml(
     : '';
   return `<div class="planet-card" data-planet-id="${p.id}" title="${cardTitle}">
     <div class="planet-card-header">
-      <canvas class="planet-card-visual" width="48" height="48" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" aria-hidden="true"></canvas>
+      <canvas class="planet-card-visual" width="72" height="48" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" data-planet-visual-seed="${p.visualSeed ?? ''}" aria-hidden="true"></canvas>
       <div class="planet-card-name-wrap">
         <span class="planet-card-name">${planetDisplayName(p, index)}</span>
         ${buttonWithTooltipHtml(planetInfoTooltip, `<span class="planet-card-info" aria-label="${t('planetInfoTitle')}">ℹ</span>`, 'planet-card-info-wrap')}
@@ -143,8 +164,11 @@ export function renderPlanetList(): void {
 
   listEl.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
     const planetName = canvas.getAttribute('data-planet-name');
-    if (planetName) drawPlanetSphereToCanvas(canvas, planetName);
+    const seedAttr = canvas.getAttribute('data-planet-visual-seed');
+    const visualSeed = seedAttr !== null && seedAttr !== '' ? parseInt(seedAttr, 10) : undefined;
+    if (planetName) drawPlanetSphereToCanvas(canvas, planetName, Date.now(), visualSeed);
   });
+  startPlanetThumbnailLoop();
   const expeditionArea = document.getElementById('expedition-area');
   const endsAt = getExpeditionEndsAt();
   const inProgress = endsAt != null;

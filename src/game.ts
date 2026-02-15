@@ -120,7 +120,6 @@ function gameLoop(now: number): void {
   if (empirePanel && !empirePanel.hidden && nowMs - lastEmpireRenderMs >= EMPIRE_UPDATE_INTERVAL_MS) {
     lastEmpireRenderMs = nowMs;
     renderCrewSection();
-    renderPlanetList();
     renderPrestigeSection();
   }
   const researchPanel = document.getElementById('panel-research');
@@ -145,6 +144,7 @@ function gameLoop(now: number): void {
       usedSlots: p.usedSlots,
       maxUpgrades: p.maxUpgrades,
       upgradeCounts,
+      visualSeed: p.visualSeed,
     };
   });
   starfieldApi?.update(canvasDt);

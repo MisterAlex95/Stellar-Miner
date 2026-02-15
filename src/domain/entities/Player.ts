@@ -198,11 +198,12 @@ export class Player {
 
   /** Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, 0 veterans, prestige level +1. */
   static createAfterPrestige(oldPlayer: Player): Player {
+    const firstPlanetName = generatePlanetName(`planet-1-${Date.now()}-${Math.random()}`);
     return new Player(
       oldPlayer.id,
       Coins.from(0),
       ProductionRate.from(0),
-      [Planet.create('planet-1', generatePlanetName('planet-1'))],
+      [Planet.create('planet-1', firstPlanetName)],
       [],
       oldPlayer.prestigeLevel + 1,
       oldPlayer.totalCoinsEver,
@@ -213,7 +214,8 @@ export class Player {
   }
 
   static create(id: string): Player {
-    const firstPlanet = Planet.create('planet-1', generatePlanetName('planet-1'));
+    const firstPlanetName = generatePlanetName(`planet-1-${Date.now()}-${Math.random()}`);
+    const firstPlanet = Planet.create('planet-1', firstPlanetName);
     return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, DEFAULT_CREW_BY_ROLE, 0, 0);
   }
 }

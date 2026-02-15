@@ -6,7 +6,6 @@ import { ProductionRate } from '../value-objects/ProductionRate.js';
 import { Upgrade } from './Upgrade.js';
 import { UpgradeEffect } from '../value-objects/UpgradeEffect.js';
 import { Artifact } from './Artifact.js';
-import { generatePlanetName } from '../constants.js';
 
 describe('Player', () => {
   it('create returns new player with default state', () => {
@@ -16,7 +15,8 @@ describe('Player', () => {
     expect(p.productionRate.value.toNumber()).toBe(0);
     expect(p.upgrades).toEqual([]);
     expect(p.planets).toHaveLength(1);
-    expect(p.planets[0].name).toBe(generatePlanetName('planet-1'));
+    expect(p.planets[0].name).toMatch(/^\S+ \S+$/);
+    expect(p.planets[0].id).toBe('planet-1');
     expect(p.artifacts).toEqual([]);
     expect(p.prestigeLevel).toBe(0);
     expect(p.totalCoinsEver.toNumber()).toBe(0);

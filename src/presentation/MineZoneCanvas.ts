@@ -1,4 +1,9 @@
 import { PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
+import {
+  generateProceduralPlanetTexture,
+  getHorizontalScrollOffset,
+  type PlanetPaletteName,
+} from './proceduralPlanetTexture.js';
 
 const MAX_PARTICLES = 30;
 const CLICK_BURST_COUNT = 12;
@@ -25,6 +30,8 @@ export type PlanetView = {
   usedSlots: number;
   maxUpgrades: number;
   upgradeCounts: Record<string, number>;
+  /** Seed for procedural texture; set at planet creation. */
+  visualSeed?: number;
 };
 
 type SolarSystemView = PlanetView[];
@@ -372,6 +379,17 @@ const textureCache = new Map<string, HTMLCanvasElement>();
 const NOISE_SCALE_MIN = 0.022;
 const NOISE_SCALE_RANGE = 0.058;
 
+function getProceduralPalette(typeName: string): PlanetPaletteName {
+  const map: Record<string, PlanetPaletteName> = {
+    rocky: 'earth',
+    desert: 'desert',
+    ice: 'ice',
+    volcanic: 'lava',
+    gas: 'gas',
+  };
+  return map[typeName] ?? 'earth';
+}
+
 /** Per-planet random-ish params (deterministic from name) for more variation. */
 function getPlanetNoiseParams(planetName: string, pType: PlanetType) {
   const h = hash(planetName + pType.name);
@@ -391,74 +409,32 @@ function getPlanetNoiseParams(planetName: string, pType: PlanetType) {
   };
 }
 
-function getPlanetTexture(planetName: string, pType: PlanetType): HTMLCanvasElement {
-  const key = `${planetName}-${pType.name}`;
+function getPlanetTexture(planetName: string, pType: PlanetType, visualSeed?: number): HTMLCanvasElement {
+  const key = `${planetName}-${pType.name}-${visualSeed ?? 'hash'}`;
   let tex = textureCache.get(key);
   if (tex) return tex;
-  tex = createPlanetTexture(planetName, pType);
+  tex = createPlanetTexture(planetName, pType, visualSeed);
   textureCache.set(key, tex);
   return tex;
 }
 
-/** Generative planet texture: noise → gradient, with per-planet variation. */
-function createPlanetTexture(planetName: string, pType: PlanetType): HTMLCanvasElement {
-  const size = TEXTURE_SIZE;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const c = canvas.getContext('2d')!;
-  const seed = hash(planetName + pType.name);
+/** Procedural planet texture (demo algorithm): water, ridges, mountains, type variation, clouds. Seamless on X for scroll. */
+function createPlanetTexture(planetName: string, pType: PlanetType, visualSeed?: number): HTMLCanvasElement {
+  const seed = visualSeed !== undefined ? (visualSeed >>> 0) : hash(planetName + pType.name);
   const params = getPlanetNoiseParams(planetName, pType);
-  const cx = size / 2;
-  const cy = size / 2;
-  const maxR = size / 2 - 0.5;
-  const gradient = PLANET_GRADIENTS[pType.name] ?? PLANET_GRADIENTS.rocky;
-
-  const imageData = c.createImageData(size, size);
-  const data = imageData.data;
-
-  for (let py = 0; py < size; py++) {
-    for (let px = 0; px < size; px++) {
-      const dx = (px - cx) / maxR;
-      const dy = (py - cy) / maxR;
-      const d2 = dx * dx + dy * dy;
-      if (d2 > 1) {
-        data[(py * size + px) * 4 + 3] = 0;
-        continue;
-      }
-      const nx = px + params.offsetX;
-      const ny = py + params.offsetY;
-      let noiseVal = fbmNoise(
-        seed,
-        nx,
-        ny,
-        params.scale,
-        params.octaves,
-        params.lacunarity,
-        params.persistence
-      );
-      const mixNoise = valueNoise2D(params.mixSeed, nx * 0.07, ny * 0.07, params.scale * 1.7);
-      noiseVal = noiseVal * (1 - params.mixAmount) + mixNoise * params.mixAmount;
-      let t = Math.pow(Math.max(0, Math.min(1, noiseVal)), params.remapPower) * 100;
-      const colorStr = sampleGradient(gradient, t);
-      const match = colorStr.match(/rgb\((\d+),(\d+),(\d+)\)/);
-      let r = match ? parseInt(match[1], 10) : 128;
-      let g = match ? parseInt(match[2], 10) : 128;
-      let b = match ? parseInt(match[3], 10) : 128;
-      const lighting = 0.5 + 0.5 * Math.max(0, 1 - (dx + 1) * 0.55);
-      r = Math.round(r * lighting);
-      g = Math.round(g * lighting);
-      b = Math.round(b * lighting);
-      const i = (py * size + px) * 4;
-      data[i] = r;
-      data[i + 1] = g;
-      data[i + 2] = b;
-      data[i + 3] = 255;
-    }
-  }
-
-  c.putImageData(imageData, 0, 0);
-  return canvas;
+  const hasClouds = (seed + 99991) % 3 === 0;
+  return generateProceduralPlanetTexture({
+    size: TEXTURE_SIZE,
+    seed,
+    noiseScale: params.scale,
+    octaves: params.octaves,
+    lacunarity: params.lacunarity,
+    persistence: params.persistence,
+    palette: getProceduralPalette(pType.name),
+    clouds: hasClouds,
+    cloudOpacity: 0.4,
+    remapPower: params.remapPower,
+  });
 }
 
 const MIN_PLANET_SCALE = 0.55;
@@ -590,7 +566,13 @@ function drawOnePlanet(
   ctx.arc(cx, cy, haloR, 0, Math.PI * 2);
   ctx.fill();
 
-  const texture = getPlanetTexture(view.name, pType);
+  const texture = getPlanetTexture(view.name, pType, view.visualSeed);
+  const scrollSpeedPxPerSec = 22;
+  const timeMs = orbitTime * 1000;
+  const offsetX = getHorizontalScrollOffset(timeMs, scrollSpeedPxPerSec, texture.width);
+  const twoR = r * 2;
+  const texScale = twoR / texture.width;
+  const baseX = cx - r - offsetX * texScale;
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -599,7 +581,8 @@ function drawOnePlanet(
   ctx.translate(cx, cy);
   ctx.rotate(spinAngle);
   ctx.translate(-cx, -cy);
-  ctx.drawImage(texture, cx - r, cy - r, r * 2, r * 2);
+  ctx.drawImage(texture, 0, 0, texture.width, texture.height, baseX, cy - r, twoR, twoR);
+  ctx.drawImage(texture, 0, 0, texture.width, texture.height, baseX + twoR, cy - r, twoR, twoR);
   const specX = cx - r * 0.32;
   const specY = cy - r * 0.32;
   const specR = r * 0.28;
@@ -761,8 +744,18 @@ function drawOnePlanet(
   ctx.strokeStyle = border;
 }
 
-/** Draw only the planet sphere (texture + border) to a small canvas, e.g. for Base/Planets list tiles. Uses planet name for type/color. */
-export function drawPlanetSphereToCanvas(canvas: HTMLCanvasElement, planetName: string): void {
+const PLANET_SCROLL_SPEED_PX_PER_SEC = 10;
+
+/**
+ * Draw only the planet sphere (texture + border) to a small canvas, e.g. for Base/Planets list tiles.
+ * When textureTimeMs is provided, texture scrolls horizontally (seamless) for 3D rotation effect.
+ */
+export function drawPlanetSphereToCanvas(
+  canvas: HTMLCanvasElement,
+  planetName: string,
+  textureTimeMs?: number,
+  visualSeed?: number
+): void {
   const targetCtx = canvas.getContext('2d');
   if (!targetCtx) return;
   const w = canvas.width;
@@ -771,13 +764,24 @@ export function drawPlanetSphereToCanvas(canvas: HTMLCanvasElement, planetName: 
   const cy = h / 2;
   const r = Math.min(w, h) / 2 - 1;
   const pType = getPlanetTypeByName(planetName);
-  const texture = getPlanetTexture(planetName, pType);
+  const texture = getPlanetTexture(planetName, pType, visualSeed);
   const border = getThemeColor('--border', '#2a2f3d');
+  const timeMs = textureTimeMs ?? 0;
+  const offsetX = getHorizontalScrollOffset(timeMs, PLANET_SCROLL_SPEED_PX_PER_SEC, texture.width);
+  const twoR = r * 2;
+  const texScale = twoR / texture.width;
+  const baseX = cx - r - offsetX * texScale;
   targetCtx.save();
   targetCtx.beginPath();
   targetCtx.arc(cx, cy, r, 0, Math.PI * 2);
   targetCtx.clip();
-  targetCtx.drawImage(texture, cx - r, cy - r, r * 2, r * 2);
+  targetCtx.drawImage(texture, 0, 0, texture.width, texture.height, baseX, cy - r, twoR, twoR);
+  targetCtx.drawImage(texture, 0, 0, texture.width, texture.height, baseX + twoR, cy - r, twoR, twoR);
+  targetCtx.restore();
+  targetCtx.save();
+  targetCtx.beginPath();
+  targetCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  targetCtx.clip();
   const specX = cx - r * 0.32;
   const specY = cy - r * 0.32;
   const specR = r * 0.28;
