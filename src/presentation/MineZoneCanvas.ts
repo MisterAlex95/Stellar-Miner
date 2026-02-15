@@ -1,11 +1,10 @@
+import { PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
+
 const MAX_PARTICLES = 30;
 const CLICK_BURST_COUNT = 12;
 const CLICK_BURST_LUCKY_COUNT = 24;
 const CLICK_PARTICLE_LIFE = 0.6;
 const CLICK_FLASH_LIFE = 0.35;
-
-/** Planets per solar system (grouping for display). */
-const PLANETS_PER_SOLAR_SYSTEM = 4;
 
 type Particle = {
   x: number;
@@ -18,10 +17,11 @@ type Particle = {
   color?: string;
 };
 
-/** Per-planet data for the spatial view. */
+/** Per-planet data for the spatial view. name = raw (for texture/type); displayName = "Name (System)" for label. */
 export type PlanetView = {
   id: string;
   name: string;
+  displayName?: string;
   usedSlots: number;
   maxUpgrades: number;
   upgradeCounts: Record<string, number>;
@@ -553,7 +553,7 @@ function drawOnePlanet(
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.fillStyle = getThemeColor('--text-dim', '#8b909a');
-  ctx.fillText(view.name, cx, labelY);
+  ctx.fillText(view.displayName ?? view.name, cx, labelY);
 }
 
 /** Draw only the planet sphere (texture + border) to a small canvas, e.g. for Base/Planets list tiles. Uses planet name for type/color. */

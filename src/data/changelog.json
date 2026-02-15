@@ -1,5 +1,41 @@
 [
   {
+    "version": "0.4.11",
+    "date": "2026-02-15",
+    "changes": [
+      "Solar systems have names (data in solarSystems.json). Planet display names show system: \"PlanetName (System Name)\" in list, upgrades, housing, and Mine view."
+    ]
+  },
+  {
+    "version": "0.4.10",
+    "date": "2026-02-15",
+    "changes": [
+      "Dashboard: empire row now shows solar systems count, upgrades count, and research nodes (X/Y). Quest card shows quest description."
+    ]
+  },
+  {
+    "version": "0.4.9",
+    "date": "2026-02-15",
+    "changes": [
+      "Crew section redesign: capacity bar, role cards (Miner / Scientist / Pilot) with count and effect per role, clearer summary line and veterans."
+    ]
+  },
+  {
+    "version": "0.4.8",
+    "date": "2026-02-15",
+    "changes": [
+      "Dashboard: prestige progress bar (to Prestige threshold), empire at a glance (planets + crew), researching pill (click to open Research), stat icons, progress card styling, staggered card entrance animation (respects reduced motion).",
+      "Keyboard shortcut hint (Space to mine · 1–6 switch tabs) is hidden on touch devices (smartphone)."
+    ]
+  },
+  {
+    "version": "0.4.7",
+    "date": "2026-02-15",
+    "changes": [
+      "Dashboard overhaul: at-a-glance stats (coins, production rate, run summary), clearer recommended-action hero card, quest progress card with bar, live status pills (events, expedition, next event), shortcut pills with i18n. Improved UI/UX and mission-control styling."
+    ]
+  },
+  {
     "version": "0.4.6",
     "date": "2026-02-15",
     "changes": [

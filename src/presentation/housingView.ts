@@ -1,6 +1,7 @@
 import { getSession, getSettings, planetService } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { hasEffectiveFreeSlot } from '../application/research.js';
+import { getPlanetDisplayName } from '../application/solarSystems.js';
 import { t, tParam } from '../application/strings.js';
 import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
 import { buttonWithTooltipHtml } from './components/buttonTooltip.js';
@@ -22,7 +23,8 @@ export function renderHousingSection(): void {
     .map((p) => {
       const cost = planetService.getHousingCost(p);
       const canBuild = planetService.canBuildHousing(player, p, hasEffectiveFreeSlot);
-      const planetName = p.name;
+      const planetIndex = player.planets.findIndex((pl) => pl.id === p.id);
+      const planetName = getPlanetDisplayName(p.name, planetIndex >= 0 ? planetIndex : 0);
       const housingInfo = p.housingCount > 0 ? ` (${p.housingCount} ${t('housingBuilt')})` : '';
       const tooltip = canBuild
         ? tParam('housingBuildTooltip', { planet: planetName, cost: formatNumber(cost, settings.compactNumbers), capacity: HOUSING_ASTRONAUT_CAPACITY })

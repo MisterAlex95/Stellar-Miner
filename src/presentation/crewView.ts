@@ -1,11 +1,18 @@
 import { getSession, getSettings } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
-import { UPGRADE_CATALOG } from '../application/catalogs.js';
-import { getAstronautCost, getMaxAstronauts, CREW_ROLES, type CrewRole } from '../domain/constants.js';
+import {
+  getAstronautCost,
+  getMaxAstronauts,
+  CREW_ROLES,
+  MINER_PRODUCTION_BONUS,
+  OTHER_CREW_PRODUCTION_BONUS,
+  VETERAN_PRODUCTION_BONUS,
+  SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST,
+  SCIENTIST_RESEARCH_SUCCESS_CAP,
+  type CrewRole,
+} from '../domain/constants.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
-import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
-import { getEffectiveRequiredAstronauts } from '../application/research.js';
 import { updateTooltipForButton } from './components/buttonTooltip.js';
 
 const ROLE_KEYS: Record<CrewRole, StringKey> = {
@@ -20,16 +27,24 @@ const ROLE_HINT_KEYS: Record<CrewRole, StringKey> = {
   pilot: 'crewRolePilotHint',
 };
 
+const ROLE_EFFECT_KEYS: Record<CrewRole, StringKey> = {
+  miner: 'crewRoleEffectMiner',
+  scientist: 'crewRoleEffectScientist',
+  pilot: 'crewRoleEffectPilot',
+};
+
 export function renderCrewSection(): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
   const settings = getSettings();
-  const crewCountEl = document.getElementById('crew-count');
-  const crewBreakdownEl = document.getElementById('crew-breakdown');
+  const crewSummaryEl = document.getElementById('crew-summary');
+  const crewCapacityFill = document.getElementById('crew-capacity-fill');
+  const crewCapacityWrap = document.getElementById('crew-capacity-wrap');
+  const crewInModulesEl = document.getElementById('crew-in-modules');
   const crewVeteransEl = document.getElementById('crew-veterans');
-  const crewOperatesEl = document.getElementById('crew-operates');
-  if (!crewCountEl) return;
+  if (!crewSummaryEl) return;
+
   const assigned = getAssignedAstronauts(session);
   const free = player.astronautCount;
   const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
@@ -40,20 +55,109 @@ export function renderCrewSection(): void {
   const canHire = player.coins.gte(cost) && !atCap;
   const costStr = formatNumber(cost, settings.compactNumbers);
 
-  if (crewBreakdownEl) {
-    const { miner, scientist, pilot } = player.crewByRole;
-    if (free > 0) {
-      crewBreakdownEl.textContent = tParam('crewBreakdown', {
-        miners: String(miner),
-        scientists: String(scientist),
-        pilots: String(pilot),
+  const { miner, scientist, pilot } = player.crewByRole;
+  const crewBonusPct =
+    Math.round(
+      (miner * MINER_PRODUCTION_BONUS + (scientist + pilot) * OTHER_CREW_PRODUCTION_BONUS) * 100
+    ) + Math.round(player.veteranCount * VETERAN_PRODUCTION_BONUS * 100);
+
+  if (crewCapacityFill && crewCapacityWrap) {
+    const capacityPct = maxCrew > 0 ? Math.min(100, (totalCrew / maxCrew) * 100) : 0;
+    crewCapacityFill.style.width = `${capacityPct.toFixed(1)}%`;
+    crewCapacityWrap.setAttribute('aria-valuenow', String(Math.round(capacityPct)));
+    CREW_ROLES.forEach((role) => {
+      const segmentEl = document.getElementById(`crew-capacity-segment-${role}`);
+      if (segmentEl) {
+        const n = player.crewByRole[role];
+        const segmentPct = totalCrew > 0 ? (n / totalCrew) * 100 : 0;
+        segmentEl.style.width = `${segmentPct.toFixed(1)}%`;
+      }
+    });
+  }
+
+  crewSummaryEl.title = tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length });
+  if (totalCrew === 0) {
+    crewSummaryEl.textContent = tParam('noCrewYetMax', { max: maxCrew });
+  } else if (assigned > 0) {
+    const freeStr = String(free);
+    const assignedStr = String(assigned);
+    const totalStr = String(totalCrew);
+    const maxStr = String(maxCrew);
+    if (crewBonusPct > 0) {
+      crewSummaryEl.textContent = tParam('crewSummaryWithAssigned', {
+        free: freeStr,
+        assigned: assignedStr,
+        total: totalStr,
+        max: maxStr,
+        pct: String(crewBonusPct),
       });
-      crewBreakdownEl.style.display = '';
     } else {
-      crewBreakdownEl.textContent = '';
-      crewBreakdownEl.style.display = 'none';
+      crewSummaryEl.textContent = tParam('crewSummaryNoBonusWithAssigned', {
+        free: freeStr,
+        assigned: assignedStr,
+        total: totalStr,
+        max: maxStr,
+      });
+    }
+  } else if (crewBonusPct > 0) {
+    crewSummaryEl.textContent = tParam('crewSummary', {
+      current: String(totalCrew),
+      max: String(maxCrew),
+      pct: String(crewBonusPct),
+    });
+  } else {
+    crewSummaryEl.textContent = tParam('crewSummaryNoBonus', {
+      current: String(totalCrew),
+      max: String(maxCrew),
+    });
+  }
+
+  CREW_ROLES.forEach((role) => {
+    const countEl = document.getElementById(`crew-role-count-${role}`);
+    const effectEl = document.getElementById(`crew-role-effect-${role}`);
+    const btn = document.getElementById(`hire-astronaut-${role}`);
+    const n = player.crewByRole[role];
+
+    if (countEl) countEl.textContent = String(n);
+
+    if (effectEl) {
+      if (role === 'miner') {
+        effectEl.textContent = n > 0 ? tParam(ROLE_EFFECT_KEYS[role], { pct: String(n * MINER_PRODUCTION_BONUS * 100) }) : '';
+      } else if (role === 'scientist') {
+        const scientistPct = Math.min(
+          n * SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST * 100,
+          SCIENTIST_RESEARCH_SUCCESS_CAP * 100
+        );
+        effectEl.textContent = n > 0 ? tParam(ROLE_EFFECT_KEYS[role], { pct: String(Math.round(scientistPct)) }) : '';
+      } else {
+        effectEl.textContent = n > 0 ? t(ROLE_EFFECT_KEYS[role]) : '';
+      }
+    }
+
+    if (btn && btn instanceof HTMLButtonElement) {
+      const roleLabel = t(ROLE_KEYS[role]);
+      const textEl = btn.querySelector('.crew-btn-text');
+      if (textEl) textEl.textContent = tParam('hireAsRole', { role: roleLabel, cost: costStr });
+      const tooltipText = atCap
+        ? tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length })
+        : canHire
+          ? t(ROLE_HINT_KEYS[role]) + ` · ${costStr} ⬡ (${totalCrew}/${maxCrew}).`
+          : tParam('needCoinsToBuy', { cost: costStr, crew: '' }) + ` (${totalCrew}/${maxCrew}).`;
+      updateTooltipForButton(btn, tooltipText);
+      btn.toggleAttribute('disabled', !canHire);
+    }
+  });
+
+  if (crewInModulesEl) {
+    if (assigned > 0) {
+      crewInModulesEl.textContent = tParam('crewInModules', { n: String(assigned) });
+      crewInModulesEl.style.display = '';
+    } else {
+      crewInModulesEl.textContent = '';
+      crewInModulesEl.style.display = 'none';
     }
   }
+
   if (crewVeteransEl) {
     if (player.veteranCount > 0) {
       crewVeteransEl.textContent = tParam('crewVeterans', { n: String(player.veteranCount) });
@@ -64,42 +168,4 @@ export function renderCrewSection(): void {
     }
   }
 
-  CREW_ROLES.forEach((role) => {
-    const btn = document.getElementById(`hire-astronaut-${role}`);
-    if (!btn || !(btn instanceof HTMLButtonElement)) return;
-    const roleLabel = t(ROLE_KEYS[role]);
-    const textEl = btn.querySelector('.crew-btn-text');
-    if (textEl) textEl.textContent = tParam('hireAsRole', { role: roleLabel, cost: costStr });
-    const tooltipText = atCap
-      ? tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length })
-      : canHire
-        ? t(ROLE_HINT_KEYS[role]) + ` · ${costStr} ⬡ (${totalCrew}/${maxCrew}).`
-        : tParam('needCoinsToBuy', { cost: costStr, crew: '' }) + ` (${totalCrew}/${maxCrew}).`;
-    updateTooltipForButton(btn, tooltipText);
-    btn.toggleAttribute('disabled', !canHire);
-  });
-
-  crewCountEl.title = tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length });
-  if (free === 0 && assigned === 0) {
-    crewCountEl.textContent = tParam('noCrewYetMax', { max: maxCrew });
-  } else if (free === 0) {
-    crewCountEl.textContent = tParam('crewLineAssigned', { assigned: String(assigned), max: String(maxCrew) });
-  } else if (assigned > 0) {
-    const pct = Math.round(player.crewByRole.miner * 2 + (player.crewByRole.scientist + player.crewByRole.pilot) * 1);
-    crewCountEl.textContent = tParam('crewLineFree', { free: String(free), pct: String(pct), assigned: String(assigned), total: String(totalCrew), max: String(maxCrew) });
-  } else {
-    const pct = Math.round(player.crewByRole.miner * 2 + (player.crewByRole.scientist + player.crewByRole.pilot) * 1);
-    crewCountEl.textContent = tParam('crewLineAstronauts', { free: String(free), max: String(maxCrew), pct: String(pct) });
-  }
-  if (crewOperatesEl) {
-    const totalUpgrades = player.upgrades.length;
-    const nextUnlock = UPGRADE_CATALOG.find((d) => getEffectiveRequiredAstronauts(d.id) > player.astronautCount);
-    if (player.astronautCount === 0 && assigned === 0) {
-      crewOperatesEl.textContent = t('crewOperatesHint');
-    } else if (nextUnlock) {
-      crewOperatesEl.textContent = tParam('crewOperatesNext', { free: String(free), name: getCatalogUpgradeName(nextUnlock.id), n: String(getEffectiveRequiredAstronauts(nextUnlock.id)) });
-    } else {
-      crewOperatesEl.textContent = totalUpgrades > 0 ? tParam('crewOperatesUpgrades', { n: String(totalUpgrades) }) : tParam('crewOperatesAvailable', { free: String(free) });
-    }
-  }
 }

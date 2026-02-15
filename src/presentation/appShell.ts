@@ -310,7 +310,7 @@ function getTabsAndPanelsHtml(): string {
     sectionClass: 'quest-section',
     titleKey: 'quest',
     dataBlock: 'quest',
-    rulesKey: 'questHint',
+    rulesKey: 'questRules',
     bodyHtml: `
           ${createProgressBarWithWrap('quest-progress-wrap', 'quest-progress-wrap', 'quest-progress-bar', 'quest-progress-bar')}
           <p class="quest-progress" id="quest-progress"></p>
@@ -323,21 +323,45 @@ function getTabsAndPanelsHtml(): string {
     sectionClass: 'crew-section',
     titleKey: 'crew',
     dataBlock: 'crew',
-    rulesKey: 'crewHint',
+    rulesKey: 'crewRules',
     bodyHtml: `
           <p class="crew-hint" data-i18n="crewHint">Hire astronauts by role. Miners boost production; scientists improve research; pilots help expeditions. Resets on Prestige.</p>
-          <div class="crew-stats-card">
-            <div class="crew-count" id="crew-count">No crew yet</div>
-            <div class="crew-breakdown" id="crew-breakdown" aria-live="polite"></div>
-            <div class="crew-veterans" id="crew-veterans" aria-live="polite"></div>
+          <div class="crew-capacity-wrap" id="crew-capacity-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Crew capacity">
+            <div class="crew-capacity-fill" id="crew-capacity-fill">
+              <div class="crew-capacity-segment crew-capacity-segment--miner" id="crew-capacity-segment-miner"></div>
+              <div class="crew-capacity-segment crew-capacity-segment--scientist" id="crew-capacity-segment-scientist"></div>
+              <div class="crew-capacity-segment crew-capacity-segment--pilot" id="crew-capacity-segment-pilot"></div>
+            </div>
           </div>
-          <div class="crew-operates" id="crew-operates"></div>
-          <p class="crew-hire-label" id="crew-hire-label" data-i18n="crewRecruitLabel">Recruit</p>
-          <div class="crew-hire-buttons" id="crew-hire-buttons">
-            <span class="btn-tooltip-wrap crew-role-wrap crew-role--miner" data-role="miner"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--miner" id="hire-astronaut-miner" data-role="miner"><span class="crew-btn-text">Miner</span></button></span>
-            <span class="btn-tooltip-wrap crew-role-wrap crew-role--scientist" data-role="scientist"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--scientist" id="hire-astronaut-scientist" data-role="scientist"><span class="crew-btn-text">Scientist</span></button></span>
-            <span class="btn-tooltip-wrap crew-role-wrap crew-role--pilot" data-role="pilot"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--pilot" id="hire-astronaut-pilot" data-role="pilot"><span class="crew-btn-text">Pilot</span></button></span>
+          <div class="crew-summary" id="crew-summary" aria-live="polite">No crew yet</div>
+          <div class="crew-role-cards" id="crew-role-cards">
+            <div class="crew-role-card crew-role-card--miner" id="crew-role-card-miner">
+              <div class="crew-role-card-header">
+                <span class="crew-role-card-name" data-i18n="crewRoleMiner">Miner</span>
+                <span class="crew-role-card-count" id="crew-role-count-miner">0</span>
+              </div>
+              <div class="crew-role-card-effect" id="crew-role-effect-miner"></div>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="miner"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--miner" id="hire-astronaut-miner" data-role="miner"><span class="crew-btn-text">Miner</span></button></span>
+            </div>
+            <div class="crew-role-card crew-role-card--scientist" id="crew-role-card-scientist">
+              <div class="crew-role-card-header">
+                <span class="crew-role-card-name" data-i18n="crewRoleScientist">Scientist</span>
+                <span class="crew-role-card-count" id="crew-role-count-scientist">0</span>
+              </div>
+              <div class="crew-role-card-effect" id="crew-role-effect-scientist"></div>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="scientist"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--scientist" id="hire-astronaut-scientist" data-role="scientist"><span class="crew-btn-text">Scientist</span></button></span>
+            </div>
+            <div class="crew-role-card crew-role-card--pilot" id="crew-role-card-pilot">
+              <div class="crew-role-card-header">
+                <span class="crew-role-card-name" data-i18n="crewRolePilot">Pilot</span>
+                <span class="crew-role-card-count" id="crew-role-count-pilot">0</span>
+              </div>
+              <div class="crew-role-card-effect" id="crew-role-effect-pilot"></div>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="pilot"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--pilot" id="hire-astronaut-pilot" data-role="pilot"><span class="crew-btn-text">Pilot</span></button></span>
+            </div>
           </div>
+          <div class="crew-in-modules" id="crew-in-modules" aria-live="polite"></div>
+          <div class="crew-veterans" id="crew-veterans" aria-live="polite"></div>
         `,
   });
   const planetsBlock = createGameplayBlock({
@@ -345,7 +369,7 @@ function getTabsAndPanelsHtml(): string {
     sectionClass: 'planets-section',
     titleKey: 'planets',
     dataBlock: 'planets',
-    rulesKey: 'planetsHint',
+    rulesKey: 'planetsRules',
     bodyHtml: `
           <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots or build housing on a planet (+2 crew capacity per module, uses 1 slot).</p>
           <div class="planet-list" id="planet-list"></div>
@@ -357,7 +381,7 @@ function getTabsAndPanelsHtml(): string {
     sectionClass: 'prestige-section',
     titleKey: 'prestige',
     dataBlock: 'prestige',
-    rulesKey: 'prestigeHint',
+    rulesKey: 'prestigeRules',
     bodyHtml: `
           <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
           <div class="prestige-status" id="prestige-status"></div>
@@ -372,7 +396,7 @@ function getTabsAndPanelsHtml(): string {
     sectionClass: 'research-section',
     titleKey: 'research',
     dataBlock: 'research',
-    rulesKey: 'researchHint',
+    rulesKey: 'researchRules',
     bodyHtml: `
           <p class="research-hint" data-i18n="researchHint">Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt has a success chance; on failure coins are lost. Resets on Prestige.</p>
           <div class="research-list" id="research-list"></div>
@@ -383,7 +407,7 @@ function getTabsAndPanelsHtml(): string {
     sectionClass: 'upgrades-section',
     titleKey: 'upgrades',
     dataBlock: 'upgrades',
-    rulesKey: 'upgradesHint',
+    rulesKey: 'upgradesRules',
     bodyHtml: `
           <p class="upgrades-hint" data-i18n="upgradesHint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
           <div class="upgrade-list" id="upgrade-list"></div>
@@ -393,7 +417,7 @@ function getTabsAndPanelsHtml(): string {
     id: 'statistics-section',
     sectionClass: 'statistics-section',
     titleKey: 'statisticsTitle',
-    rulesKey: 'statisticsHint',
+    rulesKey: 'statisticsRules',
     locked: false,
     bodyHtml: `
           <div id="statistics-container"></div>

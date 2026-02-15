@@ -102,6 +102,13 @@
   margin: 0.35rem 0 1rem 0;
 }
 
+/* Hide keyboard hint on touch devices (smartphone, etc.) — no Space/1–6 keys */
+@media (hover: none) {
+  .keyboard-hint {
+    display: none;
+  }
+}
+
 .keyboard-hint-text {
   color: var(--text-dim);
 }

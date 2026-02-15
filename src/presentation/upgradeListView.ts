@@ -6,6 +6,7 @@ import {
   UPGRADE_DISPLAY_COUNT,
 } from '../application/catalogs.js';
 import { getEffectiveUpgradeUsesSlot, getEffectiveRequiredAstronauts } from '../application/research.js';
+import { getPlanetDisplayName } from '../application/solarSystems.js';
 import { t, tParam } from '../application/strings.js';
 import { formatNumber } from '../application/format.js';
 import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
@@ -62,7 +63,11 @@ export function renderUpgradeList(): void {
   for (const def of defsToShow) {
     const maxCount = getMaxBuyCount(def.id);
     const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
-    const planetsForSelect = state.needsSlot ? planetsWithSlot : player.planets;
+    const planetList = state.needsSlot ? planetsWithSlot : player.planets;
+    const planetsForSelect = planetList.map((p) => {
+      const idx = player.planets.findIndex((pl) => pl.id === p.id);
+      return { id: p.id, name: getPlanetDisplayName(p.name, idx >= 0 ? idx : 0) };
+    });
     const card = document.createElement('div');
     card.className =
       'upgrade-card' +

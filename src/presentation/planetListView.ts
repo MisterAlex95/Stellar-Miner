@@ -9,6 +9,7 @@ import { formatNumber } from '../application/format.js';
 import { getPlanetEffectiveProduction } from '../application/productionHelpers.js';
 import { getPlanetType } from '../application/planetAffinity.js';
 import { getEffectiveUsedSlots, hasEffectiveFreeSlot } from '../application/research.js';
+import { getPlanetDisplayName } from '../application/solarSystems.js';
 import { t, tParam } from '../application/strings.js';
 import { drawPlanetSphereToCanvas } from './MineZoneCanvas.js';
 import { buttonWithTooltipHtml, updateTooltipForButton } from './components/buttonTooltip.js';
@@ -25,9 +26,9 @@ export function renderPlanetList(): void {
   const cost = planetService.getNewPlanetCost(player);
   const astronautsRequired = planetService.getExpeditionAstronautsRequired(player);
   const canLaunch = planetService.canLaunchExpedition(player);
-  const planetName = (pl: { name: string }) => pl.name;
+  const planetDisplayName = (pl: { name: string }, index: number) => getPlanetDisplayName(pl.name, index);
   listEl.innerHTML = player.planets
-    .map((p) => {
+    .map((p, index) => {
       const addSlotCost = planetService.getAddSlotCost(p);
       const canAddSlot = planetService.canAddSlot(player, p);
       const slotBtnTitle = canAddSlot ? tParam('addSlotTooltip', { cost: formatNumber(addSlotCost, settings.compactNumbers) }) : tParam('needCoinsForSlot', { cost: formatNumber(addSlotCost, settings.compactNumbers) });
@@ -42,7 +43,7 @@ export function renderPlanetList(): void {
       const planetType = getPlanetType(p.name);
       const typeLabel = planetType.charAt(0).toUpperCase() + planetType.slice(1);
       const lines: string[] = [
-        planetName(p),
+        planetDisplayName(p, index),
         `${t('planetInfoType')}: ${typeLabel}`,
         `${t('planetInfoSlots')}: ${effectiveUsed}/${p.maxUpgrades}`,
         `${t('planetInfoProduction')}: ${prodStr}/s`,
@@ -56,7 +57,7 @@ export function renderPlanetList(): void {
       const housingCost = planetService.getHousingCost(p);
       const canBuildHousing = planetService.canBuildHousing(player, p, hasEffectiveFreeSlot);
       const housingTooltip = canBuildHousing
-        ? tParam('housingBuildTooltip', { planet: planetName(p), cost: formatNumber(housingCost, settings.compactNumbers), capacity: HOUSING_ASTRONAUT_CAPACITY })
+        ? tParam('housingBuildTooltip', { planet: planetDisplayName(p, index), cost: formatNumber(housingCost, settings.compactNumbers), capacity: HOUSING_ASTRONAUT_CAPACITY })
         : tParam('needCoinsForHousing', { cost: formatNumber(housingCost, settings.compactNumbers) });
       const housingBtn = hasSlot
         ? buttonWithTooltipHtml(housingTooltip, `<button type="button" class="build-housing-btn" data-planet-id="${p.id}" ${canBuildHousing ? '' : 'disabled'}>${tParam('buildHousingBtn', { cost: formatNumber(housingCost, settings.compactNumbers) })}</button>`)
@@ -65,7 +66,7 @@ export function renderPlanetList(): void {
         <div class="planet-card-header">
           <canvas class="planet-card-visual" width="48" height="48" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" aria-hidden="true"></canvas>
           <div class="planet-card-name-wrap">
-            <span class="planet-card-name">${planetName(p)}</span>
+            <span class="planet-card-name">${planetDisplayName(p, index)}</span>
             ${buttonWithTooltipHtml(planetInfoTooltip, `<span class="planet-card-info" aria-label="${t('planetInfoTitle')}">ℹ</span>`, 'planet-card-info-wrap')}
           </div>
         </div>

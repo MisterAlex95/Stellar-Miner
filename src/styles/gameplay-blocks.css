@@ -220,71 +220,146 @@
   line-height: 1.5;
 }
 
-.crew-stats-card {
+.crew-capacity-wrap {
+  height: 8px;
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.75rem;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
 }
 
-.crew-count {
+.crew-capacity-fill {
+  height: 100%;
+  width: 0%;
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+  transition: width 0.25s ease-out;
+}
+
+.crew-capacity-segment {
+  height: 100%;
+  min-width: 0;
+  transition: width 0.25s ease-out;
+}
+
+.crew-capacity-segment--miner {
+  background: var(--crew-miner);
+}
+
+.crew-capacity-segment--miner:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.crew-capacity-segment--scientist {
+  background: var(--crew-scientist);
+}
+
+.crew-capacity-segment--pilot {
+  background: var(--crew-pilot);
+}
+
+.crew-capacity-segment--pilot:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.crew-summary {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text);
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.75rem 0;
 }
 
-.crew-breakdown {
+.crew-role-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 520px) {
+  .crew-role-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.crew-role-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.crew-role-card--miner {
+  border-left: 3px solid var(--crew-miner);
+}
+
+.crew-role-card--scientist {
+  border-left: 3px solid var(--crew-scientist);
+}
+
+.crew-role-card--pilot {
+  border-left: 3px solid var(--crew-pilot);
+}
+
+.crew-role-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.crew-role-card-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.crew-role-card-count {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  min-width: 1.5em;
+  text-align: right;
+}
+
+.crew-role-card-effect {
   font-size: 0.8rem;
   color: var(--text-dim);
-  margin: 0 0 0.2rem 0;
+  line-height: 1.35;
+  min-height: 1.2em;
+}
+
+.crew-role-card .btn-tooltip-wrap {
+  display: block;
+  min-width: 0;
+  margin-top: auto;
+}
+
+.crew-in-modules {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
   line-height: 1.35;
 }
 
 .crew-veterans {
   font-size: 0.8rem;
   color: var(--text-dim);
-  margin: 0;
+  margin: 0 0 0.5rem 0;
   line-height: 1.35;
 }
 
 .crew-veterans:not([style*="display: none"]) {
   color: var(--accent);
   font-weight: 500;
-}
-
-.crew-operates {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  margin-bottom: 0.75rem;
-  line-height: 1.35;
-}
-
-.crew-hire-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-dim);
-  margin: 0 0 0.5rem 0;
-}
-
-.crew-hire-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-@media (min-width: 640px) {
-  .crew-hire-buttons {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.crew-hire-buttons .btn-tooltip-wrap {
-  display: block;
-  min-width: 0;
 }
 
 .hire-astronaut-btn {

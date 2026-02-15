@@ -27,8 +27,12 @@ import { updateStatisticsSection } from './presentation/statisticsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
 import { renderPlanetList, updateExpeditionProgress } from './presentation/planetListView.js';
 import { renderResearchSection } from './presentation/researchView.js';
+import { renderCrewSection } from './presentation/crewView.js';
+import { renderPrestigeSection } from './presentation/prestigeView.js';
 import { renderQuestSection } from './presentation/questView.js';
+import { updateDashboardLiveCountdowns } from './presentation/dashboardView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
+import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
@@ -36,7 +40,13 @@ import { showOfflineToast } from './presentation/toasts.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 150;
+const DASHBOARD_UPDATE_INTERVAL_MS = 1000;
+const EMPIRE_UPDATE_INTERVAL_MS = 1500;
+const RESEARCH_UPDATE_INTERVAL_MS = 1500;
 let lastQuestRenderMs = 0;
+let lastDashboardRenderMs = 0;
+let lastEmpireRenderMs = 0;
+let lastResearchRenderMs = 0;
 let lastEventsUnlocked = false;
 let pageWasHidden = document.visibilityState === 'hidden';
 
@@ -101,7 +111,24 @@ function gameLoop(now: number): void {
     lastQuestRenderMs = nowMs;
     renderQuestSection();
   }
-  const planetViews = session.player.planets.map((p) => {
+  const dashboardPanel = document.getElementById('panel-dashboard');
+  if (dashboardPanel && !dashboardPanel.hidden && nowMs - lastDashboardRenderMs >= DASHBOARD_UPDATE_INTERVAL_MS) {
+    lastDashboardRenderMs = nowMs;
+    updateDashboardLiveCountdowns();
+  }
+  const empirePanel = document.getElementById('panel-empire');
+  if (empirePanel && !empirePanel.hidden && nowMs - lastEmpireRenderMs >= EMPIRE_UPDATE_INTERVAL_MS) {
+    lastEmpireRenderMs = nowMs;
+    renderCrewSection();
+    renderPlanetList();
+    renderPrestigeSection();
+  }
+  const researchPanel = document.getElementById('panel-research');
+  if (researchPanel && !researchPanel.hidden && nowMs - lastResearchRenderMs >= RESEARCH_UPDATE_INTERVAL_MS) {
+    lastResearchRenderMs = nowMs;
+    renderResearchSection();
+  }
+  const planetViews = session.player.planets.map((p, index) => {
     const upgradeCounts: Record<string, number> = {};
     for (const u of p.upgrades) {
       upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
@@ -109,6 +136,7 @@ function gameLoop(now: number): void {
     return {
       id: p.id,
       name: p.name,
+      displayName: getPlanetDisplayName(p.name, index),
       usedSlots: p.usedSlots,
       maxUpgrades: p.maxUpgrades,
       upgradeCounts,
