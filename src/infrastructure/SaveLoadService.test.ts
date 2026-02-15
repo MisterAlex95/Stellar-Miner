@@ -227,4 +227,69 @@ describe('SaveLoadService', () => {
     const reported = service.getLastOfflineCoins();
     expect(reported).toBe(loaded!.player.coins.value);
   });
+
+  it('exportSession returns JSON string', async () => {
+    const player = Player.create('p1');
+    player.addCoins(100);
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    const json = service.exportSession(session);
+    expect(typeof json).toBe('string');
+    const data = JSON.parse(json);
+    expect(data.version).toBe(1);
+    expect(data.player.coins).toBe(100);
+  });
+
+  it('importSession returns null for invalid JSON', () => {
+    const service = new SaveLoadService();
+    expect(service.importSession('not json')).toBeNull();
+    expect(service.importSession('{}')).toBeNull();
+  });
+
+  it('importSession deserializes valid payload', async () => {
+    const player = Player.create('p1');
+    player.addCoins(200);
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    const json = service.exportSession(session);
+    const loaded = service.importSession(json);
+    expect(loaded).not.toBeNull();
+    expect(loaded!.player.coins.value).toBe(200);
+  });
+
+  it('validateSavePayload returns true for valid JSON', async () => {
+    const player = Player.create('p1');
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    const json = service.exportSession(session);
+    expect(service.validateSavePayload(json)).toBe(true);
+  });
+
+  it('validateSavePayload returns false for invalid', () => {
+    const service = new SaveLoadService();
+    expect(service.validateSavePayload('{}')).toBe(false);
+    expect(service.validateSavePayload('x')).toBe(false);
+  });
+
+  it('load returns null when deserialize throws', async () => {
+    const badPayload = JSON.stringify({
+      version: 1,
+      id: 's1',
+      player: {
+        id: 'p1',
+        coins: 100,
+        productionRate: 0,
+        planets: [{ id: 'p1', name: 'T', maxUpgrades: 6, upgrades: [{ id: 'u', name: 'U', cost: 1, effect: {} }], housing: 0 }],
+        artifacts: [],
+        prestigeLevel: 0,
+        totalCoinsEver: 100,
+        astronautCount: 0,
+      },
+      activeEvents: [],
+    });
+    storage['stellar-miner-session'] = badPayload;
+    const service = new SaveLoadService();
+    const loaded = await service.load();
+    expect(loaded).toBeNull();
+  });
 });

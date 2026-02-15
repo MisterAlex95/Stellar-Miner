@@ -1,0 +1,115 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+  generateQuest,
+  getQuestProgress,
+  getQuestStreak,
+  getQuestLastClaimAt,
+  claimQuest,
+} from './quests.js';
+import { setSession, setQuestState, getQuestState } from './gameState.js';
+import { GameSession } from '../domain/aggregates/GameSession.js';
+import { Player } from '../domain/entities/Player.js';
+import { QUEST_STREAK_KEY, QUEST_LAST_CLAIM_KEY } from './catalogs.js';
+
+describe('quests', () => {
+  let storage: Record<string, string>;
+
+  beforeEach(() => {
+    storage = {};
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage[key] ?? null,
+      setItem: (key: string, value: string) => {
+        storage[key] = value;
+      },
+    });
+    const player = Player.create('p1');
+    setSession(new GameSession('s1', player));
+  });
+
+  it('generateQuest returns quest with valid shape', () => {
+    const q = generateQuest();
+    expect(q.type).toMatch(/^(coins|production|upgrade|astronauts)$/);
+    expect(q.target).toBeGreaterThan(0);
+    expect(q.reward).toBeGreaterThan(0);
+    expect(typeof q.description).toBe('string');
+  });
+
+  it('getQuestProgress returns null when no session or no quest', () => {
+    setQuestState({ quest: null });
+    expect(getQuestProgress()).toBeNull();
+    setSession(null!);
+    expect(getQuestProgress()).toBeNull();
+  });
+
+  it('getQuestProgress returns progress for coins quest', () => {
+    const player = Player.create('p1');
+    player.addCoins(500);
+    setSession(new GameSession('s1', player));
+    setQuestState({ quest: { type: 'coins', target: 500, reward: 100, description: 'Reach 500' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.current).toBe(500);
+    expect(p!.done).toBe(true);
+  });
+
+  it('getQuestStreak returns stored value', () => {
+    storage[QUEST_STREAK_KEY] = '2';
+    expect(getQuestStreak()).toBe(2);
+  });
+
+  it('getQuestLastClaimAt returns stored value', () => {
+    storage[QUEST_LAST_CLAIM_KEY] = '1234567890';
+    expect(getQuestLastClaimAt()).toBe(1234567890);
+  });
+
+  it('getQuestStreak returns 0 when no localStorage', () => {
+    const orig = globalThis.localStorage;
+    vi.stubGlobal('localStorage', undefined);
+    expect(getQuestStreak()).toBe(0);
+    vi.stubGlobal('localStorage', orig);
+  });
+
+  it('getQuestLastClaimAt returns 0 when no localStorage', () => {
+    const orig = globalThis.localStorage;
+    vi.stubGlobal('localStorage', undefined);
+    expect(getQuestLastClaimAt()).toBe(0);
+    vi.stubGlobal('localStorage', orig);
+  });
+
+  it('claimQuest returns false when no quest or not done', () => {
+    expect(claimQuest({
+      saveSession: vi.fn(),
+      updateStats: vi.fn(),
+      renderUpgradeList: vi.fn(),
+      renderQuestSection: vi.fn(),
+      showFloatingReward: vi.fn(),
+      showQuestStreakToast: vi.fn(),
+      checkAchievements: vi.fn(),
+    })).toBe(false);
+  });
+
+  it('claimQuest returns true and runs callbacks when done', () => {
+    const origDoc = globalThis.document;
+    vi.stubGlobal('document', { getElementById: () => null });
+    const player = Player.create('p1');
+    player.addCoins(10000);
+    setSession(new GameSession('s1', player));
+    setQuestState({
+      quest: { type: 'coins', target: 100, reward: 50, description: 'Reach 100 coins' },
+    });
+    const callbacks = {
+      saveSession: vi.fn(),
+      updateStats: vi.fn(),
+      renderUpgradeList: vi.fn(),
+      renderQuestSection: vi.fn(),
+      showFloatingReward: vi.fn(),
+      showQuestStreakToast: vi.fn(),
+      checkAchievements: vi.fn(),
+    };
+    const result = claimQuest(callbacks);
+    expect(result).toBe(true);
+    expect(callbacks.saveSession).toHaveBeenCalled();
+    expect(getQuestState().quest).not.toBeNull();
+    vi.stubGlobal('document', origDoc);
+  });
+});

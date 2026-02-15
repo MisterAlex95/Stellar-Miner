@@ -62,6 +62,16 @@ describe('PlanetService', () => {
     expect(player.astronautCount).toBe(required);
   });
 
+  it('launchExpedition returns failure when not enough astronauts', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const cost = service.getNewPlanetCost(player);
+    player.addCoins(cost);
+    const outcome = service.launchExpedition(player);
+    expect(outcome.success).toBe(false);
+    expect(outcome.survivors).toBe(0);
+  });
+
   it('launchExpedition when all die: no planet, no astronauts back', () => {
     const player = Player.create('p1');
     const service = new PlanetService();
@@ -128,5 +138,43 @@ describe('PlanetService', () => {
     const ok = service.addSlot(player, planet);
     expect(ok).toBe(false);
     expect(planet.maxUpgrades).toBe(6);
+  });
+
+  it('getHousingCost returns cost for planet housing count', () => {
+    const service = new PlanetService();
+    const planet = Planet.create('p1', 'Titan', 6);
+    expect(service.getHousingCost(planet)).toBe(Math.floor(500 * Math.pow(1.15, 0)));
+    planet.addHousing();
+    expect(service.getHousingCost(planet)).toBe(Math.floor(500 * Math.pow(1.15, 1)));
+  });
+
+  it('canBuildHousing is true when planet has free slot and player can afford', () => {
+    const player = Player.create('p1');
+    const planet = player.planets[0];
+    const service = new PlanetService();
+    const cost = service.getHousingCost(planet);
+    player.addCoins(cost);
+    expect(service.canBuildHousing(player, planet)).toBe(true);
+  });
+
+  it('buildHousing spends coins and adds housing', () => {
+    const player = Player.create('p1');
+    const planet = player.planets[0];
+    const service = new PlanetService();
+    const cost = service.getHousingCost(planet);
+    player.addCoins(cost);
+    const ok = service.buildHousing(player, planet);
+    expect(ok).toBe(true);
+    expect(planet.housingCount).toBe(1);
+    expect(player.coins.value).toBe(0);
+  });
+
+  it('buildHousing returns false when cannot afford', () => {
+    const player = Player.create('p1');
+    const planet = player.planets[0];
+    const service = new PlanetService();
+    const ok = service.buildHousing(player, planet);
+    expect(ok).toBe(false);
+    expect(planet.housingCount).toBe(0);
   });
 });

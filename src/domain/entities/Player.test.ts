@@ -234,4 +234,21 @@ describe('Player', () => {
     expect(p.spendAstronauts(3)).toBe(true);
     expect(p.astronautCount).toBe(0);
   });
+
+  it('addAstronauts adds count (e.g. expedition survivors)', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(0),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      2
+    );
+    p.addAstronauts(3);
+    expect(p.astronautCount).toBe(5);
+    p.addAstronauts(0);
+    expect(p.astronautCount).toBe(5);
+  });
 });

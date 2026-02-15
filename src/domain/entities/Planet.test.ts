@@ -50,6 +50,21 @@ describe('Planet', () => {
     expect(p.maxUpgrades).toBe(8);
   });
 
+  it('addHousing increases housing count', () => {
+    const p = Planet.create('p1', 'Titan', 6);
+    expect(p.housingCount).toBe(0);
+    p.addHousing();
+    expect(p.housingCount).toBe(1);
+    p.addHousing();
+    expect(p.housingCount).toBe(2);
+  });
+
+  it('addHousing throws when no free slot', () => {
+    const p = Planet.create('p1', 'Titan', 1);
+    p.addUpgrade(new Upgrade('u1', 'U1', 1, new UpgradeEffect(1)));
+    expect(() => p.addHousing()).toThrow('Planet has no free slot for housing');
+  });
+
   it('constructor copies upgrades array', () => {
     const u = new Upgrade('u1', 'U1', 1, new UpgradeEffect(1));
     const p = new Planet('p1', 'Titan', 6, [u]);

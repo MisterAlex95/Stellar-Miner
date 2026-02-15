@@ -507,6 +507,13 @@ export function handleResetProgress(): void {
     localStorage.removeItem(COMBO_MASTER_KEY);
     ['stellar-miner-first-upgrade-toast', 'stellar-miner-first-planet-toast', 'stellar-miner-first-astronaut-toast', 'stellar-miner-first-prestige-toast'].forEach((k) => localStorage.removeItem(k));
   }
+  // Replace in-memory session with a fresh one so the game loop (which can run before reload)
+  // does not call getUnlockedBlocks(oldSession) and re-persist progression to localStorage.
+  const currentSession = getSession();
+  const freshPlayer = Player.create('player-1');
+  freshPlayer.addCoins(0);
+  setSession(new GameSession(currentSession.id, freshPlayer, []));
+  setActiveEventInstances([]);
   location.reload();
 }
 
