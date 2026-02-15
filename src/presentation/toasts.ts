@@ -39,7 +39,8 @@ export function showEventToast(gameEvent: GameEvent): void {
   const container = document.getElementById('event-toasts');
   if (!container) return;
   const el = document.createElement('div');
-  el.className = 'event-toast';
+  const isNegative = gameEvent.effect.multiplier < 1;
+  el.className = isNegative ? 'event-toast event-toast--negative' : 'event-toast';
   el.setAttribute('role', 'status');
   const name = getCatalogEventName(gameEvent.id);
   el.textContent = `${name}: ×${gameEvent.effect.multiplier} production for ${gameEvent.effect.durationMs / 1000}s`;

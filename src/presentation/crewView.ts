@@ -18,7 +18,8 @@ export function renderCrewSection(): void {
   if (!listEl || !hireBtn) return;
   const assigned = getAssignedAstronauts(session);
   const free = player.astronautCount;
-  const maxCrew = getMaxAstronauts(player.planets.length);
+  const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
+  const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
   const totalCrew = free + assigned;
   const atCap = totalCrew >= maxCrew;
   const cost = getAstronautCost(free);

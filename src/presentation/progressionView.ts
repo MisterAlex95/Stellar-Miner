@@ -149,6 +149,14 @@ export function updateProgressionVisibility(): void {
     section.classList.toggle('gameplay-block--locked', !isUnlocked);
     section.classList.toggle('gameplay-block--unlocked', isUnlocked);
     section.setAttribute('aria-hidden', isUnlocked ? 'false' : 'true');
+    if (block.id === 'planets') {
+      const housingSection = document.getElementById('housing-section');
+      if (housingSection) {
+        housingSection.classList.toggle('gameplay-block--locked', !isUnlocked);
+        housingSection.classList.toggle('gameplay-block--unlocked', isUnlocked);
+        housingSection.setAttribute('aria-hidden', isUnlocked ? 'false' : 'true');
+      }
+    }
 
     const justUnlocked = isUnlocked && !previousUnlocked.has(block.id);
     const shouldShowModal = justUnlocked && !seen.has(block.id) && progressionInitialized;

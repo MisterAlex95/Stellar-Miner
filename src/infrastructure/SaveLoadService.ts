@@ -24,7 +24,7 @@ const MIN_OFFLINE_MS = 60_000; // 1 min before offline progress counts
 const MAX_OFFLINE_MS = 12 * 60 * 60 * 1000; // cap 12h
 
 type SavedUpgrade = { id: string; name: string; cost: number; effect: { coinsPerSecond: number } };
-type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[] };
+type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[]; housing?: number };
 
 export type SavedSession = {
   version?: number;
@@ -190,6 +190,7 @@ export class SaveLoadService implements ISaveLoadService {
             cost: u.cost,
             effect: { coinsPerSecond: u.effect.coinsPerSecond },
           })),
+          housing: p.housingCount,
         })),
         artifacts: session.player.artifacts.map((a) => ({
           id: a.id,
@@ -221,7 +222,8 @@ export class SaveLoadService implements ISaveLoadService {
           p.maxUpgrades,
           p.upgrades.map(
             (u) => new Upgrade(u.id, u.name, u.cost, new UpgradeEffect(u.effect.coinsPerSecond))
-          )
+          ),
+          p.housing ?? 0
         );
         return planet;
       });
@@ -230,7 +232,7 @@ export class SaveLoadService implements ISaveLoadService {
       const upgrades = (data.player.upgrades ?? []).map(
         (u) => new Upgrade(u.id, u.name, u.cost, new UpgradeEffect(u.effect.coinsPerSecond))
       );
-      const first = new Planet('planet-1', getPlanetName(0), 6, upgrades);
+      const first = new Planet('planet-1', getPlanetName(0), 6, upgrades, 0);
       planets = [first];
     }
     const artifacts = data.player.artifacts.map(

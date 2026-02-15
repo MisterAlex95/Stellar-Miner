@@ -1282,11 +1282,18 @@ h1 {
   font-weight: 700;
 }
 
+.event-toast--negative {
+  border-color: #b91c1c;
+  background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(185, 28, 28, 0.18) 100%);
+  color: #fecaca;
+}
+
 /* Card panel for all gameplay sections (Quest, Prestige, Crew, Planets, Upgrades) */
 .prestige-section,
 .crew-section,
 .quest-section,
 .planets-section,
+.housing-section,
 .research-section,
 .upgrades-section,
 .statistics-section {
@@ -1520,6 +1527,7 @@ h1 {
 
 /* Section headers: accent underline */
 .planets-section h2,
+.housing-section h2,
 .research-section h2,
 .upgrades-section h2,
 .prestige-section h2,
@@ -1531,6 +1539,7 @@ h1 {
 }
 
 .planets-section h2::after,
+.housing-section h2::after,
 .research-section h2::after,
 .upgrades-section h2::after,
 .prestige-section h2::after,
@@ -1546,6 +1555,7 @@ h1 {
 }
 
 .planets-section h2,
+.housing-section h2,
 .research-section h2,
 .upgrades-section h2,
 .prestige-section h2,
@@ -1559,6 +1569,7 @@ h1 {
 .hire-astronaut-btn:active:not(:disabled),
 .buy-planet-btn:active:not(:disabled),
 .add-slot-btn:active:not(:disabled),
+.build-housing-btn:active:not(:disabled),
 .research-attempt-btn:active:not(:disabled) {
   transform: scale(0.98);
 }
@@ -1732,6 +1743,7 @@ h1 {
 .app-tab-panel .prestige-section,
 .app-tab-panel .crew-section,
 .app-tab-panel .planets-section,
+.app-tab-panel .housing-section,
 .app-tab-panel .research-section,
 .app-tab-panel .upgrades-section,
 .app-tab-panel .statistics-section {
@@ -1944,7 +1956,8 @@ h1 {
   color: var(--text);
 }
 
-.planets-section h2 {
+.planets-section h2,
+.housing-section h2 {
   font-family: 'Orbitron', sans-serif;
   font-size: 0.9rem;
   font-weight: 600;
@@ -1953,10 +1966,18 @@ h1 {
   margin: 0 0 0.5rem 0;
 }
 
-.planets-hint {
+.planets-hint,
+.housing-section .housing-hint {
   font-size: 0.8rem;
   color: var(--text-dim);
   margin: 0 0 0.75rem 0;
+  line-height: 1.35;
+}
+
+.housing-empty {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0 0 0.5rem 0;
 }
 
 .research-section h2 {
@@ -2530,6 +2551,60 @@ h1 {
 }
 
 .add-slot-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.housing-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.housing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.housing-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.housing-planet-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.build-housing-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.build-housing-btn:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.build-housing-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

@@ -16,6 +16,7 @@ import {
   handleUpgradeBuyMax,
   handleBuyNewPlanet,
   handleAddSlot,
+  handleBuildHousing,
   handlePrestige,
   handleHireAstronaut,
   handleClaimQuest,
@@ -33,6 +34,7 @@ import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
+import { renderHousingSection } from './housingView.js';
 import { renderResearchSection } from './researchView.js';
 import { renderStatisticsSection } from './statisticsView.js';
 import {
@@ -283,12 +285,6 @@ const APP_HTML = `
       </section>
     </div>
     <div class="app-tab-panel" id="panel-base" role="tabpanel" aria-labelledby="tab-base" data-tab="base" hidden>
-      <section class="gameplay-block gameplay-block--locked prestige-section" id="prestige-section" data-block="prestige">
-        <h2 data-i18n="prestige">Prestige</h2>
-        <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
-        <div class="prestige-status" id="prestige-status"></div>
-        <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
-      </section>
       <section class="gameplay-block gameplay-block--locked crew-section" id="crew-section" data-block="crew">
         <h2 data-i18n="crew">Crew</h2>
         <p class="crew-hint" data-i18n="crewHint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
@@ -301,6 +297,17 @@ const APP_HTML = `
         <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots to expand.</p>
         <div class="planet-list" id="planet-list"></div>
         <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Send expedition</button></span>
+      </section>
+      <section class="gameplay-block gameplay-block--locked housing-section" id="housing-section" data-block="planets">
+        <h2 data-i18n="housing">Housing</h2>
+        <p class="housing-hint" data-i18n="housingHint">Build housing on a planet to increase crew capacity (+2 astronauts per module). Each module uses 1 slot on that planet.</p>
+        <div class="housing-list" id="housing-list"></div>
+      </section>
+      <section class="gameplay-block gameplay-block--locked prestige-section" id="prestige-section" data-block="prestige">
+        <h2 data-i18n="prestige">Prestige</h2>
+        <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
+        <div class="prestige-status" id="prestige-status"></div>
+        <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-research" role="tabpanel" aria-labelledby="tab-research" data-tab="research" hidden>
@@ -641,7 +648,19 @@ export function mount(): void {
   }
 
   renderPlanetList();
+  renderHousingSection();
   renderResearchSection();
+
+  const housingList = document.getElementById('housing-list');
+  if (housingList) {
+    housingList.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('.build-housing-btn');
+      if (!btn || (btn as HTMLButtonElement).disabled) return;
+      const planetId = (btn as HTMLElement).getAttribute('data-planet-id');
+      if (!planetId) return;
+      handleBuildHousing(planetId);
+    });
+  }
 
   const researchList = document.getElementById('research-list');
   if (researchList) {

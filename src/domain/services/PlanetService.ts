@@ -1,7 +1,7 @@
 import type { Player } from '../entities/Player.js';
 import type { Planet } from '../entities/Planet.js';
 import { Planet as PlanetEntity } from '../entities/Planet.js';
-import { getNewPlanetCost, getAddSlotCost, getPlanetName, getExpeditionAstronautsRequired, EXPEDITION_DEATH_CHANCE } from '../constants.js';
+import { getNewPlanetCost, getAddSlotCost, getPlanetName, getExpeditionAstronautsRequired, EXPEDITION_DEATH_CHANCE, getHousingCost } from '../constants.js';
 
 export type ExpeditionOutcome = {
   success: boolean;
@@ -75,6 +75,21 @@ export class PlanetService {
     if (!this.canAddSlot(player, planet)) return false;
     player.spendCoins(this.getAddSlotCost(planet));
     planet.addSlot();
+    return true;
+  }
+
+  getHousingCost(planet: Planet): number {
+    return getHousingCost(planet.housingCount);
+  }
+
+  canBuildHousing(player: Player, planet: Planet): boolean {
+    return planet.hasFreeSlot() && player.coins.gte(this.getHousingCost(planet));
+  }
+
+  buildHousing(player: Player, planet: Planet): boolean {
+    if (!this.canBuildHousing(player, planet)) return false;
+    player.spendCoins(this.getHousingCost(planet));
+    planet.addHousing();
     return true;
   }
 }

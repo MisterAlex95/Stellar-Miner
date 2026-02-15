@@ -44,7 +44,7 @@ export const PROGRESSION_BLOCKS: BlockDef[] = [
   },
   {
     id: 'quest',
-    coinsThreshold: 1000,
+    coinsThreshold: 5000,
     title: 'Quests',
     body: 'Complete quests for bonus coins and rewards. Each quest has a target (e.g. mine X coins, buy upgrades). Claim within 5 minutes of completion for a streak bonus. Check the Quest section above.',
     sectionId: 'quest-section',
@@ -58,14 +58,14 @@ export const PROGRESSION_BLOCKS: BlockDef[] = [
   },
   {
     id: 'research',
-    coinsThreshold: 350,
+    coinsThreshold: 1000,
     title: 'Scientific Research',
     body: 'Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt can succeed or fail (coins lost on failure). Resets on Prestige.',
     sectionId: 'research-section',
   },
   {
     id: 'prestige',
-    coinsThreshold: 5000,
+    coinsThreshold: 50000,
     title: 'Prestige',
     body: 'When you reach 50,000 coins you can Prestige: reset coins and planets to gain +5% production per prestige level forever. Use it to progress faster on each new run.',
     sectionId: 'prestige-section',

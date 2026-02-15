@@ -45,9 +45,20 @@ export function getPlanetName(index: number): string {
 /** Crew: astronauts. Production bonus per astronaut (e.g. 0.02 = +2% each). */
 export const ASTRONAUT_PRODUCTION_BONUS = 0.02;
 
-/** Max total astronauts (free + assigned) based on planet count. More planets = more crew capacity. */
-export function getMaxAstronauts(planetCount: number): number {
-  return Math.max(2, 2 * planetCount);
+/** Crew capacity added per housing module built on any planet. */
+export const HOUSING_ASTRONAUT_CAPACITY = 2;
+
+/** Max total astronauts (free + assigned) from planets and housing. housingCount = sum of housing on all planets. */
+export function getMaxAstronauts(planetCount: number, housingCount: number = 0): number {
+  const base = Math.max(2, 2 * planetCount);
+  return base + housingCount * HOUSING_ASTRONAUT_CAPACITY;
+}
+
+/** Base cost for first housing on a planet. Each additional housing on that planet costs more. */
+export const HOUSING_BASE_COST = 500;
+
+export function getHousingCost(planetHousingCount: number): number {
+  return Math.floor(HOUSING_BASE_COST * Math.pow(1.15, planetHousingCount));
 }
 
 /** Base cost to hire the first astronaut. Each additional costs more. */

@@ -3,41 +3,56 @@ import type { Upgrade } from './Upgrade.js';
 /** Default max upgrade slots on a new planet (can be expanded later). */
 export const UPGRADES_PER_PLANET = 6;
 
-/** Entity: a planet with upgrade slots (expandable by paying coins). */
+/** Entity: a planet with upgrade slots (expandable by paying coins) and optional housing (uses slots, +crew capacity). */
 export class Planet {
   /** Mutable array so we can push upgrades. */
   public readonly upgrades: Upgrade[];
   private _maxUpgrades: number;
+  private _housingCount: number;
 
   constructor(
     public readonly id: string,
     public readonly name: string,
     maxUpgrades: number,
-    upgrades: Upgrade[] = []
+    upgrades: Upgrade[] = [],
+    housingCount: number = 0
   ) {
     this._maxUpgrades = maxUpgrades;
     this.upgrades = upgrades ? [...upgrades] : [];
+    this._housingCount = Math.max(0, housingCount);
   }
 
   get maxUpgrades(): number {
     return this._maxUpgrades;
   }
 
+  /** Housing modules (each uses 1 slot and adds crew capacity). */
+  get housingCount(): number {
+    return this._housingCount;
+  }
+
+  /** Used slots = upgrades + housing. */
   get usedSlots(): number {
-    return this.upgrades.length;
+    return this.upgrades.length + this._housingCount;
   }
 
   get freeSlots(): number {
-    return Math.max(0, this._maxUpgrades - this.upgrades.length);
+    return Math.max(0, this._maxUpgrades - this.usedSlots);
   }
 
   hasFreeSlot(): boolean {
-    return this.upgrades.length < this._maxUpgrades;
+    return this.usedSlots < this._maxUpgrades;
   }
 
   addUpgrade(upgrade: Upgrade): void {
     if (!this.hasFreeSlot()) throw new Error('Planet has no free upgrade slot');
     this.upgrades.push(upgrade);
+  }
+
+  /** Build one housing module (uses 1 slot). Call only when hasFreeSlot() and after paying cost. */
+  addHousing(): void {
+    if (!this.hasFreeSlot()) throw new Error('Planet has no free slot for housing');
+    this._housingCount += 1;
   }
 
   /** Add one slot to this planet (called after paying cost in PlanetService). */
@@ -46,6 +61,6 @@ export class Planet {
   }
 
   static create(id: string, name: string, maxUpgrades: number = UPGRADES_PER_PLANET): Planet {
-    return new Planet(id, name, maxUpgrades, []);
+    return new Planet(id, name, maxUpgrades, [], 0);
   }
 }

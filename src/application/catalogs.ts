@@ -60,6 +60,12 @@ export const EVENT_CATALOG: GameEvent[] = [
   new GameEvent('solar-wind', 'Solar Wind', new EventEffect(1.15, 90_000)),
   new GameEvent('comet-tail', 'Comet Tail', new EventEffect(1.4, 40_000)),
   new GameEvent('nebula-bloom', 'Nebula Bloom', new EventEffect(1.2, 75_000)),
+  new GameEvent('dust-storm', 'Dust Storm', new EventEffect(0.6, 25_000)),
+  new GameEvent('solar-eclipse', 'Solar Eclipse', new EventEffect(0.5, 35_000)),
+  new GameEvent('equipment-malfunction', 'Equipment Malfunction', new EventEffect(0.55, 30_000)),
+  new GameEvent('power-drain', 'Power Drain', new EventEffect(0.65, 40_000)),
+  new GameEvent('communications-blackout', 'Communications Blackout', new EventEffect(0.7, 20_000)),
+  new GameEvent('debris-field', 'Debris Field', new EventEffect(0.6, 28_000)),
 ];
 
 export const UPGRADE_GROUPS: { label: string; minTier: number; maxTier: number }[] = [

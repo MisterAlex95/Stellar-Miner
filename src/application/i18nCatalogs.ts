@@ -194,6 +194,12 @@ const eventNamesEn: Record<string, string> = {
   'solar-wind': 'Solar Wind',
   'comet-tail': 'Comet Tail',
   'nebula-bloom': 'Nebula Bloom',
+  'dust-storm': 'Dust Storm',
+  'solar-eclipse': 'Solar Eclipse',
+  'equipment-malfunction': 'Equipment Malfunction',
+  'power-drain': 'Power Drain',
+  'communications-blackout': 'Communications Blackout',
+  'debris-field': 'Debris Field',
 };
 
 const eventNamesFr: Record<string, string> = {
@@ -206,6 +212,12 @@ const eventNamesFr: Record<string, string> = {
   'solar-wind': 'Vent solaire',
   'comet-tail': 'Queue de comète',
   'nebula-bloom': 'Floraison nébuleuse',
+  'dust-storm': 'Tempête de poussière',
+  'solar-eclipse': 'Éclipse solaire',
+  'equipment-malfunction': 'Panne d’équipement',
+  'power-drain': 'Drainage d’énergie',
+  'communications-blackout': 'Black-out des communications',
+  'debris-field': 'Champ de débris',
 };
 
 const achievementNamesEn: Record<string, string> = {

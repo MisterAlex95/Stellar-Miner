@@ -55,6 +55,7 @@ import { updateStats } from '../presentation/statsView.js';
 import { renderUpgradeList, getMaxBuyCount, flashUpgradeCard } from '../presentation/upgradeListView.js';
 import { renderPlanetList } from '../presentation/planetListView.js';
 import { renderResearchSection } from '../presentation/researchView.js';
+import { renderHousingSection } from '../presentation/housingView.js';
 import { renderPrestigeSection } from '../presentation/prestigeView.js';
 import { renderCrewSection } from '../presentation/crewView.js';
 import { renderQuestSection } from '../presentation/questView.js';
@@ -210,13 +211,29 @@ export function handleAddSlot(planetId: string): void {
   updateStats();
   renderUpgradeList();
   renderPlanetList();
+  renderHousingSection();
+}
+
+export function handleBuildHousing(planetId: string): void {
+  const session = getSession();
+  if (!session) return;
+  const planet = session.player.planets.find((p) => p.id === planetId);
+  if (!planet || !planetService.canBuildHousing(session.player, planet)) return;
+  planetService.buildHousing(session.player, planet);
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderPlanetList();
+  renderCrewSection();
+  renderHousingSection();
 }
 
 export function handleHireAstronaut(): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
-  const maxCrew = getMaxAstronauts(player.planets.length);
+  const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
+  const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
   const totalCrew = player.astronautCount + getAssignedAstronauts(session);
   if (totalCrew >= maxCrew) return;
   const cost = getAstronautCost(player.astronautCount);
@@ -234,6 +251,7 @@ export function handleHireAstronaut(): void {
   renderUpgradeList();
   renderPlanetList();
   renderCrewSection();
+  renderHousingSection();
   checkAchievements();
 }
 

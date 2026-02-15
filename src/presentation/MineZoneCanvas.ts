@@ -602,6 +602,12 @@ function getEventOverlayStyle(ids: string[]): string | null {
   if (id === 'solar-wind') return 'rgba(14, 165, 233, 0.1)';
   if (id === 'comet-tail') return 'rgba(231, 229, 228, 0.12)';
   if (id === 'nebula-bloom') return 'rgba(167, 139, 250, 0.12)';
+  if (id === 'dust-storm') return 'rgba(120, 113, 108, 0.2)';
+  if (id === 'solar-eclipse') return 'rgba(30, 27, 75, 0.25)';
+  if (id === 'equipment-malfunction') return 'rgba(185, 28, 28, 0.15)';
+  if (id === 'power-drain') return 'rgba(75, 85, 99, 0.2)';
+  if (id === 'communications-blackout') return 'rgba(15, 23, 42, 0.22)';
+  if (id === 'debris-field') return 'rgba(71, 85, 105, 0.18)';
   return null;
 }
 
@@ -611,6 +617,7 @@ function getEventOverlayPulse(time: number, ids: string[]): number {
     return 0.7 + 0.3 * Math.sin(time * 3);
   }
   if (ids.includes('nebula-bloom')) return 0.75 + 0.25 * Math.sin(time * 1.5);
+  if (ids.includes('solar-eclipse') || ids.includes('communications-blackout')) return 0.8 + 0.2 * Math.sin(time * 2);
   return 1;
 }
 
