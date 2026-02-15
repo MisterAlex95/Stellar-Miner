@@ -48,18 +48,30 @@ import {
   dismissIntroModal,
 } from './progressionView.js';
 import { initTooltips } from './tooltip.js';
-import { APP_VERSION, hasNewUpdate, markUpdateSeen, getLastSeenVersion } from '../application/version.js';
+import { APP_VERSION, hasNewUpdate, markUpdateSeen } from '../application/version.js';
 import { getChangelog } from '../application/changelog.js';
-import { createGameplayBlock } from './components/gameplayBlock.js';
 import { buildChangelogHtml } from './components/changelog.js';
-import { createProgressBarWithWrap, createProgressBar } from './components/progressBar.js';
 import { buildDebugPanelHtml } from './components/debugPanel.js';
-import { createModalOverlay } from './components/modal.js';
-import { TOAST_CONTAINER_ID } from './components/toasts.js';
 import { getOpenOverlayElement, openOverlay, closeOverlay } from './components/overlay.js';
+import { getAppHtml } from './appShell.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
+const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
+const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
+const COLLAPSED_STORAGE_PREFIX = 'stellar-miner-collapsed-';
+const COLLAPSIBLE_SECTION_IDS = [
+  'quest-section',
+  'crew-section',
+  'planets-section',
+  'prestige-section',
+  'research-section',
+  'upgrades-section',
+  'statistics-section',
+];
+const STATS_COMPACT_ENTER = 70;
+const STATS_COMPACT_LEAVE = 35;
+const VALID_TAB_IDS = ['mine', 'empire', 'research', 'upgrades', 'stats'] as const;
 
 function isAnyModalOpen(): boolean {
   return getOpenOverlayElement() !== null;
@@ -170,401 +182,10 @@ export function applyLayout(): void {
       document.querySelector('.app-tab--active')?.getAttribute('data-tab') ||
       localStorage.getItem(TAB_STORAGE_KEY) ||
       DEFAULT_TAB;
-    const validId = ['mine', 'empire', 'research', 'upgrades', 'stats'].includes(activeId) ? activeId : DEFAULT_TAB;
+    const validId = VALID_TAB_IDS.includes(activeId as (typeof VALID_TAB_IDS)[number]) ? activeId : DEFAULT_TAB;
     switchTab(validId);
   }
 }
-
-const APP_HTML = `
-    <div class="offline-banner" id="offline-banner" aria-live="polite" aria-hidden="true" role="status" hidden data-i18n="offlineIndicator">You are offline. Progress may not be saved.</div>
-    <header>
-      <div class="header-row">
-        <div>
-          <h1 data-i18n="appTitle">STELLAR MINER</h1>
-          <p class="subtitle" data-i18n="appSubtitle">Mine coins. Buy upgrades. Conquer the belt.</p>
-        </div>
-        <span class="header-actions">
-          <span class="info-btn-wrap">
-            <button type="button" class="info-btn" id="info-btn" data-i18n-title="whatsNew" data-i18n-aria-label="whatsNew" title="What's new">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-            </button>
-            <span class="info-update-badge" id="info-update-badge" aria-hidden="true" title="New update"></span>
-          </span>
-          <button type="button" class="settings-btn" id="settings-btn" data-i18n-title="settings" data-i18n-aria-label="openSettings">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-1.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v1.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-1.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-        </span>
-      </div>
-    </header>
-    ${createModalOverlay({
-      overlayId: 'settings-overlay',
-      overlayClass: 'settings-overlay',
-      dialogClass: 'settings-modal',
-      role: 'dialog',
-      ariaLabelledBy: 'settings-title',
-      bodyHtml: `
-        <div class="settings-header">
-          <h2 id="settings-title" data-i18n="settings">Settings</h2>
-          <button type="button" class="settings-close" id="settings-close" data-i18n-aria-label="close">×</button>
-        </div>
-        <div class="settings-body">
-          <div class="settings-option">
-            <label for="setting-language" data-i18n="language">Language</label>
-            <select id="setting-language" aria-label="Language">
-              <option value="en" data-i18n="languageEn">English</option>
-              <option value="fr" data-i18n="languageFr">Français</option>
-            </select>
-          </div>
-          <div class="settings-option">
-            <label for="setting-starfield-speed" data-i18n="starfieldSpeed">Starfield speed</label>
-            <select id="setting-starfield-speed">
-              <option value="0.5" data-i18n="starfieldSpeedSlow">Slow</option>
-              <option value="1" selected data-i18n="starfieldSpeedNormal">Normal</option>
-              <option value="1.5" data-i18n="starfieldSpeedFast">Fast</option>
-            </select>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-orbit-lines" checked />
-              <span data-i18n="showOrbitLines">Show orbit lines</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-click-particles" checked />
-              <span data-i18n="clickParticles">Click particles</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-compact-numbers" checked />
-              <span data-i18n="compactNumbers">Compact numbers (1.2K)</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-space-key-repeat" />
-              <span data-i18n="spaceKeyRepeat">Allow Space key repeat (hold to mine)</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label for="setting-layout" data-i18n="layout">Layout</label>
-            <select id="setting-layout" aria-label="Layout mode">
-              <option value="tabs" data-i18n="layoutTabs">Tabs</option>
-              <option value="one-page" data-i18n="layoutOnePage">One page</option>
-            </select>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-pause-background" />
-              <span data-i18n="pauseWhenBackground">Pause production when tab in background</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label for="setting-theme" data-i18n="theme">Theme</label>
-            <select id="setting-theme" aria-label="Theme">
-              <option value="dark" data-i18n="themeDark">Dark</option>
-              <option value="light" data-i18n="themeLight">Light</option>
-            </select>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-sound" />
-              <span data-i18n="soundEnabled">Sound effects</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-reduced-motion" />
-              <span data-i18n="reducedMotion">Reduce motion</span>
-            </label>
-          </div>
-          <div class="settings-option settings-save-export">
-            <div class="settings-save-buttons">
-              <button type="button" class="settings-export-btn" id="settings-export-btn" title="Copy save to clipboard and download as file" data-i18n="exportSave">Export save</button>
-              <button type="button" class="settings-import-btn" id="settings-import-btn" title="Load a previously exported save (replaces current)" data-i18n="importSave">Import save</button>
-            </div>
-            <input type="file" id="settings-import-file" accept=".json,application/json" class="settings-import-file" aria-hidden="true" />
-            <p class="settings-last-saved" id="last-saved-indicator" aria-live="polite"></p>
-          </div>
-          <div class="settings-option settings-achievements">
-            <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false" data-i18n="achievements">Achievements</button>
-            <div class="achievements-list" id="achievements-list" aria-hidden="true"></div>
-          </div>
-          <div class="settings-option settings-reset">
-            <button type="button" class="reset-btn" id="settings-reset-btn" data-i18n="resetProgress">Reset progress</button>
-          </div>
-        </div>
-      `,
-    })}
-    ${createModalOverlay({
-      overlayId: 'info-overlay',
-      overlayClass: 'info-overlay',
-      dialogClass: 'info-modal',
-      role: 'dialog',
-      ariaLabelledBy: 'info-title',
-      bodyHtml: `
-        <div class="info-header">
-          <h2 id="info-title" data-i18n="infoTitle">What's new</h2>
-          <button type="button" class="info-close" id="info-close" data-i18n-aria-label="close">×</button>
-        </div>
-        <div class="info-body">
-          <div class="info-version-row">
-            <span class="info-version-label" data-i18n="infoVersionLabel">Version</span>
-            <span class="info-version-value" id="info-version-value">–</span>
-          </div>
-          <div class="info-changelog-list" id="info-changelog-list"></div>
-        </div>
-      `,
-    })}
-    ${createModalOverlay({
-      overlayId: 'reset-confirm-overlay',
-      overlayClass: 'reset-confirm-overlay',
-      dialogClass: 'reset-confirm-modal',
-      role: 'alertdialog',
-      ariaLabelledBy: 'reset-confirm-title',
-      ariaDescribedBy: 'reset-confirm-desc',
-      bodyHtml: `
-        <h2 id="reset-confirm-title" data-i18n="resetConfirmTitle">Reset progress?</h2>
-        <p id="reset-confirm-desc" data-i18n="resetConfirmDesc">Coins, planets, upgrades, crew, achievements and all progress will be lost. This cannot be undone.</p>
-        <div class="reset-confirm-actions">
-          <button type="button" class="reset-confirm-cancel" id="reset-confirm-cancel" data-i18n="cancel">Cancel</button>
-          <button type="button" class="reset-confirm-reset" id="reset-confirm-reset" data-i18n="resetAll">Reset all</button>
-        </div>
-      `,
-    })}
-    ${createModalOverlay({
-      overlayId: 'prestige-confirm-overlay',
-      overlayClass: 'prestige-confirm-overlay',
-      dialogClass: 'prestige-confirm-modal',
-      role: 'alertdialog',
-      ariaLabelledBy: 'prestige-confirm-title',
-      ariaDescribedBy: 'prestige-confirm-desc',
-      bodyHtml: `
-        <h2 id="prestige-confirm-title" data-i18n="prestigeConfirmTitle">Prestige?</h2>
-        <p id="prestige-confirm-desc" data-i18n="prestigeConfirmDesc">You'll reset to 0 coins and 1 planet. You keep your new Prestige level and +5% production per level forever.</p>
-        <div class="prestige-confirm-actions">
-          <button type="button" class="prestige-confirm-cancel" id="prestige-confirm-cancel" data-i18n="cancel">Cancel</button>
-          <button type="button" class="prestige-confirm-do" id="prestige-confirm-do" data-i18n="prestige">Prestige</button>
-        </div>
-      `,
-    })}
-    ${createModalOverlay({
-      overlayId: 'prestige-rewards-overlay',
-      overlayClass: 'prestige-rewards-overlay',
-      dialogClass: 'prestige-rewards-modal',
-      role: 'dialog',
-      ariaLabelledBy: 'prestige-rewards-title',
-      ariaDescribedBy: 'prestige-rewards-desc',
-      bodyHtml: `
-        <h2 id="prestige-rewards-title" data-i18n="prestigeRewardsTitle">Prestige rewards</h2>
-        <p id="prestige-rewards-desc" class="prestige-rewards-intro" data-i18n="prestigeRewardsIntro">What you gain at each prestige level:</p>
-        <ul id="prestige-rewards-list" class="prestige-rewards-list" aria-describedby="prestige-rewards-desc"></ul>
-        <div class="prestige-confirm-actions">
-          <button type="button" class="prestige-confirm-cancel" id="prestige-rewards-close" data-i18n="gotIt">Got it</button>
-        </div>
-      `,
-    })}
-    ${createModalOverlay({
-      overlayId: 'intro-overlay',
-      overlayClass: 'intro-overlay',
-      dialogClass: 'intro-modal',
-      role: 'dialog',
-      ariaLabelledBy: 'intro-title',
-      ariaDescribedBy: 'intro-body',
-      bodyHtml: `
-        <h2 id="intro-title"></h2>
-        <p id="intro-body"></p>
-        ${createProgressBarWithWrap('intro-progress-wrap', 'intro-progress-wrap', 'intro-progress-bar', 'intro-progress-bar', true)}
-        <button type="button" class="intro-got-it" id="intro-got-it" data-i18n="gotIt">Got it</button>
-      `,
-    })}
-    ${createModalOverlay({
-      overlayId: 'events-hint-overlay',
-      overlayClass: 'events-hint-overlay',
-      dialogClass: 'events-hint-modal',
-      role: 'dialog',
-      ariaLabelledBy: 'events-hint-modal-title',
-      ariaDescribedBy: 'events-hint-modal-body',
-      bodyHtml: `
-        <div class="events-hint-modal-header">
-          <h2 id="events-hint-modal-title" data-i18n="eventsHintTitle">Events you have seen</h2>
-          <button type="button" class="events-hint-close" id="events-hint-close" data-i18n-aria-label="close">×</button>
-        </div>
-        <div id="events-hint-modal-body" class="events-hint-modal-body" aria-describedby="events-hint-modal-body"></div>
-      `,
-    })}
-    ${createModalOverlay({
-      overlayId: 'section-rules-overlay',
-      overlayClass: 'section-rules-overlay',
-      dialogClass: 'section-rules-modal',
-      role: 'dialog',
-      ariaLabelledBy: 'section-rules-title',
-      ariaDescribedBy: 'section-rules-body',
-      bodyHtml: `
-        <div class="section-rules-header">
-          <h2 id="section-rules-title" class="section-rules-title"></h2>
-          <button type="button" class="section-rules-close" id="section-rules-close" data-i18n-aria-label="close">×</button>
-        </div>
-        <div class="section-rules-content">
-          <div id="section-rules-body" class="section-rules-body"></div>
-        </div>
-        <div class="section-rules-actions">
-          <button type="button" class="section-rules-got-it" id="section-rules-got-it" data-i18n="gotIt">Got it</button>
-        </div>
-      `,
-    })}
-    <section class="stats">
-      <div class="stat-card stat-card--coins" id="coins-stat-card" data-i18n-title="coinsTitle">
-        <div class="stat-label" data-i18n="coins">Coins</div>
-        <div class="stat-value stat-value--hero" id="coins-value">0</div>
-        <div class="stat-coins-extra" id="crew-stat-line" aria-live="polite"></div>
-        <div class="stat-coins-extra stat-coins-extra--sub" id="crew-stat-detail" aria-live="polite"></div>
-        <div class="stat-coins-extra stat-coins-extra--sub" id="crew-stat-by-job" aria-live="polite"></div>
-      </div>
-      <div class="stat-card stat-card--crew stats-compact-only" id="crew-compact-card" aria-hidden="true">
-        <div class="stat-label" data-i18n="crew">Crew</div>
-        <div class="stat-value" id="stats-compact-crew">0</div>
-      </div>
-      <div class="stat-card stat-card--production" id="production-stat-card" data-i18n-title="productionTitle">
-        <div class="stat-label"><span data-i18n="production">Production</span> <span class="production-live" id="production-live" aria-hidden="true"></span></div>
-        <div class="stat-value" id="production-value">0/s</div>
-        <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
-        <div class="events-line" id="events-line">
-          <div class="events-line-content">
-            <div class="active-events" id="active-events" aria-live="polite"></div>
-            <div class="next-event-row" id="next-event-row">
-              <span class="next-event-label" id="next-event-label" data-i18n="nextEventLabel" aria-hidden="true">Next event</span>
-              ${createProgressBarWithWrap('next-event-progress-wrap', 'next-event-progress-wrap', 'next-event-progress-bar', 'next-event-progress-bar', true)}
-            </div>
-          </div>
-          <span class="events-hint-wrap" id="events-hint-wrap">
-            <button type="button" class="events-hint-trigger" id="events-hint-trigger" aria-label="Events discovered" aria-haspopup="dialog" title="">?</button>
-          </span>
-        </div>
-      </div>
-    </section>
-    <div class="stats-spacer" id="stats-spacer" aria-hidden="true"></div>
-    <p class="next-milestone" id="next-milestone" aria-live="polite"></p>
-    <div class="event-toasts" id="${TOAST_CONTAINER_ID}" aria-live="polite"></div>
-    <nav class="app-tabs" role="tablist" data-i18n-aria-label="gameSections">
-      <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine" data-i18n="tabMine">Mine</button>
-      <button type="button" class="app-tab" role="tab" id="tab-empire" aria-selected="false" aria-controls="panel-empire" data-tab="empire" data-i18n="tabBase">Empire</button>
-      <button type="button" class="app-tab" role="tab" id="tab-research" aria-selected="false" aria-controls="panel-research" data-tab="research" data-i18n="tabResearch">Research</button>
-      <button type="button" class="app-tab" role="tab" id="tab-upgrades" aria-selected="false" aria-controls="panel-upgrades" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
-      <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats" data-i18n="tabStats">Stats</button>
-    </nav>
-    <div class="app-tab-panel app-tab-panel--active" id="panel-mine" role="tabpanel" aria-labelledby="tab-mine" data-tab="mine">
-      <section class="mine-zone" id="mine-zone" data-i18n-title="mineZoneTitle">
-        <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
-        <div class="mine-zone-visual" id="mine-zone-visual"></div>
-        <p class="mine-zone-hint" aria-hidden="true" data-i18n="mineZoneTitle"></p>
-        <span class="combo-indicator" id="combo-indicator" aria-live="polite"></span>
-      </section>
-      ${createGameplayBlock({
-        id: 'quest-section',
-        sectionClass: 'quest-section',
-        titleKey: 'quest',
-        dataBlock: 'quest',
-        rulesKey: 'questHint',
-        bodyHtml: `
-          ${createProgressBarWithWrap('quest-progress-wrap', 'quest-progress-wrap', 'quest-progress-bar', 'quest-progress-bar')}
-          <p class="quest-progress" id="quest-progress"></p>
-          <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
-          <span class="btn-tooltip-wrap" id="quest-claim-wrap"><button type="button" class="quest-claim-btn" id="quest-claim" disabled data-i18n="claim">Claim</button></span>
-        `,
-      })}
-    </div>
-    <div class="app-tab-panel" id="panel-empire" role="tabpanel" aria-labelledby="tab-empire" data-tab="empire" hidden>
-      ${createGameplayBlock({
-        id: 'crew-section',
-        sectionClass: 'crew-section',
-        titleKey: 'crew',
-        dataBlock: 'crew',
-        rulesKey: 'crewHint',
-        bodyHtml: `
-          <p class="crew-hint" data-i18n="crewHint">Hire astronauts by role. Miners boost production; scientists improve research; pilots help expeditions. Resets on Prestige.</p>
-          <div class="crew-stats-card">
-            <div class="crew-count" id="crew-count">No crew yet</div>
-            <div class="crew-breakdown" id="crew-breakdown" aria-live="polite"></div>
-            <div class="crew-veterans" id="crew-veterans" aria-live="polite"></div>
-          </div>
-          <div class="crew-operates" id="crew-operates"></div>
-          <p class="crew-hire-label" id="crew-hire-label" data-i18n="crewRecruitLabel">Recruit</p>
-          <div class="crew-hire-buttons" id="crew-hire-buttons">
-            <span class="btn-tooltip-wrap crew-role-wrap crew-role--miner" data-role="miner"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--miner" id="hire-astronaut-miner" data-role="miner"><span class="crew-btn-text">Miner</span></button></span>
-            <span class="btn-tooltip-wrap crew-role-wrap crew-role--scientist" data-role="scientist"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--scientist" id="hire-astronaut-scientist" data-role="scientist"><span class="crew-btn-text">Scientist</span></button></span>
-            <span class="btn-tooltip-wrap crew-role-wrap crew-role--pilot" data-role="pilot"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--pilot" id="hire-astronaut-pilot" data-role="pilot"><span class="crew-btn-text">Pilot</span></button></span>
-          </div>
-        `,
-      })}
-      ${createGameplayBlock({
-        id: 'planets-section',
-        sectionClass: 'planets-section',
-        titleKey: 'planets',
-        dataBlock: 'planets',
-        rulesKey: 'planetsHint',
-        bodyHtml: `
-          <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots or build housing on a planet (+2 crew capacity per module, uses 1 slot).</p>
-          <div class="planet-list" id="planet-list"></div>
-          <div class="expedition-area" id="expedition-area"></div>
-        `,
-      })}
-      ${createGameplayBlock({
-        id: 'prestige-section',
-        sectionClass: 'prestige-section',
-        titleKey: 'prestige',
-        dataBlock: 'prestige',
-        rulesKey: 'prestigeHint',
-        bodyHtml: `
-          <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
-          <div class="prestige-status" id="prestige-status"></div>
-          <div class="prestige-actions">
-            <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
-            <button type="button" class="prestige-rewards-btn" id="prestige-rewards-btn" data-i18n="prestigeRewardsWhatFor">What do I get?</button>
-          </div>
-        `,
-      })}
-    </div>
-    <div class="app-tab-panel" id="panel-research" role="tabpanel" aria-labelledby="tab-research" data-tab="research" hidden>
-      ${createGameplayBlock({
-        id: 'research-section',
-        sectionClass: 'research-section',
-        titleKey: 'research',
-        dataBlock: 'research',
-        rulesKey: 'researchHint',
-        bodyHtml: `
-          <p class="research-hint" data-i18n="researchHint">Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt has a success chance; on failure coins are lost. Resets on Prestige.</p>
-          <div class="research-list" id="research-list"></div>
-        `,
-      })}
-    </div>
-    <div class="app-tab-panel" id="panel-upgrades" role="tabpanel" aria-labelledby="tab-upgrades" data-tab="upgrades" hidden>
-      ${createGameplayBlock({
-        id: 'upgrades-section',
-        sectionClass: 'upgrades-section',
-        titleKey: 'upgrades',
-        dataBlock: 'upgrades',
-        rulesKey: 'upgradesHint',
-        bodyHtml: `
-          <p class="upgrades-hint" data-i18n="upgradesHint">You can buy each upgrade multiple times; production stacks. Assigns to a planet with a free slot.</p>
-          <div class="upgrade-list" id="upgrade-list"></div>
-        `,
-      })}
-    </div>
-    <div class="app-tab-panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" data-tab="stats" hidden>
-      ${createGameplayBlock({
-        id: 'statistics-section',
-        sectionClass: 'statistics-section',
-        titleKey: 'statisticsTitle',
-        rulesKey: 'statisticsHint',
-        locked: false,
-        bodyHtml: `
-          <div id="statistics-container"></div>
-        `,
-      })}
-    </div>
-  `;
 
 function applyThemeAndMotion(): void {
   const s = getSettings();
@@ -592,15 +213,10 @@ export function mount(): void {
   const app = document.getElementById('app');
   if (!app) return;
   applyThemeAndMotion();
-  app.innerHTML = APP_HTML;
+  app.innerHTML = getAppHtml();
   applyTranslations();
 
-  const COLLAPSED_STORAGE_PREFIX = 'stellar-miner-collapsed-';
-  const COLLAPSIBLE_SECTION_IDS = [
-    'quest-section', 'crew-section', 'planets-section',
-    'prestige-section', 'research-section', 'upgrades-section', 'statistics-section',
-  ];
-
+  // --- Collapsible sections ---
   function initCollapsedState(): void {
     COLLAPSIBLE_SECTION_IDS.forEach((id) => {
       const section = document.getElementById(id);
@@ -650,12 +266,14 @@ export function mount(): void {
   initCollapsedState();
   app.addEventListener('click', onCollapseToggle);
 
+  // --- Mine zone canvas ---
   const settings = getSettings();
   const mineZoneVisual = document.getElementById('mine-zone-visual');
   if (mineZoneVisual) {
     setMineZoneCanvasApi(createMineZoneCanvas(mineZoneVisual, getSettings, getEventContext));
   }
 
+  // --- Modals: info, section rules, events hint ---
   const settingsBtn = document.getElementById('settings-btn');
   const settingsOverlay = document.getElementById('settings-overlay');
   const settingsClose = document.getElementById('settings-close');
@@ -681,8 +299,6 @@ export function mount(): void {
     });
   }
 
-  const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
-  const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
   const eventsHintTrigger = document.getElementById('events-hint-trigger');
   const eventsHintOverlay = document.getElementById(EVENTS_HINT_OVERLAY_ID);
   const eventsHintClose = document.getElementById('events-hint-close');
@@ -742,6 +358,7 @@ export function mount(): void {
   if (settingsClose) settingsClose.addEventListener('click', closeSettings);
   subscribe('save_success', () => updateLastSavedIndicator());
 
+  // --- Settings form: inputs, export/import, reset, achievements ---
   const starfieldSpeedEl = document.getElementById('setting-starfield-speed') as HTMLSelectElement | null;
   const orbitLinesEl = document.getElementById('setting-orbit-lines') as HTMLInputElement | null;
   const clickParticlesEl = document.getElementById('setting-click-particles') as HTMLInputElement | null;
@@ -847,6 +464,7 @@ export function mount(): void {
   const resetBtn = document.getElementById('settings-reset-btn');
   if (resetBtn) resetBtn.addEventListener('click', openResetConfirmModal);
 
+  // --- Reset & prestige confirm modals ---
   const resetConfirmCancel = document.getElementById('reset-confirm-cancel');
   const resetConfirmReset = document.getElementById('reset-confirm-reset');
   const resetConfirmOverlay = document.getElementById('reset-confirm-overlay');
@@ -888,6 +506,7 @@ export function mount(): void {
 
   updateVersionAndChangelogUI();
 
+  // --- Mine zone click + Space key ---
   const mineZone = document.getElementById('mine-zone');
   if (mineZone) {
     mineZone.addEventListener('click', (e: Event) => handleMineClick(e as MouseEvent));
@@ -914,6 +533,7 @@ export function mount(): void {
     document.getElementById('mine-zone')?.classList.remove('mine-zone--active');
   });
 
+  // --- Empire: expedition, planets, prestige, crew ---
   const expeditionArea = document.getElementById('expedition-area');
   if (expeditionArea) {
     expeditionArea.addEventListener('click', (e: Event) => {
@@ -942,6 +562,7 @@ export function mount(): void {
     });
   });
 
+  // --- Intro, progression, initial section renders ---
   bindIntroModal();
   updateProgressionVisibility();
   renderPrestigeSection();
@@ -951,6 +572,7 @@ export function mount(): void {
   const claimBtn = document.getElementById('quest-claim');
   if (claimBtn) claimBtn.addEventListener('click', handleClaimQuest);
 
+  // --- Debug panel ---
   if (!document.getElementById('debug-panel')) {
     const debugPanel = document.createElement('div');
     debugPanel.id = 'debug-panel';
@@ -1006,6 +628,7 @@ export function mount(): void {
   renderPlanetList();
   renderResearchSection();
 
+  // --- Upgrades list, housing, research list ---
   const empirePanel = document.getElementById('panel-empire');
   if (empirePanel) {
     empirePanel.addEventListener('click', (e) => {
@@ -1049,10 +672,9 @@ export function mount(): void {
   }
 
   const statisticsContainer = document.getElementById('statistics-container');
-  if (statisticsContainer) {
-    renderStatisticsSection(statisticsContainer);
-  }
+  if (statisticsContainer) renderStatisticsSection(statisticsContainer);
 
+  // --- Tabs, layout, offline, stats compact ---
   document.querySelectorAll('.app-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       const tabId = (tab as HTMLElement).getAttribute('data-tab');
@@ -1073,7 +695,7 @@ export function mount(): void {
   });
   const savedTab =
     (typeof localStorage !== 'undefined' && localStorage.getItem(TAB_STORAGE_KEY)) || DEFAULT_TAB;
-  const validTab = ['mine', 'empire', 'research', 'upgrades', 'stats'].includes(savedTab) ? savedTab : DEFAULT_TAB;
+  const validTab = VALID_TAB_IDS.includes(savedTab as (typeof VALID_TAB_IDS)[number]) ? savedTab : DEFAULT_TAB;
   switchTab(validTab);
   applyLayout();
 
@@ -1091,8 +713,6 @@ export function mount(): void {
 
   const statsSection = document.querySelector('.stats') as HTMLElement | null;
   const statsSpacer = document.getElementById('stats-spacer');
-  const STATS_COMPACT_ENTER = 70;
-  const STATS_COMPACT_LEAVE = 35;
   let statsCompactRaf: number | null = null;
   function updateStatsCompact(): void {
     if (!statsSection) return;
