@@ -42,6 +42,7 @@ import {
   MILESTONES_STORAGE_KEY,
   TOTAL_CLICKS_KEY,
   ACHIEVEMENTS_KEY,
+  COMBO_MASTER_KEY,
 } from './catalogs.js';
 import { generateQuest } from './quests.js';
 import { getQuestProgress } from './quests.js';
@@ -163,7 +164,15 @@ export function handleBuyNewPlanet(): void {
   if (!session) return;
   const player = session.player;
   if (!planetService.canBuyNewPlanet(player)) return;
+  const wasFirstPlanet = player.planets.length === 1;
   planetService.buyNewPlanet(player);
+  if (wasFirstPlanet && typeof localStorage !== 'undefined') {
+    const key = 'stellar-miner-first-planet-toast';
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      showMiniMilestoneToast('First new planet!');
+    }
+  }
   saveSession();
   updateStats();
   renderUpgradeList();
@@ -188,6 +197,13 @@ export function handleHireAstronaut(): void {
   const player = session.player;
   const cost = getAstronautCost(player.astronautCount);
   if (!player.hireAstronaut(cost)) return;
+  if (player.astronautCount === 1 && typeof localStorage !== 'undefined') {
+    const key = 'stellar-miner-first-astronaut-toast';
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      showMiniMilestoneToast('First astronaut!');
+    }
+  }
   saveSession();
   updateStats();
   renderUpgradeList();
@@ -216,6 +232,9 @@ export function handleMineClick(e?: MouseEvent): void {
     comboCount >= COMBO_MIN_CLICKS
       ? Math.min(COMBO_MAX_MULT, 1 + (comboCount - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL)
       : 1;
+  if (comboMult >= COMBO_MAX_MULT && typeof localStorage !== 'undefined') {
+    localStorage.setItem(COMBO_MASTER_KEY, '1');
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   if (typeof localStorage !== 'undefined') {
@@ -302,6 +321,13 @@ export function confirmPrestige(): void {
   saveSession();
   setSessionClickCount(0);
   setSessionCoinsFromClicks(0);
+  if (newPlayer.prestigeLevel === 1 && typeof localStorage !== 'undefined') {
+    const key = 'stellar-miner-first-prestige-toast';
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      showMiniMilestoneToast('First prestige!');
+    }
+  }
   if ([2, 5, 10, 20].includes(newPlayer.prestigeLevel)) showPrestigeMilestoneToast(newPlayer.prestigeLevel);
   updateStats();
   renderUpgradeList();

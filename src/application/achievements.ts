@@ -1,4 +1,4 @@
-import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, QUEST_LAST_CLAIM_KEY } from './catalogs.js';
+import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, QUEST_LAST_CLAIM_KEY, COMBO_MASTER_KEY } from './catalogs.js';
 import { getSession } from './gameState.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { getQuestStreak } from './quests.js';
@@ -23,6 +23,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'prestige-10', name: 'Legend', check: () => (getSession()?.player.prestigeLevel ?? 0) >= 10 },
   { id: 'coins-1m', name: 'Millionaire', check: () => (getSession()?.player.totalCoinsEver ?? 0) >= 1_000_000 },
   { id: 'planets-10', name: 'Empire', check: () => (getSession()?.player.planets.length ?? 0) >= 10 },
+  { id: 'clicks-50k', name: 'Relentless', check: () => getTotalClicksEver() >= 50000 },
+  { id: 'upgrades-25', name: 'Factory', check: () => (getSession()?.player.upgrades.length ?? 0) >= 25 },
+  { id: 'combo-master', name: 'Combo master', check: () => typeof localStorage !== 'undefined' && localStorage.getItem(COMBO_MASTER_KEY) === '1' },
+  { id: 'first-slot', name: 'Expander', check: () => (getSession()?.player.planets.reduce((s, p) => s + p.maxUpgrades, 0) ?? 0) > 6 },
 ];
 
 export function getTotalClicksEver(): number {

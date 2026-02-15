@@ -58,6 +58,8 @@ export const EVENT_CATALOG: GameEvent[] = [
   new GameEvent('lucky-strike', 'Lucky Strike', new EventEffect(3, 15_000)),
   new GameEvent('asteroid-rush', 'Asteroid Rush', new EventEffect(1.8, 25_000)),
   new GameEvent('solar-wind', 'Solar Wind', new EventEffect(1.15, 90_000)),
+  new GameEvent('comet-tail', 'Comet Tail', new EventEffect(1.4, 40_000)),
+  new GameEvent('nebula-bloom', 'Nebula Bloom', new EventEffect(1.2, 75_000)),
 ];
 
 export const UPGRADE_GROUPS: { label: string; minTier: number; maxTier: number }[] = [
@@ -107,7 +109,8 @@ export const QUEST_STREAK_BONUS_PER_LEVEL = 0.15;
 export const QUEST_STREAK_MAX = 3;
 export const QUEST_LAST_CLAIM_KEY = 'stellar-miner-quest-last-claim';
 
-export const MILESTONES = [100, 500, 1000, 5000, 10000, 25000, 50000, 100000, 500000, 1000000];
+export const MILESTONES = [100, 500, 1000, 5000, 10000, 25000, 50000, 100000, 500000, 1000000, 2500000, 5000000];
+export const COMBO_MASTER_KEY = 'stellar-miner-combo-master';
 
 export const STATS_STORAGE_KEY = 'stellar-miner-stats';
 export const STATS_HISTORY_STORAGE_KEY = 'stellar-miner-stats-history';

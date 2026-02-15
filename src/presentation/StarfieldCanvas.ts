@@ -69,6 +69,8 @@ function getEventSpeedMult(ids: string[]): number {
   if (ids.includes('solar-flare')) mult *= 1.15;
   if (ids.includes('asteroid-rush')) mult *= 1.2;
   if (ids.includes('solar-wind')) mult *= 1.05;
+  if (ids.includes('comet-tail')) mult *= 1.25;
+  if (ids.includes('nebula-bloom')) mult *= 0.9;
   return mult;
 }
 
@@ -105,10 +107,18 @@ function getEventColors(ids: string[], baseAccent: string, baseDim: string): [st
     c0 = '#422006';
     c1 = '#b45309';
     c2 = '#f59e0b';
-  } else if (ids.includes('solar-wind')) {
+  } else   if (ids.includes('solar-wind')) {
     c0 = '#1e3a5f';
     c1 = '#0ea5e9';
     c2 = '#7dd3fc';
+  } else if (ids.includes('comet-tail')) {
+    c0 = '#1c1917';
+    c1 = '#a8a29e';
+    c2 = '#e7e5e4';
+  } else if (ids.includes('nebula-bloom')) {
+    c0 = '#4c1d95';
+    c1 = '#a78bfa';
+    c2 = '#e9d5ff';
   }
   return [c0, c1, c2];
 }

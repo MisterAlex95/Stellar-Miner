@@ -592,6 +592,8 @@ function getEventOverlayStyle(ids: string[]): string | null {
   if (id === 'lucky-strike') return 'rgba(254, 249, 195, 0.1)';
   if (id === 'asteroid-rush') return 'rgba(245, 158, 11, 0.12)';
   if (id === 'solar-wind') return 'rgba(14, 165, 233, 0.1)';
+  if (id === 'comet-tail') return 'rgba(231, 229, 228, 0.12)';
+  if (id === 'nebula-bloom') return 'rgba(167, 139, 250, 0.12)';
   return null;
 }
 
@@ -600,6 +602,7 @@ function getEventOverlayPulse(time: number, ids: string[]): number {
   if (ids.includes('solar-flare') || ids.includes('lucky-strike')) {
     return 0.7 + 0.3 * Math.sin(time * 3);
   }
+  if (ids.includes('nebula-bloom')) return 0.75 + 0.25 * Math.sin(time * 1.5);
   return 1;
 }
 
