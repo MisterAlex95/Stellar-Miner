@@ -1,3 +1,4 @@
+import Decimal from 'break_infinity.js';
 import { Player } from '../domain/entities/Player.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
@@ -19,7 +20,7 @@ let nextEventAt = 0;
 let gameStartTime = 0;
 let settings: Settings = loadSettings();
 let questState: QuestState = loadQuestState();
-let lastCoinsForBump = 0;
+let lastCoinsForBump: Decimal = new Decimal(0);
 let clickTimestamps: number[] = [];
 let sessionClickCount = 0;
 let sessionCoinsFromClicks = 0;
@@ -83,12 +84,12 @@ export function setQuestState(q: QuestState): void {
   questState = q;
 }
 
-export function getLastCoinsForBump(): number {
+export function getLastCoinsForBump(): Decimal {
   return lastCoinsForBump;
 }
 
-export function setLastCoinsForBump(n: number): void {
-  lastCoinsForBump = n;
+export function setLastCoinsForBump(n: number | Decimal): void {
+  lastCoinsForBump = n instanceof Decimal ? n : new Decimal(n);
 }
 
 export function getClickTimestamps(): number[] {

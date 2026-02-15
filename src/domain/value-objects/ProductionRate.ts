@@ -1,16 +1,34 @@
-/** Value object: coins per second production rate. Immutable. */
+import { Decimal, toDecimal, type DecimalSource } from '../bigNumber.js';
+
+/** Value object: coins per second production rate. Immutable. Supports unbounded values (Decimal). */
 export class ProductionRate {
-  constructor(public readonly value: number) {
-    if (value < 0 || !Number.isFinite(value)) {
+  public readonly value: Decimal;
+
+  constructor(source: DecimalSource) {
+    if (typeof source === 'number' && !Number.isFinite(source)) {
       throw new Error('ProductionRate must be a non-negative finite number');
     }
+    const value = toDecimal(source);
+    if (value.lt(0)) {
+      throw new Error('ProductionRate must be a non-negative number');
+    }
+    this.value = value;
   }
 
-  add(rate: number): ProductionRate {
-    return new ProductionRate(this.value + rate);
+  static from(source: DecimalSource): ProductionRate {
+    return new ProductionRate(source);
+  }
+
+  add(rate: DecimalSource): ProductionRate {
+    return new ProductionRate(this.value.add(rate));
   }
 
   applyMultiplier(multiplier: number): ProductionRate {
-    return new ProductionRate(this.value * multiplier);
+    return new ProductionRate(this.value.mul(multiplier));
+  }
+
+  toNumber(): number {
+    const n = this.value.toNumber();
+    return Number.isFinite(n) ? n : Number.MAX_VALUE;
   }
 }

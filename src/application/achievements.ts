@@ -1,3 +1,4 @@
+import Decimal from 'break_infinity.js';
 import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs.js';
 import { getSession } from './gameState.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
@@ -24,7 +25,7 @@ function buildCheck(def: AchievementDef): () => boolean {
     case 'planetsCount':
       return () => (session()?.player.planets.length ?? 0) >= value;
     case 'totalCoinsEver':
-      return () => (session()?.player.totalCoinsEver ?? 0) >= value;
+      return () => (session()?.player.totalCoinsEver ?? new Decimal(0)).gte(value);
     case 'questStreak':
       return () => getQuestStreak() >= value;
     case 'questClaimed':

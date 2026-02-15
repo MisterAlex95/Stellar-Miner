@@ -1,3 +1,4 @@
+import Decimal from 'break_infinity.js';
 import {
   getSession,
   getSettings,
@@ -28,13 +29,18 @@ export function updateCoinDisplay(dt: number): void {
   const settings = getSettings();
   const coinsEl = document.getElementById('coins-value');
   if (!coinsEl) return;
-  if (displayedCoins < 0) displayedCoins = target;
-  else {
-    const speed = 12;
-    displayedCoins += (target - displayedCoins) * Math.min(1, dt * speed);
-    if (Math.abs(displayedCoins - target) < 0.5) displayedCoins = target;
+  const targetNum = target.toNumber();
+  if (target.lte(Decimal.NUMBER_MAX_VALUE) && Number.isFinite(targetNum)) {
+    if (displayedCoins < 0) displayedCoins = targetNum;
+    else {
+      const speed = 12;
+      displayedCoins += (targetNum - displayedCoins) * Math.min(1, dt * speed);
+      if (Math.abs(displayedCoins - targetNum) < 0.5) displayedCoins = targetNum;
+    }
+    coinsEl.textContent = formatNumber(Math.floor(displayedCoins), settings.compactNumbers);
+  } else {
+    coinsEl.textContent = formatNumber(target, settings.compactNumbers);
   }
-  coinsEl.textContent = formatNumber(Math.floor(displayedCoins), settings.compactNumbers);
 }
 
 /** Call from game loop with dt to animate production rate toward target. */
@@ -43,25 +49,31 @@ export function updateProductionDisplay(dt: number): void {
   if (!session) return;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const target = session.player.effectiveProductionRate * eventMult * researchMult;
+  const target = session.player.effectiveProductionRate.mul(eventMult * researchMult);
   const settings = getSettings();
   const rateEl = document.getElementById('production-value');
   if (!rateEl) return;
-  if (displayedProduction < 0) displayedProduction = target;
-  else {
-    const speed = 10;
-    displayedProduction += (target - displayedProduction) * Math.min(1, dt * speed);
-    if (Math.abs(displayedProduction - target) < 0.05) displayedProduction = target;
+  const targetNum = target.toNumber();
+  if (target.lte(Decimal.NUMBER_MAX_VALUE) && Number.isFinite(targetNum)) {
+    if (displayedProduction < 0) displayedProduction = targetNum;
+    else {
+      const speed = 10;
+      displayedProduction += (targetNum - displayedProduction) * Math.min(1, dt * speed);
+      if (Math.abs(displayedProduction - targetNum) < 0.05) displayedProduction = targetNum;
+    }
+    rateEl.textContent = formatNumber(displayedProduction, settings.compactNumbers) + '/s';
+  } else {
+    rateEl.textContent = formatNumber(target, settings.compactNumbers) + '/s';
   }
-  rateEl.textContent = formatNumber(displayedProduction, settings.compactNumbers) + '/s';
 }
 
 export function syncCoinDisplay(): void {
   const session = getSession();
   if (!session) return;
-  displayedCoins = session.player.coins.value;
+  const target = session.player.coins.value;
+  displayedCoins = target.toNumber();
   const coinsEl = document.getElementById('coins-value');
-  if (coinsEl) coinsEl.textContent = formatNumber(Math.floor(displayedCoins), getSettings().compactNumbers);
+  if (coinsEl) coinsEl.textContent = formatNumber(target, getSettings().compactNumbers);
 }
 
 export function syncProductionDisplay(): void {
@@ -69,9 +81,10 @@ export function syncProductionDisplay(): void {
   if (!session) return;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  displayedProduction = session.player.effectiveProductionRate * eventMult * researchMult;
+  const target = session.player.effectiveProductionRate.mul(eventMult * researchMult);
+  displayedProduction = target.toNumber();
   const rateEl = document.getElementById('production-value');
-  if (rateEl) rateEl.textContent = formatNumber(displayedProduction, getSettings().compactNumbers) + '/s';
+  if (rateEl) rateEl.textContent = formatNumber(target, getSettings().compactNumbers) + '/s';
 }
 
 export function updateStats(): void {
@@ -81,7 +94,7 @@ export function updateStats(): void {
   const settings = getSettings();
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const effectiveRate = player.effectiveProductionRate * eventMult * researchMult;
+  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
   const coinsCard = document.getElementById('coins-stat-card');
   const crewLineEl = document.getElementById('crew-stat-line');
   if (crewLineEl) {
@@ -91,7 +104,7 @@ export function updateStats(): void {
     crewLineEl.style.display = total > 0 ? 'block' : 'none';
   }
   const lastCoinsForBump = getLastCoinsForBump();
-  if (coinsCard && player.coins.value > lastCoinsForBump) {
+  if (coinsCard && player.coins.value.gt(lastCoinsForBump)) {
     coinsCard.classList.add('stat-card--bump');
     setTimeout(() => coinsCard.classList.remove('stat-card--bump'), 400);
   }
@@ -99,8 +112,8 @@ export function updateStats(): void {
 
   const productionCard = document.getElementById('production-stat-card');
   const productionLive = document.getElementById('production-live');
-  if (productionCard) productionCard.classList.toggle('stat-card--live', effectiveRate > 0);
-  if (productionLive) productionLive.textContent = effectiveRate > 0 ? '●' : '';
+  if (productionCard) productionCard.classList.toggle('stat-card--live', effectiveRate.gt(0));
+  if (productionLive) productionLive.textContent = effectiveRate.gt(0) ? '●' : '';
   const breakdownEl = document.getElementById('production-breakdown');
   if (breakdownEl) {
     const base = player.productionRate.value;
@@ -108,7 +121,7 @@ export function updateStats(): void {
     const prestigeBonus = player.prestigeLevel > 0 ? player.prestigeLevel * 5 : 0;
     const crewBonus = player.astronautCount > 0 ? player.astronautCount * 2 : 0;
     const parts: string[] = [];
-    if (base > 0) parts.push(`${t('breakdownBase')} ${formatNumber(base, settings.compactNumbers)}/s`);
+    if (base.gt(0)) parts.push(`${t('breakdownBase')} ${formatNumber(base, settings.compactNumbers)}/s`);
     if (planetBonus > 0) parts.push(`+${planetBonus}% ${t('breakdownPlanets')}`);
     if (prestigeBonus > 0) parts.push(`+${prestigeBonus}% ${t('breakdownPrestige')}`);
     if (crewBonus > 0) parts.push(`+${crewBonus}% ${t('breakdownCrew')}`);
@@ -125,9 +138,10 @@ export function updateStats(): void {
   if (nextMilestoneEl) {
     const milestone = getNextMilestone(session);
     if (milestone) {
-      const remaining = Math.max(0, milestone.coinsNeeded - session.player.coins.value);
+      const remaining = new Decimal(milestone.coinsNeeded).sub(session.player.coins.value);
+      const remainingFormatted = remaining.lte(0) ? formatNumber(0, settings.compactNumbers) : formatNumber(remaining, settings.compactNumbers);
       const titleKey = ('progression' + milestone.block.id.charAt(0).toUpperCase() + milestone.block.id.slice(1) + 'Title') as StringKey;
-      nextMilestoneEl.textContent = tParam('nextMilestoneFormat', { remaining: formatNumber(remaining, settings.compactNumbers), title: t(titleKey) });
+      nextMilestoneEl.textContent = tParam('nextMilestoneFormat', { remaining: remainingFormatted, title: t(titleKey) });
       nextMilestoneEl.style.display = 'block';
     } else {
       nextMilestoneEl.textContent = '';

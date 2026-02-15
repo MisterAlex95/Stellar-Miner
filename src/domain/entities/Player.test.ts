@@ -11,29 +11,29 @@ describe('Player', () => {
   it('create returns new player with default state', () => {
     const p = Player.create('player-1');
     expect(p.id).toBe('player-1');
-    expect(p.coins.value).toBe(0);
-    expect(p.productionRate.value).toBe(0);
+    expect(p.coins.value.toNumber()).toBe(0);
+    expect(p.productionRate.value.toNumber()).toBe(0);
     expect(p.upgrades).toEqual([]);
     expect(p.planets).toHaveLength(1);
     expect(p.planets[0].name).toBe('Titan');
     expect(p.artifacts).toEqual([]);
     expect(p.prestigeLevel).toBe(0);
-    expect(p.totalCoinsEver).toBe(0);
+    expect(p.totalCoinsEver.toNumber()).toBe(0);
   });
 
   it('addCoins mutates coins', () => {
     const p = Player.create('player-1');
     p.addCoins(50);
-    expect(p.coins.value).toBe(50);
+    expect(p.coins.value.toNumber()).toBe(50);
     p.addCoins(25);
-    expect(p.coins.value).toBe(75);
+    expect(p.coins.value.toNumber()).toBe(75);
   });
 
   it('spendCoins subtracts from coins', () => {
     const p = Player.create('player-1');
     p.addCoins(100);
     p.spendCoins(30);
-    expect(p.coins.value).toBe(70);
+    expect(p.coins.value.toNumber()).toBe(70);
   });
 
   it('spendCoins throws when insufficient', () => {
@@ -45,7 +45,7 @@ describe('Player', () => {
   it('setProductionRate updates rate', () => {
     const p = Player.create('player-1');
     p.setProductionRate(new ProductionRate(5));
-    expect(p.productionRate.value).toBe(5);
+    expect(p.productionRate.value.toNumber()).toBe(5);
   });
 
   it('addUpgrade on planet pushes upgrade to list', () => {
@@ -129,11 +129,11 @@ describe('Player', () => {
   it('effectiveProductionRate applies planet bonus for multiple planets', () => {
     const p = Player.create('p1');
     p.setProductionRate(new ProductionRate(100));
-    expect(p.effectiveProductionRate).toBe(100);
+    expect(p.effectiveProductionRate.toNumber()).toBe(100);
     p.addPlanet(Planet.create('planet-2', 'Nova Prime'));
-    expect(p.effectiveProductionRate).toBe(105);
+    expect(p.effectiveProductionRate.toNumber()).toBe(105);
     p.addPlanet(Planet.create('planet-3', 'Dust Haven'));
-    expect(p.effectiveProductionRate).toBeCloseTo(110, 10);
+    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(110, 10);
   });
 
   it('effectiveProductionRate applies prestige bonus', () => {
@@ -146,7 +146,7 @@ describe('Player', () => {
       2,
       0
     );
-    expect(p.effectiveProductionRate).toBe(100 * (1 + 2 * 0.05));
+    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(100 * (1 + 2 * 0.05), 10);
   });
 
   it('createAfterPrestige resets to one empty planet and increments prestige', () => {
@@ -155,12 +155,12 @@ describe('Player', () => {
     p.setProductionRate(new ProductionRate(10));
     p.planets[0].addUpgrade(new Upgrade('u', 'U', 1, new UpgradeEffect(1)));
     const after = Player.createAfterPrestige(p);
-    expect(after.coins.value).toBe(0);
-    expect(after.productionRate.value).toBe(0);
+    expect(after.coins.value.toNumber()).toBe(0);
+    expect(after.productionRate.value.toNumber()).toBe(0);
     expect(after.planets).toHaveLength(1);
     expect(after.planets[0].upgrades).toHaveLength(0);
     expect(after.prestigeLevel).toBe(1);
-    expect(after.totalCoinsEver).toBe(p.totalCoinsEver);
+    expect(after.totalCoinsEver.eq(p.totalCoinsEver)).toBe(true);
   });
 
   it('effectiveProductionRate applies crew (astronaut) bonus', () => {
@@ -174,7 +174,7 @@ describe('Player', () => {
       0,
       10
     );
-    expect(p.effectiveProductionRate).toBe(100 * (1 + 10 * 0.02));
+    expect(p.effectiveProductionRate.toNumber()).toBe(100 * (1 + 10 * 0.02));
   });
 
   it('hireAstronaut returns false when not enough coins', () => {
@@ -182,7 +182,7 @@ describe('Player', () => {
     p.addCoins(50);
     const ok = p.hireAstronaut(100);
     expect(ok).toBe(false);
-    expect(p.coins.value).toBe(50);
+    expect(p.coins.value.toNumber()).toBe(50);
     expect(p.astronautCount).toBe(0);
   });
 
@@ -191,7 +191,7 @@ describe('Player', () => {
     p.addCoins(200);
     const ok = p.hireAstronaut(100);
     expect(ok).toBe(true);
-    expect(p.coins.value).toBe(100);
+    expect(p.coins.value.toNumber()).toBe(100);
     expect(p.astronautCount).toBe(1);
     p.hireAstronaut(50);
     expect(p.astronautCount).toBe(2);

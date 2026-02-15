@@ -3,12 +3,12 @@ import { Coins } from './Coins.js';
 
 describe('Coins', () => {
   it('creates with non-negative finite value', () => {
-    expect(new Coins(0).value).toBe(0);
-    expect(new Coins(100).value).toBe(100);
+    expect(new Coins(0).value.toNumber()).toBe(0);
+    expect(new Coins(100).value.toNumber()).toBe(100);
   });
 
   it('throws when value is negative', () => {
-    expect(() => new Coins(-1)).toThrow('Coins must be a non-negative finite number');
+    expect(() => new Coins(-1)).toThrow('Coins must be a non-negative number');
   });
 
   it('throws when value is not finite', () => {
@@ -19,21 +19,21 @@ describe('Coins', () => {
   it('add returns new Coins with sum', () => {
     const a = new Coins(10);
     const b = a.add(5);
-    expect(a.value).toBe(10);
-    expect(b.value).toBe(15);
+    expect(a.value.toNumber()).toBe(10);
+    expect(b.value.toNumber()).toBe(15);
   });
 
   it('subtract returns new Coins with difference', () => {
     const a = new Coins(20);
     const b = a.subtract(7);
-    expect(a.value).toBe(20);
-    expect(b.value).toBe(13);
+    expect(a.value.toNumber()).toBe(20);
+    expect(b.value.toNumber()).toBe(13);
   });
 
   it('subtract clamps to zero when result is small positive', () => {
     const a = new Coins(1);
     const b = a.subtract(1);
-    expect(b.value).toBe(0);
+    expect(b.value.toNumber()).toBe(0);
   });
 
   it('subtract throws when result would be negative beyond epsilon', () => {
@@ -58,5 +58,12 @@ describe('Coins', () => {
   it('gte handles floating point with epsilon', () => {
     const a = new Coins(49.999999);
     expect(a.gte(50)).toBe(true);
+  });
+
+  it('toNumber returns capped value when beyond Number range', () => {
+    const huge = new Coins('1e400');
+    const n = huge.toNumber();
+    expect(Number.isFinite(n)).toBe(true);
+    expect(n).toBe(Number.MAX_VALUE);
   });
 });

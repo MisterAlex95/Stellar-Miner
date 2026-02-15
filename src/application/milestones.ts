@@ -1,3 +1,4 @@
+import { toDecimal } from '../domain/bigNumber.js';
 import { MILESTONES_STORAGE_KEY, MILESTONES } from './catalogs.js';
 import { getSession } from './gameState.js';
 import { showMilestoneToast } from '../presentation/toasts.js';
@@ -24,10 +25,10 @@ export function markMilestoneReached(value: number): void {
 export function checkAndShowMilestones(): void {
   const session = getSession();
   if (!session) return;
-  const total = session.player.totalCoinsEver;
+  const total = toDecimal(session.player.totalCoinsEver);
   const reached = getReachedMilestones();
   for (const m of MILESTONES) {
-    if (total >= m && !reached.includes(m)) {
+    if (total.gte(m) && !reached.includes(m)) {
       markMilestoneReached(m);
       showMilestoneToast(m);
       break;

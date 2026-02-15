@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import Decimal from 'break_infinity.js';
 import { getReachedMilestones, markMilestoneReached, checkAndShowMilestones } from './milestones.js';
 import { setSession } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
@@ -53,7 +54,7 @@ describe('milestones', () => {
 
   it('checkAndShowMilestones marks and shows when threshold reached', () => {
     const player = Player.create('p1');
-    (player as { totalCoinsEver: number }).totalCoinsEver = 100;
+    (player as { totalCoinsEver: Decimal }).totalCoinsEver = new Decimal(100);
     setSession(new GameSession('s1', player));
     checkAndShowMilestones();
     expect(getReachedMilestones()).toContain(100);

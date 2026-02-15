@@ -66,14 +66,20 @@ function gameLoop(now: number): void {
 
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const rate = session.player.effectiveProductionRate * eventMult * researchMult;
+  const rateDec = session.player.effectiveProductionRate.mul(eventMult * researchMult);
   const shouldProduce = !getSettings().pauseWhenBackground || document.visibilityState !== 'hidden';
-  if (rate > 0 && shouldProduce) {
-    session.player.addCoins(rate * dt);
+  if (rateDec.gt(0) && shouldProduce) {
+    session.player.addCoins(rateDec.mul(dt));
     updateStats();
     updateUpgradeListInPlace();
   }
-  recordStatsIfDue(nowMs, session.player.coins.value, rate, session.player.totalCoinsEver);
+  const rateNum = rateDec.toNumber();
+  recordStatsIfDue(
+    nowMs,
+    session.player.coins.value.toNumber(),
+    Number.isFinite(rateNum) ? rateNum : 0,
+    session.player.totalCoinsEver.toNumber()
+  );
   updateCoinDisplay(dt);
   updateProductionDisplay(dt);
   if (nowMs - lastQuestRenderMs >= QUEST_RENDER_INTERVAL_MS) {

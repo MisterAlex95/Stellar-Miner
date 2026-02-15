@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import Decimal from 'break_infinity.js';
 import { formatNumber } from './format.js';
 
 describe('format', () => {
@@ -10,8 +11,27 @@ describe('format', () => {
     expect(formatNumber(1_000_000_000)).toBe('1.0B');
   });
 
+  it('formats Decimal in compact mode with suffixes', () => {
+    expect(formatNumber(new Decimal(1e12))).toBe('1.0T');
+    expect(formatNumber(new Decimal(2.5e15))).toBe('2.5Qa');
+  });
+
+  it('formats very large numbers (suffix or scientific fallback)', () => {
+    const d308 = new Decimal('1e308');
+    expect(formatNumber(d308).length).toBeGreaterThan(0);
+    expect(formatNumber(d308)).toBeDefined();
+    const d400 = new Decimal('1e400');
+    expect(formatNumber(d400)).toBeDefined();
+    expect(formatNumber(d400).length).toBeGreaterThan(0);
+  });
+
   it('formatNumber with compact false uses toLocaleString', () => {
     expect(formatNumber(1234, false)).toBe('1,234');
     expect(formatNumber(0, false)).toBe('0');
+  });
+
+  it('formatNumber compact false with huge Decimal uses toString', () => {
+    const huge = new Decimal('1e400');
+    expect(formatNumber(huge, false)).toBe(huge.toString());
   });
 });

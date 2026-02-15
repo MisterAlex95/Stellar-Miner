@@ -78,7 +78,7 @@ export function getUnlockedBlocks(session: GameSession | null): Set<BlockId> {
   let changed = false;
   for (const block of PROGRESSION_BLOCKS) {
     if (block.id === 'welcome') continue;
-    if (coins >= block.coinsThreshold) {
+    if (coins.gte(block.coinsThreshold)) {
       unlocked.add(block.id);
       if (!permanent.has(block.id)) {
         data.unlockedBlocks.push(block.id);
@@ -92,7 +92,7 @@ export function getUnlockedBlocks(session: GameSession | null): Set<BlockId> {
 
 /** Should we show the welcome modal? Only on first run (no save = no seen modals, and we show welcome once). */
 export function shouldShowWelcome(seen: Set<BlockId>, session: GameSession | null): boolean {
-  if (!session || session.player.coins.value > 0) return false;
+  if (!session || session.player.coins.value.gt(0)) return false;
   return !seen.has('welcome');
 }
 

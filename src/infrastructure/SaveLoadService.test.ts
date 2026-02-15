@@ -40,8 +40,8 @@ describe('SaveLoadService', () => {
     const data = JSON.parse(raw);
     expect(data.id).toBe('session-1');
     expect(data.player.id).toBe('p1');
-    expect(data.player.coins).toBe(100);
-    expect(data.player.productionRate).toBe(0);
+    expect(data.player.coins).toBe('100');
+    expect(data.player.productionRate).toBe('0');
   });
 
   it('load returns null when nothing stored', async () => {
@@ -85,8 +85,8 @@ describe('SaveLoadService', () => {
     expect(loaded).not.toBeNull();
     expect(loaded!.id).toBe('session-1');
     expect(loaded!.player.id).toBe('p1');
-    expect(loaded!.player.coins.value).toBe(500);
-    expect(loaded!.player.productionRate.value).toBe(5);
+    expect(loaded!.player.coins.value.toNumber()).toBe(500);
+    expect(loaded!.player.productionRate.value.toNumber()).toBe(5);
     expect(loaded!.player.upgrades).toHaveLength(1);
     expect(loaded!.player.upgrades[0].id).toBe('drill');
     expect(loaded!.player.planets).toHaveLength(1);
@@ -160,8 +160,8 @@ describe('SaveLoadService', () => {
     expect(loaded!.player.planets[0].id).toBe('planet-1');
     expect(loaded!.player.planets[0].upgrades).toHaveLength(1);
     expect(loaded!.player.planets[0].upgrades[0].id).toBe('drill');
-    expect(loaded!.player.coins.value).toBe(100);
-    expect(loaded!.player.productionRate.value).toBe(5);
+    expect(loaded!.player.coins.value.toNumber()).toBe(100);
+    expect(loaded!.player.productionRate.value.toNumber()).toBe(5);
   });
 
   it('load migrates legacy save with no upgrades key (empty array fallback)', async () => {
@@ -223,9 +223,9 @@ describe('SaveLoadService', () => {
     vi.useRealTimers();
 
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.coins.value).toBeGreaterThan(0);
+    expect(loaded!.player.coins.value.toNumber()).toBeGreaterThan(0);
     const reported = service.getLastOfflineCoins();
-    expect(reported).toBe(loaded!.player.coins.value);
+    expect(reported).toBe(loaded!.player.coins.value.toNumber());
   });
 
   it('exportSession returns JSON string', async () => {
@@ -237,7 +237,7 @@ describe('SaveLoadService', () => {
     expect(typeof json).toBe('string');
     const data = JSON.parse(json);
     expect(data.version).toBe(1);
-    expect(data.player.coins).toBe(100);
+    expect(data.player.coins).toBe('100');
   });
 
   it('importSession returns null for invalid JSON', () => {
@@ -254,7 +254,7 @@ describe('SaveLoadService', () => {
     const json = service.exportSession(session);
     const loaded = service.importSession(json);
     expect(loaded).not.toBeNull();
-    expect(loaded!.player.coins.value).toBe(200);
+    expect(loaded!.player.coins.value.toNumber()).toBe(200);
   });
 
   it('validateSavePayload returns true for valid JSON', async () => {

@@ -14,10 +14,10 @@ describe('UpgradeService', () => {
 
     const event = service.purchaseUpgrade(player, upgrade);
 
-    expect(player.coins.value).toBe(0);
+    expect(player.coins.value.toNumber()).toBe(0);
     expect(player.upgrades).toHaveLength(1);
     expect(player.upgrades[0].id).toBe('drill');
-    expect(player.productionRate.value).toBe(5);
+    expect(player.productionRate.value.toNumber()).toBe(5);
     expect(event).toEqual({
       type: 'UpgradePurchased',
       playerId: 'p1',
@@ -34,9 +34,9 @@ describe('UpgradeService', () => {
     const event = service.purchaseUpgrade(player, upgrade);
 
     expect(event).toBeNull();
-    expect(player.coins.value).toBe(50);
+    expect(player.coins.value.toNumber()).toBe(50);
     expect(player.upgrades).toHaveLength(0);
-    expect(player.productionRate.value).toBe(0);
+    expect(player.productionRate.value.toNumber()).toBe(0);
   });
 
   it('purchaseUpgrade stacks production when buying same upgrade twice', () => {
@@ -48,9 +48,9 @@ describe('UpgradeService', () => {
     service.purchaseUpgrade(player, upgrade);
     service.purchaseUpgrade(player, upgrade);
 
-    expect(player.coins.value).toBe(0);
+    expect(player.coins.value.toNumber()).toBe(0);
     expect(player.upgrades).toHaveLength(2);
-    expect(player.productionRate.value).toBe(10);
+    expect(player.productionRate.value.toNumber()).toBe(10);
   });
 
   it('purchaseUpgrade returns null when no planet has free slot', () => {
@@ -66,7 +66,7 @@ describe('UpgradeService', () => {
     const event = service.purchaseUpgrade(player, upgrade);
 
     expect(event).toBeNull();
-    expect(player.coins.value).toBe(200);
+    expect(player.coins.value.toNumber()).toBe(200);
     expect(player.upgrades).toHaveLength(slots);
   });
 
@@ -99,7 +99,7 @@ describe('UpgradeService', () => {
     const event = service.purchaseUpgrade(player, upgrade, fullPlanet);
 
     expect(event).toBeNull();
-    expect(player.coins.value).toBe(200);
+    expect(player.coins.value.toNumber()).toBe(200);
   });
 
   it('purchaseUpgrade with targetPlanet not in player.planets returns null', () => {
@@ -112,7 +112,7 @@ describe('UpgradeService', () => {
     const event = service.purchaseUpgrade(player, upgrade, otherPlanet);
 
     expect(event).toBeNull();
-    expect(player.coins.value).toBe(200);
+    expect(player.coins.value.toNumber()).toBe(200);
     expect(player.upgrades).toHaveLength(0);
   });
 });

@@ -90,7 +90,7 @@ describe('gameState', () => {
 
   it('getLastCoinsForBump / setLastCoinsForBump', () => {
     setLastCoinsForBump(500);
-    expect(getLastCoinsForBump()).toBe(500);
+    expect(getLastCoinsForBump().toNumber()).toBe(500);
   });
 
   it('getClickTimestamps / setClickTimestamps', () => {
@@ -138,6 +138,6 @@ describe('gameState', () => {
     });
     const session = await getOrCreateSession();
     expect(session.id).toBe('loaded-1');
-    expect(session.player.coins.value).toBe(200);
+    expect(session.player.coins.value.toNumber()).toBe(200);
   });
 });

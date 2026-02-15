@@ -78,8 +78,15 @@ export function getStatsHistory(range: ChartRange = 'recent'): HistoryPoint[] {
   return range === 'longTerm' ? longTermPoints : points;
 }
 
+const STATS_CAP = Number.MAX_VALUE;
+
 export function recordStatsIfDue(now: number, coins: number, production: number, totalCoinsEver: number): void {
-  const point: HistoryPoint = { t: now, coins, production, totalCoinsEver };
+  const point: HistoryPoint = {
+    t: now,
+    coins: Number.isFinite(coins) ? Math.min(coins, STATS_CAP) : 0,
+    production: Number.isFinite(production) ? Math.min(production, STATS_CAP) : 0,
+    totalCoinsEver: Number.isFinite(totalCoinsEver) ? Math.min(totalCoinsEver, STATS_CAP) : 0,
+  };
   let dirty = false;
   if (now - lastRecordAt >= STATS_HISTORY_INTERVAL_MS) {
     lastRecordAt = now;

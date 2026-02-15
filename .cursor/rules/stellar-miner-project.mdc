@@ -11,4 +11,5 @@ alwaysApply: true
 - **Key entry points**: Game bootstrap in `src/game.ts`; UI mount in `src/presentation/mount.ts`; handlers in `src/application/handlers.ts`. State in `gameState.ts`; persistence in `SaveLoadService`; i18n via `t(key)` from `strings.ts`.
 - **Docs**: See `docs/ARCHITECTURE.md` for DDD and flows; `docs/IDEAS.md` for backlog. Keep README and ARCHITECTURE in sync when adding features.
 - **Tests**: Unit tests next to or in `*.test.ts`; E2E in `e2e/`. Run `yarn test`, `yarn test:e2e`.
+- **Typecheck**: After making code changes, always run `npm run typecheck` (or `yarn typecheck`) and fix any TypeScript errors before considering the task done.
 - **Version & changelog**: When adding features or shipping user-facing changes, always (1) bump `version` in `package.json` (e.g. 0.1.0 → 0.2.0 or patch 0.1.1), and (2) add a new entry at the top of `src/data/changelog.json` with `version`, `date` (e.g. "2025-02"), and `changes` (array of short strings). Newest entry first. The app reads version from package.json at build time and shows the changelog in the "What's new" modal.

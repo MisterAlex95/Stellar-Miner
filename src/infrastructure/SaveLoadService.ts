@@ -1,3 +1,4 @@
+import Decimal from 'break_infinity.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { Planet } from '../domain/entities/Planet.js';
@@ -31,13 +32,13 @@ export type SavedSession = {
   id: string;
   player: {
     id: string;
-    coins: number;
-    productionRate: number;
+    coins: number | string;
+    productionRate: number | string;
     planets?: SavedPlanet[];
     upgrades?: SavedUpgrade[];
     artifacts: Array<{ id: string; name: string; effect: unknown; isActive: boolean }>;
     prestigeLevel: number;
-    totalCoinsEver: number;
+    totalCoinsEver: number | string;
     astronautCount?: number;
   };
   activeEvents: Array<{ id: string; name: string; effect: { multiplier: number; durationMs: number } }>;
@@ -49,8 +50,11 @@ function isSavedSession(data: unknown): data is SavedSession {
   if (typeof o.id !== 'string') return false;
   if (!o.player || typeof o.player !== 'object') return false;
   const p = o.player as Record<string, unknown>;
-  if (typeof p.id !== 'string' || typeof p.coins !== 'number' || typeof p.productionRate !== 'number') return false;
-  if (!Array.isArray(p.artifacts) || typeof p.prestigeLevel !== 'number' || typeof p.totalCoinsEver !== 'number') return false;
+  if (typeof p.id !== 'string') return false;
+  if (typeof p.coins !== 'number' && typeof p.coins !== 'string') return false;
+  if (typeof p.productionRate !== 'number' && typeof p.productionRate !== 'string') return false;
+  if (!Array.isArray(p.artifacts) || typeof p.prestigeLevel !== 'number') return false;
+  if (typeof p.totalCoinsEver !== 'number' && typeof p.totalCoinsEver !== 'string') return false;
   if (!Array.isArray(o.activeEvents)) return false;
   return true;
 }
@@ -123,12 +127,13 @@ export class SaveLoadService implements ISaveLoadService {
     if (lastSaveRaw) {
       const lastSave = parseInt(lastSaveRaw, 10);
       const elapsed = Date.now() - lastSave;
-      if (elapsed >= MIN_OFFLINE_MS && session.player.productionRate.value > 0) {
+      if (elapsed >= MIN_OFFLINE_MS && session.player.productionRate.value.gt(0)) {
         const cappedMs = Math.min(elapsed, MAX_OFFLINE_MS);
         const researchMult = getResearchProductionMultiplier();
-        const offlineCoins = (cappedMs / 1000) * session.player.effectiveProductionRate * researchMult;
+        const offlineCoins = session.player.effectiveProductionRate.mul(cappedMs / 1000).mul(researchMult);
         session.player.addCoins(offlineCoins);
-        this.lastOfflineCoinsApplied = offlineCoins;
+        const n = offlineCoins.toNumber();
+        this.lastOfflineCoinsApplied = Number.isFinite(n) ? n : Number.MAX_VALUE;
         this.lastOfflineWasCapped = elapsed > MAX_OFFLINE_MS;
       }
     }
@@ -178,8 +183,8 @@ export class SaveLoadService implements ISaveLoadService {
       id: session.id,
       player: {
         id: session.player.id,
-        coins: session.player.coins.value,
-        productionRate: session.player.productionRate.value,
+        coins: session.player.coins.value.toString(),
+        productionRate: session.player.productionRate.value.toString(),
         planets: session.player.planets.map((p) => ({
           id: p.id,
           name: p.name,
@@ -199,7 +204,7 @@ export class SaveLoadService implements ISaveLoadService {
           isActive: a.isActive,
         })),
         prestigeLevel: session.player.prestigeLevel,
-        totalCoinsEver: session.player.totalCoinsEver,
+        totalCoinsEver: session.player.totalCoinsEver.toString(),
         astronautCount: session.player.astronautCount,
       },
       activeEvents: session.activeEvents.map((e) => ({
@@ -240,12 +245,12 @@ export class SaveLoadService implements ISaveLoadService {
     );
     const player = new Player(
       data.player.id,
-      new Coins(data.player.coins),
-      new ProductionRate(data.player.productionRate),
+      Coins.from(data.player.coins),
+      ProductionRate.from(data.player.productionRate),
       planets,
       artifacts,
       data.player.prestigeLevel,
-      data.player.totalCoinsEver,
+      new Decimal(data.player.totalCoinsEver),
       data.player.astronautCount ?? 0
     );
     const activeEvents = data.activeEvents.map(

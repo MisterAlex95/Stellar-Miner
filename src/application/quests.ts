@@ -1,3 +1,4 @@
+import Decimal from 'break_infinity.js';
 import type { QuestState, Quest } from './questState.js';
 import { saveQuestState } from './questState.js';
 import {
@@ -68,18 +69,19 @@ export function generateQuest(): Quest {
   };
 }
 
-export function getQuestProgress(): { current: number; target: number; done: boolean } | null {
+export function getQuestProgress(): { current: number | Decimal; target: number; done: boolean } | null {
   const session = getSession();
   const questState = getQuestState();
   if (!session || !questState.quest) return null;
   const q = questState.quest;
-  let current = 0;
+  let current: number | Decimal = 0;
   if (q.type === 'coins') current = session.player.coins.value;
-  else if (q.type === 'production') current = session.player.effectiveProductionRate * getResearchProductionMultiplier();
+  else if (q.type === 'production') current = session.player.effectiveProductionRate.mul(getResearchProductionMultiplier());
   else if (q.type === 'upgrade' && q.targetId)
     current = session.player.upgrades.filter((u) => u.id === q.targetId).length;
   else if (q.type === 'astronauts') current = session.player.astronautCount + getAssignedAstronauts(session);
-  return { current, target: q.target, done: current >= q.target };
+  const done = typeof current === 'number' ? current >= q.target : current.gte(q.target);
+  return { current, target: q.target, done };
 }
 
 export function getQuestStreak(): number {

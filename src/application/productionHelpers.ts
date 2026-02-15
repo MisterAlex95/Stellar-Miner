@@ -11,8 +11,10 @@ export function getPlanetEffectiveProduction(
 ): number {
   if (!session) return 0;
   const totalBase = session.player.productionRate.value;
-  if (totalBase <= 0) return 0;
+  if (totalBase.lte(0)) return 0;
+  const totalBaseNum = totalBase.toNumber();
   const planetBase = getPlanetBaseProduction(planet);
+  const ratio = Number.isFinite(totalBaseNum) && totalBaseNum > 0 ? planetBase / totalBaseNum : 0;
   const researchMult = getResearchProductionMultiplier();
-  return (planetBase / totalBase) * session.player.effectiveProductionRate * researchMult;
+  return session.player.effectiveProductionRate.mul(ratio).mul(researchMult).toNumber();
 }

@@ -1,3 +1,4 @@
+import { Decimal, toDecimal, type DecimalSource } from '../bigNumber.js';
 import { Coins } from '../value-objects/Coins.js';
 import { ProductionRate } from '../value-objects/ProductionRate.js';
 import type { Upgrade } from './Upgrade.js';
@@ -10,6 +11,8 @@ export class Player {
   /** Mutable array of planets. Each planet has upgrade slots (expandable) and contributes to production bonus. */
   public readonly planets: Planet[];
 
+  public readonly totalCoinsEver: Decimal;
+
   constructor(
     public readonly id: string,
     public coins: Coins,
@@ -17,10 +20,11 @@ export class Player {
     planets: Planet[],
     public readonly artifacts: Artifact[],
     public readonly prestigeLevel: number,
-    public readonly totalCoinsEver: number,
+    totalCoinsEver: DecimalSource,
     public readonly astronautCount: number = 0
   ) {
     this.planets = planets ? [...planets] : [];
+    this.totalCoinsEver = toDecimal(totalCoinsEver);
   }
 
   /** All upgrades across all planets (for backward compatibility and UI totals). */
@@ -28,12 +32,13 @@ export class Player {
     return this.planets.flatMap((p) => p.upgrades);
   }
 
-  addCoins(amount: number): void {
-    this.coins = this.coins.add(amount);
-    (this as { totalCoinsEver: number }).totalCoinsEver += amount;
+  addCoins(amount: DecimalSource): void {
+    const a = toDecimal(amount);
+    this.coins = this.coins.add(a);
+    (this as { totalCoinsEver: Decimal }).totalCoinsEver = this.totalCoinsEver.add(a);
   }
 
-  spendCoins(amount: number): void {
+  spendCoins(amount: DecimalSource): void {
     this.coins = this.coins.subtract(amount);
   }
 
@@ -56,15 +61,15 @@ export class Player {
   }
 
   /** Production rate from upgrades × planet bonus × prestige × crew (astronauts +2% each). */
-  get effectiveProductionRate(): number {
+  get effectiveProductionRate(): Decimal {
     const planetBonus = 1 + (this.planets.length - 1) * PLANET_PRODUCTION_BONUS;
     const prestigeBonus = 1 + this.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL;
     const crewBonus = 1 + this.astronautCount * ASTRONAUT_PRODUCTION_BONUS;
-    return this.productionRate.value * planetBonus * prestigeBonus * crewBonus;
+    return this.productionRate.value.mul(planetBonus * prestigeBonus * crewBonus);
   }
 
   /** Hire one astronaut if the player can afford the cost. Returns true if hired. */
-  hireAstronaut(cost: number): boolean {
+  hireAstronaut(cost: DecimalSource): boolean {
     if (!this.coins.gte(cost)) return false;
     this.spendCoins(cost);
     (this as { astronautCount: number }).astronautCount++;
@@ -89,8 +94,8 @@ export class Player {
   static createAfterPrestige(oldPlayer: Player): Player {
     return new Player(
       oldPlayer.id,
-      new Coins(0),
-      new ProductionRate(0),
+      Coins.from(0),
+      ProductionRate.from(0),
       [Planet.create('planet-1', getPlanetName(0))],
       [],
       oldPlayer.prestigeLevel + 1,
@@ -101,15 +106,6 @@ export class Player {
 
   static create(id: string): Player {
     const firstPlanet = Planet.create('planet-1', getPlanetName(0));
-    return new Player(
-      id,
-      new Coins(0),
-      new ProductionRate(0),
-      [firstPlanet],
-      [],
-      0,
-      0,
-      0
-    );
+    return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, 0);
   }
 }

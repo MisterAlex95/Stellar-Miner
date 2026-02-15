@@ -599,16 +599,17 @@ export function updateDebugPanel(): void {
   const player = session.player;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const effectiveRate = player.effectiveProductionRate * eventMult * researchMult;
+  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
   const now = Date.now();
   const nextEventAt = getNextEventAt();
   const nextEventIn = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
   const activeCount = getActiveEventInstances().filter((a) => a.endsAt > now).length;
 
+  const rateNum = effectiveRate.toNumber();
   statsEl.innerHTML = `
-    <div class="debug-row"><span>${t('debugCoinsRaw')}</span><span>${player.coins.value.toLocaleString()}</span></div>
-    <div class="debug-row"><span>${t('debugProductionBase')}</span><span>${player.productionRate.value}/s</span></div>
-    <div class="debug-row"><span>${t('debugProductionEffective')}</span><span>${effectiveRate.toFixed(1)}/s</span></div>
+    <div class="debug-row"><span>${t('debugCoinsRaw')}</span><span>${player.coins.value.toString()}</span></div>
+    <div class="debug-row"><span>${t('debugProductionBase')}</span><span>${player.productionRate.value.toString()}/s</span></div>
+    <div class="debug-row"><span>${t('debugProductionEffective')}</span><span>${Number.isFinite(rateNum) ? rateNum.toFixed(1) : effectiveRate.toString()}/s</span></div>
     <div class="debug-row"><span>${t('debugEventMult')}</span><span>×${eventMult.toFixed(2)}</span></div>
     <div class="debug-row"><span>${t('debugPrestigeLevel')}</span><span>${player.prestigeLevel}</span></div>
     <div class="debug-row"><span>${t('debugPlanets')}</span><span>${player.planets.length}</span></div>

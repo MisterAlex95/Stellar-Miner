@@ -56,7 +56,7 @@ describe('PlanetService', () => {
     expect(outcome.success).toBe(true);
     expect(outcome.survivors).toBe(required);
     expect(outcome.deaths).toBe(0);
-    expect(player.coins.value).toBe(0);
+    expect(player.coins.value.toNumber()).toBe(0);
     expect(player.planets).toHaveLength(2);
     expect(player.planets[1].name).toBe('Nova Prime');
     expect(player.astronautCount).toBe(required);
@@ -128,7 +128,7 @@ describe('PlanetService', () => {
     const ok = service.addSlot(player, planet);
     expect(ok).toBe(true);
     expect(planet.maxUpgrades).toBe(7);
-    expect(player.coins.value).toBe(0);
+    expect(player.coins.value.toNumber()).toBe(0);
   });
 
   it('addSlot returns false when cannot afford', () => {
@@ -166,7 +166,7 @@ describe('PlanetService', () => {
     const ok = service.buildHousing(player, planet);
     expect(ok).toBe(true);
     expect(planet.housingCount).toBe(1);
-    expect(player.coins.value).toBe(0);
+    expect(player.coins.value.toNumber()).toBe(0);
   });
 
   it('buildHousing returns false when cannot afford', () => {

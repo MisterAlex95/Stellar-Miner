@@ -1,24 +1,42 @@
-/** Value object: in-game currency. Immutable. */
+import { Decimal, toDecimal, type DecimalSource } from '../bigNumber.js';
+
+/** Value object: in-game currency. Immutable. Supports unbounded values (Decimal). */
 export class Coins {
-  constructor(public readonly value: number) {
-    if (value < 0 || !Number.isFinite(value)) {
+  public readonly value: Decimal;
+
+  constructor(source: DecimalSource) {
+    if (typeof source === 'number' && !Number.isFinite(source)) {
       throw new Error('Coins must be a non-negative finite number');
     }
+    const value = toDecimal(source);
+    if (value.lt(0)) {
+      throw new Error('Coins must be a non-negative number');
+    }
+    this.value = value;
   }
 
-  add(amount: number): Coins {
-    return new Coins(this.value + amount);
+  static from(source: DecimalSource): Coins {
+    return new Coins(source);
   }
 
-  subtract(amount: number): Coins {
-    const next = this.value - amount;
-    if (next < -1e-6) throw new Error('Insufficient coins');
-    return new Coins(Math.max(0, next));
+  add(amount: DecimalSource): Coins {
+    return new Coins(this.value.add(amount));
   }
 
-  /** Use small epsilon to avoid floating-point errors (e.g. 49.999999 < 50). */
-  gte(other: Coins | number): boolean {
-    const v = typeof other === 'number' ? other : other.value;
-    return this.value >= v - 1e-6;
+  subtract(amount: DecimalSource): Coins {
+    const next = this.value.sub(amount);
+    if (next.lt(-1e-6)) throw new Error('Insufficient coins');
+    return new Coins(next.lt(0) ? new Decimal(0) : next);
+  }
+
+  gte(other: Coins | DecimalSource): boolean {
+    const v = other instanceof Coins ? other.value : toDecimal(other);
+    return this.value.gte(v.minus(1e-6));
+  }
+
+  /** Safe number for display animation (capped so lerp works). */
+  toNumber(): number {
+    const n = this.value.toNumber();
+    return Number.isFinite(n) ? n : Number.MAX_VALUE;
   }
 }

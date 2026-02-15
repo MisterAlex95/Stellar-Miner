@@ -511,7 +511,7 @@ export function updateStatisticsSection(): void {
   const now = Date.now();
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const effectiveRate = player.effectiveProductionRate * eventMult * researchMult;
+  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
   const playTime = getPlayTimeStats();
   const sessionStart = getGameStartTime();
   const sessionDurationMs = now - sessionStart;

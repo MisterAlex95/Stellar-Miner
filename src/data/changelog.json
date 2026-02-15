@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.3.0",
+    "date": "2026-02-15",
+    "changes": [
+      "Big numbers: coins, production rate, and total coins ever can now grow beyond 1e308 (Cookie Clicker–style). Display uses K, M, B, T, Qa, Qi, … and scientific notation for huge values."
+    ]
+  },
+  {
     "version": "0.2.1",
     "date": "2026-02-15",
     "changes": [

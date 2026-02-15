@@ -18,7 +18,11 @@ export function getMaxBuyCount(upgradeId: string): number {
   const player = session.player;
   const freeSlots = player.planets.reduce((s, p) => s + p.freeSlots, 0);
   if (freeSlots <= 0 || !player.coins.gte(def.cost)) return 0;
-  const byCoins = Math.floor(player.coins.value / def.cost);
+  const byCoins = Math.min(
+    player.coins.value.div(def.cost).floor().toNumber(),
+    freeSlots,
+    Number.MAX_SAFE_INTEGER
+  );
   const byAstronauts = def.requiredAstronauts === 0 ? freeSlots : Math.floor(player.astronautCount / def.requiredAstronauts);
   return Math.min(byCoins, freeSlots, byAstronauts);
 }

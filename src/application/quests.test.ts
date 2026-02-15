@@ -48,7 +48,8 @@ describe('quests', () => {
     setQuestState({ quest: { type: 'coins', target: 500, reward: 100, description: 'Reach 500' } });
     const p = getQuestProgress();
     expect(p).not.toBeNull();
-    expect(p!.current).toBe(500);
+    const current = p!.current;
+    expect(typeof current === 'number' ? current : (current as { toNumber: () => number }).toNumber()).toBe(500);
     expect(p!.done).toBe(true);
   });
 
