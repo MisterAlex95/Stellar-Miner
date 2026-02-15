@@ -302,10 +302,12 @@ function updateDashboardHeroInPlace(): void {
   timeEl.style.display = timeText ? '' : 'none';
 }
 
-/** Build only the quest card HTML (empty string when no active quest). */
+/** Build only the quest card HTML (empty string when no active quest or quest block not unlocked). */
 function buildDashboardQuestCardHtml(): string {
   const session = getSession();
   if (!session) return '';
+  const unlocked = getUnlockedBlocks(session);
+  if (!unlocked.has('quest')) return '';
   const questProgress = getQuestProgress();
   const questDone = questProgress?.done ?? false;
   if (!questProgress || questDone) return '';
@@ -333,12 +335,17 @@ export function refreshDashboardQuestCard(): void {
   wrap.innerHTML = buildDashboardQuestCardHtml();
 }
 
-/** Update quest card in place (value, bar, desc) or clear when done. */
+/** Update quest card in place (value, bar, desc) or clear when done or quest not unlocked. */
 function updateDashboardQuestCardInPlace(): void {
   const wrap = document.getElementById('dashboard-quest-card-wrap');
   if (!wrap) return;
   const session = getSession();
   if (!session) return;
+  const unlocked = getUnlockedBlocks(session);
+  if (!unlocked.has('quest')) {
+    if (wrap.innerHTML !== '') wrap.innerHTML = '';
+    return;
+  }
   const questProgress = getQuestProgress();
   const questDone = questProgress?.done ?? false;
   if (!questProgress || questDone) {
