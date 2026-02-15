@@ -1,0 +1,282 @@
+.planets-hint,
+.housing-section .housing-hint {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.35;
+}
+
+.planet-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 360px) {
+  .planet-list {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+@media (min-width: 361px) and (max-width: 767px) {
+  .planet-list {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .planet-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+.planet-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  align-items: stretch;
+}
+
+.planet-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 360px) {
+  .planet-card {
+    padding: 0.6rem 0.75rem;
+  }
+}
+
+.planet-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.planet-card-visual {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-reduced-motion="true"]) .planet-card-visual {
+    animation: planet-spin 12s linear infinite;
+  }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(2) .planet-card-visual { animation-delay: -2s; }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(3) .planet-card-visual { animation-delay: -4s; }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(4) .planet-card-visual { animation-delay: -6s; }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(5) .planet-card-visual { animation-delay: -8s; }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(n+6) .planet-card-visual { animation-delay: -1s; }
+}
+
+@keyframes planet-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.planet-card-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.planet-card-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.planet-card-info {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: help;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.planet-card-info:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.planet-card-info-wrap {
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.planet-card-slots {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  min-height: 1.25em;
+}
+
+.planet-slot-value {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.planet-card-production {
+  font-size: 0.8rem;
+  color: var(--success);
+  min-height: 1.25em;
+  display: flex;
+  align-items: center;
+}
+
+.planet-card-production--zero {
+  color: var(--text-dim);
+}
+
+.planet-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.add-slot-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.add-slot-btn:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.add-slot-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buy-planet-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.buy-planet-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg-dark);
+  border-color: var(--accent);
+}
+
+.buy-planet-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.buy-planet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 360px) {
+  .buy-planet-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+/* Housing */
+.housing-empty {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0 0 0.5rem 0;
+}
+
+.housing-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.housing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.housing-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.housing-planet-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.build-housing-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.build-housing-btn:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.build-housing-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

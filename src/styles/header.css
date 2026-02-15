@@ -1,0 +1,121 @@
+header {
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 361px) and (max-width: 767px) {
+  header {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-row > div {
+  flex: 1;
+  text-align: center;
+}
+
+.settings-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.settings-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+.settings-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.info-btn-wrap {
+  position: relative;
+}
+
+.info-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.info-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+.info-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.info-update-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.info-update-badge--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (max-width: 360px) {
+  header .header-row h1 {
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+  }
+
+  .subtitle {
+    font-size: 0.7rem;
+  }
+
+  .settings-btn,
+  .info-btn {
+    width: 36px;
+    height: 36px;
+  }
+}

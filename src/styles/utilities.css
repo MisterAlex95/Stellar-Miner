@@ -1,0 +1,66 @@
+@media (prefers-reduced-motion: reduce) {
+  .stat-card--bump,
+  .upgrade-card--just-bought,
+  .float-coin,
+  .float-coin-combo,
+  .float-reward,
+  .combo-indicator,
+  .production-live,
+  #app.app--shake {
+    animation: none !important;
+  }
+
+  .mine-zone {
+    animation: none !important;
+  }
+
+  .stat-card,
+  .upgrade-card,
+  .mine-zone,
+  .upgrade-btn,
+  .float-coin,
+  .float-reward {
+    transition-duration: 0.01ms !important;
+  }
+
+  .combo-indicator--fading {
+    animation: none;
+    opacity: 0.8;
+  }
+
+  .prestige-btn--just-unlocked,
+  .upgrade-card--just-affordable {
+    animation: none !important;
+  }
+}
+
+html[data-reduced-motion="true"] .stat-card--bump,
+html[data-reduced-motion="true"] .upgrade-card--just-bought,
+html[data-reduced-motion="true"] .float-coin,
+html[data-reduced-motion="true"] .float-coin-combo,
+html[data-reduced-motion="true"] .float-reward,
+html[data-reduced-motion="true"] .combo-indicator,
+html[data-reduced-motion="true"] .production-live,
+html[data-reduced-motion="true"] #app.app--shake,
+html[data-reduced-motion="true"] .mine-zone,
+html[data-reduced-motion="true"] .stat-card,
+html[data-reduced-motion="true"] .upgrade-card,
+html[data-reduced-motion="true"] .upgrade-btn,
+html[data-reduced-motion="true"] .prestige-btn--just-unlocked,
+html[data-reduced-motion="true"] .upgrade-card--just-affordable {
+  animation: none !important;
+}
+
+html[data-reduced-motion="true"] .stat-card,
+html[data-reduced-motion="true"] .upgrade-card,
+html[data-reduced-motion="true"] .mine-zone,
+html[data-reduced-motion="true"] .upgrade-btn,
+html[data-reduced-motion="true"] .float-coin,
+html[data-reduced-motion="true"] .float-reward {
+  transition-duration: 0.01ms !important;
+}
+
+html[data-reduced-motion="true"] .combo-indicator--fading {
+  animation: none;
+  opacity: 0.8;
+}

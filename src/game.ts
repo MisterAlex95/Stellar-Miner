@@ -1,4 +1,4 @@
-import './game.css';
+import './styles/index.css';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
 import { mount } from './presentation/mount.js';
 import {

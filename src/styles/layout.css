@@ -1,0 +1,98 @@
+/* App container responsive */
+@media (max-width: 360px) {
+  #app {
+    padding: 0.5rem;
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+  }
+}
+
+@media (min-width: 361px) and (max-width: 767px) {
+  #app {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  #app {
+    max-width: 720px;
+    padding: 1.5rem 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  #app {
+    max-width: 640px;
+    padding: 2rem;
+  }
+}
+
+/* Tabs */
+.app-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 0.25rem;
+  background: var(--bg-card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.app-tab {
+  flex: 1;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.app-tab:hover {
+  color: var(--text);
+  background: var(--bg-panel);
+}
+
+.app-tab--active {
+  background: var(--accent);
+  color: var(--bg-dark);
+}
+
+.app-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app-tab[data-tab="empire"],
+.app-tab[data-tab="upgrades"],
+.app-tab[data-tab="stats"] {
+  display: none;
+}
+
+.app-tab-panel {
+  display: none;
+}
+
+.app-tab-panel--active {
+  display: block;
+}
+
+.app-tab-panel .quest-section,
+.app-tab-panel .prestige-section,
+.app-tab-panel .crew-section,
+.app-tab-panel .planets-section,
+.app-tab-panel .housing-section,
+.app-tab-panel .research-section,
+.app-tab-panel .upgrades-section,
+.app-tab-panel .statistics-section {
+  margin-bottom: 1.5rem;
+}
+
+.app-tab-panel .mine-zone {
+  margin-bottom: 1.5rem;
+}
