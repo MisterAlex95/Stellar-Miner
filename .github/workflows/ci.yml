@@ -48,7 +48,8 @@ jobs:
       - name: Set base path for GitHub Pages
         id: base
         run: |
-          slug=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+          # Use repo name as-is (only spaces -> hyphens). GitHub Pages URL is case-sensitive.
+          slug=$(echo '${{ github.event.repository.name }}' | sed 's/ /-/g')
           echo "path=/$slug/" >> $GITHUB_OUTPUT
 
       - name: Build
