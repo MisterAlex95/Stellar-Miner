@@ -12,7 +12,8 @@ import {
   getPlanetsWithEffectiveFreeSlot,
   getEffectiveUsedSlots,
 } from '../application/research.js';
-import { t } from '../application/strings.js';
+import { t, tParam } from '../application/strings.js';
+import { formatNumber } from '../application/format.js';
 import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
 import { updateStats } from './statsView.js';
 import { updateTooltipForButton } from './components/buttonTooltip.js';
@@ -99,13 +100,20 @@ export function updateUpgradeListInPlace(): void {
     const maxCount = getMaxBuyCount(id);
     const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
 
-    const nameEl = card.querySelector('.upgrade-name');
-    if (nameEl) {
-      nameEl.innerHTML =
-        getCatalogUpgradeName(id) +
-        (state.owned > 0 ? `<span class="count-badge">×${state.owned}</span>` : '') +
-        state.crewBadge +
+    const titleRow = card.querySelector('.upgrade-title-row');
+    if (titleRow) {
+      titleRow.innerHTML =
+        `<span class="upgrade-name">${getCatalogUpgradeName(id)}</span>` +
+        (state.owned > 0 ? `<span class="upgrade-count-badge">×${state.owned}</span>` : '') +
         (state.isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : '');
+    }
+    const effectEl = card.querySelector('.upgrade-effect');
+    if (effectEl) {
+      const eachSec = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
+      const totalSec = state.owned > 0 ? ' · ' + tParam('totalPerSecond', { n: formatNumber(state.owned * def.coinsPerSecond, settings.compactNumbers) }) : '';
+      effectEl.innerHTML =
+        `<span class="upgrade-effect-each">${eachSec}</span>` +
+        (state.owned > 0 ? `<span class="upgrade-effect-total">${totalSec}</span>` : '');
     }
     const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
     if (select) {

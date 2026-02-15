@@ -8,7 +8,6 @@ import {
   type UpgradeDef,
   createUpgrade,
 } from '../../application/catalogs.js';
-import { getPlanetAffinityDescription } from '../../application/planetAffinity.js';
 import {
   getEffectiveUpgradeUsesSlot,
   getEffectiveRequiredAstronauts,
@@ -38,7 +37,6 @@ export interface UpgradeCardState {
   buyTitle: string;
   maxTitle: string;
   isRecommended: boolean;
-  crewBadge: string;
 }
 
 export function getUpgradeCardState(
@@ -80,10 +78,6 @@ export function getUpgradeCardState(
   }
 
   const isRecommended = canBuy && !player.upgrades.some((u) => u.id === def.id);
-  const crewBadge =
-    crewReq > 0
-      ? `<span class="upgrade-crew-req" title="${t('crewBadgeTitle')}">${crewReq} crew</span>`
-      : '';
 
   return {
     def,
@@ -101,7 +95,6 @@ export function getUpgradeCardState(
     buyTitle,
     maxTitle,
     isRecommended,
-    crewBadge,
   };
 }
 
@@ -112,7 +105,7 @@ export interface BuildUpgradeCardHtmlOptions {
 
 export function buildUpgradeCardHtml(state: UpgradeCardState, options: BuildUpgradeCardHtmlOptions): string {
   const settings = getSettings();
-  const { def, owned, canBuy, hasCrew, maxCount, costCoins, costCrewLine, buyLabel, maxLabel, buyTitle, maxTitle, isRecommended, crewBadge } = state;
+  const { def, owned, canBuy, hasCrew, maxCount, costCoins, costCrewLine, buyLabel, maxLabel, buyTitle, maxTitle, isRecommended } = state;
   const { choosePlanet, planetsForSelect } = options;
 
   const planetOptions = choosePlanet
@@ -125,29 +118,35 @@ export function buildUpgradeCardHtml(state: UpgradeCardState, options: BuildUpgr
   const eachSec = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
   const totalSec = owned > 0 ? ' · ' + tParam('totalPerSecond', { n: formatNumber(owned * def.coinsPerSecond, settings.compactNumbers) }) : '';
   const slotCostText = getEffectiveUpgradeUsesSlot(def.id) ? t('upgradeUsesSlot') : t('upgradeNoSlot');
-  const affinityDesc = getPlanetAffinityDescription(def.id);
-  const affinityTitleRaw = affinityDesc ? `${t('upgradePlanetAffinityTitle')}: ${affinityDesc}` : t('upgradePlanetAffinityTitle');
-  const affinityTitle = escapeAttr(affinityTitleRaw);
 
   return `
     <div class="upgrade-info">
       <div class="upgrade-header">
-        <span class="upgrade-tier" aria-label="${escapeAttr(tParam('tierLabel', { n: def.tier }))}">T${def.tier}</span>
-        <div class="upgrade-name">${getCatalogUpgradeName(def.id)}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}${crewBadge}${isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : ''}<span class="upgrade-affinity-info" title="${affinityTitle}" aria-label="${affinityTitle}">i</span></div>
+        <span class="upgrade-tier" aria-label="${escapeAttr(tParam('tierLabel', { n: def.tier }))}" data-tier="${def.tier}">T${def.tier}</span>
+        <div class="upgrade-title-row">
+          <span class="upgrade-name">${getCatalogUpgradeName(def.id)}</span>
+          ${owned > 0 ? `<span class="upgrade-count-badge">×${owned}</span>` : ''}
+          ${isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : ''}
+        </div>
       </div>
-      <div class="upgrade-description">${getCatalogUpgradeDesc(def.id)}</div>
-      <div class="upgrade-effect">${eachSec}${totalSec}</div>
+      <p class="upgrade-description">${getCatalogUpgradeDesc(def.id)}</p>
+      <div class="upgrade-effect" aria-live="polite">
+        <span class="upgrade-effect-each">${eachSec}</span>
+        ${owned > 0 ? `<span class="upgrade-effect-total">${totalSec}</span>` : ''}
+      </div>
     </div>
-    <div class="upgrade-cost">
-      <span class="upgrade-cost-coins">${costCoins}</span>
-      ${costCrewLine ? `<span class="upgrade-cost-crew">${costCrewLine}</span>` : ''}
-      <span class="upgrade-cost-slot">· ${slotCostText}</span>
-    </div>
-    <div class="upgrade-actions">
-      ${planetSelectHtml}
-      <div class="upgrade-buttons">
-        ${buttonWithTooltipHtml(buyTitle, `<button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>`)}
-        ${buttonWithTooltipHtml(maxTitle, `<button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button>`)}
+    <div class="upgrade-right">
+      <div class="upgrade-cost">
+        <span class="upgrade-cost-coins">${costCoins}</span>
+        ${costCrewLine ? `<span class="upgrade-cost-crew">${costCrewLine}</span>` : ''}
+        <span class="upgrade-cost-slot">· ${slotCostText}</span>
+      </div>
+      <div class="upgrade-actions">
+        ${planetSelectHtml}
+        <div class="upgrade-buttons">
+          ${buttonWithTooltipHtml(buyTitle, `<button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>`)}
+          ${buttonWithTooltipHtml(maxTitle, `<button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button>`)}
+        </div>
       </div>
     </div>`;
 }

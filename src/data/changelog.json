@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.3.8",
+    "date": "2026-02-15",
+    "changes": [
+      "Upgrades tab: clearer card layout with tier-colored badge, production effect highlight, cost block, and improved count/crew badges."
+    ]
+  },
+  {
     "version": "0.3.7",
     "date": "2026-02-15",
     "changes": [
