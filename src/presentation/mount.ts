@@ -66,14 +66,16 @@ function isAnyModalOpen(): boolean {
 
 function openInfoModal(): void {
   const overlay = document.getElementById('info-overlay');
+  const list = document.getElementById('info-changelog-list');
   if (overlay) {
     overlay.classList.add('info-overlay--open');
     overlay.setAttribute('aria-hidden', 'false');
-    markUpdateSeen();
-    updateVersionAndChangelogUI();
-    const list = document.getElementById('info-changelog-list');
-    if (list) renderChangelogList(list);
-    requestAnimationFrame(() => document.getElementById('info-close')?.focus());
+    requestAnimationFrame(() => {
+      markUpdateSeen();
+      updateVersionAndChangelogUI();
+      if (list) renderChangelogList(list);
+      document.getElementById('info-close')?.focus();
+    });
   }
 }
 

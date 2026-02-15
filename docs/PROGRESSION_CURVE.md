@@ -12,6 +12,10 @@ Reference for the game’s economy: upgrade costs, unlock thresholds, other cost
 - **“Typical prod”**: approximate production when that milestone is in reach (from upgrades + crew + planets).
 - Estimates are **order-of-magnitude** (minutes vs hours vs days), not exact.
 
+### Slot limit (robots / upgrades per planet)
+
+Each planet has a **limited number of upgrade slots**. The first planet starts with **6 slots**. Each upgrade (Mining Robot, Drill, etc.) or each housing module uses one slot. So at the beginning you can place at most **6 upgrades** on your first planet until you add slots to that planet (cost scales with current slot count) or discover new planets (each new planet also has 6 base slots). This cap is why expanding slots and unlocking planets are core progression goals.
+
 ---
 
 ## 2. Upgrades (cost and production)

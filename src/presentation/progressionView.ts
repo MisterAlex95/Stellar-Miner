@@ -54,6 +54,9 @@ export function showIntroModal(blockId: BlockId): void {
   }
 
   introCanClose = false;
+  overlay.classList.add('intro-overlay--open');
+  overlay.setAttribute('aria-hidden', 'false');
+
   const titleKey = ('progression' + block.id.charAt(0).toUpperCase() + block.id.slice(1) + 'Title') as StringKey;
   const bodyKey = ('progression' + block.id.charAt(0).toUpperCase() + block.id.slice(1) + 'Body') as StringKey;
   titleEl.textContent = t(titleKey);
@@ -69,8 +72,6 @@ export function showIntroModal(blockId: BlockId): void {
   if (gotItBtn) {
     gotItBtn.disabled = true;
   }
-  overlay.classList.add('intro-overlay--open');
-  overlay.setAttribute('aria-hidden', 'false');
 
   introProgressStartTs = Date.now();
   introProgressRafId = requestAnimationFrame(tickIntroProgress);

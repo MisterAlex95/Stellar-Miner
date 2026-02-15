@@ -340,17 +340,19 @@ export function handleMineClick(e?: MouseEvent): void {
 }
 
 export function openPrestigeConfirmModal(): void {
-  const session = getSession();
   const overlay = document.getElementById('prestige-confirm-overlay');
-  const descEl = document.getElementById('prestige-confirm-desc');
   if (!overlay) return;
-  if (session && descEl) {
-    const nextLevel = session.player.prestigeLevel + 1;
-    descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: nextLevel * 5 });
-  }
   overlay.classList.add('prestige-confirm-overlay--open');
   overlay.setAttribute('aria-hidden', 'false');
-  requestAnimationFrame(() => document.getElementById('prestige-confirm-cancel')?.focus());
+  requestAnimationFrame(() => {
+    const session = getSession();
+    const descEl = document.getElementById('prestige-confirm-desc');
+    if (session && descEl) {
+      const nextLevel = session.player.prestigeLevel + 1;
+      descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: nextLevel * 5 });
+    }
+    document.getElementById('prestige-confirm-cancel')?.focus();
+  });
 }
 
 export function closePrestigeConfirmModal(): void {
@@ -367,20 +369,22 @@ export function openPrestigeRewardsModal(): void {
   const overlay = document.getElementById('prestige-rewards-overlay');
   const listEl = document.getElementById('prestige-rewards-list');
   if (!overlay || !listEl) return;
-  listEl.innerHTML = '';
-  const li1 = document.createElement('li');
-  li1.textContent = t('prestigeReward1');
-  listEl.appendChild(li1);
-  for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
-    const prod = level * 5;
-    const click = (level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL;
-    const li = document.createElement('li');
-    li.textContent = tParam('prestigeRewardLevelFormat', { level, prod, click });
-    listEl.appendChild(li);
-  }
   overlay.classList.add('prestige-rewards-overlay--open');
   overlay.setAttribute('aria-hidden', 'false');
-  requestAnimationFrame(() => document.getElementById('prestige-rewards-close')?.focus());
+  requestAnimationFrame(() => {
+    listEl.innerHTML = '';
+    const li1 = document.createElement('li');
+    li1.textContent = t('prestigeReward1');
+    listEl.appendChild(li1);
+    for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
+      const prod = level * 5;
+      const click = (level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL;
+      const li = document.createElement('li');
+      li.textContent = tParam('prestigeRewardLevelFormat', { level, prod, click });
+      listEl.appendChild(li);
+    }
+    document.getElementById('prestige-rewards-close')?.focus();
+  });
 }
 
 export function closePrestigeRewardsModal(): void {
