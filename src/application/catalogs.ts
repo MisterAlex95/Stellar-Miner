@@ -45,8 +45,9 @@ export function getUpgradeCost(def: UpgradeDef, ownedCount: number): Decimal {
   return toDecimal(def.cost).mul(Decimal.pow(UPGRADE_COST_MULT, ownedCount));
 }
 
-export function createUpgrade(def: UpgradeDef, ownedCount: number = 0): Upgrade {
-  const usesSlot = def.usesSlot !== false;
+/** @param options.usesSlot - When set, overrides catalog (e.g. for research slot-free). Omit for catalog default / deserialization. */
+export function createUpgrade(def: UpgradeDef, ownedCount: number = 0, options?: { usesSlot?: boolean }): Upgrade {
+  const usesSlot = options?.usesSlot !== undefined ? options.usesSlot : def.usesSlot !== false;
   return new Upgrade(
     def.id,
     def.name,

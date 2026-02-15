@@ -55,42 +55,30 @@ import { buildChangelogHtml } from './components/changelog.js';
 import { createProgressBarWithWrap, createProgressBar } from './components/progressBar.js';
 import { buildDebugPanelHtml } from './components/debugPanel.js';
 import { createModalOverlay } from './components/modal.js';
+import { TOAST_CONTAINER_ID } from './components/toasts.js';
+import { getOpenOverlayElement, openOverlay, closeOverlay } from './components/overlay.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
 
 function isAnyModalOpen(): boolean {
-  return (
-    isIntroOverlayOpen() ||
-    document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open') === true ||
-    document.getElementById('info-overlay')?.classList.contains('info-overlay--open') === true ||
-    document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open') === true ||
-    document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open') === true ||
-    document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open') === true
-  );
+  return getOpenOverlayElement() !== null;
 }
 
 function openInfoModal(): void {
-  const overlay = document.getElementById('info-overlay');
   const list = document.getElementById('info-changelog-list');
-  if (overlay) {
-    overlay.classList.add('info-overlay--open');
-    overlay.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(() => {
+  openOverlay('info-overlay', 'info-overlay--open', {
+    focusId: 'info-close',
+    onOpen: () => {
       markUpdateSeen();
       updateVersionAndChangelogUI();
       if (list) renderChangelogList(list);
-      document.getElementById('info-close')?.focus();
-    });
-  }
+    },
+  });
 }
 
 function closeInfoModal(): void {
-  const overlay = document.getElementById('info-overlay');
-  if (overlay) {
-    overlay.classList.remove('info-overlay--open');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
+  closeOverlay('info-overlay', 'info-overlay--open');
 }
 
 export function switchTab(tabId: string): void {
@@ -368,7 +356,7 @@ const APP_HTML = `
     </section>
     <div class="stats-spacer" id="stats-spacer" aria-hidden="true"></div>
     <p class="next-milestone" id="next-milestone" aria-live="polite"></p>
-    <div class="event-toasts" id="event-toasts" aria-live="polite"></div>
+    <div class="event-toasts" id="${TOAST_CONTAINER_ID}" aria-live="polite"></div>
     <nav class="app-tabs" role="tablist" data-i18n-aria-label="gameSections">
       <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine" data-i18n="tabMine">Mine</button>
       <button type="button" class="app-tab" role="tab" id="tab-empire" aria-selected="false" aria-controls="panel-empire" data-tab="empire" data-i18n="tabBase">Empire</button>
@@ -573,19 +561,9 @@ export function mount(): void {
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Tab') {
-        const openOverlay = settingsOverlay.classList.contains('settings-overlay--open')
-          ? settingsOverlay
-          : infoOverlay?.classList.contains('info-overlay--open')
-            ? infoOverlay
-            : document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open')
-              ? document.getElementById('reset-confirm-overlay')
-              : document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open')
-                ? document.getElementById('prestige-confirm-overlay')
-                : document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open')
-                  ? document.getElementById('prestige-rewards-overlay')
-                  : null;
-        if (openOverlay) {
-          const focusable = openOverlay.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const overlayEl = getOpenOverlayElement();
+        if (overlayEl) {
+          const focusable = overlayEl.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
           const list = Array.from(focusable).filter((el) => el.offsetParent !== null);
           if (list.length === 0) return;
           const i = list.indexOf(document.activeElement as HTMLElement);
@@ -604,15 +582,12 @@ export function mount(): void {
         return;
       }
       if (e.key !== 'Escape') return;
-      const resetOverlay = document.getElementById('reset-confirm-overlay');
-      const prestigeOverlay = document.getElementById('prestige-confirm-overlay');
-      const prestigeRewardsOverlay = document.getElementById('prestige-rewards-overlay');
-      if (resetOverlay?.classList.contains('reset-confirm-overlay--open')) closeResetConfirmModal();
-      else if (prestigeOverlay?.classList.contains('prestige-confirm-overlay--open')) closePrestigeConfirmModal();
-      else if (prestigeRewardsOverlay?.classList.contains('prestige-rewards-overlay--open')) closePrestigeRewardsModal();
+      if (document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open')) closeResetConfirmModal();
+      else if (document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open')) closePrestigeConfirmModal();
+      else if (document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open')) closePrestigeRewardsModal();
       else if (isIntroOverlayOpen()) dismissIntroModal();
-      else if (infoOverlay?.classList.contains('info-overlay--open')) closeInfoModal();
-      else if (settingsOverlay.classList.contains('settings-overlay--open')) closeSettings();
+      else if (document.getElementById('info-overlay')?.classList.contains('info-overlay--open')) closeInfoModal();
+      else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
   if (settingsClose) settingsClose.addEventListener('click', closeSettings);
@@ -845,7 +820,13 @@ export function mount(): void {
   const upgradeList = document.getElementById('upgrade-list');
   if (upgradeList) {
     upgradeList.addEventListener('click', (e: Event) => {
-      const target = (e.target as HTMLElement).closest('button.upgrade-btn');
+      const clicked = e.target as HTMLElement;
+      // Button may be wrapped in .btn-tooltip-wrap; click can land on the span so closest('button') misses.
+      let target = clicked.closest('button.upgrade-btn') as HTMLButtonElement | null;
+      if (!target) {
+        const wrap = clicked.closest('.btn-tooltip-wrap');
+        target = wrap?.querySelector<HTMLButtonElement>('button.upgrade-btn') ?? null;
+      }
       if (!target || target.hasAttribute('disabled')) return;
       e.preventDefault();
       const upgradeId = target.getAttribute('data-upgrade-id');

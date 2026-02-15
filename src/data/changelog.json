@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.3.15",
+    "date": "2026-02-15",
+    "changes": [
+      "UI: overlay open/close unified in presentation/components/overlay (openOverlay, closeOverlay, isOverlayOpen, getOpenOverlayElement). All modals (settings, info, reset confirm, prestige confirm/rewards, intro) use the same pattern; focus trap uses getOpenOverlayElement()."
+    ]
+  },
+  {
+    "version": "0.3.14",
+    "date": "2026-02-15",
+    "changes": [
+      "UI: notification logic unified into reusable components. Toasts use components/toasts (with TOAST_CONTAINER_ID); floating reward and floating coin use components/floatingFeedback with a single animation lifecycle."
+    ]
+  },
+  {
     "version": "0.3.13",
     "date": "2026-02-15",
     "changes": [

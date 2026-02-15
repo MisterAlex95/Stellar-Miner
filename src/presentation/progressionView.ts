@@ -8,6 +8,7 @@ import {
   type BlockId,
 } from '../application/progression.js';
 import { t, type StringKey } from '../application/strings.js';
+import { openOverlay, closeOverlay, isOverlayOpen } from './components/overlay.js';
 
 const INTRO_READY_DELAY_MS = 5000;
 
@@ -54,8 +55,7 @@ export function showIntroModal(blockId: BlockId): void {
   }
 
   introCanClose = false;
-  overlay.classList.add('intro-overlay--open');
-  overlay.setAttribute('aria-hidden', 'false');
+  openOverlay('intro-overlay', 'intro-overlay--open');
 
   const titleKey = ('progression' + block.id.charAt(0).toUpperCase() + block.id.slice(1) + 'Title') as StringKey;
   const bodyKey = ('progression' + block.id.charAt(0).toUpperCase() + block.id.slice(1) + 'Body') as StringKey;
@@ -102,12 +102,8 @@ export function closeIntroModal(): void {
     clearInterval(introProgressIntervalId);
     introProgressIntervalId = null;
   }
-  const overlay = document.getElementById('intro-overlay');
   const progressWrap = document.getElementById('intro-progress-wrap');
-  if (overlay) {
-    overlay.classList.remove('intro-overlay--open');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
+  closeOverlay('intro-overlay', 'intro-overlay--open');
   if (progressWrap) {
     progressWrap.style.display = 'none';
     progressWrap.setAttribute('aria-hidden', 'true');
@@ -199,8 +195,7 @@ export function maybeShowWelcomeModal(): void {
 }
 
 export function isIntroOverlayOpen(): boolean {
-  const overlay = document.getElementById('intro-overlay');
-  return overlay?.classList.contains('intro-overlay--open') ?? false;
+  return isOverlayOpen('intro-overlay', 'intro-overlay--open');
 }
 
 /** Close intro and mark current pending block as seen (e.g. on Escape). No-op if still in the 5s lock. */

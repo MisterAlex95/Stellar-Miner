@@ -22,6 +22,7 @@ import { renderCrewSection } from '../presentation/crewView.js';
 import { renderResearchSection } from '../presentation/researchView.js';
 import { renderQuestSection } from '../presentation/questView.js';
 import { showPrestigeMilestoneToast, showMiniMilestoneToast } from '../presentation/toasts.js';
+import { openOverlay, closeOverlay } from '../presentation/components/overlay.js';
 import { checkAchievements } from './achievements.js';
 import { emit } from './eventBus.js';
 import { t, tParam } from './strings.js';
@@ -30,57 +31,46 @@ import { saveSession } from './handlersSave.js';
 const PRESTIGE_REWARDS_LIST_MAX_LEVEL = 15;
 
 export function openPrestigeConfirmModal(): void {
-  const overlay = document.getElementById('prestige-confirm-overlay');
-  if (!overlay) return;
-  overlay.classList.add('prestige-confirm-overlay--open');
-  overlay.setAttribute('aria-hidden', 'false');
-  requestAnimationFrame(() => {
-    const session = getSession();
-    const descEl = document.getElementById('prestige-confirm-desc');
-    if (session && descEl) {
-      const nextLevel = session.player.prestigeLevel + 1;
-      descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: nextLevel * 5 });
-    }
-    document.getElementById('prestige-confirm-cancel')?.focus();
+  openOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open', {
+    focusId: 'prestige-confirm-cancel',
+    onOpen: () => {
+      const session = getSession();
+      const descEl = document.getElementById('prestige-confirm-desc');
+      if (session && descEl) {
+        const nextLevel = session.player.prestigeLevel + 1;
+        descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: nextLevel * 5 });
+      }
+    },
   });
 }
 
 export function closePrestigeConfirmModal(): void {
-  const overlay = document.getElementById('prestige-confirm-overlay');
-  if (overlay) {
-    overlay.classList.remove('prestige-confirm-overlay--open');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
+  closeOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open');
 }
 
 export function openPrestigeRewardsModal(): void {
-  const overlay = document.getElementById('prestige-rewards-overlay');
   const listEl = document.getElementById('prestige-rewards-list');
-  if (!overlay || !listEl) return;
-  overlay.classList.add('prestige-rewards-overlay--open');
-  overlay.setAttribute('aria-hidden', 'false');
-  requestAnimationFrame(() => {
-    listEl.innerHTML = '';
-    const li1 = document.createElement('li');
-    li1.textContent = t('prestigeReward1');
-    listEl.appendChild(li1);
-    for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
-      const prod = level * 5;
-      const click = (level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL;
-      const li = document.createElement('li');
-      li.textContent = tParam('prestigeRewardLevelFormat', { level, prod, click });
-      listEl.appendChild(li);
-    }
-    document.getElementById('prestige-rewards-close')?.focus();
+  if (!listEl) return;
+  openOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open', {
+    focusId: 'prestige-rewards-close',
+    onOpen: () => {
+      listEl.innerHTML = '';
+      const li1 = document.createElement('li');
+      li1.textContent = t('prestigeReward1');
+      listEl.appendChild(li1);
+      for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
+        const prod = level * 5;
+        const click = (level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL;
+        const li = document.createElement('li');
+        li.textContent = tParam('prestigeRewardLevelFormat', { level, prod, click });
+        listEl.appendChild(li);
+      }
+    },
   });
 }
 
 export function closePrestigeRewardsModal(): void {
-  const overlay = document.getElementById('prestige-rewards-overlay');
-  if (overlay) {
-    overlay.classList.remove('prestige-rewards-overlay--open');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
+  closeOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open');
 }
 
 export function confirmPrestige(): void {

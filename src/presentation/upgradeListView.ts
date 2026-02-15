@@ -10,7 +10,6 @@ import {
   getEffectiveRequiredAstronauts,
   getPlanetWithEffectiveFreeSlot,
   getPlanetsWithEffectiveFreeSlot,
-  getEffectiveUsedSlots,
 } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
 import { formatNumber } from '../application/format.js';
@@ -26,8 +25,9 @@ export function getMaxBuyCount(upgradeId: string): number {
   if (!def) return 0;
   const player = session.player;
   const usesSlot = getEffectiveUpgradeUsesSlot(def.id);
+  // Use raw free slots so the count matches handleUpgradeBuyMax (which uses getPlanetsWithFreeSlot).
   const freeSlots = usesSlot
-    ? player.planets.reduce((s, p) => s + Math.max(0, p.maxUpgrades - getEffectiveUsedSlots(p)), 0)
+    ? player.planets.reduce((s, p) => s + p.freeSlots, 0)
     : Number.MAX_SAFE_INTEGER;
   const effectiveCrew = getEffectiveRequiredAstronauts(def.id);
   const maxByCrew = effectiveCrew === 0 ? Number.MAX_SAFE_INTEGER : Math.floor(player.astronautCount / effectiveCrew);

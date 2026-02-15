@@ -18,6 +18,13 @@ describe('catalogs', () => {
     expect(u.usesSlot).toBe(false);
   });
 
+  it('createUpgrade with options.usesSlot overrides catalog', () => {
+    const def = UPGRADE_CATALOG.find((d) => d.id === 'drill-mk1')!;
+    expect(createUpgrade(def, 0).usesSlot).toBe(true);
+    expect(createUpgrade(def, 0, { usesSlot: false }).usesSlot).toBe(false);
+    expect(createUpgrade(def, 0, { usesSlot: true }).usesSlot).toBe(true);
+  });
+
   it('getUpgradeUsesSlot returns false for mining-robot, true for others', () => {
     expect(getUpgradeUsesSlot('mining-robot')).toBe(false);
     expect(getUpgradeUsesSlot('drill-mk1')).toBe(true);

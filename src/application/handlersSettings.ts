@@ -18,6 +18,7 @@ import {
 import { updateStats } from '../presentation/statsView.js';
 import { renderUpgradeList } from '../presentation/upgradeListView.js';
 import { renderPlanetList } from '../presentation/planetListView.js';
+import { openOverlay, closeOverlay } from '../presentation/components/overlay.js';
 
 export function updateLastSavedIndicator(): void {
   const el = document.getElementById('last-saved-indicator');
@@ -38,21 +39,14 @@ export function updateLastSavedIndicator(): void {
 }
 
 export function openSettings(): void {
-  const overlay = document.getElementById('settings-overlay');
-  if (overlay) {
-    overlay.classList.add('settings-overlay--open');
-    overlay.setAttribute('aria-hidden', 'false');
-    updateLastSavedIndicator();
-    requestAnimationFrame(() => document.getElementById('settings-close')?.focus());
-  }
+  openOverlay('settings-overlay', 'settings-overlay--open', {
+    focusId: 'settings-close',
+    onOpen: updateLastSavedIndicator,
+  });
 }
 
 export function closeSettings(): void {
-  const overlay = document.getElementById('settings-overlay');
-  if (overlay) {
-    overlay.classList.remove('settings-overlay--open');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
+  closeOverlay('settings-overlay', 'settings-overlay--open');
 }
 
 export function applySettingsToUI(): void {
@@ -62,20 +56,13 @@ export function applySettingsToUI(): void {
 }
 
 export function openResetConfirmModal(): void {
-  const overlay = document.getElementById('reset-confirm-overlay');
-  if (overlay) {
-    overlay.classList.add('reset-confirm-overlay--open');
-    overlay.setAttribute('aria-hidden', 'false');
-    requestAnimationFrame(() => document.getElementById('reset-confirm-cancel')?.focus());
-  }
+  openOverlay('reset-confirm-overlay', 'reset-confirm-overlay--open', {
+    focusId: 'reset-confirm-cancel',
+  });
 }
 
 export function closeResetConfirmModal(): void {
-  const overlay = document.getElementById('reset-confirm-overlay');
-  if (overlay) {
-    overlay.classList.remove('reset-confirm-overlay--open');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
+  closeOverlay('reset-confirm-overlay', 'reset-confirm-overlay--open');
 }
 
 export function handleResetProgress(): void {

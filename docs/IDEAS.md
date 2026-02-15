@@ -202,3 +202,57 @@ Concrete ideas that build on current systems (quests, events, upgrades, prestige
 - Unlock a "theme" or rename for a planet at a cost (cosmetic only). Or random adjective + planet name (e.g. "Dust Haven — Prosperous"). Stored in save; no balance change.
 
 Pick 2–3 of these for a first batch; quest types (1), prestige perks (3), and overdrive (4) or mastery (5) are the highest impact for the least scope.
+
+---
+
+## Proposed story / narrative improvements
+
+Ways to add lore and narrative without new domain entities. All data-driven (JSON + application layer + presentation). Fit existing flows: eventBus, handlers, toasts, Stats/Empire tabs.
+
+**1. Event flavor text**
+- Add optional `flavor` (or `storySnippet`) to each event in `events.json`. When an event triggers, show that line in the existing toast or a small popup.
+- Example: Meteor Storm → "The crew braces as ancient debris rattles the hull—readings show rare minerals in the shower."
+- Optional setting to show/hide story toasts.
+
+**2. Codex / Archive**
+- Unlockable lore entries (short texts) keyed to achievements, event types seen, planet types discovered, prestige level.
+- Data: `data/codex.json` — id, title, body, unlockCondition (e.g. achievement:first-prestige, eventSeen:meteor-storm, prestigeLevel:5).
+- Application: codexUnlocks in state/save; on achievement/event/planet/prestige emit, call unlockCodexEntry(id).
+- Presentation: "Codex" or "Archive" in Stats or Empire — list unlocked entries, grey out locked ones.
+
+**3. Quest story hooks**
+- Keep quest generation as-is; add a pool of one-line intros per quest type.
+- Data: e.g. `data/questFlavor.json` — by type (coins, production, upgrade, …) an array of intros.
+- In generateQuest(), pick a random intro and prepend to description or pass as storyHook to UI.
+- Example: "A stranded freighter needs supplies. Reach 5,000 coins."
+
+**4. Planet discovery log**
+- When the player buys a new planet, show a one-line "first contact" flavor.
+- Data: in planetAffinity or `discoveryFlavor.json` — discoveryLog (or a few variants) per planet type.
+- On planet buy: pick a line by type/name, store on planet or in a discovery log in state/save.
+- Presentation: planet card expand or tooltip, or "Discovery log" section: "First landing on [Name]: [flavor]."
+
+**5. Prestige "chapters"**
+- Give each prestige level (or every N) a short title or quote.
+- Data: `data/prestigeLore.json` — prestigeLevel → title, optional quote.
+- Show on prestige confirmation or "You prestiged!" screen, e.g. "Prestige 5 — Veteran of the Belt".
+
+**6. Narrator / ship log toasts**
+- One-off lines from "the ship" or "mission control" on milestones (first 1M coins, first prestige, achievement:Legend).
+- Data: `data/narrator.json` — list of { trigger, message } (e.g. totalCoinsEver:1000000, prestige:1).
+- Application: on eventBus/handlers, check if trigger already shown (narratorShown in state/save); if not, toast and mark shown.
+
+**7. Chronicle (journey log)**
+- Append-only log of key first-time moments (first upgrade, first planet, first prestige).
+- Application: chronicle array in save — { date, eventId, sentence } per type; one narrative sentence per event.
+- Presentation: "Chronicle" or "History" in Stats — scrollable list. E.g. "First Mining Robot deployed.", "First planet discovered: [name]."
+- Sentences can be generated from a small template map in code; no new JSON required.
+
+**8. Achievement flavor**
+- Add optional `flavor` (or `story`) to each entry in `achievements.json`. When unlocking, show that line in the unlock toast alongside the name.
+- Example: Legend → "Your name is spoken in every port on the belt."
+
+**Suggested order to implement**
+- Quick win: (1) Event flavor + (8) Achievement flavor — data only + a few lines in existing toasts.
+- High impact: (2) Codex — one new data file, one unlock flow, one new view; feed it from achievements, events, planets, prestige.
+- Nice touch: (5) Prestige chapters + (6) Narrator toasts — data-driven, small hooks in existing handlers/eventBus.
