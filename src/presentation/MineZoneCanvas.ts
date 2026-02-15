@@ -17,7 +17,7 @@ type Particle = {
   color?: string;
 };
 
-/** Per-planet data for the spatial view. name = raw (for texture/type); displayName = "Name (System)" for label. */
+/** Per-planet data for the spatial view. name = raw (for texture/type). displayName is optional, not drawn on canvas. */
 export type PlanetView = {
   id: string;
   name: string;
@@ -40,6 +40,17 @@ let orbitTime = 0;
 
 type ClickFlash = { x: number; y: number; life: number; maxLife: number; critical?: boolean };
 let clickFlash: ClickFlash | null = null;
+
+type ClickRipple = { x: number; y: number; life: number; maxLife: number };
+const clickRipples: ClickRipple[] = [];
+const RIPPLE_LIFE = 0.55;
+const RIPPLE_MAX_R = 70;
+
+type ShootingStar = { x: number; y: number; vx: number; vy: number; life: number; maxLife: number };
+let shootingStar: ShootingStar | null = null;
+const SHOOTING_STAR_CHANCE_PER_SEC = 0.032;
+const SHOOTING_STAR_DURATION = 0.9;
+const SHOOTING_STAR_LENGTH = 120;
 
 export type MineZoneSettings = { showOrbitLines?: boolean; clickParticles?: boolean };
 export type EventContext = { activeEventIds: string[] };
@@ -102,6 +113,9 @@ function emitBurst(
       maxLife: CLICK_FLASH_LIFE,
       critical: options.critical,
     };
+  }
+  if (clickRipples.length < 6) {
+    clickRipples.push({ x: originX, y: originY, life: RIPPLE_LIFE, maxLife: RIPPLE_LIFE });
   }
 }
 
@@ -207,15 +221,60 @@ const STAR_TYPES = [
   { core: '#f0f9ff', mid: '#7dd3fc', outer: '#0ea5e9', corona: 'rgba(56, 189, 248, 0.22)', glow: 'rgba(14, 165, 233, 0.1)' },
 ];
 
+
+/** Background: radial gradient (darker edges) + subtle nebula blobs. */
+function drawBackground(): void {
+  if (!ctx || width <= 0 || height <= 0) return;
+  const cx = width / 2;
+  const cy = height / 2;
+  const maxR = Math.max(width, height) * 0.85;
+  const bg = getThemeColor('--bg-panel', '#1a1d24');
+  const grd = ctx.createRadialGradient(cx, cy, maxR * 0.15, cx, cy, maxR);
+  grd.addColorStop(0, bg);
+  grd.addColorStop(0.5, bg);
+  grd.addColorStop(1, 'rgba(10, 12, 18, 0.97)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, width, height);
+  ctx.save();
+  ctx.globalAlpha = 0.035 + 0.015 * Math.sin(orbitTime * 0.4);
+  const nebulaSeed = 12345;
+  for (let i = 0; i < 5; i++) {
+    const nx = (valueAt(nebulaSeed, i, 0) * width * 0.6) + width * 0.2;
+    const ny = (valueAt(nebulaSeed, 0, i) * height * 0.6) + height * 0.2;
+    const nr = 80 + valueAt(nebulaSeed, i + 10, i) * 120;
+    const ng = ctx.createRadialGradient(nx, ny, 0, nx, ny, nr);
+    ng.addColorStop(0, 'rgba(120, 130, 180, 0.12)');
+    ng.addColorStop(0.6, 'rgba(80, 90, 140, 0.04)');
+    ng.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = ng;
+    ctx.fillRect(nx - nr, ny - nr, nr * 2, nr * 2);
+  }
+  ctx.restore();
+
+  for (let f = 0; f < 12; f++) {
+    const fx = (valueAt(3333, f, 0) * width * 1.2 - width * 0.1 + orbitTime * 8 + f * 20) % (width + 40) - 20;
+    const fy = (valueAt(4444, 0, f) * height * 1.2 - height * 0.1 + orbitTime * 5 + f * 15) % (height + 40) - 20;
+    ctx.fillStyle = getThemeColor('--text-dim', '#6b7280');
+    ctx.globalAlpha = 0.15 + valueAt(5555, f, f) * 0.15;
+    ctx.beginPath();
+    ctx.arc(fx, fy, 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
 function drawStar(sx: number, sy: number, radius: number, systemIndex: number): void {
   if (!ctx) return;
   const type = STAR_TYPES[systemIndex % STAR_TYPES.length];
   const sizeScale = 0.92 + (hash(`star-${systemIndex}`) % 18) / 100;
   const r = radius * sizeScale;
-  const glowR = r * 3.2;
-  const coronaR = r * 2;
+  const coronaPulse = 0.92 + 0.08 * Math.sin(orbitTime * 1.8 + systemIndex);
+  const glowR = r * 3.2 * coronaPulse;
+  const coronaR = r * 2 * coronaPulse;
   const outerR = r * 1.4;
+  const twinkle = 0.88 + 0.12 * Math.sin(orbitTime * 2.2 + systemIndex);
   ctx.save();
+  ctx.globalAlpha = twinkle;
   const grdGlow = ctx.createRadialGradient(sx, sy, r * 0.5, sx, sy, glowR);
   grdGlow.addColorStop(0, type.glow);
   grdGlow.addColorStop(0.4, type.glow);
@@ -293,11 +352,11 @@ const PLANET_GRADIENTS: Record<string, GradientStop[]> = {
 };
 
 const PLANET_TYPES = [
-  { light: '#78716c', mid: '#57534e', dark: '#44403c', name: 'rocky' },
-  { light: '#d6d3d1', mid: '#a8a29e', dark: '#78716c', name: 'desert' },
-  { light: '#e0f2fe', mid: '#7dd3fc', dark: '#0ea5e9', name: 'ice' },
-  { light: '#fca5a5', mid: '#dc2626', dark: '#7f1d1d', name: 'volcanic' },
-  { light: '#fde047', mid: '#eab308', dark: '#a16207', name: 'gas' },
+  { light: '#78716c', mid: '#57534e', dark: '#44403c', name: 'rocky', atmosphere: 'rgba(160, 158, 150, 0.09)' },
+  { light: '#d6d3d1', mid: '#a8a29e', dark: '#78716c', name: 'desert', atmosphere: 'rgba(212, 184, 150, 0.07)' },
+  { light: '#e0f2fe', mid: '#7dd3fc', dark: '#0ea5e9', name: 'ice', atmosphere: 'rgba(186, 230, 253, 0.12)' },
+  { light: '#fca5a5', mid: '#dc2626', dark: '#7f1d1d', name: 'volcanic', atmosphere: 'rgba(254, 202, 202, 0.07)' },
+  { light: '#fde047', mid: '#eab308', dark: '#a16207', name: 'gas', atmosphere: 'rgba(254, 240, 138, 0.1)' },
 ];
 
 type PlanetType = (typeof PLANET_TYPES)[0];
@@ -507,14 +566,29 @@ function drawOnePlanet(
   planetRadius: number,
   view: PlanetView,
   planetIndex: number,
-  systemIndex: number
+  systemIndex: number,
+  starCenterX: number,
+  starCenterY: number,
+  orbitIndex: number,
+  systemPlanetsLength: number
 ): void {
   const border = getThemeColor('--border', '#2a2f3d');
   if (!ctx) return;
 
   const pType = getPlanetTypeByName(view.name);
   const scale = planetSizeScale(view);
-  const r = planetRadius * scale;
+  const orbitSizeFactor = 1 + 0.1 * (1 - orbitIndex / Math.max(1, systemPlanetsLength));
+  const r = planetRadius * scale * orbitSizeFactor;
+
+  const haloR = r * 1.35;
+  const grdHalo = ctx.createRadialGradient(cx, cy, r * 0.5, cx, cy, haloR);
+  grdHalo.addColorStop(0, 'rgba(255, 252, 240, 0.08)');
+  grdHalo.addColorStop(0.5, 'rgba(200, 210, 230, 0.03)');
+  grdHalo.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grdHalo;
+  ctx.beginPath();
+  ctx.arc(cx, cy, haloR, 0, Math.PI * 2);
+  ctx.fill();
 
   const texture = getPlanetTexture(view.name, pType);
   ctx.save();
@@ -537,11 +611,134 @@ function drawOnePlanet(
   ctx.fill();
   ctx.restore();
 
+  const toStarX = starCenterX - cx;
+  const toStarY = starCenterY - cy;
+  const dist = Math.hypot(toStarX, toStarY) || 1;
+  const sunDirX = toStarX / dist;
+  const sunDirY = toStarY / dist;
+  const d = r * 2.5;
+  const oppositeToArrowX = cx - sunDirX * d;
+  const oppositeToArrowY = cy - sunDirY * d;
+  const arrowSideX = cx + sunDirX * d;
+  const arrowSideY = cy + sunDirY * d;
+  const grdTerminator = ctx.createLinearGradient(
+    oppositeToArrowX,
+    oppositeToArrowY,
+    arrowSideX,
+    arrowSideY
+  );
+  grdTerminator.addColorStop(0, 'rgba(0,0,0,1)');
+  grdTerminator.addColorStop(0.25, 'rgba(0,0,0,0.95)');
+  grdTerminator.addColorStop(0.38, 'rgba(0,0,0,0.75)');
+  grdTerminator.addColorStop(0.5, 'rgba(0,0,0,0.25)');
+  grdTerminator.addColorStop(0.62, 'rgba(0,0,0,0)');
+  grdTerminator.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = grdTerminator;
+  ctx.fill();
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.strokeStyle = border;
   ctx.lineWidth = 1;
   ctx.globalAlpha = 0.9;
   ctx.stroke();
   ctx.globalAlpha = 1;
+
+  const atmColor = (pType as PlanetType & { atmosphere?: string }).atmosphere ?? 'rgba(200,210,230,0.08)';
+  ctx.strokeStyle = atmColor;
+  ctx.lineWidth = Math.max(1.5, r * 0.12);
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.08, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  const moonCount = hash(view.name + 'moon') % 3;
+  if (moonCount >= 1) {
+    const moonOrbitR = r * 2.2;
+    const moonR = r * 0.18;
+    const moonAngle = orbitTime * 0.5 + (hash(view.name) % 100) / 100 * Math.PI * 2;
+    const mx = cx + Math.cos(moonAngle) * moonOrbitR;
+    const my = cy + Math.sin(moonAngle) * moonOrbitR;
+    ctx.fillStyle = getThemeColor('--text-dim', '#6b7280');
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.arc(mx, my, moonR, 0, Math.PI * 2);
+    ctx.fill();
+    const toStarMx = starCenterX - mx;
+    const toStarMy = starCenterY - my;
+    const distM = Math.hypot(toStarMx, toStarMy) || 1;
+    const sunDirMx = toStarMx / distM;
+    const sunDirMy = toStarMy / distM;
+    const dm = moonR * 2.5;
+    const grdMoon = ctx.createLinearGradient(
+      mx - sunDirMx * dm,
+      my - sunDirMy * dm,
+      mx + sunDirMx * dm,
+      my + sunDirMy * dm
+    );
+    grdMoon.addColorStop(0, 'rgba(0,0,0,1)');
+    grdMoon.addColorStop(0.35, 'rgba(0,0,0,0.5)');
+    grdMoon.addColorStop(0.6, 'rgba(0,0,0,0)');
+    grdMoon.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(mx, my, moonR, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = grdMoon;
+    ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = getThemeColor('--border', '#4b5563');
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(mx, my, moonR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (moonCount >= 2) {
+      const moonAngle2 = orbitTime * 0.35 + (hash(view.name + '2') % 100) / 100 * Math.PI * 2;
+      const moonOrbitR2 = r * 1.6;
+      const moonR2 = moonR * 0.7;
+      const mx2 = cx + Math.cos(moonAngle2) * moonOrbitR2;
+      const my2 = cy + Math.sin(moonAngle2) * moonOrbitR2;
+      ctx.fillStyle = getThemeColor('--text-dim', '#6b7280');
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      ctx.arc(mx2, my2, moonR2, 0, Math.PI * 2);
+      ctx.fill();
+      const toStarMx2 = starCenterX - mx2;
+      const toStarMy2 = starCenterY - my2;
+      const distM2 = Math.hypot(toStarMx2, toStarMy2) || 1;
+      const sunDirMx2 = toStarMx2 / distM2;
+      const sunDirMy2 = toStarMy2 / distM2;
+      const dm2 = moonR2 * 2.5;
+      const grdMoon2 = ctx.createLinearGradient(
+        mx2 - sunDirMx2 * dm2,
+        my2 - sunDirMy2 * dm2,
+        mx2 + sunDirMx2 * dm2,
+        my2 + sunDirMy2 * dm2
+      );
+      grdMoon2.addColorStop(0, 'rgba(0,0,0,1)');
+      grdMoon2.addColorStop(0.35, 'rgba(0,0,0,0.5)');
+      grdMoon2.addColorStop(0.6, 'rgba(0,0,0,0)');
+      grdMoon2.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(mx2, my2, moonR2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.fillStyle = grdMoon2;
+      ctx.fill();
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(mx2, my2, moonR2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
 
   const extra = getPlanetExtra(view.name);
   if (extra === 'rings' || extra === 'rings_and_belt') drawPlanetRings(cx, cy, r, view.name);
@@ -552,8 +749,16 @@ function drawOnePlanet(
   ctx.font = `${fontSize}px system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillStyle = getThemeColor('--text-dim', '#8b909a');
-  ctx.fillText(view.displayName ?? view.name, cx, labelY);
+  const labelColor = getThemeColor('--text-dim', '#8b909a');
+  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.shadowBlur = 3;
+  ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+  ctx.lineWidth = 2;
+  ctx.strokeText(view.name, cx, labelY);
+  ctx.fillStyle = labelColor;
+  ctx.fillText(view.name, cx, labelY);
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = border;
 }
 
 /** Draw only the planet sphere (texture + border) to a small canvas, e.g. for Base/Planets list tiles. Uses planet name for type/color. */
@@ -610,31 +815,70 @@ function drawSolarSystem(
   drawStar(systemCenterX, systemCenterY, starRadius, systemIndex);
   const basePlanetRadius = starRadius * (0.65 / MAX_PLANET_SCALE);
 
-  const orbitRadiusBase = Math.min(systemW, systemH) * 0.24;
-  const orbitSpacing = Math.min(systemW, systemH) * 0.09;
+  const orbitRadiusBase = Math.min(systemW, systemH) * 0.32;
+  const orbitSpacing = Math.min(systemW, systemH) * 0.11;
   const showOrbits = getMineZoneSettings?.()?.showOrbitLines !== false;
   const orbitDashed = systemIndex % 2 === 1;
+  const orbitPhaseOffset = systemIndex * 1.7;
   if (orbitDashed) ctx.setLineDash([4, 6]);
 
-  const orbitDirection = 1; // All planets orbit the same way
+  const borderColor = getThemeColor('--border', '#2a2f3d');
+  const dimColor = getThemeColor('--text-dim', '#6b7280');
+  const maxOrbitR = orbitRadiusBase + (systemPlanets.length - 1) * orbitSpacing;
+  for (let d = 0; d < 14; d++) {
+    const driftAngle = orbitTime * 0.12 + (systemIndex * 7 + d) * 0.44;
+    const dist = orbitRadiusBase * 0.3 + (valueAt(7777 + systemIndex, d, 0) * (maxOrbitR - orbitRadiusBase * 0.3));
+    const ax = systemCenterX + Math.cos(driftAngle + d) * dist;
+    const ay = systemCenterY + Math.sin(driftAngle + d * 0.7) * dist * 0.4;
+    ctx.fillStyle = dimColor;
+    ctx.globalAlpha = 0.25 + (valueAt(8888 + systemIndex, d, 0) * 0.2);
+    ctx.beginPath();
+    ctx.arc(ax, ay, 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  const orbitDirection = 1;
   for (let i = 0; i < systemPlanets.length; i++) {
     const orbitR = orbitRadiusBase + i * orbitSpacing;
     const speed = orbitDirection * (0.18 + (i * 0.08) + ((systemIndex % 3) * 0.04));
-    const angle = orbitTime * speed + (i * Math.PI * 2) / Math.max(systemPlanets.length, 1);
+    const angle = orbitTime * speed + orbitPhaseOffset + (i * Math.PI * 2) / Math.max(systemPlanets.length, 1);
     const px = systemCenterX + Math.cos(angle) * orbitR;
     const py = systemCenterY + Math.sin(angle) * orbitR;
 
+    const trailLen = 14 + i * 3;
+    const trailX = px - Math.cos(angle) * trailLen;
+    const trailY = py - Math.sin(angle) * trailLen;
+    const grdTrail = ctx.createLinearGradient(trailX, trailY, px, py);
+    grdTrail.addColorStop(0, 'rgba(120, 125, 140, 0)');
+    grdTrail.addColorStop(0.5, 'rgba(120, 125, 140, 0.12)');
+    grdTrail.addColorStop(1, 'rgba(120, 125, 140, 0.2)');
+    ctx.strokeStyle = grdTrail;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(trailX, trailY);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+
     if (showOrbits) {
-      ctx.strokeStyle = getThemeColor('--border', '#2a2f3d');
-      ctx.globalAlpha = 0.45;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(systemCenterX, systemCenterY, orbitR, 0, Math.PI * 2);
-      ctx.stroke();
+      const segs = 48;
+      for (let s = 0; s < segs; s++) {
+        const a0 = (s / segs) * Math.PI * 2;
+        const a1 = ((s + 1) / segs) * Math.PI * 2;
+        const t = s / segs;
+        const bright = 0.55 - t * 0.25;
+        ctx.strokeStyle = borderColor;
+        ctx.globalAlpha = bright;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(systemCenterX, systemCenterY, orbitR, a0, a1);
+        ctx.stroke();
+      }
       ctx.globalAlpha = 1;
     }
 
-    drawOnePlanet(px, py, basePlanetRadius, systemPlanets[i], systemIndex * 10 + i, systemIndex);
+    drawOnePlanet(px, py, basePlanetRadius, systemPlanets[i], systemIndex * 10 + i, systemIndex, systemCenterX, systemCenterY, i, systemPlanets.length);
   }
 
   ctx.setLineDash([]);
@@ -652,21 +896,40 @@ function drawSpatialSystem(): void {
     const cy = height / 2;
     const starR = Math.min(width, height) * 0.12;
     drawStar(cx, cy, starR, 0);
-    const orbitR = Math.min(width, height) * 0.28;
+    const orbitR = Math.min(width, height) * 0.36;
     const angle = orbitTime * 0.25;
     const px = cx + Math.cos(angle) * orbitR;
     const py = cy + Math.sin(angle) * orbitR;
+    const trailLen = 18;
+    const trailX = px - Math.cos(angle) * trailLen;
+    const trailY = py - Math.sin(angle) * trailLen;
+    const grdTrail0 = ctx.createLinearGradient(trailX, trailY, px, py);
+    grdTrail0.addColorStop(0, 'rgba(120, 125, 140, 0)');
+    grdTrail0.addColorStop(0.5, 'rgba(120, 125, 140, 0.12)');
+    grdTrail0.addColorStop(1, 'rgba(120, 125, 140, 0.2)');
+    ctx.strokeStyle = grdTrail0;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(trailX, trailY);
+    ctx.lineTo(px, py);
+    ctx.stroke();
     if (getMineZoneSettings?.()?.showOrbitLines !== false) {
-      ctx.strokeStyle = getThemeColor('--border', '#2a2f3d');
-      ctx.globalAlpha = 0.45;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
-      ctx.stroke();
+      const borderColor = getThemeColor('--border', '#2a2f3d');
+      const segs = 48;
+      for (let s = 0; s < segs; s++) {
+        const t = s / segs;
+        ctx.strokeStyle = borderColor;
+        ctx.globalAlpha = 0.55 - t * 0.25;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, orbitR, (s / segs) * Math.PI * 2, ((s + 1) / segs) * Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.globalAlpha = 1;
     }
     const basePlanetR = starR * (0.65 / MAX_PLANET_SCALE);
-    drawOnePlanet(px, py, basePlanetR, solarSystems[0][0], 0, 0);
+    drawOnePlanet(px, py, basePlanetR, solarSystems[0][0], 0, 0, cx, cy, 0, 1);
     return;
   }
 
@@ -688,6 +951,63 @@ function drawSpatialSystem(): void {
     const sy = (row + 0.5) * cellH;
     drawSolarSystem(sx, sy, cellW, cellH, solarSystems[s], s);
   }
+
+  ctx.strokeStyle = 'rgba(60, 65, 80, 0.35)';
+  ctx.lineWidth = 1;
+  for (let c = 1; c < cols; c++) {
+    ctx.beginPath();
+    ctx.moveTo(c * cellW, 0);
+    ctx.lineTo(c * cellW, height);
+    ctx.stroke();
+  }
+  for (let r = 1; r < rows; r++) {
+    ctx.beginPath();
+    ctx.moveTo(0, r * cellH);
+    ctx.lineTo(width, r * cellH);
+    ctx.stroke();
+  }
+}
+
+function drawShootingStar(): void {
+  if (!ctx || !shootingStar) return;
+  const s = shootingStar;
+  const t = 1 - s.life / s.maxLife;
+  const speed = Math.hypot(s.vx, s.vy) || 1;
+  const k = SHOOTING_STAR_LENGTH / speed;
+  const headX = s.x;
+  const headY = s.y;
+  const tailX = s.x - s.vx * k;
+  const tailY = s.y - s.vy * k;
+  const grd = ctx.createLinearGradient(tailX, tailY, headX, headY);
+  grd.addColorStop(0, 'rgba(255,255,255,0)');
+  grd.addColorStop(0.5, 'rgba(255,252,240,0.25)');
+  grd.addColorStop(1, 'rgba(255,255,255,0.85)');
+  ctx.save();
+  ctx.globalAlpha = 1 - t * t;
+  ctx.strokeStyle = grd;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(tailX, tailY);
+  ctx.lineTo(headX, headY);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawClickRipples(): void {
+  if (!ctx) return;
+  const border = getThemeColor('--border', '#4b5563');
+  for (const rip of clickRipples) {
+    const t = 1 - rip.life / rip.maxLife;
+    const rad = 12 + t * (RIPPLE_MAX_R - 12);
+    ctx.strokeStyle = border;
+    ctx.globalAlpha = 1 - t * 0.9;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(rip.x, rip.y, rad, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 }
 
 /** Event-based tint overlay on the mine zone. */
@@ -720,6 +1040,26 @@ function getEventOverlayPulse(time: number, ids: string[]): number {
   if (ids.includes('nebula-bloom')) return 0.75 + 0.25 * Math.sin(time * 1.5);
   if (ids.includes('solar-eclipse') || ids.includes('communications-blackout')) return 0.8 + 0.2 * Math.sin(time * 2);
   return 1;
+}
+
+/** Animated stripe pattern for certain events (solar-flare, solar-wind). */
+function drawEventOverlayPattern(time: number, ids: string[]): void {
+  if (!ctx || ids.length === 0) return;
+  const id = ids[0];
+  if (id !== 'solar-flare' && id !== 'solar-wind' && id !== 'comet-tail') return;
+  const stripeSpacing = 28;
+  const offset = (time * 45) % stripeSpacing;
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.strokeStyle = id === 'solar-wind' ? '#7dd3fc' : id === 'comet-tail' ? '#e7e5e4' : '#fde68a';
+  ctx.lineWidth = 2;
+  for (let x = -offset; x < width + stripeSpacing; x += stripeSpacing) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + height * 0.6, height);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 let eventOverlayTime = 0;
@@ -768,6 +1108,46 @@ export function createMineZoneCanvas(
         clickFlash.life -= dt;
         if (clickFlash.life <= 0) clickFlash = null;
       }
+      for (let i = clickRipples.length - 1; i >= 0; i--) {
+        clickRipples[i].life -= dt;
+        if (clickRipples[i].life <= 0) clickRipples.splice(i, 1);
+      }
+      if (shootingStar) {
+        shootingStar.life -= dt;
+        shootingStar.x += shootingStar.vx * dt;
+        shootingStar.y += shootingStar.vy * dt;
+        if (shootingStar.life <= 0) shootingStar = null;
+      } else if (width > 0 && height > 0 && Math.random() < SHOOTING_STAR_CHANCE_PER_SEC * dt) {
+        const side = Math.floor(Math.random() * 4);
+        const spread = (Math.random() - 0.5) * 0.5;
+        const speed = 380 + Math.random() * 120;
+        let vx: number;
+        let vy: number;
+        let x: number;
+        let y: number;
+        if (side === 0) {
+          x = 0;
+          y = height * Math.random();
+          vx = speed;
+          vy = speed * spread;
+        } else if (side === 1) {
+          x = width * Math.random();
+          y = 0;
+          vx = speed * spread;
+          vy = speed;
+        } else if (side === 2) {
+          x = width;
+          y = height * Math.random();
+          vx = -speed;
+          vy = speed * spread;
+        } else {
+          x = width * Math.random();
+          y = height;
+          vx = speed * spread;
+          vy = -speed;
+        }
+        shootingStar = { x, y, vx, vy, life: SHOOTING_STAR_DURATION, maxLife: SHOOTING_STAR_DURATION };
+      }
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
@@ -783,7 +1163,15 @@ export function createMineZoneCanvas(
     draw() {
       if (!ctx || width <= 0 || height <= 0) return;
       ctx.clearRect(0, 0, width, height);
+      drawBackground();
+      const breath = 0.99 + 0.02 * Math.sin(orbitTime * 0.3);
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(breath, breath);
+      ctx.translate(-width / 2, -height / 2);
       drawSpatialSystem();
+      ctx.restore();
+      drawShootingStar();
       const accent = getThemeColor('--accent', '#f59e0b');
       for (const p of particles) {
         const t = 1 - p.life / p.maxLife;
@@ -794,6 +1182,7 @@ export function createMineZoneCanvas(
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+      drawClickRipples();
       if (clickFlash && ctx) {
         const t = 1 - clickFlash.life / clickFlash.maxLife;
         const r = 40 + t * 80;
@@ -826,6 +1215,7 @@ export function createMineZoneCanvas(
           ctx.fillStyle = overlayStyle;
         }
         ctx.fillRect(0, 0, width, height);
+        drawEventOverlayPattern(eventOverlayTime, eventIds);
       }
     },
     onMineClick(

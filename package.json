@@ -1,6 +1,6 @@
 {
   "name": "stellar-miner",
-  "version": "0.4.14",
+  "version": "0.4.16",
   "private": true,
   "type": "module",
   "scripts": {

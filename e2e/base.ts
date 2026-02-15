@@ -10,11 +10,11 @@ async function dismissIntroIfPresent(
   page: import('@playwright/test').Page
 ): Promise<void> {
   const overlay = page.locator('#intro-overlay.intro-overlay--open');
-  const gotIt = page.locator('#intro-got-it');
+  await overlay.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
   if ((await overlay.count()) === 0) return;
-  await gotIt.waitFor({ state: 'visible', timeout: 6000 });
+  await page.locator('#intro-got-it').waitFor({ state: 'visible', timeout: 6000 });
   await page.waitForTimeout(INTRO_READY_MS);
-  await gotIt.click();
+  await page.locator('#intro-got-it').click();
   await overlay.waitFor({ state: 'hidden', timeout: 3000 });
   await page.locator('#tab-mine').focus();
 }

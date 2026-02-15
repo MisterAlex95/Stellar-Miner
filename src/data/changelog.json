@@ -1,5 +1,20 @@
 [
   {
+    "version": "0.4.16",
+    "date": "2026-02-15",
+    "changes": [
+      "Mine zone canvas: star corona pulse and rotating spikes; planet atmospheres (by type), moons (1–2 for some), size by orbit; planet trails and drifting dust; grid lines for multi-system; breathing zoom; center glow (single system); floating background particles."
+    ]
+  },
+  {
+    "version": "0.4.15",
+    "date": "2026-02-15",
+    "changes": [
+      "Mine zone canvas visual polish: star twinkle, radial background and subtle nebula, planet halos and terminator shadow, readable planet labels with outline.",
+      "Orbits: gradient (brighter near star), phase offset per system. Click ripple on mine, rare shooting stars, animated stripes for solar-flare/solar-wind/comet-tail events."
+    ]
+  },
+  {
     "version": "0.4.14",
     "date": "2026-02-15",
     "changes": [
