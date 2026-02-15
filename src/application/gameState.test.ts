@@ -36,6 +36,16 @@ import {
   saveLoad,
   setStarfieldApi,
   setMineZoneCanvasApi,
+  getDiscoveredEventIds,
+  setDiscoveredEventIds,
+  addDiscoveredEvent,
+  getExpeditionEndsAt,
+  getExpeditionComposition,
+  getExpeditionDurationMs,
+  setExpeditionInProgress,
+  clearExpedition,
+  getExpeditionForSave,
+  setExpeditionFromPayload,
 } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
@@ -311,5 +321,98 @@ describe('gameState', () => {
     const evt = new GameEvent('e1', 'E1', new EventEffect(1, 0));
     setActiveEventInstances([{ event: evt, endsAt: Date.now() - 1000 }]);
     expect(getEventContext().activeEventIds).not.toContain('e1');
+  });
+
+  it('getDiscoveredEventIds and setDiscoveredEventIds', () => {
+    setDiscoveredEventIds(['a', 'b']);
+    expect(getDiscoveredEventIds()).toEqual(['a', 'b']);
+    setDiscoveredEventIds(['x']);
+    expect(getDiscoveredEventIds()).toEqual(['x']);
+  });
+
+  it('setDiscoveredEventIds with non-array clears ids', () => {
+    setDiscoveredEventIds(['a']);
+    setDiscoveredEventIds(null as unknown as string[]);
+    expect(getDiscoveredEventIds()).toEqual([]);
+  });
+
+  it('addDiscoveredEvent adds id when not already present', () => {
+    setDiscoveredEventIds([]);
+    addDiscoveredEvent('evt1');
+    expect(getDiscoveredEventIds()).toContain('evt1');
+    addDiscoveredEvent('evt1');
+    expect(getDiscoveredEventIds().filter((id) => id === 'evt1')).toHaveLength(1);
+  });
+
+  it('addDiscoveredEvent ignores non-string and duplicate', () => {
+    setDiscoveredEventIds(['existing']);
+    addDiscoveredEvent('existing');
+    expect(getDiscoveredEventIds()).toEqual(['existing']);
+    addDiscoveredEvent(1 as unknown as string);
+    expect(getDiscoveredEventIds()).toEqual(['existing']);
+  });
+
+  it('getExpeditionEndsAt, getExpeditionComposition, getExpeditionDurationMs return defaults when clear', () => {
+    clearExpedition();
+    expect(getExpeditionEndsAt()).toBeNull();
+    expect(getExpeditionComposition()).toBeNull();
+    expect(getExpeditionDurationMs()).toBe(0);
+  });
+
+  it('setExpeditionInProgress and getExpeditionForSave', () => {
+    setExpeditionInProgress(1000, { miner: 1, scientist: 0, pilot: 0 }, 5000);
+    expect(getExpeditionEndsAt()).toBe(1000);
+    expect(getExpeditionComposition()).toEqual({ miner: 1, scientist: 0, pilot: 0 });
+    expect(getExpeditionDurationMs()).toBe(5000);
+    const saved = getExpeditionForSave();
+    expect(saved).not.toBeNull();
+    expect(saved!.endsAt).toBe(1000);
+    expect(saved!.composition).toEqual({ miner: 1, scientist: 0, pilot: 0 });
+    expect(saved!.durationMs).toBe(5000);
+  });
+
+  it('clearExpedition clears expedition state', () => {
+    setExpeditionInProgress(1000, { miner: 1, scientist: 0, pilot: 0 }, 5000);
+    clearExpedition();
+    expect(getExpeditionEndsAt()).toBeNull();
+    expect(getExpeditionForSave()).toBeNull();
+  });
+
+  it('setExpeditionFromPayload with valid payload restores expedition', () => {
+    setExpeditionFromPayload({
+      endsAt: 2000,
+      composition: { miner: 2, scientist: 1, pilot: 0 },
+      durationMs: 10000,
+    });
+    expect(getExpeditionEndsAt()).toBe(2000);
+    expect(getExpeditionComposition()).toEqual({ miner: 2, scientist: 1, pilot: 0 });
+    expect(getExpeditionDurationMs()).toBe(10000);
+  });
+
+  it('setExpeditionFromPayload with partial composition uses 0 for missing roles', () => {
+    setExpeditionFromPayload({
+      endsAt: 3000,
+      composition: { miner: 1 },
+      durationMs: 5000,
+    });
+    expect(getExpeditionComposition()).toEqual({ miner: 1, scientist: 0, pilot: 0 });
+  });
+
+  it('setExpeditionFromPayload with null clears expedition', () => {
+    setExpeditionInProgress(1000, { miner: 1, scientist: 0, pilot: 0 }, 5000);
+    setExpeditionFromPayload(null);
+    expect(getExpeditionEndsAt()).toBeNull();
+  });
+
+  it('getEventMultiplier filters expired events and multiplies active', () => {
+    const future = Date.now() + 60000;
+    const evt1 = new GameEvent('e1', 'E1', new EventEffect(2, 60000));
+    const evt2 = new GameEvent('e2', 'E2', new EventEffect(3, 60000));
+    setActiveEventInstances([
+      { event: evt1, endsAt: future },
+      { event: evt2, endsAt: Date.now() - 1 },
+    ]);
+    expect(getEventMultiplier()).toBe(2);
+    expect(getActiveEventInstances()).toHaveLength(1);
   });
 });

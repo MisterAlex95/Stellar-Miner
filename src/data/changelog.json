@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.2",
+    "date": "2026-02-15",
+    "changes": [
+      "Expedition progress bar: finding a new planet now takes time (base + extra per planet already owned). A progress bar and countdown show during the expedition; outcome (success/fail, toasts) when it completes. Expedition state is saved so it continues after reload."
+    ]
+  },
+  {
     "version": "0.4.1",
     "date": "2026-02-15",
     "changes": [

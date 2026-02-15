@@ -1,7 +1,13 @@
 export { saveSession, handleExportSave, handleImportSave } from './handlersSave.js';
 export { handleMineClick } from './handlersMine.js';
 export { handleUpgradeBuy, handleUpgradeBuyMax } from './handlersUpgrade.js';
-export { handleBuyNewPlanet, handleAddSlot, handleBuildHousing, handleHireAstronaut } from './handlersPlanet.js';
+export {
+  handleBuyNewPlanet,
+  completeExpeditionIfDue,
+  handleAddSlot,
+  handleBuildHousing,
+  handleHireAstronaut,
+} from './handlersPlanet.js';
 export { handleClaimQuest } from './handlersQuest.js';
 export {
   openPrestigeConfirmModal,

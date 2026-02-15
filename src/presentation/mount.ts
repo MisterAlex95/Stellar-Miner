@@ -380,6 +380,21 @@ const APP_HTML = `
       `,
     })}
     ${createModalOverlay({
+      overlayId: 'events-hint-overlay',
+      overlayClass: 'events-hint-overlay',
+      dialogClass: 'events-hint-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'events-hint-modal-title',
+      ariaDescribedBy: 'events-hint-modal-body',
+      bodyHtml: `
+        <div class="events-hint-modal-header">
+          <h2 id="events-hint-modal-title" data-i18n="eventsHintTitle">Events you have seen</h2>
+          <button type="button" class="events-hint-close" id="events-hint-close" data-i18n-aria-label="close">×</button>
+        </div>
+        <div id="events-hint-modal-body" class="events-hint-modal-body" aria-describedby="events-hint-modal-body"></div>
+      `,
+    })}
+    ${createModalOverlay({
       overlayId: 'section-rules-overlay',
       overlayClass: 'section-rules-overlay',
       dialogClass: 'section-rules-modal',
@@ -404,6 +419,8 @@ const APP_HTML = `
         <div class="stat-label" data-i18n="coins">Coins</div>
         <div class="stat-value stat-value--hero" id="coins-value">0</div>
         <div class="stat-coins-extra" id="crew-stat-line" aria-live="polite"></div>
+        <div class="stat-coins-extra stat-coins-extra--sub" id="crew-stat-detail" aria-live="polite"></div>
+        <div class="stat-coins-extra stat-coins-extra--sub" id="crew-stat-by-job" aria-live="polite"></div>
       </div>
       <div class="stat-card stat-card--crew stats-compact-only" id="crew-compact-card" aria-hidden="true">
         <div class="stat-label" data-i18n="crew">Crew</div>
@@ -413,10 +430,18 @@ const APP_HTML = `
         <div class="stat-label"><span data-i18n="production">Production</span> <span class="production-live" id="production-live" aria-hidden="true"></span></div>
         <div class="stat-value" id="production-value">0/s</div>
         <div class="stat-breakdown" id="production-breakdown" aria-hidden="true"></div>
-        <div class="active-events" id="active-events" aria-live="polite"></div>
-        <span class="next-event-label" id="next-event-label" data-i18n="nextEventLabel" aria-hidden="true">Next event</span>
-        ${createProgressBarWithWrap('next-event-progress-wrap', 'next-event-progress-wrap', 'next-event-progress-bar', 'next-event-progress-bar', true)}
-        <div class="next-event-countdown" id="next-event-countdown" aria-live="polite"></div>
+        <div class="events-line" id="events-line">
+          <div class="events-line-content">
+            <div class="active-events" id="active-events" aria-live="polite"></div>
+            <div class="next-event-row" id="next-event-row">
+              <span class="next-event-label" id="next-event-label" data-i18n="nextEventLabel" aria-hidden="true">Next event</span>
+              ${createProgressBarWithWrap('next-event-progress-wrap', 'next-event-progress-wrap', 'next-event-progress-bar', 'next-event-progress-bar', true)}
+            </div>
+          </div>
+          <span class="events-hint-wrap" id="events-hint-wrap">
+            <button type="button" class="events-hint-trigger" id="events-hint-trigger" aria-label="Events discovered" aria-haspopup="dialog" title="">?</button>
+          </span>
+        </div>
       </div>
     </section>
     <div class="stats-spacer" id="stats-spacer" aria-hidden="true"></div>
@@ -482,7 +507,7 @@ const APP_HTML = `
         bodyHtml: `
           <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots or build housing on a planet (+2 crew capacity per module, uses 1 slot).</p>
           <div class="planet-list" id="planet-list"></div>
-          <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Send expedition</button></span>
+          <div class="expedition-area" id="expedition-area"></div>
         `,
       })}
       ${createGameplayBlock({
@@ -656,6 +681,26 @@ export function mount(): void {
     });
   }
 
+  const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
+  const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
+  const eventsHintTrigger = document.getElementById('events-hint-trigger');
+  const eventsHintOverlay = document.getElementById(EVENTS_HINT_OVERLAY_ID);
+  const eventsHintClose = document.getElementById('events-hint-close');
+  function closeEventsHintModal(): void {
+    closeOverlay(EVENTS_HINT_OVERLAY_ID, EVENTS_HINT_OPEN_CLASS);
+  }
+  if (eventsHintTrigger) {
+    eventsHintTrigger.addEventListener('click', () => {
+      openOverlay(EVENTS_HINT_OVERLAY_ID, EVENTS_HINT_OPEN_CLASS, { focusId: 'events-hint-close' });
+    });
+  }
+  if (eventsHintClose) eventsHintClose.addEventListener('click', closeEventsHintModal);
+  if (eventsHintOverlay) {
+    eventsHintOverlay.addEventListener('click', (e: MouseEvent) => {
+      if (e.target === eventsHintOverlay) closeEventsHintModal();
+    });
+  }
+
   if (settingsBtn && settingsOverlay) {
     settingsBtn.addEventListener('click', openSettings);
     settingsOverlay.addEventListener('click', (e) => {
@@ -690,6 +735,7 @@ export function mount(): void {
       else if (isIntroOverlayOpen()) dismissIntroModal();
       else if (document.getElementById('section-rules-overlay')?.classList.contains(SECTION_RULES_OVERLAY_CLASS)) closeSectionRulesModal();
       else if (document.getElementById('info-overlay')?.classList.contains('info-overlay--open')) closeInfoModal();
+      else if (document.getElementById(EVENTS_HINT_OVERLAY_ID)?.classList.contains(EVENTS_HINT_OPEN_CLASS)) closeEventsHintModal();
       else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
     });
   }

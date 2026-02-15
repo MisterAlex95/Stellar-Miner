@@ -1,4 +1,10 @@
-import { getSession, getSettings, planetService } from '../application/gameState.js';
+import {
+  getSession,
+  getSettings,
+  planetService,
+  getExpeditionEndsAt,
+  getExpeditionDurationMs,
+} from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { getPlanetEffectiveProduction } from '../application/productionHelpers.js';
 import { getPlanetType } from '../application/planetAffinity.js';
@@ -76,13 +82,50 @@ export function renderPlanetList(): void {
     const planetName = canvas.getAttribute('data-planet-name');
     if (planetName) drawPlanetSphereToCanvas(canvas, planetName);
   });
-  const buyPlanetBtn = document.getElementById('buy-planet-btn');
-  if (buyPlanetBtn) {
-    buyPlanetBtn.textContent = tParam('sendExpeditionBtn', { cost: formatNumber(cost, settings.compactNumbers), n: astronautsRequired });
-    const tooltipText = canLaunch
-      ? tParam('sendExpeditionTooltip', { n: astronautsRequired, cost: formatNumber(cost, settings.compactNumbers) })
-      : tParam('needForExpedition', { cost: formatNumber(cost, settings.compactNumbers), n: astronautsRequired });
-    updateTooltipForButton(buyPlanetBtn, tooltipText);
-    buyPlanetBtn.toggleAttribute('disabled', !canLaunch);
+  const expeditionArea = document.getElementById('expedition-area');
+  const endsAt = getExpeditionEndsAt();
+  const inProgress = endsAt != null;
+  if (expeditionArea) {
+    if (inProgress) {
+      const durationMs = getExpeditionDurationMs();
+      const remaining = Math.max(0, endsAt - Date.now());
+      const progress = durationMs > 0 ? 1 - remaining / durationMs : 0;
+      expeditionArea.innerHTML = `
+        <div class="expedition-progress-wrap" id="expedition-progress-wrap">
+          <div class="expedition-progress-bar-wrap"><div class="expedition-progress-fill" id="expedition-progress-fill" style="width: ${Math.min(100, progress * 100).toFixed(1)}%"></div></div>
+          <p class="expedition-progress-text" id="expedition-progress-text">${tParam('expeditionInProgress', { seconds: String(Math.ceil(remaining / 1000)) })}</p>
+        </div>`;
+    } else {
+      const tooltipText = canLaunch
+        ? tParam('sendExpeditionTooltip', { n: astronautsRequired, cost: formatNumber(cost, settings.compactNumbers) })
+        : tParam('needForExpedition', { cost: formatNumber(cost, settings.compactNumbers), n: astronautsRequired });
+      const btnHtml = `<button type="button" class="buy-planet-btn" id="buy-planet-btn" ${canLaunch ? '' : 'disabled'}>${tParam('sendExpeditionBtn', { cost: formatNumber(cost, settings.compactNumbers), n: astronautsRequired })}</button>`;
+      expeditionArea.innerHTML = buttonWithTooltipHtml(tooltipText, btnHtml);
+      const buyPlanetBtn = expeditionArea.querySelector('#buy-planet-btn');
+      if (buyPlanetBtn) updateTooltipForButton(buyPlanetBtn as HTMLElement, tooltipText);
+    }
   }
+}
+
+function updateExpeditionProgressDom(
+  wrap: HTMLElement,
+  endsAt: number,
+  durationMs: number
+): void {
+  const now = Date.now();
+  const remaining = Math.max(0, endsAt - now);
+  const progress = durationMs > 0 ? 1 - remaining / durationMs : 1;
+  const fill = wrap.querySelector('#expedition-progress-fill') as HTMLElement | null;
+  const text = wrap.querySelector('#expedition-progress-text') as HTMLElement | null;
+  if (fill) fill.style.width = `${Math.min(100, progress * 100).toFixed(1)}%`;
+  if (text) text.textContent = tParam('expeditionInProgress', { seconds: String(Math.ceil(remaining / 1000)) });
+}
+
+/** Call from game loop to refresh expedition bar and remaining time. */
+export function updateExpeditionProgress(): void {
+  const endsAt = getExpeditionEndsAt();
+  if (endsAt == null) return;
+  const progressWrap = document.getElementById('expedition-progress-wrap');
+  if (!progressWrap || progressWrap.hidden) return;
+  updateExpeditionProgressDom(progressWrap, endsAt, getExpeditionDurationMs());
 }

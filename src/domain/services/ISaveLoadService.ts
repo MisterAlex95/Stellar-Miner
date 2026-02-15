@@ -11,6 +11,6 @@ export type RunStatsPayload = {
 
 /** Port for persistence: save and load game state (implemented in infrastructure). */
 export interface ISaveLoadService {
-  save(session: GameSession, runStats?: RunStatsPayload): Promise<void>;
-  load(): Promise<{ session: GameSession; runStats?: RunStatsPayload } | null>;
+  save(session: GameSession, runStats?: RunStatsPayload, options?: { discoveredEventIds?: string[] }): Promise<void>;
+  load(): Promise<{ session: GameSession; runStats?: RunStatsPayload; discoveredEventIds?: string[]; expedition?: unknown } | null>;
 }

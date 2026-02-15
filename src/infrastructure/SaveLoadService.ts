@@ -44,6 +44,8 @@ export type SavedRunStats = {
   runMaxComboMult: number;
 };
 
+export type SavedExpedition = { endsAt: number; composition: Record<string, number>; durationMs: number };
+
 export type SavedSession = {
   version?: number;
   id: string;
@@ -62,6 +64,8 @@ export type SavedSession = {
   };
   activeEvents: Array<{ id: string; name: string; effect: { multiplier: number; durationMs: number } }>;
   runStats?: SavedRunStats;
+  discoveredEventIds?: string[];
+  expedition?: SavedExpedition;
 };
 
 function isSavedSession(data: unknown): data is SavedSession {
@@ -105,9 +109,13 @@ export class SaveLoadService implements ISaveLoadService {
     return Number.isFinite(n) ? n : null;
   }
 
-  async save(session: GameSession, runStats?: SavedRunStats): Promise<void> {
+  async save(
+    session: GameSession,
+    runStats?: SavedRunStats,
+    options?: { discoveredEventIds?: string[]; expedition?: SavedExpedition | null }
+  ): Promise<void> {
     if (typeof performance !== 'undefined' && performance.mark) performance.mark('save-start');
-    const payload = this.serialize(session, runStats);
+    const payload = this.serialize(session, runStats, options);
     if (typeof localStorage === 'undefined') return;
     const now = Date.now();
     try {
@@ -135,7 +143,7 @@ export class SaveLoadService implements ISaveLoadService {
     emit('save_success', undefined);
   }
 
-  async load(): Promise<{ session: GameSession; runStats?: SavedRunStats } | null> {
+  async load(): Promise<{ session: GameSession; runStats?: SavedRunStats; discoveredEventIds?: string[]; expedition?: SavedExpedition } | null> {
     if (typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -153,6 +161,18 @@ export class SaveLoadService implements ISaveLoadService {
       return null;
     }
     const runStats = data.runStats && typeof data.runStats === 'object' ? (data.runStats as SavedRunStats) : undefined;
+    const discoveredEventIds = Array.isArray(data.discoveredEventIds)
+      ? (data.discoveredEventIds as string[]).filter((id) => typeof id === 'string')
+      : undefined;
+    const expedition =
+      data.expedition &&
+      typeof data.expedition === 'object' &&
+      typeof data.expedition.endsAt === 'number' &&
+      typeof data.expedition.durationMs === 'number' &&
+      data.expedition.composition &&
+      typeof data.expedition.composition === 'object'
+        ? (data.expedition as SavedExpedition)
+        : undefined;
     const lastSaveRaw = localStorage.getItem(LAST_SAVE_KEY);
     if (lastSaveRaw) {
       const lastSave = parseInt(lastSaveRaw, 10);
@@ -190,7 +210,7 @@ export class SaveLoadService implements ISaveLoadService {
         this.lastOfflineWasCapped = elapsed > FULL_CAP_OFFLINE_MS;
       }
     }
-    return { session, runStats };
+    return { session, runStats, discoveredEventIds, expedition };
   }
 
   clearProgress(): void {
@@ -230,7 +250,11 @@ export class SaveLoadService implements ISaveLoadService {
     }
   }
 
-  private serialize(session: GameSession, runStats?: SavedRunStats): SavedSession {
+  private serialize(
+    session: GameSession,
+    runStats?: SavedRunStats,
+    options?: { discoveredEventIds?: string[]; expedition?: SavedExpedition | null }
+  ): SavedSession {
     const payload: SavedSession = {
       version: SAVE_VERSION,
       id: session.id,
@@ -270,6 +294,10 @@ export class SaveLoadService implements ISaveLoadService {
       })),
     };
     if (runStats) payload.runStats = runStats;
+    if (options?.discoveredEventIds && options.discoveredEventIds.length > 0) {
+      payload.discoveredEventIds = options.discoveredEventIds;
+    }
+    if (options?.expedition) payload.expedition = options.expedition;
     return payload;
   }
 

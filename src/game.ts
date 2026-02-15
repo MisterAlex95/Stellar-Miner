@@ -23,16 +23,14 @@ import { getResearchProductionMultiplier } from './application/research.js';
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
 import { updateStatisticsSection } from './presentation/statisticsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
-import { renderPlanetList } from './presentation/planetListView.js';
+import { renderPlanetList, updateExpeditionProgress } from './presentation/planetListView.js';
 import { renderResearchSection } from './presentation/researchView.js';
 import { renderQuestSection } from './presentation/questView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
 import { switchTab } from './presentation/mount.js';
-import { updateDebugPanel } from './application/handlers.js';
-import { saveSession } from './application/handlers.js';
-import { triggerRandomEvent } from './application/handlers.js';
+import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { showOfflineToast } from './presentation/toasts.js';
 
 let lastTime = performance.now();
@@ -51,6 +49,8 @@ function gameLoop(now: number): void {
   lastTime = now;
 
   const nowMs = Date.now();
+  completeExpeditionIfDue();
+  updateExpeditionProgress();
   const eventsUnlocked = getUnlockedBlocks(session).has('events');
   if (eventsUnlocked) {
     if (!lastEventsUnlocked) {

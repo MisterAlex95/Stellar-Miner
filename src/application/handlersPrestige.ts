@@ -5,6 +5,7 @@ import {
   getSession,
   setSession,
   setActiveEventInstances,
+  clearExpedition,
   setQuestState,
   setSessionClickCount,
   setSessionCoinsFromClicks,
@@ -81,6 +82,7 @@ export function confirmPrestige(): void {
   const newPlayer = Player.createAfterPrestige(session.player);
   setSession(new GameSession(session.id, newPlayer, []));
   setActiveEventInstances([]);
+  clearExpedition();
   resetRunStatsOnPrestige();
   incrementPrestigesToday();
   const newQuestState = { quest: generateQuest() };

@@ -16,6 +16,8 @@ const B = balance as {
   expeditionMaxAstronauts: number;
   expeditionDeathChance: number;
   expeditionMinDeathChance?: number;
+  expeditionDurationBaseMs?: number;
+  expeditionDurationPerPlanetMs?: number;
   planetProductionBonus: number;
   prestigeBonusPerLevel: number;
   prestigeClickBonusPercentPerLevel: number;
@@ -54,6 +56,13 @@ export function getNewPlanetCost(planetCount: number): Decimal {
 /** Astronauts required to send on expedition (risk: some may die; if all die, planet not discovered). */
 export function getExpeditionAstronautsRequired(planetCount: number): number {
   return Math.min(B.expeditionMinAstronauts + Math.floor(planetCount / 2), B.expeditionMaxAstronauts);
+}
+
+/** Expedition duration in ms (takes longer as you have more planets). */
+export function getExpeditionDurationMs(planetCount: number): number {
+  const base = B.expeditionDurationBaseMs ?? 20000;
+  const perPlanet = B.expeditionDurationPerPlanetMs ?? 8000;
+  return base + planetCount * perPlanet;
 }
 
 /** Per-astronaut death chance during expedition (0–1). Each rolls independently. */

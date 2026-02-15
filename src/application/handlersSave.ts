@@ -1,8 +1,20 @@
-import { getSession, setSession, getRunStats, setRunStatsFromPayload, saveLoad } from './gameState.js';
+import {
+  getSession,
+  setSession,
+  getRunStats,
+  setRunStatsFromPayload,
+  getDiscoveredEventIds,
+  getExpeditionForSave,
+  setExpeditionFromPayload,
+  saveLoad,
+} from './gameState.js';
 
 export function saveSession(): void {
   const session = getSession();
-  saveLoad.save(session, getRunStats());
+  saveLoad.save(session, getRunStats(), {
+    discoveredEventIds: getDiscoveredEventIds(),
+    expedition: getExpeditionForSave(),
+  });
 }
 
 export function handleExportSave(): void {
@@ -25,6 +37,10 @@ export async function handleImportSave(json: string): Promise<boolean> {
   if (!session) return false;
   setSession(session);
   setRunStatsFromPayload(null);
-  await saveLoad.save(session, getRunStats());
+  setExpeditionFromPayload(null);
+  await saveLoad.save(session, getRunStats(), {
+    discoveredEventIds: getDiscoveredEventIds(),
+    expedition: getExpeditionForSave(),
+  });
   return true;
 }

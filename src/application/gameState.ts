@@ -12,8 +12,11 @@ import { loadQuestState } from './questState.js';
 import type { QuestState } from './questState.js';
 import { emit } from './eventBus.js';
 import { PRESTIGES_TODAY_KEY } from './catalogs.js';
+import { CREW_ROLES, type ExpeditionComposition } from '../domain/constants.js';
 
 export type ActiveEventInstance = { event: GameEvent; endsAt: number };
+
+export type SavedExpedition = { endsAt: number; composition: ExpeditionComposition; durationMs: number };
 
 export type RunStats = {
   runStartTime: number;
@@ -40,6 +43,12 @@ let runStats: RunStats = {
   runEventsTriggered: 0,
   runMaxComboMult: 0,
 };
+/** Event IDs the player has ever seen (persisted with save). Only these appear in the events hint. */
+let discoveredEventIds: string[] = [];
+
+let expeditionEndsAt: number | null = null;
+let expeditionComposition: ExpeditionComposition | null = null;
+let expeditionDurationMs = 0;
 
 export const saveLoad = new SaveLoadService();
 export const upgradeService = new UpgradeService();
@@ -178,6 +187,19 @@ export function incrementRunEventsTriggered(): void {
   runStats.runEventsTriggered += 1;
 }
 
+export function getDiscoveredEventIds(): string[] {
+  return [...discoveredEventIds];
+}
+
+export function setDiscoveredEventIds(ids: string[]): void {
+  discoveredEventIds = Array.isArray(ids) ? ids.filter((id) => typeof id === 'string') : [];
+}
+
+export function addDiscoveredEvent(eventId: string): void {
+  if (typeof eventId !== 'string' || discoveredEventIds.includes(eventId)) return;
+  discoveredEventIds = [...discoveredEventIds, eventId];
+}
+
 export function updateRunMaxComboMult(mult: number): void {
   if (mult > runStats.runMaxComboMult) runStats.runMaxComboMult = mult;
 }
@@ -214,6 +236,50 @@ export function setMineZoneCanvasApi(api: ReturnType<typeof createMineZoneCanvas
   mineZoneCanvasApi = api;
 }
 
+export function getExpeditionEndsAt(): number | null {
+  return expeditionEndsAt;
+}
+
+export function getExpeditionComposition(): ExpeditionComposition | null {
+  return expeditionComposition;
+}
+
+export function getExpeditionDurationMs(): number {
+  return expeditionDurationMs;
+}
+
+export function setExpeditionInProgress(endsAt: number, composition: ExpeditionComposition, durationMs: number): void {
+  expeditionEndsAt = endsAt;
+  expeditionComposition = { ...composition };
+  expeditionDurationMs = durationMs;
+}
+
+export function clearExpedition(): void {
+  expeditionEndsAt = null;
+  expeditionComposition = null;
+  expeditionDurationMs = 0;
+}
+
+export function getExpeditionForSave(): SavedExpedition | null {
+  if (expeditionEndsAt == null || !expeditionComposition) return null;
+  return { endsAt: expeditionEndsAt, composition: { ...expeditionComposition }, durationMs: expeditionDurationMs };
+}
+
+export function setExpeditionFromPayload(
+  payload: { endsAt: number; composition: Record<string, number>; durationMs: number } | null | undefined
+): void {
+  if (!payload) {
+    clearExpedition();
+    return;
+  }
+  expeditionEndsAt = payload.endsAt;
+  const raw = payload.composition;
+  expeditionComposition = Object.fromEntries(
+    CREW_ROLES.map((r) => [r, typeof raw[r] === 'number' ? raw[r] : 0])
+  ) as ExpeditionComposition;
+  expeditionDurationMs = payload.durationMs;
+}
+
 export function getEventContext(): { activeEventIds: string[] } {
   const now = Date.now();
   return {
@@ -235,10 +301,13 @@ export async function getOrCreateSession(): Promise<GameSession> {
   if (result) {
     setSession(result.session);
     setRunStatsFromPayload(result.runStats ?? null);
+    setDiscoveredEventIds(result.discoveredEventIds ?? []);
+    setExpeditionFromPayload(result.expedition ?? null);
     return result.session;
   }
   const player = Player.create('player-1');
   player.addCoins(0);
   setRunStatsFromPayload(null);
+  setDiscoveredEventIds([]);
   return new GameSession('session-1', player);
 }

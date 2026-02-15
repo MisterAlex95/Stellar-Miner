@@ -5,6 +5,8 @@
   "expeditionMaxAstronauts": 6,
   "expeditionDeathChance": 0.25,
   "expeditionMinDeathChance": 0.05,
+  "expeditionDurationBaseMs": 20000,
+  "expeditionDurationPerPlanetMs": 8000,
   "planetProductionBonus": 0.05,
   "prestigeBonusPerLevel": 0.05,
   "prestigeClickBonusPercentPerLevel": 5,

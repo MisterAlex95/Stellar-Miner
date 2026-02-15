@@ -280,3 +280,38 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Expedition progress bar */
+.expedition-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.expedition-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.expedition-progress-bar-wrap {
+  height: 8px;
+  background: var(--bg-panel);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.expedition-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #e69500);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+  min-width: 0;
+}
+
+.expedition-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0;
+}

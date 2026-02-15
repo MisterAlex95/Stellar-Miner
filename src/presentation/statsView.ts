@@ -13,7 +13,8 @@ import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { getMaxAstronauts } from '../domain/constants.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
-import { EVENT_INTERVAL_MS } from '../application/catalogs.js';
+import { EVENT_INTERVAL_MS, EVENT_CATALOG } from '../application/catalogs.js';
+import { getDiscoveredEventIds } from '../application/gameState.js';
 import { getNextMilestone, getUnlockedBlocks } from '../application/progression.js';
 import { getResearchProductionMultiplier, getResearchProductionPercent } from '../application/research.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
@@ -99,10 +100,32 @@ export function updateStats(): void {
   const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
   const coinsCard = document.getElementById('coins-stat-card');
   const crewLineEl = document.getElementById('crew-stat-line');
-  const totalCrew = player.astronautCount + (session ? getAssignedAstronauts(session) : 0);
+  const crewDetailEl = document.getElementById('crew-stat-detail');
+  const freeCrew = player.astronautCount;
+  const assignedCrew = session ? getAssignedAstronauts(session) : 0;
+  const totalCrew = freeCrew + assignedCrew;
+  const showCrew = totalCrew > 0;
   if (crewLineEl) {
-    crewLineEl.textContent = totalCrew > 0 ? tParam('crewStatFormat', { n: totalCrew }) : '';
-    crewLineEl.style.display = totalCrew > 0 ? 'block' : 'none';
+    crewLineEl.textContent = showCrew ? tParam('crewStatFormat', { n: freeCrew }) : '';
+    crewLineEl.style.display = showCrew ? 'block' : 'none';
+  }
+  if (crewDetailEl) {
+    crewDetailEl.textContent = showCrew ? tParam('crewStatDetail', { assigned: String(assignedCrew), total: String(totalCrew) }) : '';
+    crewDetailEl.style.display = showCrew ? 'block' : 'none';
+  }
+  const crewByJobEl = document.getElementById('crew-stat-by-job');
+  if (crewByJobEl) {
+    if (showCrew) {
+      const { miner, scientist, pilot } = player.crewByRole;
+      crewByJobEl.innerHTML = [
+        `<span class="crew-stat-role crew-stat-role--miner">${miner} ${t('crewStatRoleMiners')}</span>`,
+        `<span class="crew-stat-role crew-stat-role--scientist">${scientist} ${t('crewStatRoleScientists')}</span>`,
+        `<span class="crew-stat-role crew-stat-role--pilot">${pilot} ${t('crewStatRolePilots')}</span>`,
+      ].join(', ');
+    } else {
+      crewByJobEl.textContent = '';
+    }
+    crewByJobEl.style.display = showCrew ? 'block' : 'none';
   }
   const crewCompactEl = document.getElementById('stats-compact-crew');
   if (crewCompactEl) crewCompactEl.textContent = String(totalCrew);
@@ -167,24 +190,25 @@ export function updateStats(): void {
   const activeEventInstances = getActiveEventInstances();
   const nextEventAt = getNextEventAt();
   const activeEl = document.getElementById('active-events');
+  const nextEventRow = document.getElementById('next-event-row');
   const nextEventLabel = document.getElementById('next-event-label');
-  const nextEventEl = document.getElementById('next-event-countdown');
   const nextEventProgressWrap = document.getElementById('next-event-progress-wrap');
   const nextEventProgressBar = document.getElementById('next-event-progress-bar');
   if (!eventsUnlocked) {
     if (activeEl) activeEl.style.display = 'none';
+    if (nextEventRow) nextEventRow.style.display = 'none';
     if (nextEventLabel) nextEventLabel.style.display = 'none';
-    if (nextEventEl) nextEventEl.style.display = 'none';
     if (nextEventProgressWrap) nextEventProgressWrap.style.display = 'none';
   } else {
     const now = Date.now();
     const active = activeEventInstances.filter((a) => a.endsAt > now);
+    if (nextEventRow) nextEventRow.style.display = active.length > 0 ? 'none' : 'flex';
     if (activeEl) {
       if (active.length === 0) {
         activeEl.innerHTML = '';
         activeEl.style.display = 'none';
       } else {
-        activeEl.style.display = 'block';
+        activeEl.style.display = 'flex';
         activeEl.innerHTML = active
           .map((a) => {
             const name = getCatalogEventName(a.event.id);
@@ -194,18 +218,6 @@ export function updateStats(): void {
             return createEventBadgeHtml(name, secondsLeft, title, { modifier, mult: a.event.effect.multiplier });
           })
           .join('');
-      }
-    }
-    if (nextEventEl) {
-      if (active.length > 0) {
-        nextEventEl.textContent = '';
-        nextEventEl.style.display = 'none';
-      } else {
-        const secs = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
-        const m = Math.floor(secs / 60);
-        const s = secs % 60;
-        nextEventEl.textContent = m > 0 ? tParam('nextEventInFormat', { time: `${m}:${s.toString().padStart(2, '0')}` }) : tParam('nextEventInFormat', { time: `${secs}s` });
-        nextEventEl.style.display = 'block';
       }
     }
     if (nextEventProgressWrap && nextEventProgressBar && active.length === 0) {
@@ -224,4 +236,41 @@ export function updateStats(): void {
       }
     }
   }
+  const hintWrap = document.getElementById('events-hint-wrap');
+  const hintTrigger = document.getElementById('events-hint-trigger');
+  if (hintWrap) hintWrap.style.display = 'block';
+  if (hintTrigger) {
+    hintTrigger.setAttribute('title', t('eventsHintTitle'));
+    hintTrigger.setAttribute('aria-label', t('eventsHintTitle'));
+  }
+  const hintModalBody = document.getElementById('events-hint-modal-body');
+  if (hintModalBody) {
+    const discovered = getDiscoveredEventIds();
+    const explanation = `<p class="events-hint-what">${t('eventsHintWhat')}</p>`;
+    const unlockLine = !eventsUnlocked ? `<p class="events-hint-unlock">${t('eventsHintUnlock')}</p>` : '';
+    let listSection: string;
+    if (discovered.length === 0) {
+      listSection = `<p class="events-hint-heading">${t('eventsHintHeading')}</p><p class="events-hint-empty">${t('eventsHintEmpty')}</p>`;
+    } else {
+      const items = discovered
+        .map((id) => {
+          const ev = EVENT_CATALOG.find((e) => e.id === id);
+          if (!ev) return '';
+          const name = getCatalogEventName(ev.id);
+          const mult = ev.effect.multiplier;
+          const secs = ev.effect.durationMs / 1000;
+          const modClass = mult >= 1 ? 'events-hint-item--positive' : 'events-hint-item--negative';
+          return `<div class="events-hint-item ${modClass}"><span class="events-hint-item__name">${escapeHtml(name)}</span> <span class="events-hint-item__effect">×${mult}</span> <span class="events-hint-item__dur">${secs}s</span></div>`;
+        })
+        .filter(Boolean);
+      listSection = `<p class="events-hint-heading">${t('eventsHintHeading')}</p><div class="events-hint-list">${items.join('')}</div>`;
+    }
+    hintModalBody.innerHTML = explanation + unlockLine + listSection;
+  }
+}
+
+function escapeHtml(s: string): string {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
 }

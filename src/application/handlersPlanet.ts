@@ -1,6 +1,12 @@
-import { getSession } from './gameState.js';
-import { planetService } from './gameState.js';
-import { getMaxAstronauts, getAstronautCost, type CrewRole } from '../domain/constants.js';
+import {
+  getSession,
+  planetService,
+  getExpeditionEndsAt,
+  getExpeditionComposition,
+  clearExpedition,
+  setExpeditionInProgress,
+} from './gameState.js';
+import { getMaxAstronauts, getAstronautCost, getExpeditionDurationMs, type CrewRole } from '../domain/constants.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { hasEffectiveFreeSlot } from './research.js';
 import { emit } from './eventBus.js';
@@ -17,9 +23,33 @@ export function handleBuyNewPlanet(): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
+  if (getExpeditionEndsAt() !== null) return; // expedition already in progress
   if (!planetService.canLaunchExpedition(player)) return;
+  const result = planetService.startExpedition(player);
+  if (!result.started) return;
+  const durationMs = getExpeditionDurationMs(player.planets.length);
+  const endsAt = Date.now() + durationMs;
+  setExpeditionInProgress(endsAt, result.composition, durationMs);
+  saveSession();
+  updateStats();
+  renderUpgradeList();
+  renderPlanetList();
+  renderCrewSection();
+}
+
+/** Called from game loop: if expedition timer has elapsed, complete it and refresh UI. */
+export function completeExpeditionIfDue(): void {
+  const endsAt = getExpeditionEndsAt();
+  if (endsAt == null) return;
+  if (Date.now() < endsAt) return;
+  const session = getSession();
+  if (!session) return;
+  const composition = getExpeditionComposition();
+  if (!composition) return;
+  const player = session.player;
   const wasFirstPlanet = player.planets.length === 1;
-  const outcome = planetService.launchExpedition(player);
+  const outcome = planetService.completeExpedition(player, composition, Math.random);
+  clearExpedition();
   if (outcome.success && outcome.planetName) {
     emit('planet_bought', { planetCount: player.planets.length });
     if (outcome.deaths > 0) {
@@ -49,6 +79,7 @@ export function handleBuyNewPlanet(): void {
   renderUpgradeList();
   renderPlanetList();
   renderCrewSection();
+  checkAchievements();
 }
 
 export function handleAddSlot(planetId: string): void {

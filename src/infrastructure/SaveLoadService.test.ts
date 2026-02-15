@@ -367,4 +367,53 @@ describe('SaveLoadService', () => {
     const loaded = await service.load();
     expect(loaded).toBeNull();
   });
+
+  it('save with runStats and expedition options includes them in payload', async () => {
+    const player = Player.create('p1');
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    const runStats = {
+      runStartTime: 1000,
+      runCoinsEarned: 500,
+      runQuestsClaimed: 1,
+      runEventsTriggered: 0,
+      runMaxComboMult: 1.2,
+    };
+    const expedition = {
+      endsAt: 2000,
+      composition: { miner: 2, scientist: 0, pilot: 0 },
+      durationMs: 10000,
+    };
+    await service.save(session, runStats, { discoveredEventIds: ['e1'], expedition });
+    const raw = storage['stellar-miner-session'];
+    expect(raw).toBeDefined();
+    const data = JSON.parse(raw);
+    expect(data.runStats).toEqual(runStats);
+    expect(data.discoveredEventIds).toEqual(['e1']);
+    expect(data.expedition).toEqual(expedition);
+  });
+
+  it('load returns runStats, discoveredEventIds and expedition when present in stored payload', async () => {
+    const player = Player.create('p1');
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    const runStats = {
+      runStartTime: 1000,
+      runCoinsEarned: 500,
+      runQuestsClaimed: 0,
+      runEventsTriggered: 0,
+      runMaxComboMult: 1,
+    };
+    const expedition = {
+      endsAt: 3000,
+      composition: { miner: 1, scientist: 0, pilot: 0 },
+      durationMs: 5000,
+    };
+    await service.save(session, runStats, { discoveredEventIds: ['evt-a', 'evt-b'], expedition });
+    const loaded = await service.load();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.runStats).toEqual(runStats);
+    expect(loaded!.discoveredEventIds).toEqual(['evt-a', 'evt-b']);
+    expect(loaded!.expedition).toEqual(expedition);
+  });
 });

@@ -59,6 +59,48 @@ export class PlanetService {
     return true;
   }
 
+  /** Start expedition: spend coins + crew only. Returns composition so you can complete it later. */
+  startExpedition(player: Player): { started: true; composition: ExpeditionComposition } | { started: false } {
+    const cost = this.getNewPlanetCost(player);
+    const required = this.getExpeditionAstronautsRequired(player);
+    const composition = defaultComposition(player, required);
+    if (!player.coins.gte(cost) || !player.spendCrewByComposition(composition)) {
+      return { started: false };
+    }
+    player.spendCoins(cost);
+    return { started: true, composition: { ...composition } };
+  }
+
+  /** Complete expedition: roll deaths, add planet and veterans on success. Call when expedition duration has elapsed. */
+  completeExpedition(
+    player: Player,
+    composition: ExpeditionComposition,
+    roll: () => number = Math.random
+  ): ExpeditionOutcome {
+    const totalSent = CREW_ROLES.reduce((s, r) => s + composition[r], 0);
+    const pilotCount = composition.pilot;
+    const deathChance = Math.max(EXPEDITION_MIN_DEATH_CHANCE, EXPEDITION_DEATH_CHANCE);
+    let deaths = 0;
+    for (let i = 0; i < totalSent; i++) {
+      if (roll() < deathChance) deaths++;
+    }
+    let survivors = totalSent - deaths;
+    const hasPilot = pilotCount >= 1;
+    if (hasPilot && survivors === 0 && totalSent >= 1) {
+      survivors = 1;
+      deaths = totalSent - 1;
+    }
+    const success = survivors >= 1;
+    if (success) {
+      const id = `planet-${player.planets.length + 1}`;
+      const name = generatePlanetName(id);
+      player.addPlanet(PlanetEntity.create(id, name));
+      player.addVeterans(survivors);
+      return { success: true, totalSent, survivors, deaths, planetName: name };
+    }
+    return { success: false, totalSent, survivors: 0, deaths: totalSent, planetName: undefined };
+  }
+
   /** Launch expedition: spend coins + crew (by composition or default). Pilot guarantees one survivor. Survivors become veterans. */
   launchExpedition(
     player: Player,

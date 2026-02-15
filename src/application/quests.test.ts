@@ -55,12 +55,53 @@ describe('quests', () => {
   });
 
   it('generateQuest can return astronauts quest when random in range', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.75);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    expect(q.type).toBe('astronauts');
+    expect(q.target).toBeGreaterThan(0);
+  });
+
+  it('generateQuest can return coins quest when random in first bucket', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.1);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    expect(q.type).toBe('coins');
+    expect(q.target).toBeGreaterThan(0);
+    expect(q.description).toContain('coins');
+  });
+
+  it('generateQuest can return prestige_today quest when random in range', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.85);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    expect(q.type).toBe('prestige_today');
+    expect(q.target).toBeGreaterThan(0);
+  });
+
+  it('generateQuest can return combo_tier quest when random in range', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.9);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    expect(q.type).toBe('combo_tier');
+    expect(q.target).toBeGreaterThan(0);
+    expect(q.description).toContain('combo');
+  });
+
+  it('generateQuest can return events_triggered quest when random in range', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.95);
     const q = generateQuest();
     vi.restoreAllMocks();
-    if (q.type === 'astronauts') {
-      expect(q.target).toBeGreaterThan(0);
-    }
+    expect(q.type).toBe('events_triggered');
+    expect(q.target).toBeGreaterThan(0);
+  });
+
+  it('generateQuest can return tier1_set quest when random in last bucket', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    expect(q.type).toBe('tier1_set');
+    expect(q.description).toContain('tier-1');
   });
 
   it('getQuestProgress returns null when no session or no quest', () => {
@@ -122,6 +163,16 @@ describe('quests', () => {
     expect(p).not.toBeNull();
     expect(p!.current).toBe(150);
     expect(p!.done).toBe(true);
+  });
+
+  it('getQuestProgress returns progress for combo_tier when below target', () => {
+    setSession(new GameSession('s1', Player.create('p1')));
+    setRunStatsFromPayload({ runMaxComboMult: 1.1 });
+    setQuestState({ quest: { type: 'combo_tier', target: 130, reward: 100, description: 'Reach ×1.3 combo' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.current).toBe(110);
+    expect(p!.done).toBe(false);
   });
 
   it('getQuestProgress returns progress for events_triggered quest', () => {
@@ -233,5 +284,53 @@ describe('quests', () => {
     expect(callbacks.saveSession).toHaveBeenCalled();
     expect(getQuestState().quest).not.toBeNull();
     vi.stubGlobal('document', origDoc);
+  });
+
+  it('claimQuest calls showFloatingReward with claim button when element exists', () => {
+    const mockBtn = { id: 'quest-claim' } as unknown as HTMLElement;
+    vi.stubGlobal('document', { getElementById: (id: string) => (id === 'quest-claim' ? mockBtn : null) });
+    const player = Player.create('p1');
+    player.addCoins(10000);
+    setSession(new GameSession('s1', player));
+    setQuestState({
+      quest: { type: 'coins', target: 100, reward: 50, description: 'Reach 100 coins' },
+    });
+    const showFloatingReward = vi.fn();
+    claimQuest({
+      saveSession: vi.fn(),
+      updateStats: vi.fn(),
+      renderUpgradeList: vi.fn(),
+      renderQuestSection: vi.fn(),
+      showFloatingReward,
+      showQuestStreakToast: vi.fn(),
+      checkAchievements: vi.fn(),
+    });
+    expect(showFloatingReward).toHaveBeenCalledWith(50, mockBtn);
+  });
+
+  it('claimQuest calls showQuestStreakToast when streak > 1', () => {
+    storage[QUEST_LAST_CLAIM_KEY] = String(Date.now() - 1000);
+    storage[QUEST_STREAK_KEY] = '2';
+    vi.stubGlobal('document', { getElementById: () => null });
+    const player = Player.create('p1');
+    player.addCoins(10000);
+    setSession(new GameSession('s1', player));
+    setQuestState({
+      quest: { type: 'coins', target: 100, reward: 50, description: 'Reach 100 coins' },
+    });
+    const showQuestStreakToast = vi.fn();
+    claimQuest({
+      saveSession: vi.fn(),
+      updateStats: vi.fn(),
+      renderUpgradeList: vi.fn(),
+      renderQuestSection: vi.fn(),
+      showFloatingReward: vi.fn(),
+      showQuestStreakToast,
+      checkAchievements: vi.fn(),
+    });
+    expect(showQuestStreakToast).toHaveBeenCalled();
+    const [streak, mult] = showQuestStreakToast.mock.calls[0];
+    expect(streak).toBeGreaterThan(1);
+    expect(typeof mult).toBe('number');
   });
 });

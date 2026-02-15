@@ -41,6 +41,106 @@ describe('PlanetService', () => {
     expect(service.canLaunchExpedition(player)).toBe(false);
   });
 
+  it('canLaunchExpedition is true with valid composition', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const cost = service.getNewPlanetCost(player);
+    const required = service.getExpeditionAstronautsRequired(player);
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
+    player.hireAstronaut(getAstronautCost(0));
+    player.hireAstronaut(getAstronautCost(1));
+    const composition = { miner: required, scientist: 0, pilot: 0 };
+    expect(service.canLaunchExpedition(player, composition)).toBe(true);
+  });
+
+  it('canLaunchExpedition is false when composition sum does not match required', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const cost = service.getNewPlanetCost(player);
+    const required = service.getExpeditionAstronautsRequired(player);
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
+    player.hireAstronaut(getAstronautCost(0));
+    player.hireAstronaut(getAstronautCost(1));
+    expect(service.canLaunchExpedition(player, { miner: required - 1, scientist: 0, pilot: 0 })).toBe(false);
+  });
+
+  it('canLaunchExpedition is false when crew in composition exceeds player crew', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const cost = service.getNewPlanetCost(player);
+    const required = service.getExpeditionAstronautsRequired(player);
+    player.addCoins(cost.add(getAstronautCost(0)));
+    player.hireAstronaut(getAstronautCost(0));
+    expect(service.canLaunchExpedition(player, { miner: required, scientist: 0, pilot: 0 })).toBe(false);
+  });
+
+  it('startExpedition spends coins and crew and returns composition on success', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const cost = service.getNewPlanetCost(player);
+    const required = service.getExpeditionAstronautsRequired(player);
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
+    player.hireAstronaut(getAstronautCost(0));
+    player.hireAstronaut(getAstronautCost(1));
+    const result = service.startExpedition(player);
+    expect(result.started).toBe(true);
+    if (result.started) {
+      expect(result.composition.miner + result.composition.scientist + result.composition.pilot).toBe(required);
+    }
+    expect(player.planets).toHaveLength(1);
+  });
+
+  it('startExpedition returns started false when cannot afford', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const result = service.startExpedition(player);
+    expect(result.started).toBe(false);
+  });
+
+  it('completeExpedition rolls deaths and adds planet and veterans on success', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const cost = service.getNewPlanetCost(player);
+    const required = service.getExpeditionAstronautsRequired(player);
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
+    player.hireAstronaut(getAstronautCost(0));
+    player.hireAstronaut(getAstronautCost(1));
+    const startResult = service.startExpedition(player);
+    expect(startResult.started).toBe(true);
+    const composition = startResult.started ? startResult.composition : { miner: required, scientist: 0, pilot: 0 };
+    const outcome = service.completeExpedition(player, composition, () => 1);
+    expect(outcome.success).toBe(true);
+    expect(outcome.survivors).toBe(required);
+    expect(player.planets).toHaveLength(2);
+    expect(player.veteranCount).toBe(required);
+  });
+
+  it('completeExpedition with pilot saves one survivor when all would die', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const composition = { miner: 1, scientist: 0, pilot: 1 };
+    const outcome = service.completeExpedition(player, composition, () => 0);
+    expect(outcome.success).toBe(true);
+    expect(outcome.survivors).toBe(1);
+    expect(outcome.deaths).toBe(1);
+    expect(player.planets).toHaveLength(2);
+    expect(player.veteranCount).toBe(1);
+  });
+
+  it('launchExpedition with composition object uses given composition', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const cost = service.getNewPlanetCost(player);
+    const required = service.getExpeditionAstronautsRequired(player);
+    player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
+    player.hireAstronaut(getAstronautCost(0));
+    player.hireAstronaut(getAstronautCost(1));
+    const composition = { miner: required, scientist: 0, pilot: 0 };
+    const outcome = service.launchExpedition(player, composition, () => 1);
+    expect(outcome.success).toBe(true);
+    expect(player.planets).toHaveLength(2);
+  });
+
   it('launchExpedition spends coins and astronauts; on success adds planet and returns survivors', () => {
     const player = Player.create('p1');
     const service = new PlanetService();
@@ -186,5 +286,26 @@ describe('PlanetService', () => {
     const ok = service.buildHousing(player, planet);
     expect(ok).toBe(false);
     expect(planet.housingCount).toBe(0);
+  });
+
+  it('canBuildHousing uses hasFreeSlot callback when provided', () => {
+    const player = Player.create('p1');
+    const planet = player.planets[0];
+    const service = new PlanetService();
+    const cost = service.getHousingCost(planet);
+    player.addCoins(cost);
+    expect(service.canBuildHousing(player, planet, () => true)).toBe(true);
+    expect(service.canBuildHousing(player, planet, () => false)).toBe(false);
+  });
+
+  it('buildHousing uses hasFreeSlot callback when provided', () => {
+    const player = Player.create('p1');
+    const planet = player.planets[0];
+    const service = new PlanetService();
+    const cost = service.getHousingCost(planet);
+    player.addCoins(cost);
+    const ok = service.buildHousing(player, planet, () => true);
+    expect(ok).toBe(true);
+    expect(planet.housingCount).toBe(1);
   });
 });
