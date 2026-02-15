@@ -237,70 +237,94 @@ function sampleGradient(stops: GradientStop[], t: number): string {
 
 /** Star types: yellow, orange, red dwarf, white/blue. */
 const STAR_TYPES = [
-  { core: '#fff8e7', mid: '#f59e0b', outer: '#b45309', inner: '#f59e0b' },
-  { core: '#fff4d6', mid: '#ea580c', outer: '#c2410c', inner: '#fb923c' },
-  { core: '#fef3c7', mid: '#dc2626', outer: '#991b1b', inner: '#f87171' },
-  { core: '#e0f2fe', mid: '#0ea5e9', outer: '#0369a1', inner: '#7dd3fc' },
+  { core: '#fffef5', mid: '#fde68a', outer: '#f59e0b', corona: 'rgba(251, 191, 36, 0.25)', glow: 'rgba(245, 158, 11, 0.12)' },
+  { core: '#fff8e7', mid: '#fdba74', outer: '#ea580c', corona: 'rgba(249, 115, 22, 0.22)', glow: 'rgba(234, 88, 12, 0.1)' },
+  { core: '#fef2f2', mid: '#fca5a5', outer: '#dc2626', corona: 'rgba(248, 113, 113, 0.2)', glow: 'rgba(220, 38, 38, 0.08)' },
+  { core: '#f0f9ff', mid: '#7dd3fc', outer: '#0ea5e9', corona: 'rgba(56, 189, 248, 0.22)', glow: 'rgba(14, 165, 233, 0.1)' },
 ];
 
 function drawStar(sx: number, sy: number, radius: number, systemIndex: number): void {
   if (!ctx) return;
   const type = STAR_TYPES[systemIndex % STAR_TYPES.length];
-  const sizeScale = 0.9 + (hash(`star-${systemIndex}`) % 21) / 100;
+  const sizeScale = 0.92 + (hash(`star-${systemIndex}`) % 18) / 100;
   const r = radius * sizeScale;
-  const grd = ctx.createRadialGradient(sx - r * 0.3, sy - r * 0.3, 0, sx, sy, r * 1.5);
+  const glowR = r * 3.2;
+  const coronaR = r * 2;
+  const outerR = r * 1.4;
+  ctx.save();
+  const grdGlow = ctx.createRadialGradient(sx, sy, r * 0.5, sx, sy, glowR);
+  grdGlow.addColorStop(0, type.glow);
+  grdGlow.addColorStop(0.4, type.glow);
+  grdGlow.addColorStop(0.7, 'rgba(0,0,0,0)');
+  grdGlow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grdGlow;
+  ctx.beginPath();
+  ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
+  ctx.fill();
+  const grdCorona = ctx.createRadialGradient(sx - r * 0.2, sy - r * 0.2, 0, sx, sy, coronaR);
+  grdCorona.addColorStop(0, 'rgba(255,255,255,0.4)');
+  grdCorona.addColorStop(0.15, type.corona);
+  grdCorona.addColorStop(0.5, 'rgba(0,0,0,0)');
+  grdCorona.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grdCorona;
+  ctx.beginPath();
+  ctx.arc(sx, sy, coronaR, 0, Math.PI * 2);
+  ctx.fill();
+  const grd = ctx.createRadialGradient(sx - r * 0.3, sy - r * 0.3, 0, sx, sy, outerR);
   grd.addColorStop(0, type.core);
-  grd.addColorStop(0.35, type.mid);
-  grd.addColorStop(0.7, type.outer);
+  grd.addColorStop(0.25, type.mid);
+  grd.addColorStop(0.6, type.outer);
   grd.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = grd;
   ctx.beginPath();
-  ctx.arc(sx, sy, r * 1.5, 0, Math.PI * 2);
+  ctx.arc(sx, sy, outerR, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = type.inner;
-  ctx.globalAlpha = 0.95;
+  ctx.fillStyle = type.core;
+  ctx.globalAlpha = 0.98;
   ctx.beginPath();
-  ctx.arc(sx, sy, r, 0, Math.PI * 2);
+  ctx.arc(sx, sy, r * 0.88, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
-/** Planet types with base colors (for shading) and gradient regions (noise → biomes, bevy_generative-style). */
+/** Planet types with base colors (for shading) and gradient regions (noise → biomes). */
 const PLANET_GRADIENTS: Record<string, GradientStop[]> = {
   rocky: [
-    { position: 0, color: '#44403c' },
-    { position: 25, color: '#57534e' },
-    { position: 50, color: '#78716c' },
-    { position: 75, color: '#a8a29e' },
-    { position: 100, color: '#d6d3d1' },
+    { position: 0, color: '#3c3836' },
+    { position: 20, color: '#57534e' },
+    { position: 45, color: '#78716c' },
+    { position: 70, color: '#a8a29e' },
+    { position: 90, color: '#d6d3d1' },
+    { position: 100, color: '#e7e5e4' },
   ],
   desert: [
-    { position: 0, color: '#78716c' },
-    { position: 30, color: '#a8a29e' },
-    { position: 60, color: '#d6d3d1' },
-    { position: 85, color: '#e7e5e4' },
-    { position: 100, color: '#fafaf9' },
+    { position: 0, color: '#6b5344' },
+    { position: 25, color: '#a0826d' },
+    { position: 50, color: '#d4b896' },
+    { position: 75, color: '#e8dcc8' },
+    { position: 100, color: '#f5f0e8' },
   ],
   ice: [
-    { position: 0, color: '#0c4a6e' },
-    { position: 25, color: '#0ea5e9' },
-    { position: 50, color: '#7dd3fc' },
-    { position: 75, color: '#bae6fd' },
-    { position: 100, color: '#e0f2fe' },
+    { position: 0, color: '#0e3a52' },
+    { position: 20, color: '#0c6b8a' },
+    { position: 45, color: '#38b4d0' },
+    { position: 70, color: '#7dd3fc' },
+    { position: 100, color: '#bae6fd' },
   ],
   volcanic: [
-    { position: 0, color: '#450a0a' },
+    { position: 0, color: '#2d0a0a' },
     { position: 25, color: '#7f1d1d' },
-    { position: 50, color: '#dc2626' },
+    { position: 50, color: '#b91c1c' },
     { position: 75, color: '#f87171' },
     { position: 100, color: '#fecaca' },
   ],
   gas: [
-    { position: 0, color: '#713f12' },
-    { position: 25, color: '#a16207' },
-    { position: 50, color: '#eab308' },
-    { position: 75, color: '#fde047' },
-    { position: 100, color: '#fef9c3' },
+    { position: 0, color: '#5c3d0f' },
+    { position: 30, color: '#92400e' },
+    { position: 55, color: '#ca8a04' },
+    { position: 80, color: '#facc15' },
+    { position: 100, color: '#fef08a' },
   ],
 };
 
@@ -314,8 +338,9 @@ const PLANET_TYPES = [
 
 type PlanetType = (typeof PLANET_TYPES)[0];
 
-function getPlanetType(view: PlanetView, planetIndex: number): PlanetType {
-  const idx = (hash(view.id) + planetIndex) % PLANET_TYPES.length;
+/** Planet type from id only so Mine and Base/Planets show the same look for the same planet. */
+function getPlanetTypeById(planetId: string, planetIndex = 0): PlanetType {
+  const idx = (hash(planetId) + planetIndex) % PLANET_TYPES.length;
   return PLANET_TYPES[idx];
 }
 
@@ -394,9 +419,13 @@ function createPlanetTexture(planetId: string, pType: PlanetType): HTMLCanvasEle
       let t = Math.pow(Math.max(0, Math.min(1, noiseVal)), params.remapPower) * 100;
       const colorStr = sampleGradient(gradient, t);
       const match = colorStr.match(/rgb\((\d+),(\d+),(\d+)\)/);
-      const r = match ? parseInt(match[1], 10) : 128;
-      const g = match ? parseInt(match[2], 10) : 128;
-      const b = match ? parseInt(match[3], 10) : 128;
+      let r = match ? parseInt(match[1], 10) : 128;
+      let g = match ? parseInt(match[2], 10) : 128;
+      let b = match ? parseInt(match[3], 10) : 128;
+      const lighting = 0.5 + 0.5 * Math.max(0, 1 - (dx + 1) * 0.55);
+      r = Math.round(r * lighting);
+      g = Math.round(g * lighting);
+      b = Math.round(b * lighting);
       const i = (py * size + px) * 4;
       data[i] = r;
       data[i + 1] = g;
@@ -409,9 +438,103 @@ function createPlanetTexture(planetId: string, pType: PlanetType): HTMLCanvasEle
   return canvas;
 }
 
-/** Scale factor 0.85–1.15 from id. */
+const MIN_PLANET_SCALE = 0.55;
+const MAX_PLANET_SCALE = 1.35;
+
+/** Scale factor from id so planets look clearly bigger or smaller. */
 function planetSizeScale(view: PlanetView): number {
-  return 0.85 + (hash(view.id) % 31) / 100;
+  return MIN_PLANET_SCALE + ((hash(view.id) % 81) / 100);
+}
+
+type PlanetExtra = 'none' | 'rings' | 'belt' | 'rings_and_belt';
+
+function getPlanetExtra(planetId: string): PlanetExtra {
+  const h = hash(planetId + 'extra');
+  const v = h % 10;
+  if (v < 2) return 'rings';
+  if (v < 4) return 'belt';
+  if (v < 5) return 'rings_and_belt';
+  return 'none';
+}
+
+function drawPlanetRings(
+  cx: number,
+  cy: number,
+  r: number,
+  planetId: string,
+  tiltScale: number = 1,
+  targetCtx?: CanvasRenderingContext2D | null
+): void {
+  const c = targetCtx ?? ctx;
+  if (!c) return;
+  const isListView = targetCtx != null;
+  const time = targetCtx ? 0 : orbitTime;
+  const tilt = (hash(planetId + 'tilt') % 31) / 100 * tiltScale;
+  const innerR = r * 1.15;
+  const outerR = r * 1.5;
+  c.save();
+  c.translate(cx, cy);
+  c.rotate(time * 0.05 + (hash(planetId) % 100) / 100);
+  c.scale(1, Math.max(0.2, 0.38 - tilt));
+  const grd = c.createRadialGradient(0, 0, innerR * 0.3, 0, 0, outerR);
+  if (isListView) {
+    grd.addColorStop(0, 'rgba(255, 252, 240, 0)');
+    grd.addColorStop(0.35, 'rgba(235, 228, 210, 0.45)');
+    grd.addColorStop(0.6, 'rgba(218, 205, 185, 0.5)');
+    grd.addColorStop(0.85, 'rgba(190, 178, 160, 0.35)');
+    grd.addColorStop(1, 'rgba(150, 140, 125, 0.12)');
+  } else {
+    grd.addColorStop(0, 'rgba(255, 252, 240, 0)');
+    grd.addColorStop(0.35, 'rgba(230, 220, 200, 0.22)');
+    grd.addColorStop(0.6, 'rgba(210, 195, 175, 0.28)');
+    grd.addColorStop(0.85, 'rgba(180, 168, 150, 0.15)');
+    grd.addColorStop(1, 'rgba(140, 130, 115, 0.04)');
+  }
+  c.fillStyle = grd;
+  c.beginPath();
+  c.arc(0, 0, outerR, 0, Math.PI * 2);
+  c.arc(0, 0, innerR, 0, Math.PI * 2, true);
+  c.fill();
+  c.strokeStyle = isListView ? 'rgba(230, 218, 200, 0.65)' : 'rgba(220, 210, 190, 0.35)';
+  c.lineWidth = isListView ? 1 : 0.6;
+  c.beginPath();
+  c.arc(0, 0, outerR, 0, Math.PI * 2);
+  c.arc(0, 0, innerR, 0, Math.PI * 2, true);
+  c.stroke();
+  c.restore();
+}
+
+function drawPlanetBelt(
+  cx: number,
+  cy: number,
+  r: number,
+  planetId: string,
+  targetCtx?: CanvasRenderingContext2D | null
+): void {
+  const c = targetCtx ?? ctx;
+  if (!c) return;
+  const isListView = targetCtx != null;
+  const beltRadius = isListView ? r * 1.06 : r * 1.42;
+  const count = isListView ? 18 + (hash(planetId + 'belt') % 8) : 28 + (hash(planetId + 'belt') % 12);
+  const dotSize = Math.max(0.4, r * (isListView ? 0.045 : 0.032));
+  const dim = getThemeColor('--text-dim', '#6b7280');
+  const mid = getThemeColor('--border', '#4b5563');
+  c.save();
+  c.translate(cx, cy);
+  c.rotate((hash(planetId) % 50) / 50);
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + (hash(planetId + String(i)) % 20) / 20 * 0.2;
+    const x = Math.cos(angle) * beltRadius;
+    const y = Math.sin(angle) * 0.26 * beltRadius;
+    const size = dotSize * (0.7 + (hash(planetId + 's' + i) % 30) / 100);
+    c.fillStyle = (hash(planetId + 'c' + i) % 4 === 0 ? mid : dim);
+    c.globalAlpha = isListView ? 0.5 + (hash(planetId + 'a' + i) % 35) / 100 : 0.4 + (hash(planetId + 'a' + i) % 40) / 100;
+    c.beginPath();
+    c.arc(x, y, size, 0, Math.PI * 2);
+    c.fill();
+  }
+  c.globalAlpha = 1;
+  c.restore();
 }
 
 function drawOnePlanet(
@@ -425,7 +548,7 @@ function drawOnePlanet(
   const border = getThemeColor('--border', '#2a2f3d');
   if (!ctx) return;
 
-  const pType = getPlanetType(view, planetIndex);
+  const pType = getPlanetTypeById(view.id);
   const scale = planetSizeScale(view);
   const r = planetRadius * scale;
 
@@ -434,12 +557,31 @@ function drawOnePlanet(
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.clip();
+  const spinAngle = orbitTime * 0.12 + (planetIndex + systemIndex) * 0.7;
+  ctx.translate(cx, cy);
+  ctx.rotate(spinAngle);
+  ctx.translate(-cx, -cy);
   ctx.drawImage(texture, cx - r, cy - r, r * 2, r * 2);
+  const specX = cx - r * 0.32;
+  const specY = cy - r * 0.32;
+  const specR = r * 0.28;
+  const grdSpec = ctx.createRadialGradient(specX, specY, 0, specX, specY, specR);
+  grdSpec.addColorStop(0, 'rgba(255,255,255,0.5)');
+  grdSpec.addColorStop(0.4, 'rgba(255,255,255,0.12)');
+  grdSpec.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grdSpec;
+  ctx.fill();
   ctx.restore();
 
   ctx.strokeStyle = border;
   ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.9;
   ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  const extra = getPlanetExtra(view.id);
+  if (extra === 'rings' || extra === 'rings_and_belt') drawPlanetRings(cx, cy, r, view.id);
+  if (extra === 'belt' || extra === 'rings_and_belt') drawPlanetBelt(cx, cy, r, view.id);
 
   const accent = getThemeColor('--accent', '#f59e0b');
   const counts = view.upgradeCounts;
@@ -494,6 +636,45 @@ function drawOnePlanet(
   }
 }
 
+/** Draw only the planet sphere (texture + border) to a small canvas, e.g. for Base/Planets list tiles. */
+export function drawPlanetSphereToCanvas(canvas: HTMLCanvasElement, planetId: string): void {
+  const targetCtx = canvas.getContext('2d');
+  if (!targetCtx) return;
+  const w = canvas.width;
+  const h = canvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const r = Math.min(w, h) / 2 - 1;
+  const pType = getPlanetTypeById(planetId);
+  const texture = getPlanetTexture(planetId, pType);
+  const border = getThemeColor('--border', '#2a2f3d');
+  targetCtx.save();
+  targetCtx.beginPath();
+  targetCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  targetCtx.clip();
+  targetCtx.drawImage(texture, cx - r, cy - r, r * 2, r * 2);
+  const specX = cx - r * 0.32;
+  const specY = cy - r * 0.32;
+  const specR = r * 0.28;
+  const grdSpec = targetCtx.createRadialGradient(specX, specY, 0, specX, specY, specR);
+  grdSpec.addColorStop(0, 'rgba(255,255,255,0.45)');
+  grdSpec.addColorStop(0.5, 'rgba(255,255,255,0.08)');
+  grdSpec.addColorStop(1, 'rgba(255,255,255,0)');
+  targetCtx.fillStyle = grdSpec;
+  targetCtx.fill();
+  targetCtx.restore();
+  targetCtx.strokeStyle = border;
+  targetCtx.lineWidth = 1;
+  targetCtx.globalAlpha = 0.9;
+  targetCtx.beginPath();
+  targetCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  targetCtx.stroke();
+  targetCtx.globalAlpha = 1;
+  const extra = getPlanetExtra(planetId);
+  if (extra === 'rings' || extra === 'rings_and_belt') drawPlanetRings(cx, cy, r, planetId, 0.7, targetCtx);
+  if (extra === 'belt' || extra === 'rings_and_belt') drawPlanetBelt(cx, cy, r, planetId, targetCtx);
+}
+
 /** Draw one solar system: star in center, planets in orbit. */
 function drawSolarSystem(
   systemCenterX: number,
@@ -505,12 +686,12 @@ function drawSolarSystem(
 ): void {
   if (!ctx || systemPlanets.length === 0) return;
 
-  const starRadius = Math.min(systemW, systemH) * 0.08;
+  const starRadius = Math.min(systemW, systemH) * 0.14;
   drawStar(systemCenterX, systemCenterY, starRadius, systemIndex);
+  const basePlanetRadius = starRadius * (0.65 / MAX_PLANET_SCALE);
 
-  const orbitRadiusBase = Math.min(systemW, systemH) * 0.22;
-  const orbitSpacing = Math.min(systemW, systemH) * 0.08;
-  const basePlanetRadius = Math.min(20, Math.min(systemW, systemH) * 0.06);
+  const orbitRadiusBase = Math.min(systemW, systemH) * 0.24;
+  const orbitSpacing = Math.min(systemW, systemH) * 0.09;
   const showOrbits = getMineZoneSettings?.()?.showOrbitLines !== false;
   const orbitDashed = systemIndex % 2 === 1;
   if (orbitDashed) ctx.setLineDash([4, 6]);
@@ -549,7 +730,7 @@ function drawSpatialSystem(): void {
   if (isSingle && solarSystems[0].length === 1) {
     const cx = width / 2;
     const cy = height / 2;
-    const starR = Math.min(width, height) * 0.06;
+    const starR = Math.min(width, height) * 0.12;
     drawStar(cx, cy, starR, 0);
     const orbitR = Math.min(width, height) * 0.28;
     const angle = orbitTime * 0.25;
@@ -564,8 +745,8 @@ function drawSpatialSystem(): void {
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
-    const planetR = Math.min(36, Math.min(width, height) * 0.12);
-    drawOnePlanet(px, py, planetR, solarSystems[0][0], 0, 0);
+    const basePlanetR = starR * (0.65 / MAX_PLANET_SCALE);
+    drawOnePlanet(px, py, basePlanetR, solarSystems[0][0], 0, 0);
     return;
   }
 

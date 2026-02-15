@@ -105,7 +105,7 @@ const researchNamesEn: Record<string, string> = {
 const researchDescsEn: Record<string, string> = {
   'mining-theory': 'Basic extraction principles. Foundation of all research.',
   'heavy-equipment': 'Heavy-duty drills and rigs. More raw output.',
-  'automation': 'Automated systems. Slightly less production, better click yield.',
+  'automation': 'Automated systems. Better click yield.',
   'survey-systems': 'Prospecting and mapping. Better discovery rates.',
   'basic-refining': 'On-site ore processing. Steady production gain.',
   'orbital-engineering': 'Station and platform tech. Big production boost.',
@@ -146,7 +146,7 @@ const researchDescsEn: Record<string, string> = {
 const researchDescsFr: Record<string, string> = {
   'mining-theory': 'Principes d’extraction de base. Fondement de toute recherche.',
   'heavy-equipment': 'Foreuses et plateformes lourdes. Plus de rendement brut.',
-  'automation': 'Systèmes automatisés. Moins de production, meilleur rendement au clic.',
+  'automation': 'Systèmes automatisés. Meilleur rendement au clic.',
   'survey-systems': 'Prospection et cartographie. Meilleurs taux de découverte.',
   'basic-refining': 'Traitement du minerai sur site. Gain de production régulier.',
   'orbital-engineering': 'Technologie des stations. Gros bonus de production.',

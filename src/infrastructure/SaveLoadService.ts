@@ -11,6 +11,8 @@ import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
 import { getPlanetName } from '../domain/constants.js';
+import { getUpgradeUsesSlot } from '../application/catalogs.js';
+import { getBaseProductionRateFromPlanets } from '../application/planetAffinity.js';
 import { toDecimal } from '../domain/bigNumber.js';
 import { emit } from '../application/eventBus.js';
 import { RESEARCH_STORAGE_KEY, getResearchProductionMultiplier } from '../application/research.js';
@@ -224,7 +226,13 @@ export class SaveLoadService implements ISaveLoadService {
       if (u.effect == null || (typeof u.effect.coinsPerSecond !== 'number' && typeof u.effect.coinsPerSecond !== 'string')) {
         throw new Error('Invalid upgrade effect');
       }
-      return new Upgrade(u.id, u.name, toDecimal(u.cost), new UpgradeEffect(toDecimal(u.effect.coinsPerSecond)));
+      return new Upgrade(
+        u.id,
+        u.name,
+        toDecimal(u.cost),
+        new UpgradeEffect(toDecimal(u.effect.coinsPerSecond)),
+        getUpgradeUsesSlot(u.id)
+      );
     };
     if (data.player.planets && data.player.planets.length > 0) {
       planets = data.player.planets.map((p) => {
@@ -246,10 +254,11 @@ export class SaveLoadService implements ISaveLoadService {
     const artifacts = data.player.artifacts.map(
       (a) => new Artifact(a.id, a.name, a.effect, a.isActive)
     );
+    const productionRate = getBaseProductionRateFromPlanets(planets);
     const player = new Player(
       data.player.id,
       Coins.from(data.player.coins),
-      ProductionRate.from(data.player.productionRate),
+      ProductionRate.from(productionRate),
       planets,
       artifacts,
       data.player.prestigeLevel,

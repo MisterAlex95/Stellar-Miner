@@ -6,16 +6,54 @@ import {
   getUnlockedResearch,
   canAttemptResearch,
   getUnlockPathIds,
+  getModifierSlotEntries,
+  getModifierCrewEntries,
   type ResearchNode,
 } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
-import { getCatalogResearchName, getCatalogResearchDesc } from '../application/i18nCatalogs.js';
+import { getCatalogResearchName, getCatalogResearchDesc, getCatalogUpgradeName } from '../application/i18nCatalogs.js';
 
 function modifierText(node: ResearchNode): string {
   const parts: string[] = [];
   if (node.modifiers.productionPercent) parts.push(`+${node.modifiers.productionPercent}% production`);
   if (node.modifiers.clickPercent) parts.push(`+${node.modifiers.clickPercent}% click`);
+  const slotEntries = getModifierSlotEntries(node);
+  if (slotEntries.length)
+    parts.push(
+      slotEntries
+        .map(({ id, n }) => tParam('researchUpgradeLessSlot', { name: getCatalogUpgradeName(id), n }))
+        .join(', ')
+    );
+  const crewEntries = getModifierCrewEntries(node);
+  if (crewEntries.length)
+    parts.push(
+      crewEntries
+        .map(({ id, n }) => tParam('researchUpgradeLessCrew', { name: getCatalogUpgradeName(id), n }))
+        .join(', ')
+    );
   return parts.length > 0 ? parts.join(', ') : '—';
+}
+
+/** In-card info block: description + effects + prereq + cost/chance. */
+function buildCardInfoHtml(
+  desc: string,
+  modText: string,
+  prereqText: string,
+  costStr: string,
+  pct: number,
+  done: boolean
+): string {
+  const parts: string[] = [];
+  parts.push(`<p class="research-card-desc">${escapeHtml(desc)}</p>`);
+  if (modText && modText !== '—')
+    parts.push(`<p class="research-card-mods research-card-mods-preview">${escapeHtml(t('researchEffectsLabel') + ' ' + modText)}</p>`);
+  if (prereqText)
+    parts.push(`<p class="research-card-prereq">${escapeHtml(tParam('researchRequires', { names: prereqText }))}</p>`);
+  if (!done)
+    parts.push(
+      `<p class="research-card-meta"><span class="research-card-cost">${escapeHtml(costStr)} ⬡</span><span class="research-card-chance">${escapeHtml(tParam('percentSuccess', { pct }))}</span></p>`
+    );
+  return parts.join('');
 }
 
 export function renderResearchSection(): void {
@@ -60,6 +98,10 @@ function escapeAttr(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function renderResearchCard(
   node: ResearchNode,
   rowIndex: number,
@@ -82,6 +124,7 @@ function renderResearchCard(
   const pathIdsAttr = escapeAttr(unlockPathIds.join(','));
   const name = getCatalogResearchName(node.id);
   const desc = getCatalogResearchDesc(node.id);
+  const cardInfoHtml = buildCardInfoHtml(desc, modText, prereqText, costStr, pct, done);
   const attemptTitle = canAttempt ? tParam('researchAttemptTooltip', { pct }) : t('researchAttemptDisabled');
   if (done) {
     return `
@@ -90,8 +133,7 @@ function renderResearchCard(
           <span class="research-card-level" aria-hidden="true">${levelLabel}</span>
           <span class="research-card-name">${name}</span>
         </div>
-        <p class="research-card-desc">${desc}</p>
-        <p class="research-card-mods research-card-mods--done">${modText}</p>
+        <div class="research-card-info-block">${cardInfoHtml}</div>
       </div>`;
   }
   return `
@@ -100,14 +142,8 @@ function renderResearchCard(
         <span class="research-card-level" aria-hidden="true">${levelLabel}</span>
         <span class="research-card-name">${name}</span>
       </div>
-      <p class="research-card-mods-preview">${modText}</p>
-      <p class="research-card-desc">${desc}</p>
-      ${prereqText ? `<p class="research-card-prereq">${tParam('researchRequires', { names: prereqText })}</p>` : ''}
-      <div class="research-card-meta">
-        <span class="research-card-cost">${costStr} ⬡</span>
-        <span class="research-card-chance">${tParam('percentSuccess', { pct })}</span>
-      </div>
-      <span class="btn-tooltip-wrap" title="${attemptTitle}">
+      <div class="research-card-info-block">${cardInfoHtml}</div>
+      <span class="btn-tooltip-wrap" title="${escapeAttr(attemptTitle)}">
         <button type="button" class="research-attempt-btn" data-research-id="${node.id}" ${canAttempt ? '' : 'disabled'}>${t('attempt')}</button>
       </span>
     </div>`;

@@ -78,8 +78,16 @@ import { getAssignedAstronauts } from './crewHelpers.js';
 import { claimQuest } from './quests.js';
 import { emit } from './eventBus.js';
 import { attemptResearch, clearResearch, getResearchProductionMultiplier, getResearchClickMultiplier, setResearchInProgress, isResearchInProgress, RESEARCH_CATALOG } from './research.js';
+import { getPlanetType, getPlanetTypeMultiplier } from './planetAffinity.js';
+import {
+  getEffectiveUpgradeUsesSlot,
+  getEffectiveRequiredAstronauts,
+  getPlanetWithEffectiveFreeSlot,
+  getPlanetsWithEffectiveFreeSlot,
+  hasEffectiveFreeSlot,
+} from './research.js';
 import { t, tParam } from './strings.js';
-import { getCatalogResearchName, getCatalogAchievementName } from './i18nCatalogs.js';
+import { getCatalogResearchName, getCatalogAchievementName, getCatalogUpgradeName } from './i18nCatalogs.js';
 
 const RESEARCH_PROGRESS_DURATION_MS = 2500;
 
@@ -119,11 +127,19 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
   const player = session.player;
   const upgrade = createUpgrade(def);
   const targetPlanet = planetId ? player.planets.find((p) => p.id === planetId) : undefined;
-  if (!player.coins.gte(upgrade.cost) || !player.getPlanetWithFreeSlot()) return;
-  if (planetId && !targetPlanet?.hasFreeSlot()) return;
-  if (player.astronautCount < def.requiredAstronauts) return;
-  if (!player.spendAstronauts(def.requiredAstronauts)) return;
-  upgradeService.purchaseUpgrade(player, upgrade, targetPlanet ?? null);
+  const needsSlot = getEffectiveUpgradeUsesSlot(def.id);
+  if (!player.coins.gte(upgrade.cost)) return;
+  if (needsSlot && !getPlanetWithEffectiveFreeSlot(player)) return;
+  if (planetId && targetPlanet && needsSlot && !hasEffectiveFreeSlot(targetPlanet)) return;
+  const crewRequired = getEffectiveRequiredAstronauts(def.id);
+  if (player.astronautCount < crewRequired) return;
+  if (!player.spendAstronauts(crewRequired)) return;
+  let planet = targetPlanet && player.planets.includes(targetPlanet)
+    ? (needsSlot ? (hasEffectiveFreeSlot(targetPlanet) ? targetPlanet : null) : targetPlanet)
+    : (needsSlot ? getPlanetWithEffectiveFreeSlot(player) : player.planets[0] ?? null);
+  if (!planet) return;
+  const mult = getPlanetTypeMultiplier(def.id, getPlanetType(planet.id));
+  upgradeService.purchaseUpgrade(player, upgrade, planet, mult, hasEffectiveFreeSlot);
   emit('upgrade_purchased', { upgradeId, planetId });
   if (player.upgrades.length === 1 && typeof localStorage !== 'undefined') {
     const key = 'stellar-miner-first-upgrade-toast';
@@ -148,14 +164,22 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): void 
   const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
   if (!def) return;
   const player = session.player;
+  const needsSlot = getEffectiveUpgradeUsesSlot(def.id);
   let bought = 0;
-  while (player.coins.gte(def.cost) && player.astronautCount >= def.requiredAstronauts) {
-    let target = planetId ? player.planets.find((p) => p.id === planetId) : null;
-    if (!target?.hasFreeSlot()) target = player.getPlanetWithFreeSlot();
+  const crewRequired = getEffectiveRequiredAstronauts(def.id);
+  while (player.coins.gte(def.cost) && player.astronautCount >= crewRequired) {
+    let target: typeof player.planets[0] | null = planetId ? player.planets.find((p) => p.id === planetId) ?? null : null;
+    if (needsSlot) {
+      const withSlot = getPlanetsWithEffectiveFreeSlot(player);
+      if (!target || !hasEffectiveFreeSlot(target)) target = withSlot[0] ?? null;
+    } else {
+      target = target ?? player.planets[0] ?? null;
+    }
     if (!target) break;
-    if (!player.spendAstronauts(def.requiredAstronauts)) break;
+    if (!player.spendAstronauts(crewRequired)) break;
     const upgrade = createUpgrade(def);
-    upgradeService.purchaseUpgrade(player, upgrade, target);
+    const mult = getPlanetTypeMultiplier(def.id, getPlanetType(target.id));
+    upgradeService.purchaseUpgrade(player, upgrade, target, mult, hasEffectiveFreeSlot);
     bought++;
   }
   if (bought > 0) {
@@ -218,8 +242,8 @@ export function handleBuildHousing(planetId: string): void {
   const session = getSession();
   if (!session) return;
   const planet = session.player.planets.find((p) => p.id === planetId);
-  if (!planet || !planetService.canBuildHousing(session.player, planet)) return;
-  planetService.buildHousing(session.player, planet);
+  if (!planet || !planetService.canBuildHousing(session.player, planet, hasEffectiveFreeSlot)) return;
+  planetService.buildHousing(session.player, planet, hasEffectiveFreeSlot);
   saveSession();
   updateStats();
   renderUpgradeList();
@@ -432,22 +456,22 @@ export function confirmPrestige(): void {
 export function handleResearchAttempt(id: string): void {
   const session = getSession();
   if (!session) return;
+  const getUpgradeDisplayLine = (upgradeId: string, kind: 'slot' | 'crew', n: number) =>
+    kind === 'slot'
+      ? tParam('researchUpgradeLessSlot', { name: getCatalogUpgradeName(upgradeId), n })
+      : tParam('researchUpgradeLessCrew', { name: getCatalogUpgradeName(upgradeId), n });
   const result = attemptResearch(id, (amount) => {
     if (!session.player.coins.gte(amount)) return false;
     session.player.spendCoins(amount);
     return true;
-  });
+  }, getUpgradeDisplayLine);
   saveSession();
   updateStats();
   renderUpgradeList();
   renderResearchSection();
   setResearchInProgress(false);
   if (result.success) {
-    const node = RESEARCH_CATALOG.find((n) => n.id === id);
-    const mods: string[] = [];
-    if (node?.modifiers.productionPercent) mods.push(`+${node.modifiers.productionPercent}% production`);
-    if (node?.modifiers.clickPercent) mods.push(`+${node.modifiers.clickPercent}% click`);
-    showMiniMilestoneToast(tParam('researchSuccessFormat', { name: getCatalogResearchName(id), mods: mods.join(', ') }));
+    showMiniMilestoneToast(result.message);
   } else if (result.message.includes('failed')) {
     showMiniMilestoneToast(result.message.includes('Coins spent') ? t('researchFailedCoinsSpent') : t('researchFailedTryAgain'));
   }

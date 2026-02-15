@@ -1,5 +1,5 @@
 [
-  {"id":"mining-robot","name":"Mining Robot","description":"Basic autonomous miner. Your first step into the belt.","cost":25,"coinsPerSecond":1,"tier":1,"requiredAstronauts":0},
+  {"id":"mining-robot","name":"Mining Robot","description":"Basic autonomous miner. Your first step into the belt.","cost":25,"coinsPerSecond":1,"tier":1,"requiredAstronauts":0,"usesSlot":false},
   {"id":"drill-mk1","name":"Drill Mk.I","description":"Improved extraction head. Needs an operator. Cuts through surface rock in seconds.","cost":1000,"coinsPerSecond":10,"tier":2,"requiredAstronauts":1},
   {"id":"drill-mk2","name":"Drill Mk.II","description":"Heavy-duty surface drill. Built for long shifts in the void. Requires trained crew.","cost":10000,"coinsPerSecond":50,"tier":3,"requiredAstronauts":2},
   {"id":"asteroid-rig","name":"Asteroid Rig","description":"Full mining platform. Drills, crushes, and sorts in one unit. Needs a team.","cost":100000,"coinsPerSecond":250,"tier":4,"requiredAstronauts":2},

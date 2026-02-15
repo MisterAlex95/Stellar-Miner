@@ -29,12 +29,27 @@ export type UpgradeDef = {
   coinsPerSecond: number;
   tier: number;
   requiredAstronauts: number;
+  /** If false, this upgrade does not use a planet slot (default true). */
+  usesSlot?: boolean;
 };
 
 export const UPGRADE_CATALOG: UpgradeDef[] = upgradesData as UpgradeDef[];
 
 export function createUpgrade(def: UpgradeDef): Upgrade {
-  return new Upgrade(def.id, def.name, toDecimal(def.cost), new UpgradeEffect(toDecimal(def.coinsPerSecond)));
+  const usesSlot = def.usesSlot !== false;
+  return new Upgrade(
+    def.id,
+    def.name,
+    toDecimal(def.cost),
+    new UpgradeEffect(toDecimal(def.coinsPerSecond)),
+    usesSlot
+  );
+}
+
+/** Whether this upgrade type uses a planet slot. Used when deserializing saves. */
+export function getUpgradeUsesSlot(upgradeId: string): boolean {
+  const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
+  return def?.usesSlot !== false;
 }
 
 /** Tiers the player has unlocked for display. Tier 1 always; tier n+1 from owning tier n. */

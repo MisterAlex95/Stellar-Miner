@@ -1,5 +1,20 @@
 [
   {
+    "version": "0.3.5",
+    "date": "2026-02-15",
+    "changes": [
+      "Base/Planets: each planet tile now shows the same procedural planet sphere as in the Mine view."
+    ]
+  },
+  {
+    "version": "0.3.4",
+    "date": "2026-02-15",
+    "changes": [
+      "Mining Robot no longer uses a planet slot; you can have as many as you want.",
+      "Upgrades show slot cost (1 slot or No slot). Planet type affects production: each machine has affinity per planet type (Rocky, Desert, Ice, Volcanic, Gas). Info (i) on each upgrade shows production by planet type."
+    ]
+  },
+  {
     "version": "0.3.3",
     "date": "2026-02-15",
     "changes": [

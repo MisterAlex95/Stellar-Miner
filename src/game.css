@@ -10,6 +10,30 @@
   --success: #22c55e;
   --muted: #4b5563;
   --panel-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+
+  /* Tooltip widths per breakpoint (one list, overridden in media below) */
+  --tooltip-min: 320px;
+  --tooltip-max: 560px;
+  --tooltip-min-sm: 280px;
+  --tooltip-max-sm: 420px;
+}
+
+@media (max-width: 480px) {
+  :root {
+    --tooltip-min: 220px;
+    --tooltip-max: calc(100vw - 1.5rem);
+    --tooltip-min-sm: 200px;
+    --tooltip-max-sm: calc(100vw - 1.5rem);
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --tooltip-min: 180px;
+    --tooltip-max: calc(100vw - 1rem);
+    --tooltip-min-sm: 160px;
+    --tooltip-max-sm: calc(100vw - 1rem);
+  }
 }
 
 * {
@@ -2443,9 +2467,8 @@ h1 {
 
 .research-tree-row-nodes {
   display: grid;
-  grid-template-columns: repeat(var(--row-nodes, 1), minmax(0, 200px));
-  justify-content: center;
-  gap: 0.65rem 1rem;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -2459,13 +2482,46 @@ h1 {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(145deg, rgba(26, 29, 40, 0.98) 0%, var(--bg-card) 100%);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.7rem 0.9rem;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s ease;
+  transition: border-color 0.2s, box-shadow 0.2s;
   min-width: 0;
+  overflow: visible;
+}
+
+.research-card--compact {
+  padding: 0.4rem 0.6rem;
+}
+
+.research-card--compact .research-card-body {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.research-card--compact .research-card-name {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  text-overflow: ellipsis;
+}
+
+.research-card-info-block {
+  margin-top: 0.35rem;
+  min-width: 0;
+}
+
+.research-card-info-block .research-card-meta:last-child {
+  margin-bottom: 0.4rem;
 }
 
 .research-card .btn-tooltip-wrap {
@@ -2487,11 +2543,11 @@ h1 {
   content: '';
   position: absolute;
   left: 0;
-  top: 0;
-  bottom: 0;
+  top: 12px;
+  bottom: 12px;
   width: 3px;
   background: var(--border);
-  border-radius: 3px 0 0 3px;
+  border-radius: 0 2px 2px 0;
 }
 
 .research-card:hover {
@@ -2549,9 +2605,6 @@ h1 {
   color: var(--text);
   letter-spacing: 0.02em;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .research-card-tier {
@@ -2708,13 +2761,22 @@ h1 {
     padding: 0.75rem 0.4rem;
   }
 
-  .research-tree-row-nodes {
-    grid-template-columns: repeat(var(--row-nodes, 1), minmax(0, 1fr));
-    gap: 0.55rem 0.75rem;
-  }
-
   .research-card {
     padding: 0.6rem 0.75rem;
+  }
+
+  .research-card::before {
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+  }
+
+  .research-card--compact {
+    padding: 0.35rem 0.5rem;
+  }
+
+  .research-card--compact .research-card-body {
+    flex-wrap: wrap;
   }
 
   .research-card-name {
@@ -2764,18 +2826,13 @@ h1 {
     border-radius: 10px;
   }
 
-  .research-tree-row-nodes {
-    grid-template-columns: repeat(var(--row-nodes, 1), minmax(0, 1fr));
-    gap: 0.5rem 0.5rem;
-  }
-
   .research-card {
     padding: 0.55rem 0.65rem;
     border-radius: 10px;
   }
 
-  .research-card::before {
-    width: 2px;
+  .research-card--compact {
+    padding: 0.3rem 0.5rem;
   }
 
   .research-card-header {
@@ -2857,7 +2914,6 @@ h1 {
   }
 
   .research-tree-row-nodes {
-    grid-template-columns: 1fr;
     gap: 0.4rem;
   }
 
@@ -2911,6 +2967,7 @@ h1 {
   flex-direction: column;
   gap: 0.5rem;
   transition: border-color 0.2s, box-shadow 0.2s;
+  align-items: stretch;
 }
 
 .planet-card:hover {
@@ -2918,22 +2975,97 @@ h1 {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.planet-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.planet-card-visual {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-reduced-motion="true"]) .planet-card-visual {
+    animation: planet-spin 12s linear infinite;
+  }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(2) .planet-card-visual { animation-delay: -2s; }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(3) .planet-card-visual { animation-delay: -4s; }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(4) .planet-card-visual { animation-delay: -6s; }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(5) .planet-card-visual { animation-delay: -8s; }
+  html:not([data-reduced-motion="true"]) .planet-card:nth-child(n+6) .planet-card-visual { animation-delay: -1s; }
+}
+
+@keyframes planet-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.planet-card-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
 .planet-card-name {
   font-family: 'Orbitron', sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.planet-card-info {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: help;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.planet-card-info:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.planet-card-info-wrap {
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: help;
 }
 
 .planet-card-slots {
   font-size: 0.8rem;
   color: var(--text-dim);
+  min-height: 1.25em;
 }
 
 .planet-card-production {
   font-size: 0.8rem;
   color: var(--success);
-  margin: 0.2rem 0;
+  min-height: 1.25em;
+  display: flex;
+  align-items: center;
+}
+
+.planet-card-production--zero {
+  color: var(--text-dim);
 }
 
 .quest-streak-hint {
@@ -3261,6 +3393,34 @@ h1 {
   white-space: nowrap;
 }
 
+.upgrade-cost-slot {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.upgrade-affinity-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-left: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: help;
+  vertical-align: middle;
+}
+
+.upgrade-affinity-info:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .upgrade-actions {
   display: flex;
   align-items: center;
@@ -3350,7 +3510,9 @@ h1 {
   z-index: 9999;
   pointer-events: none;
   padding: 0.5rem 0.75rem;
-  max-width: 300px;
+  min-width: var(--tooltip-min-sm);
+  max-width: var(--tooltip-max-sm);
+  white-space: pre-line;
   font-family: 'Orbitron', sans-serif;
   font-size: 0.85rem;
   font-weight: 600;

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createUpgrade,
   getUnlockedUpgradeTiers,
+  getUpgradeUsesSlot,
   getComboName,
   UPGRADE_CATALOG,
   EVENT_CATALOG,
@@ -14,6 +15,13 @@ describe('catalogs', () => {
     const u = createUpgrade(UPGRADE_CATALOG[0]);
     expect(u.id).toBe('mining-robot');
     expect(u.effect.coinsPerSecond.toNumber()).toBe(1);
+    expect(u.usesSlot).toBe(false);
+  });
+
+  it('getUpgradeUsesSlot returns false for mining-robot, true for others', () => {
+    expect(getUpgradeUsesSlot('mining-robot')).toBe(false);
+    expect(getUpgradeUsesSlot('drill-mk1')).toBe(true);
+    expect(getUpgradeUsesSlot('unknown')).toBe(true);
   });
 
   it('getUnlockedUpgradeTiers includes tier+1 for owned', () => {

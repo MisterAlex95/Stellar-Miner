@@ -1,13 +1,21 @@
 import { Decimal } from '../domain/bigNumber.js';
 import type { GameSession } from '../domain/aggregates/GameSession.js';
 import { getResearchProductionMultiplier } from './research.js';
+import { getPlanetType, getPlanetTypeMultiplier } from './planetAffinity.js';
 
-export function getPlanetBaseProduction(planet: { upgrades: { effect: { coinsPerSecond: Decimal } }[] }): Decimal {
-  return planet.upgrades.reduce((s, u) => s.add(u.effect.coinsPerSecond), new Decimal(0));
+export function getPlanetBaseProduction(planet: {
+  id: string;
+  upgrades: { id: string; effect: { coinsPerSecond: Decimal } }[];
+}): Decimal {
+  const planetType = getPlanetType(planet.id);
+  return planet.upgrades.reduce(
+    (s, u) => s.add(u.effect.coinsPerSecond.mul(getPlanetTypeMultiplier(u.id, planetType))),
+    new Decimal(0)
+  );
 }
 
 export function getPlanetEffectiveProduction(
-  planet: { upgrades: { effect: { coinsPerSecond: Decimal } }[] },
+  planet: { id: string; upgrades: { id: string; effect: { coinsPerSecond: Decimal } }[] },
   session: GameSession | null
 ): Decimal {
   if (!session) return new Decimal(0);

@@ -23,7 +23,7 @@ import {
 } from '../application/catalogs.js';
 import { getUnlockedBlocks } from '../application/progression.js';
 import type { BlockId } from '../application/progression.js';
-import { getResearchProductionMultiplier, getResearchProductionPercent, getResearchClickPercent } from '../application/research.js';
+import { getResearchProductionMultiplier, getResearchProductionPercent, getResearchClickPercent, getEffectiveUsedSlots } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
 
 /** Which block must be unlocked to show each statistics group. */
@@ -524,7 +524,7 @@ export function updateStatisticsSection(): void {
   const crewBonusPct = (player.astronautCount + assignedAstronauts) * ASTRONAUT_PRODUCTION_BONUS * 100;
 
   const totalSlots = player.planets.reduce((s, p) => s + p.maxUpgrades, 0);
-  const usedSlots = player.planets.reduce((s, p) => s + p.usedSlots, 0);
+  const usedSlots = player.planets.reduce((s, p) => s + getEffectiveUsedSlots(p), 0);
 
   const sessionClicks = getSessionClickCount();
   const sessionCoinsFromClicks = getSessionCoinsFromClicks();

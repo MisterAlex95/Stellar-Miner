@@ -5,6 +5,7 @@ import { UPGRADE_CATALOG } from '../application/catalogs.js';
 import { getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
 import { t, tParam } from '../application/strings.js';
 import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
+import { getEffectiveRequiredAstronauts } from '../application/research.js';
 
 export function renderCrewSection(): void {
   const session = getSession();
@@ -49,11 +50,11 @@ export function renderCrewSection(): void {
   }
   if (crewOperatesEl) {
     const totalUpgrades = player.upgrades.length;
-    const nextUnlock = UPGRADE_CATALOG.find((d) => d.requiredAstronauts > player.astronautCount);
+    const nextUnlock = UPGRADE_CATALOG.find((d) => getEffectiveRequiredAstronauts(d.id) > player.astronautCount);
     if (player.astronautCount === 0 && assigned === 0) {
       crewOperatesEl.textContent = t('crewOperatesHint');
     } else if (nextUnlock) {
-      crewOperatesEl.textContent = tParam('crewOperatesNext', { free: String(free), name: getCatalogUpgradeName(nextUnlock.id), n: String(nextUnlock.requiredAstronauts) });
+      crewOperatesEl.textContent = tParam('crewOperatesNext', { free: String(free), name: getCatalogUpgradeName(nextUnlock.id), n: String(getEffectiveRequiredAstronauts(nextUnlock.id)) });
     } else {
       crewOperatesEl.textContent = totalUpgrades > 0 ? tParam('crewOperatesUpgrades', { n: String(totalUpgrades) }) : tParam('crewOperatesAvailable', { free: String(free) });
     }

@@ -6,6 +6,10 @@ import {
   getResearchClickMultiplier,
   getResearchProductionPercent,
   getResearchClickPercent,
+  getSlotFreeUpgradeIdsFromResearch,
+  getCrewFreeUpgradeIdsFromResearch,
+  getEffectiveUpgradeUsesSlot,
+  getEffectiveRequiredAstronauts,
   getResearchTreeRows,
   getResearchBranchSegments,
   getUnlockPath,
@@ -50,6 +54,35 @@ describe('research', () => {
   it('getResearchProductionPercent and getResearchClickPercent', () => {
     expect(getResearchProductionPercent()).toBe(0);
     expect(getResearchClickPercent()).toBe(0);
+  });
+
+  it('getSlotFreeUpgradeIdsFromResearch returns empty when none unlocked', () => {
+    expect(getSlotFreeUpgradeIdsFromResearch()).toEqual([]);
+  });
+
+  it('getSlotFreeUpgradeIdsFromResearch returns drill-mk1 when automation unlocked', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    expect(getSlotFreeUpgradeIdsFromResearch()).toContain('drill-mk1');
+  });
+
+  it('getEffectiveUpgradeUsesSlot returns false for mining-robot and for research-granted slot-free', () => {
+    expect(getEffectiveUpgradeUsesSlot('mining-robot')).toBe(false);
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    expect(getEffectiveUpgradeUsesSlot('drill-mk1')).toBe(false);
+    expect(getEffectiveUpgradeUsesSlot('drill-mk2')).toBe(true);
+  });
+
+  it('getCrewFreeUpgradeIdsFromResearch returns drill-mk1 when ai-assist unlocked', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation', 'ai-assist']);
+    expect(getCrewFreeUpgradeIdsFromResearch()).toContain('drill-mk1');
+  });
+
+  it('getEffectiveRequiredAstronauts returns 0 for crew-free research, else base value', () => {
+    expect(getEffectiveRequiredAstronauts('mining-robot')).toBe(0);
+    expect(getEffectiveRequiredAstronauts('drill-mk1')).toBe(1);
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation', 'ai-assist']);
+    expect(getEffectiveRequiredAstronauts('drill-mk1')).toBe(0);
+    expect(getEffectiveRequiredAstronauts('drill-mk2')).toBe(2);
   });
 
   it('getResearchTreeRows returns rows', () => {

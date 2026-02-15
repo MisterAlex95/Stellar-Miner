@@ -31,9 +31,9 @@ export class Planet {
     return this._housingCount;
   }
 
-  /** Used slots = upgrades + housing. */
+  /** Used slots = upgrades that use a slot + housing. */
   get usedSlots(): number {
-    return this.upgrades.length + this._housingCount;
+    return this.upgrades.filter((u) => u.usesSlot).length + this._housingCount;
   }
 
   get freeSlots(): number {
@@ -45,7 +45,7 @@ export class Planet {
   }
 
   addUpgrade(upgrade: Upgrade): void {
-    if (!this.hasFreeSlot()) throw new Error('Planet has no free upgrade slot');
+    if (upgrade.usesSlot && !this.hasFreeSlot()) throw new Error('Planet has no free upgrade slot');
     this.upgrades.push(upgrade);
   }
 

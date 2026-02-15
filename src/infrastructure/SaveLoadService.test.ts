@@ -192,6 +192,7 @@ describe('SaveLoadService', () => {
     vi.setSystemTime(1_000_000_000_000);
     const player = Player.create('p1');
     player.addCoins(100);
+    player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
     player.setProductionRate(new ProductionRate(10));
     const session = new GameSession('session-1', player);
     const service = new SaveLoadService();
@@ -213,6 +214,7 @@ describe('SaveLoadService', () => {
     vi.setSystemTime(1_000_000_000_000);
     const player = Player.create('p1');
     player.addCoins(0);
+    player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
     player.setProductionRate(new ProductionRate(10));
     const session = new GameSession('session-1', player);
     const service = new SaveLoadService();

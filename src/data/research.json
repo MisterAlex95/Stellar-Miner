@@ -30,7 +30,7 @@
   {
     "id": "automation",
     "name": "Automation",
-    "description": "Automated systems. Slightly less production, better click yield.",
+    "description": "Automated systems. Better click yield.",
     "cost": 2200,
     "successChance": 0.82,
     "prerequisites": [
@@ -38,7 +38,8 @@
     ],
     "modifiers": {
       "productionPercent": 4,
-      "clickPercent": 10
+      "clickPercent": 10,
+      "slotFreeUpgrades": ["drill-mk1"]
     },
     "row": 1,
     "col": 1
@@ -100,7 +101,8 @@
     ],
     "modifiers": {
       "productionPercent": 7,
-      "clickPercent": 8
+      "clickPercent": 8,
+      "slotFreeUpgrades": ["asteroid-rig"]
     },
     "row": 2,
     "col": 1
@@ -116,7 +118,8 @@
     ],
     "modifiers": {
       "productionPercent": 2,
-      "clickPercent": 15
+      "clickPercent": 15,
+      "crewFreeUpgrades": ["drill-mk1"]
     },
     "row": 2,
     "col": 2
@@ -131,7 +134,8 @@
       "automation"
     ],
     "modifiers": {
-      "productionPercent": 10
+      "productionPercent": 10,
+      "slotFreeUpgrades": ["drill-mk2"]
     },
     "row": 2,
     "col": 3
@@ -147,7 +151,9 @@
     ],
     "modifiers": {
       "productionPercent": 9,
-      "clickPercent": 6
+      "clickPercent": 6,
+      "crewFreeUpgrades": ["asteroid-rig"],
+      "crewReduction": { "orbital-station": 1 }
     },
     "row": 2,
     "col": 4
@@ -177,7 +183,8 @@
       "orbital-engineering"
     ],
     "modifiers": {
-      "productionPercent": 15
+      "productionPercent": 15,
+      "slotFreeUpgrades": ["deep-core-drill"]
     },
     "row": 3,
     "col": 0
@@ -208,7 +215,8 @@
       "deep-extraction"
     ],
     "modifiers": {
-      "productionPercent": 14
+      "productionPercent": 14,
+      "crewFreeUpgrades": ["deep-core-drill"]
     },
     "row": 3,
     "col": 2
@@ -224,7 +232,8 @@
     ],
     "modifiers": {
       "productionPercent": 5,
-      "clickPercent": 18
+      "clickPercent": 18,
+      "crewFreeUpgrades": ["drill-mk2"]
     },
     "row": 3,
     "col": 3
@@ -239,7 +248,9 @@
       "efficiency"
     ],
     "modifiers": {
-      "productionPercent": 16
+      "productionPercent": 16,
+      "slotFreeUpgrades": ["orbital-station"],
+      "crewFreeUpgrades": ["orbital-station"]
     },
     "row": 3,
     "col": 4
@@ -255,7 +266,8 @@
     ],
     "modifiers": {
       "productionPercent": 10,
-      "clickPercent": 10
+      "clickPercent": 10,
+      "crewReduction": { "orbital-station": 1 }
     },
     "row": 3,
     "col": 5

@@ -1,5 +1,6 @@
 import { getSession, getSettings, planetService } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
+import { hasEffectiveFreeSlot } from '../application/research.js';
 import { t, tParam } from '../application/strings.js';
 import { getCatalogPlanetNameById } from '../application/i18nCatalogs.js';
 import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
@@ -11,7 +12,7 @@ export function renderHousingSection(): void {
   if (!listEl) return;
   const player = session.player;
   const settings = getSettings();
-  const planetsWithSlot = player.planets.filter((p) => p.hasFreeSlot());
+  const planetsWithSlot = player.planets.filter(hasEffectiveFreeSlot);
   if (planetsWithSlot.length === 0) {
     listEl.innerHTML = `<p class="housing-empty">${t('housingNoSlot')}</p>`;
     return;
@@ -19,7 +20,7 @@ export function renderHousingSection(): void {
   listEl.innerHTML = planetsWithSlot
     .map((p) => {
       const cost = planetService.getHousingCost(p);
-      const canBuild = planetService.canBuildHousing(player, p);
+      const canBuild = planetService.canBuildHousing(player, p, hasEffectiveFreeSlot);
       const planetName = getCatalogPlanetNameById(p.id);
       const housingInfo = p.housingCount > 0 ? ` (${p.housingCount} ${t('housingBuilt')})` : '';
       const tooltip = canBuild

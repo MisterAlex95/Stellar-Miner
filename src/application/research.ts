@@ -1,8 +1,11 @@
 /**
  * Scientific Research: skill tree (Skyrim/PoE style). Spend coins to attempt unlocking nodes;
- * each attempt has a success chance; on failure coins are lost. Nodes grant modifiers (+% production, +% click).
+ * each attempt has a success chance; on failure coins are lost. Nodes grant modifiers (+% production, +% click, slot-free upgrades).
  */
 import researchData from '../data/research.json';
+import { getUpgradeUsesSlot, UPGRADE_CATALOG } from './catalogs.js';
+import type { Planet } from '../domain/entities/Planet.js';
+import type { Player } from '../domain/entities/Player.js';
 
 export const RESEARCH_STORAGE_KEY = 'stellar-miner-research';
 
@@ -11,6 +14,14 @@ export type ResearchModifiers = {
   productionPercent?: number;
   /** Additive percent applied to click reward (e.g. 3 => +3%). */
   clickPercent?: number;
+  /** Upgrade ids that no longer use a planet slot when this node is unlocked (reduction of 1). */
+  slotFreeUpgrades?: string[];
+  /** Per-upgrade slot cost reduction from this node (e.g. { "drill-mk2": 1 } => uses 1 fewer slot). */
+  slotReduction?: Record<string, number>;
+  /** Upgrade ids that no longer require crew when this node is unlocked (full reduction to 0). */
+  crewFreeUpgrades?: string[];
+  /** Per-upgrade crew requirement reduction from this node (e.g. { "orbital-station": 1 } => 1 fewer crew). */
+  crewReduction?: Record<string, number>;
 };
 
 export type ResearchNode = {
@@ -85,6 +96,96 @@ export function getResearchProductionPercent(): number {
 /** Total +% click from research (e.g. 12 for +12%). */
 export function getResearchClickPercent(): number {
   return (getResearchClickMultiplier() - 1) * 100;
+}
+
+/** All upgrade ids that no longer use a slot thanks to unlocked research. */
+export function getSlotFreeUpgradeIdsFromResearch(): string[] {
+  const unlocked = loadUnlocked();
+  const ids: string[] = [];
+  for (const node of RESEARCH_CATALOG) {
+    if (unlocked.includes(node.id) && node.modifiers.slotFreeUpgrades?.length) {
+      ids.push(...node.modifiers.slotFreeUpgrades);
+    }
+  }
+  return ids;
+}
+
+/** All upgrade ids that no longer require crew thanks to unlocked research. */
+export function getCrewFreeUpgradeIdsFromResearch(): string[] {
+  const unlocked = loadUnlocked();
+  const ids: string[] = [];
+  for (const node of RESEARCH_CATALOG) {
+    if (unlocked.includes(node.id) && node.modifiers.crewFreeUpgrades?.length) {
+      ids.push(...node.modifiers.crewFreeUpgrades);
+    }
+  }
+  return ids;
+}
+
+/** Total slot cost reduction from all unlocked research for this upgrade (slotFreeUpgrades count as 1 each). */
+export function getSlotReductionFromResearch(upgradeId: string): number {
+  const unlocked = loadUnlocked();
+  let total = 0;
+  for (const node of RESEARCH_CATALOG) {
+    if (!unlocked.includes(node.id)) continue;
+    if (node.modifiers.slotFreeUpgrades?.includes(upgradeId)) total += 1;
+    total += node.modifiers.slotReduction?.[upgradeId] ?? 0;
+  }
+  return total;
+}
+
+/** Total crew requirement reduction from all unlocked research (crewFree = full base once, crewReduction sums). */
+export function getCrewReductionFromResearch(upgradeId: string): number {
+  const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
+  const base = def?.requiredAstronauts ?? 0;
+  const crewFree = getCrewFreeUpgradeIdsFromResearch().includes(upgradeId);
+  let total = crewFree ? base : 0;
+  const unlocked = loadUnlocked();
+  for (const node of RESEARCH_CATALOG) {
+    if (!unlocked.includes(node.id)) continue;
+    total += node.modifiers.crewReduction?.[upgradeId] ?? 0;
+  }
+  return total;
+}
+
+/** Effective slot cost for this upgrade (0 or 1). Research can reduce base 1 to 0. */
+export function getEffectiveSlotCost(upgradeId: string): number {
+  if (!getUpgradeUsesSlot(upgradeId)) return 0;
+  const base = 1;
+  return Math.max(0, base - getSlotReductionFromResearch(upgradeId));
+}
+
+/** Whether this upgrade type uses a slot after research (false = no slot, e.g. Mining Robot or research-granted). */
+export function getEffectiveUpgradeUsesSlot(upgradeId: string): boolean {
+  return getEffectiveSlotCost(upgradeId) > 0;
+}
+
+/** Crew (astronauts) required to buy this upgrade after research. */
+export function getEffectiveRequiredAstronauts(upgradeId: string): number {
+  const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
+  if (!def) return 0;
+  return Math.max(0, def.requiredAstronauts - getCrewReductionFromResearch(upgradeId));
+}
+
+/** Used slots on a planet (effective slot cost per upgrade + housing). */
+export function getEffectiveUsedSlots(planet: Planet): number {
+  const slotCost = planet.upgrades.reduce((sum, u) => sum + getEffectiveSlotCost(u.id), 0);
+  return slotCost + planet.housingCount;
+}
+
+/** Whether the planet has at least one free slot (effective count). */
+export function hasEffectiveFreeSlot(planet: Planet): boolean {
+  return getEffectiveUsedSlots(planet) < planet.maxUpgrades;
+}
+
+/** All planets that have at least one effective free slot. */
+export function getPlanetsWithEffectiveFreeSlot(player: Player): Planet[] {
+  return player.planets.filter(hasEffectiveFreeSlot);
+}
+
+/** First planet with an effective free slot, or null. */
+export function getPlanetWithEffectiveFreeSlot(player: Player): Planet | null {
+  return getPlanetsWithEffectiveFreeSlot(player)[0] ?? null;
 }
 
 /** Rows for tree layout: each element is an array of nodes in that row (left to right). */
@@ -167,9 +268,30 @@ export function canAttemptResearch(id: string): boolean {
   return true;
 }
 
+/** Slot modifier entries for a node: upgrade id and reduction amount (e.g. "uses N less slot"). */
+export function getModifierSlotEntries(node: ResearchNode): { id: string; n: number }[] {
+  const fromFree = (node.modifiers.slotFreeUpgrades ?? []).map((id) => ({ id, n: 1 }));
+  const fromReduction = Object.entries(node.modifiers.slotReduction ?? {}).map(([id, n]) => ({ id, n }));
+  return [...fromFree, ...fromReduction];
+}
+
+/** Crew modifier entries for a node: upgrade id and reduction amount (e.g. "requires N less crew"). */
+export function getModifierCrewEntries(node: ResearchNode): { id: string; n: number }[] {
+  const fromFree = (node.modifiers.crewFreeUpgrades ?? []).map((id) => {
+    const base = UPGRADE_CATALOG.find((d) => d.id === id)?.requiredAstronauts ?? 0;
+    return { id, n: base };
+  });
+  const fromReduction = Object.entries(node.modifiers.crewReduction ?? {}).map(([id, n]) => ({ id, n }));
+  return [...fromFree, ...fromReduction];
+}
+
+/** Optional: (upgradeId, kind, reduction amount) => display line for success message. */
+export type GetUpgradeDisplayLine = (upgradeId: string, kind: 'slot' | 'crew', n: number) => string;
+
 export function attemptResearch(
   id: string,
-  spendCoins: (amount: number) => boolean
+  spendCoins: (amount: number) => boolean,
+  getUpgradeDisplayLine?: GetUpgradeDisplayLine
 ): { success: boolean; message: string } {
   const node = RESEARCH_CATALOG.find((n) => n.id === id);
   if (!node) return { success: false, message: 'Unknown research.' };
@@ -183,6 +305,22 @@ export function attemptResearch(
     const mods: string[] = [];
     if (node.modifiers.productionPercent) mods.push(`+${node.modifiers.productionPercent}% production`);
     if (node.modifiers.clickPercent) mods.push(`+${node.modifiers.clickPercent}% click`);
+    const slotEntries = getModifierSlotEntries(node);
+    if (slotEntries.length) {
+      mods.push(
+        getUpgradeDisplayLine
+          ? slotEntries.map(({ id: upgradeId, n }) => getUpgradeDisplayLine(upgradeId, 'slot', n)).join(', ')
+          : `${slotEntries.length} upgrade(s) use fewer slot(s)`
+      );
+    }
+    const crewEntries = getModifierCrewEntries(node);
+    if (crewEntries.length) {
+      mods.push(
+        getUpgradeDisplayLine
+          ? crewEntries.map(({ id: upgradeId, n }) => getUpgradeDisplayLine(upgradeId, 'crew', n)).join(', ')
+          : `${crewEntries.length} upgrade(s) require less crew`
+      );
+    }
     return { success: true, message: `${node.name} complete! ${mods.join(', ')}.` };
   }
   return { success: false, message: 'Research failed. Coins spent. Try again.' };

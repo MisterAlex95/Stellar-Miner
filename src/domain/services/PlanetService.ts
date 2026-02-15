@@ -89,12 +89,13 @@ export class PlanetService {
     return getHousingCost(planet.housingCount);
   }
 
-  canBuildHousing(player: Player, planet: Planet): boolean {
-    return planet.hasFreeSlot() && player.coins.gte(this.getHousingCost(planet));
+  canBuildHousing(player: Player, planet: Planet, hasFreeSlot?: (p: Planet) => boolean): boolean {
+    const slotOk = hasFreeSlot ? hasFreeSlot(planet) : planet.hasFreeSlot();
+    return slotOk && player.coins.gte(this.getHousingCost(planet));
   }
 
-  buildHousing(player: Player, planet: Planet): boolean {
-    if (!this.canBuildHousing(player, planet)) return false;
+  buildHousing(player: Player, planet: Planet, hasFreeSlot?: (p: Planet) => boolean): boolean {
+    if (!this.canBuildHousing(player, planet, hasFreeSlot)) return false;
     player.spendCoins(this.getHousingCost(planet));
     planet.addHousing();
     return true;

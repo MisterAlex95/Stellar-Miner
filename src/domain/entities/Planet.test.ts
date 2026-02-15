@@ -41,6 +41,17 @@ describe('Planet', () => {
     );
   });
 
+  it('usedSlots does not count upgrades that do not use a slot', () => {
+    const p = Planet.create('p1', 'Titan', 2);
+    p.addUpgrade(new Upgrade('u1', 'U1', 1, new UpgradeEffect(1), true));
+    p.addUpgrade(new Upgrade('u2', 'U2', 1, new UpgradeEffect(1), false));
+    expect(p.usedSlots).toBe(1);
+    expect(p.freeSlots).toBe(1);
+    p.addUpgrade(new Upgrade('u3', 'U3', 1, new UpgradeEffect(1), false));
+    expect(p.usedSlots).toBe(1);
+    expect(p.upgrades).toHaveLength(3);
+  });
+
   it('addSlot increases maxUpgrades', () => {
     const p = Planet.create('p1', 'Titan', 6);
     expect(p.maxUpgrades).toBe(6);
