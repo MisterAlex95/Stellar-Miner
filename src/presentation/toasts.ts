@@ -28,10 +28,16 @@ export function showEventToast(gameEvent: GameEvent): void {
   showToast(message, variant, { duration: isNegative ? 5000 : 4000 });
 }
 
-export function showOfflineToast(coins: number, capped?: boolean): void {
-  const message = capped
-    ? tParam('welcomeBackCapped', { coins: formatNumber(coins, false) })
-    : tParam('welcomeBack', { coins: formatNumber(coins, false) });
+export function showOfflineToast(coins: number, capped?: boolean, hours?: number): void {
+  const coinsStr = formatNumber(coins, false);
+  const message =
+    hours != null && hours > 0
+      ? capped
+        ? tParam('welcomeBackCappedWithHours', { coins: coinsStr, hours: String(hours) })
+        : tParam('welcomeBackWithHours', { coins: coinsStr, hours: String(hours) })
+      : capped
+        ? tParam('welcomeBackCapped', { coins: coinsStr })
+        : tParam('welcomeBack', { coins: coinsStr });
   showToast(message, 'offline', { duration: 5000 });
 }
 

@@ -37,9 +37,13 @@ export function openPrestigeConfirmModal(): void {
     onOpen: () => {
       const session = getSession();
       const descEl = document.getElementById('prestige-confirm-desc');
+      const afterEl = document.getElementById('prestige-confirm-after');
       if (session && descEl) {
         const nextLevel = session.player.prestigeLevel + 1;
         descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: nextLevel * 5 });
+        if (afterEl) {
+          afterEl.textContent = tParam('prestigeConfirmAfter', { level: nextLevel, pct: nextLevel * 5 });
+        }
       }
     },
   });

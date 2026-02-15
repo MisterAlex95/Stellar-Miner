@@ -16,7 +16,7 @@
 .statistics-section {
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
   box-shadow: var(--panel-shadow);

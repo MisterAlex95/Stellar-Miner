@@ -86,12 +86,19 @@ function isSavedSession(data: unknown): data is SavedSession {
 /** Infrastructure: persist game session to localStorage. */
 export class SaveLoadService implements ISaveLoadService {
   private lastOfflineCoinsApplied = 0;
+  private lastOfflineHoursApplied = 0;
   private lastOfflineWasCapped = false;
 
   getLastOfflineCoins(): number {
     const n = this.lastOfflineCoinsApplied;
     this.lastOfflineCoinsApplied = 0;
     return n;
+  }
+
+  getLastOfflineHours(): number {
+    const h = this.lastOfflineHoursApplied;
+    this.lastOfflineHoursApplied = 0;
+    return h;
   }
 
   getLastOfflineWasCapped(): boolean {
@@ -207,6 +214,7 @@ export class SaveLoadService implements ISaveLoadService {
         session.player.addCoins(offlineCoins);
         const n = offlineCoins.toNumber();
         this.lastOfflineCoinsApplied = Number.isFinite(n) ? n : Number.MAX_VALUE;
+        this.lastOfflineHoursApplied = Math.round((elapsed / (60 * 60 * 1000)) * 10) / 10;
         this.lastOfflineWasCapped = elapsed > FULL_CAP_OFFLINE_MS;
       }
     }

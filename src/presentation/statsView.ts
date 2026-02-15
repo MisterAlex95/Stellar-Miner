@@ -41,8 +41,11 @@ export function updateCoinDisplay(dt: number): void {
       if (Math.abs(displayedCoins - targetNum) < 0.5) displayedCoins = targetNum;
     }
     coinsEl.textContent = formatNumber(Math.floor(displayedCoins), settings.compactNumbers);
+    if (settings.compactNumbers) coinsEl.title = target.toFixed(2);
+    else coinsEl.removeAttribute('title');
   } else {
     coinsEl.textContent = formatNumber(target, settings.compactNumbers);
+    coinsEl.title = target.toFixed(2);
   }
 }
 
@@ -65,8 +68,11 @@ export function updateProductionDisplay(dt: number): void {
       if (Math.abs(displayedProduction - targetNum) < 0.05) displayedProduction = targetNum;
     }
     rateEl.textContent = formatNumber(displayedProduction, settings.compactNumbers) + '/s';
+    if (settings.compactNumbers) rateEl.title = target.toFixed(2) + '/s';
+    else rateEl.removeAttribute('title');
   } else {
     rateEl.textContent = formatNumber(target, settings.compactNumbers) + '/s';
+    rateEl.title = target.toFixed(2) + '/s';
   }
 }
 
@@ -76,7 +82,11 @@ export function syncCoinDisplay(): void {
   const target = session.player.coins.value;
   displayedCoins = target.toNumber();
   const coinsEl = document.getElementById('coins-value');
-  if (coinsEl) coinsEl.textContent = formatNumber(target, getSettings().compactNumbers);
+  if (coinsEl) {
+    coinsEl.textContent = formatNumber(target, getSettings().compactNumbers);
+    if (getSettings().compactNumbers) coinsEl.title = target.toFixed(2);
+    else coinsEl.removeAttribute('title');
+  }
 }
 
 export function syncProductionDisplay(): void {
@@ -87,7 +97,11 @@ export function syncProductionDisplay(): void {
   const target = session.player.effectiveProductionRate.mul(eventMult * researchMult);
   displayedProduction = target.toNumber();
   const rateEl = document.getElementById('production-value');
-  if (rateEl) rateEl.textContent = formatNumber(target, getSettings().compactNumbers) + '/s';
+  if (rateEl) {
+    rateEl.textContent = formatNumber(target, getSettings().compactNumbers) + '/s';
+    if (getSettings().compactNumbers) rateEl.title = target.toFixed(2) + '/s';
+    else rateEl.removeAttribute('title');
+  }
 }
 
 export function updateStats(): void {

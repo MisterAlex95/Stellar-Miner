@@ -8,6 +8,34 @@ a,
   touch-action: manipulation;
 }
 
+button:disabled,
+[role="button"]:disabled,
+.add-slot-btn:disabled,
+.build-housing-btn:disabled,
+.buy-planet-btn:disabled,
+.hire-astronaut-btn:disabled,
+.prestige-btn:disabled,
+.quest-claim-btn:disabled,
+.research-attempt-btn:disabled,
+.upgrade-btn:disabled {
+  cursor: not-allowed;
+  color: var(--text-dim);
+}
+
+/* Touch targets: min 44px for primary actions */
+.quest-claim-btn,
+.prestige-btn,
+.hire-astronaut-btn,
+.add-slot-btn,
+.build-housing-btn,
+.buy-planet-btn,
+.upgrade-btn,
+.research-attempt-btn {
+  min-height: 44px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
 html {
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;

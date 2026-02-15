@@ -138,13 +138,12 @@ function closeSectionRulesModal(): void {
 }
 
 export function switchTab(tabId: string): void {
-  const tabs = document.querySelectorAll('.app-tab');
+  const tabs = document.querySelectorAll<HTMLElement>('.app-tab[data-tab]');
   const panels = document.querySelectorAll('.app-tab-panel');
   tabs.forEach((tab) => {
-    const t = tab as HTMLElement;
-    const isSelected = t.getAttribute('data-tab') === tabId;
-    t.classList.toggle('app-tab--active', isSelected);
-    t.setAttribute('aria-selected', String(isSelected));
+    const isSelected = tab.getAttribute('data-tab') === tabId;
+    tab.classList.toggle('app-tab--active', isSelected);
+    tab.setAttribute('aria-selected', String(isSelected));
   });
   panels.forEach((panel) => {
     const p = panel as HTMLElement;
@@ -158,6 +157,14 @@ export function switchTab(tabId: string): void {
     // ignore
   }
   if (tabId === 'research') renderResearchSection();
+  const tabMore = document.getElementById('tab-more');
+  if (tabMore) {
+    const inMenu = ['empire', 'research', 'upgrades', 'stats'].includes(tabId);
+    tabMore.classList.toggle('app-tab-more--active', inMenu);
+  }
+  document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
+    item.classList.toggle('app-tabs-menu-item--active', item.getAttribute('data-tab') === tabId);
+  });
 }
 
 /** Apply layout mode: tabs (one panel at a time) or one-page (all sections stacked). */
@@ -508,8 +515,33 @@ export function mount(): void {
 
   // --- Mine zone click + Space key ---
   const mineZone = document.getElementById('mine-zone');
+  const mineZoneHint = document.getElementById('mine-zone-hint');
+  const MINE_HINT_DISMISSED_KEY = 'stellar-miner-mine-hint-dismissed';
+  if (mineZoneHint) {
+    try {
+      if (localStorage.getItem(MINE_HINT_DISMISSED_KEY)) {
+        mineZoneHint.classList.add('mine-zone-hint--dismissed');
+        mineZoneHint.setAttribute('aria-hidden', 'true');
+      } else {
+        mineZoneHint.setAttribute('aria-hidden', 'false');
+      }
+    } catch {
+      mineZoneHint.setAttribute('aria-hidden', 'false');
+    }
+  }
   if (mineZone) {
-    mineZone.addEventListener('click', (e: Event) => handleMineClick(e as MouseEvent));
+    mineZone.addEventListener('click', (e: Event) => {
+      if (mineZoneHint && !mineZoneHint.classList.contains('mine-zone-hint--dismissed')) {
+        try {
+          localStorage.setItem(MINE_HINT_DISMISSED_KEY, '1');
+        } catch {
+          // ignore
+        }
+        mineZoneHint.classList.add('mine-zone-hint--dismissed');
+        mineZoneHint.setAttribute('aria-hidden', 'true');
+      }
+      handleMineClick(e as MouseEvent);
+    });
     mineZone.addEventListener('mousedown', () => mineZone.classList.add('mine-zone--active'));
     mineZone.addEventListener('mouseup', () => mineZone.classList.remove('mine-zone--active'));
     mineZone.addEventListener('mouseleave', () => mineZone.classList.remove('mine-zone--active'));
@@ -525,6 +557,15 @@ export function mount(): void {
     if (target?.closest('input, select, textarea, [role="dialog"]')) return;
     e.preventDefault();
     mineZone?.classList.add('mine-zone--active');
+    if (mineZoneHint && !mineZoneHint.classList.contains('mine-zone-hint--dismissed')) {
+      try {
+        localStorage.setItem(MINE_HINT_DISMISSED_KEY, '1');
+      } catch {
+        // ignore
+      }
+      mineZoneHint.classList.add('mine-zone-hint--dismissed');
+      mineZoneHint.setAttribute('aria-hidden', 'true');
+    }
     const allowRepeat = getSettings().spaceKeyRepeat;
     if (!e.repeat || allowRepeat) handleMineClick();
   });
@@ -675,23 +716,58 @@ export function mount(): void {
   if (statisticsContainer) renderStatisticsSection(statisticsContainer);
 
   // --- Tabs, layout, offline, stats compact ---
-  document.querySelectorAll('.app-tab').forEach((tab) => {
+  document.querySelectorAll<HTMLElement>('.app-tab[data-tab]').forEach((tab) => {
     tab.addEventListener('click', () => {
-      const tabId = (tab as HTMLElement).getAttribute('data-tab');
+      const tabId = tab.getAttribute('data-tab');
       if (tabId) switchTab(tabId);
     });
   });
+  const tabMore = document.getElementById('tab-more');
+  const appTabsMenu = document.getElementById('app-tabs-menu');
+  function closeTabsMenu(): void {
+    if (appTabsMenu) appTabsMenu.hidden = true;
+    if (tabMore) tabMore.setAttribute('aria-expanded', 'false');
+  }
+  function openTabsMenu(): void {
+    if (appTabsMenu) appTabsMenu.hidden = false;
+    if (tabMore) tabMore.setAttribute('aria-expanded', 'true');
+  }
+  if (tabMore && appTabsMenu) {
+    tabMore.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = appTabsMenu.hidden === false;
+      if (isOpen) closeTabsMenu();
+      else openTabsMenu();
+    });
+    document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const tabId = item.getAttribute('data-tab');
+        if (tabId) switchTab(tabId);
+        closeTabsMenu();
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (appTabsMenu.hidden) return;
+      const target = e.target as Node;
+      if (!appTabsMenu.contains(target) && !tabMore.contains(target)) closeTabsMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape' && !appTabsMenu.hidden) {
+        closeTabsMenu();
+        tabMore?.focus();
+      }
+    });
+  }
   document.addEventListener('keydown', (e) => {
     const key = e.key;
     if (key !== '1' && key !== '2' && key !== '3' && key !== '4' && key !== '5') return;
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.closest('[role="dialog"]'))) return;
-    const tabs = Array.from(document.querySelectorAll<HTMLElement>('.app-tab')).filter((t) => (t as HTMLElement).offsetParent !== null);
     const idx = parseInt(key, 10) - 1;
-    const tabEl = tabs[idx];
-    if (!tabEl) return;
-    const tabId = tabEl.getAttribute('data-tab');
-    if (tabId) switchTab(tabId);
+    const tabId = VALID_TAB_IDS[idx];
+    if (!tabId) return;
+    const tabEl = document.querySelector(`.app-tab[data-tab="${tabId}"]`);
+    if (tabEl) switchTab(tabId);
   });
   const savedTab =
     (typeof localStorage !== 'undefined' && localStorage.getItem(TAB_STORAGE_KEY)) || DEFAULT_TAB;

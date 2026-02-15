@@ -18,13 +18,15 @@ export function updateComboIndicator(): void {
   if (mult > 1) {
     updateRunMaxComboMult(mult);
     const name = getCatalogComboName(mult);
-    el.textContent = `${name} ×${mult.toFixed(1)}`;
-    el.setAttribute('data-combo-tier', name.toLowerCase().replace(/\s+/g, '-'));
-    el.classList.add('combo-indicator--active');
     const oldest = recent.length > 0 ? Math.min(...recent) : 0;
     const timeLeft = oldest > 0 ? COMBO_WINDOW_MS - (now - oldest) : COMBO_WINDOW_MS;
+    const timeSec = (timeLeft / 1000).toFixed(1);
+    el.innerHTML = `<span class="combo-indicator__mult">${name} ×${mult.toFixed(1)}</span> <span class="combo-indicator__time">${timeSec}s</span>`;
+    el.setAttribute('data-combo-tier', name.toLowerCase().replace(/\s+/g, '-'));
+    el.classList.add('combo-indicator--active');
     el.classList.toggle('combo-indicator--fading', timeLeft < COMBO_FADING_MS && timeLeft > 0);
   } else {
+    el.textContent = '';
     el.removeAttribute('data-combo-tier');
     el.classList.remove('combo-indicator--active', 'combo-indicator--fading');
   }

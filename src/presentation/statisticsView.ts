@@ -103,6 +103,8 @@ function updateChartLegend(legendId: string, legendLabel: string, min: number, m
   if (minmaxEl) minmaxEl.textContent = tParam('chartMinMax', { min: formatValue(min), max: formatValue(max) });
 }
 
+const STATS_RANGE_STORAGE_KEY = 'stellar-miner-stats-range';
+
 let lastHistoryLength = 0;
 let chartRange: ChartRange = 'recent';
 
@@ -243,11 +245,25 @@ export function renderStatisticsSection(container: HTMLElement): void {
 function bindChartRange(container: HTMLElement): void {
   const rangeWrap = container.querySelector('.statistics-chart-range');
   if (!rangeWrap) return;
+  const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(STATS_RANGE_STORAGE_KEY) : null;
+  if (saved === 'recent' || saved === 'longTerm') {
+    chartRange = saved;
+    rangeWrap.querySelectorAll('.statistics-range-btn').forEach((b) => {
+      const isActive = (b as HTMLElement).getAttribute('data-range') === saved;
+      b.classList.toggle('statistics-range-btn--active', isActive);
+      b.setAttribute('aria-selected', String(isActive));
+    });
+  }
   rangeWrap.querySelectorAll('.statistics-range-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const range = (btn as HTMLElement).getAttribute('data-range') as ChartRange | null;
       if (range !== 'recent' && range !== 'longTerm') return;
       chartRange = range;
+      try {
+        localStorage.setItem(STATS_RANGE_STORAGE_KEY, range);
+      } catch {
+        // ignore
+      }
       rangeWrap.querySelectorAll('.statistics-range-btn').forEach((b) => {
         const isActive = (b as HTMLElement).getAttribute('data-range') === range;
         b.classList.toggle('statistics-range-btn--active', isActive);

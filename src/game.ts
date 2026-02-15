@@ -124,6 +124,7 @@ async function init(): Promise<void> {
   setSession(session);
   loadStatsHistory();
   const offlineCoins = saveLoad.getLastOfflineCoins();
+  const offlineHours = saveLoad.getLastOfflineHours();
   const gameStartTime = Date.now();
   setGameStartTime(gameStartTime);
   setNextEventAt(gameStartTime + MIN_EVENT_DELAY_MS);
@@ -136,7 +137,7 @@ async function init(): Promise<void> {
   renderUpgradeList();
   renderPlanetList();
   maybeShowWelcomeModal();
-  if (offlineCoins > 0) showOfflineToast(offlineCoins, saveLoad.getLastOfflineWasCapped());
+  if (offlineCoins > 0) showOfflineToast(offlineCoins, saveLoad.getLastOfflineWasCapped(), offlineHours > 0 ? offlineHours : undefined);
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
   setInterval(saveSession, SAVE_INTERVAL_MS);

@@ -101,6 +101,8 @@
 .info-body {
   padding: 1rem 1.25rem;
   overflow-y: auto;
+  max-height: min(60vh, 400px);
+  scrollbar-gutter: stable;
 }
 
 .info-version-row {
@@ -313,6 +315,12 @@
   font-size: 0.9rem;
   color: var(--text-dim);
   line-height: 1.4;
+}
+
+.prestige-confirm-after {
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
 .prestige-confirm-actions {
@@ -857,6 +865,7 @@
   padding: 0.5rem 0;
   max-height: 200px;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .achievements-list--open {

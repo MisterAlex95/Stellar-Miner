@@ -1,5 +1,22 @@
 [
   {
+    "version": "0.4.3",
+    "date": "2026-02-15",
+    "changes": [
+      "UI/UX: All tabs (Mine, Empire, Research, Upgrades, Stats) visible on mobile with horizontal scroll.",
+      "Keyboard shortcut hint under Mine zone (Space to mine · 1–4 switch tabs).",
+      "Mine zone hint visible by default, fades after first click or Space.",
+      "Combo decay: time left (e.g. 1.2s) shown next to combo multiplier.",
+      "Exact value tooltip on Coins and Production when compact numbers are on.",
+      "Event badge countdown format: \"— 18s\" for active events.",
+      "Prestige confirm modal: line \"After Prestige: level X → +Y% production forever.\"",
+      "Offline recap toast shows hours away when applicable (e.g. \"You earned X coins while away (Y h).\").",
+      "Border radius standardized (8/12/16px). Disabled buttons: cursor not-allowed, dimmed.",
+      "Stats chart range (Recent/Long term) persisted in localStorage.",
+      "Modals with long content: scrollable body, scrollbar-gutter. Touch targets min 44px. One-page layout: more spacing and borders between sections."
+    ]
+  },
+  {
     "version": "0.4.2",
     "date": "2026-02-15",
     "changes": [

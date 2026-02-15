@@ -41,12 +41,17 @@ const stringsEn = {
   production: 'Production',
   productionTitle: 'Empire × planets × prestige × events',
   gameSections: 'Game sections',
+  tabsMoreLabel: 'More sections',
   tabMine: 'Mine',
   tabBase: 'Empire',
   tabResearch: 'Research',
   tabUpgrades: 'Upgrades',
   tabStats: 'Stats',
   mineZoneTitle: 'Click or press Space to mine',
+  keyboardShortcutsHint: 'Space to mine · 1–4 switch tabs',
+  keyboardShortcutsSpaceKey: 'Space',
+  keyboardShortcutsMine: 'to mine',
+  keyboardShortcutsTabs: 'switch tabs',
   quest: 'Quest',
   questHint: 'Complete quest targets to earn rewards.\n- Mine coins, buy upgrades, etc. to reach the target.\n- Claim within 5 minutes of completion for a streak bonus.\n- Each quest has a random target and reward.',
   claim: 'Claim',
@@ -132,6 +137,8 @@ const stringsEn = {
   achievementToast: 'Achievement: {{name}}',
   welcomeBack: 'Welcome back! +{{coins}} coins while you were away.',
   welcomeBackCapped: 'Welcome back! +{{coins}} coins while you were away (capped at 12h).',
+  welcomeBackWithHours: 'You earned {{coins}} coins while away ({{hours}} h).',
+  welcomeBackCappedWithHours: 'You earned {{coins}} coins while away ({{hours}} h, capped at 12h).',
   luckyToast: '★ LUCKY! +{{coins}} ⬡',
   questStreakToastFormat: 'Quest streak ×{{n}}! +{{pct}}% reward',
   milestoneToastFormat: 'Milestone: {{coins}} total coins earned!',
@@ -271,6 +278,7 @@ const stringsEn = {
   crewOperatesAvailable: '{{free}} available.',
   freeAstronautsTitle: 'Free astronauts: +2% production each (miners). Others: scientists (research), pilots (expedition survivor). Max: {{max}}.',
   prestigeConfirmDescLevel: "You'll reset to 0 coins and 1 planet. You keep Prestige level {{level}} (+{{pct}}% production forever).",
+  prestigeConfirmAfter: 'After Prestige: level {{level}} → +{{pct}}% production forever.',
   prestigeRewardsTitle: 'Prestige rewards',
   prestigeRewardsIntro: 'What you gain at each prestige level:',
   prestigeReward1: 'Prestige 1: +5% production forever. Unlocks all click bonuses: Lucky / Super Lucky / Critical clicks, Combo multiplier, and Research +% click (skill tree). Before prestige 1, each click gives only 1 coin.',
@@ -353,12 +361,17 @@ const stringsFr: Record<keyof typeof stringsEn, string> = {
   production: 'Production',
   productionTitle: 'Empire × planètes × prestige × événements',
   gameSections: 'Sections du jeu',
+  tabsMoreLabel: 'Plus de sections',
   tabMine: 'Mine',
   tabBase: 'Empire',
   tabResearch: 'Recherche',
   tabUpgrades: 'Améliorations',
   tabStats: 'Stats',
   mineZoneTitle: 'Cliquez ou Espace pour miner',
+  keyboardShortcutsHint: 'Espace pour miner · 1–4 changer d’onglet',
+  keyboardShortcutsSpaceKey: 'Espace',
+  keyboardShortcutsMine: 'pour miner',
+  keyboardShortcutsTabs: 'changer d’onglet',
   quest: 'Quête',
   questHint: 'Complétez les objectifs de quête pour gagner des récompenses.\n- Miner des pièces, acheter des améliorations, etc. pour atteindre l\'objectif.\n- Récupérez dans les 5 minutes après complétion pour un bonus de série.\n- Chaque quête a un objectif et une récompense aléatoires.',
   claim: 'Récupérer',
@@ -444,6 +457,8 @@ const stringsFr: Record<keyof typeof stringsEn, string> = {
   achievementToast: 'Succès : {{name}}',
   welcomeBack: 'Bon retour ! +{{coins}} pièces pendant votre absence.',
   welcomeBackCapped: 'Bon retour ! +{{coins}} pièces pendant votre absence (plafonné 12 h).',
+  welcomeBackWithHours: 'Vous avez gagné {{coins}} pièces pendant votre absence ({{hours}} h).',
+  welcomeBackCappedWithHours: 'Vous avez gagné {{coins}} pièces pendant votre absence ({{hours}} h, plafonné 12 h).',
   luckyToast: '★ CHANCE ! +{{coins}} ⬡',
   questStreakToastFormat: 'Série de quêtes ×{{n}} ! +{{pct}} % de récompense',
   milestoneToastFormat: 'Jalon : {{coins}} pièces gagnées au total !',
@@ -583,6 +598,7 @@ const stringsFr: Record<keyof typeof stringsEn, string> = {
   crewOperatesAvailable: '{{free}} disponible(s).',
   freeAstronautsTitle: 'Astronautes libres : +2 % production (mineurs). Autres : scientifiques (recherche), pilotes (survivant expédition). Max : {{max}}.',
   prestigeConfirmDescLevel: 'Vous repartez à 0 pièce et 1 planète. Vous gardez le niveau Prestige {{level}} (+{{pct}} % production pour toujours).',
+  prestigeConfirmAfter: 'Après Prestige : niveau {{level}} → +{{pct}} % production pour toujours.',
   prestigeRewardsTitle: 'Récompenses de prestige',
   prestigeRewardsIntro: 'Ce que vous gagnez à chaque niveau de prestige :',
   prestigeReward1: 'Prestige 1 : +5 % production pour toujours. Débloque tous les bonus de clic : Lucky / Super Lucky / Critical, multiplicateur Combo, et + % clic recherche (arbre). Avant le prestige 1, chaque clic ne donne qu’1 pièce.',
@@ -667,5 +683,18 @@ export function applyTranslations(): void {
   document.querySelectorAll<HTMLElement>('[data-i18n-aria-label]').forEach((el) => {
     const key = el.getAttribute('data-i18n-aria-label');
     if (key && key in stringsEn) el.setAttribute('aria-label', t(key as StringKey));
+  });
+  const tabTitleKeys: Record<string, StringKey> = {
+    mine: 'tabMine',
+    empire: 'tabBase',
+    research: 'tabResearch',
+    upgrades: 'tabUpgrades',
+    stats: 'tabStats',
+  };
+  document.querySelectorAll<HTMLElement>('.app-tab[data-tab]').forEach((btn, index) => {
+    const tabId = btn.getAttribute('data-tab');
+    const key = tabId ? tabTitleKeys[tabId] : null;
+    const num = index + 1;
+    if (key && key in stringsEn) btn.title = `${t(key)} (${num})`;
   });
 }
