@@ -65,9 +65,20 @@ export function renderUpgradeList(): void {
           : '';
 
       let buyTitle = '';
-      if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Costs ${formatNumber(def.cost, settings.compactNumbers)} ⬡ + ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
-      else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
-      else if (canBuy) buyTitle = `Buy ${def.name} · ${costCoins}${costCrewLine ? ` + ${costCrewLine}` : ''}`;
+      if (!canBuy) {
+        if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Need ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
+        else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
+        else if (!canAfford) buyTitle = `Need ${costCoins}${costCrewLine ? ` + ${costCrewLine}` : ''} to buy.`;
+        else buyTitle = `Need ${costCoins}${costCrewLine ? ` + ${costCrewLine}` : ''} and a free slot.`;
+      } else buyTitle = `Buy ${def.name} · ${costCoins}${costCrewLine ? ` + ${costCrewLine}` : ''}`;
+
+      let maxTitle = 'Buy as many as you can afford with current slots';
+      if (maxCount <= 0 || !hasCrew) {
+        if (!hasCrew && def.requiredAstronauts > 0) maxTitle = 'Need more crew to buy this upgrade.';
+        else if (!hasFreeSlot) maxTitle = 'No free slots. Add slots or buy a new planet.';
+        else if (!canAfford) maxTitle = `Need ${costCoins} to buy at least one.`;
+        else maxTitle = 'No free slots or not enough coins/crew to buy more.';
+      }
 
       const crewBadge =
         def.requiredAstronauts > 0
@@ -105,8 +116,8 @@ export function renderUpgradeList(): void {
         <div class="upgrade-actions">
           ${planetSelectHtml}
           <div class="upgrade-buttons">
-            <button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" title="${buyTitle}" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>
-            <button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" title="Buy as many as you can afford with current slots" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button>
+            <span class="btn-tooltip-wrap" title="${buyTitle}"><button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" ${canBuy ? '' : 'disabled'}>${buyLabel}</button></span>
+            <span class="btn-tooltip-wrap" title="${maxTitle}"><button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button></span>
           </div>
         </div>
       `;
@@ -139,8 +150,20 @@ export function updateUpgradeListInPlace(): void {
     const maxLabel = maxCount > 1 ? `Max (${maxCount})` : 'Max';
 
     let buyTitle = '';
-    if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Costs ${formatNumber(def.cost, settings.compactNumbers)} ⬡ + ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
-    else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
+    if (!canBuy) {
+      if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Need ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
+      else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
+      else if (!canAfford) buyTitle = `Need ${formatNumber(def.cost, settings.compactNumbers)} ⬡${def.requiredAstronauts > 0 ? ` + ${def.requiredAstronauts} crew` : ''} to buy.`;
+      else buyTitle = `Need ${formatNumber(def.cost, settings.compactNumbers)} ⬡ and a free slot.`;
+    } else buyTitle = `Buy ${def.name} · ${formatNumber(def.cost, settings.compactNumbers)} ⬡${def.requiredAstronauts > 0 ? ` + ${def.requiredAstronauts} crew` : ''}`;
+
+    let maxTitle = 'Buy as many as you can afford with current slots';
+    if (maxCount <= 0 || !hasCrew) {
+      if (!hasCrew && def.requiredAstronauts > 0) maxTitle = 'Need more crew to buy this upgrade.';
+      else if (!hasFreeSlot) maxTitle = 'No free slots. Add slots or buy a new planet.';
+      else if (!canAfford) maxTitle = `Need ${formatNumber(def.cost, settings.compactNumbers)} ⬡ to buy at least one.`;
+      else maxTitle = 'No free slots or not enough coins/crew to buy more.';
+    }
 
     const isRecommended = canBuy && !player.upgrades.some((u) => u.id === id);
     const crewBadge = def.requiredAstronauts > 0 ? `<span class="upgrade-crew-req" title="Cost in astronauts (spent when you buy)">${def.requiredAstronauts} crew</span>` : '';
@@ -164,12 +187,15 @@ export function updateUpgradeListInPlace(): void {
     if (buyBtn) {
       buyBtn.textContent = buyLabel;
       buyBtn.toggleAttribute('disabled', !canBuy);
-      buyBtn.setAttribute('title', buyTitle);
+      const buyWrap = buyBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? buyBtn.parentElement : null;
+      if (buyWrap) buyWrap.setAttribute('title', buyTitle);
     }
     const maxBtn = card.querySelector('.upgrade-btn--max');
     if (maxBtn) {
       maxBtn.textContent = maxLabel;
       maxBtn.toggleAttribute('disabled', maxCount <= 0 || !hasCrew);
+      const maxWrap = maxBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? maxBtn.parentElement : null;
+      if (maxWrap) maxWrap.setAttribute('title', maxTitle);
     }
     const wasAffordable = card.classList.contains('upgrade-card--affordable');
     card.classList.toggle('upgrade-card--affordable', canBuy);

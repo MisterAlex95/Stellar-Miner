@@ -23,6 +23,10 @@ describe('settings', () => {
       compactNumbers: true,
       spaceKeyRepeat: false,
       layout: 'tabs',
+      pauseWhenBackground: false,
+      reducedMotion: false,
+      theme: 'dark',
+      soundEnabled: true,
     });
   });
 
@@ -37,6 +41,10 @@ describe('settings', () => {
       compactNumbers: true,
       spaceKeyRepeat: false,
       layout: 'tabs',
+      pauseWhenBackground: false,
+      reducedMotion: false,
+      theme: 'dark',
+      soundEnabled: true,
     });
     vi.stubGlobal('localStorage', orig);
   });
@@ -65,6 +73,10 @@ describe('settings', () => {
       compactNumbers: true,
       spaceKeyRepeat: false,
       layout: 'tabs',
+      pauseWhenBackground: false,
+      reducedMotion: false,
+      theme: 'dark',
+      soundEnabled: true,
     });
   });
 
@@ -76,6 +88,10 @@ describe('settings', () => {
       compactNumbers: false,
       spaceKeyRepeat: true,
       layout: 'one-page',
+      pauseWhenBackground: false,
+      reducedMotion: false,
+      theme: 'dark',
+      soundEnabled: true,
     });
     const raw = storage['stellar-miner-settings'];
     expect(raw).toBeDefined();
@@ -95,6 +111,10 @@ describe('settings', () => {
         compactNumbers: true,
         spaceKeyRepeat: false,
         layout: 'tabs',
+        pauseWhenBackground: false,
+        reducedMotion: false,
+        theme: 'dark',
+        soundEnabled: true,
       })
     ).not.toThrow();
     vi.stubGlobal('localStorage', orig);
@@ -114,6 +134,10 @@ describe('settings', () => {
         compactNumbers: true,
         spaceKeyRepeat: false,
         layout: 'tabs',
+        pauseWhenBackground: false,
+        reducedMotion: false,
+        theme: 'dark',
+        soundEnabled: true,
       })
     ).not.toThrow();
   });

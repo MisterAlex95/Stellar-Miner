@@ -17,7 +17,10 @@ export function renderCrewSection(): void {
   const cost = getAstronautCost(player.astronautCount);
   const canHire = player.coins.gte(cost);
   hireBtn.textContent = `Hire astronaut · ${formatNumber(cost, settings.compactNumbers)} ⬡`;
-  hireBtn.title = canHire ? `Hire an astronaut for ${formatNumber(cost, settings.compactNumbers)} ⬡ · +2% production each; required for tier 2+ upgrades` : `Need ${formatNumber(cost, settings.compactNumbers)} ⬡ to hire`;
+  const tooltipText = canHire ? `Hire an astronaut for ${formatNumber(cost, settings.compactNumbers)} ⬡ · +2% production each; required for tier 2+ upgrades` : `Need ${formatNumber(cost, settings.compactNumbers)} ⬡ to hire`;
+  const wrap = hireBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? hireBtn.parentElement : null;
+  if (wrap) wrap.setAttribute('title', tooltipText);
+  else hireBtn.setAttribute('title', tooltipText);
   hireBtn.toggleAttribute('disabled', !canHire);
   const assigned = getAssignedAstronauts(session);
   const free = player.astronautCount;

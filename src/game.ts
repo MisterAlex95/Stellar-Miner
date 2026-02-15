@@ -36,6 +36,7 @@ const QUEST_RENDER_INTERVAL_MS = 150;
 let lastQuestRenderMs = 0;
 
 function gameLoop(now: number): void {
+  if (typeof performance !== 'undefined' && performance.mark) performance.mark('game-loop-start');
   const session = getSession();
   if (!session) {
     requestAnimationFrame(gameLoop);
@@ -87,7 +88,11 @@ function gameLoop(now: number): void {
   updateComboIndicator();
   updateProgressionVisibility();
   updateTabVisibility(switchTab);
-  updateStatisticsSection();
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(() => updateStatisticsSection(), { timeout: 100 });
+  } else {
+    updateStatisticsSection();
+  }
 
   const debugPanel = document.getElementById('debug-panel');
   if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) {

@@ -1,5 +1,6 @@
 import { createMineZoneCanvas } from './MineZoneCanvas.js';
 import { getSettings, getEventContext, setSettings, setMineZoneCanvasApi } from '../application/gameState.js';
+import { t } from '../application/strings.js';
 import {
   openSettings,
   closeSettings,
@@ -39,6 +40,7 @@ import {
   isIntroOverlayOpen,
   dismissIntroModal,
 } from './progressionView.js';
+import { initTooltips } from './tooltip.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
@@ -88,6 +90,7 @@ export function applyLayout(): void {
 }
 
 const APP_HTML = `
+    <div class="offline-banner" id="offline-banner" aria-live="polite" aria-hidden="true" role="status" hidden>You are offline. Progress may not be saved.</div>
     <header>
       <div class="header-row">
         <div>
@@ -149,6 +152,25 @@ const APP_HTML = `
             <label class="settings-toggle">
               <input type="checkbox" id="setting-pause-background" />
               <span>Pause production when tab in background</span>
+            </label>
+          </div>
+          <div class="settings-option">
+            <label for="setting-theme">Theme</label>
+            <select id="setting-theme" aria-label="Theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="settings-option">
+            <label class="settings-toggle">
+              <input type="checkbox" id="setting-sound" />
+              <span>Sound effects</span>
+            </label>
+          </div>
+          <div class="settings-option">
+            <label class="settings-toggle">
+              <input type="checkbox" id="setting-reduced-motion" />
+              <span>Reduce motion</span>
             </label>
           </div>
           <div class="settings-option settings-save-export">
@@ -234,7 +256,7 @@ const APP_HTML = `
         </div>
         <p class="quest-progress" id="quest-progress"></p>
         <p class="quest-streak-hint" id="quest-streak-hint" aria-live="polite"></p>
-        <button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button>
+        <span class="btn-tooltip-wrap" id="quest-claim-wrap"><button type="button" class="quest-claim-btn" id="quest-claim" disabled>Claim</button></span>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-base" role="tabpanel" aria-labelledby="tab-base" data-tab="base" hidden>
@@ -242,20 +264,20 @@ const APP_HTML = `
         <h2>Prestige</h2>
         <p class="prestige-hint">Reset coins and planets to gain +5% production per prestige level forever.</p>
         <div class="prestige-status" id="prestige-status"></div>
-        <button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button>
+        <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
       </section>
       <section class="gameplay-block gameplay-block--locked crew-section" id="crew-section" data-block="crew">
         <h2>Crew</h2>
         <p class="crew-hint">Hire astronauts for +2% production each. Upgrades cost coins and astronauts (crew is assigned to operate the equipment). Resets on Prestige.</p>
         <div class="crew-count" id="crew-count">No crew yet</div>
         <div class="crew-operates" id="crew-operates"></div>
-        <button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button>
+        <span class="btn-tooltip-wrap" id="hire-astronaut-wrap"><button type="button" class="hire-astronaut-btn" id="hire-astronaut-btn">Hire astronaut</button></span>
       </section>
       <section class="gameplay-block gameplay-block--locked planets-section" id="planets-section" data-block="planets">
         <h2>Planets</h2>
         <p class="planets-hint">Each planet has upgrade slots (expandable). More planets = +5% production each. Buy a new planet or add slots to expand.</p>
         <div class="planet-list" id="planet-list"></div>
-        <button type="button" class="buy-planet-btn" id="buy-planet-btn">Buy new planet</button>
+        <span class="btn-tooltip-wrap" id="buy-planet-wrap"><button type="button" class="buy-planet-btn" id="buy-planet-btn">Buy new planet</button></span>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-upgrades" role="tabpanel" aria-labelledby="tab-upgrades" data-tab="upgrades" hidden>
@@ -272,9 +294,17 @@ const APP_HTML = `
     </div>
   `;
 
+function applyThemeAndMotion(): void {
+  const s = getSettings();
+  const root = document.documentElement;
+  root.setAttribute('data-theme', s.theme);
+  root.setAttribute('data-reduced-motion', s.reducedMotion ? 'true' : 'false');
+}
+
 export function mount(): void {
   const app = document.getElementById('app');
   if (!app) return;
+  applyThemeAndMotion();
   app.innerHTML = APP_HTML;
 
   const settings = getSettings();
@@ -292,6 +322,33 @@ export function mount(): void {
       if (e.target === settingsOverlay) closeSettings();
     });
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        const openOverlay = settingsOverlay.classList.contains('settings-overlay--open')
+          ? settingsOverlay
+          : document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open')
+            ? document.getElementById('reset-confirm-overlay')
+            : document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open')
+              ? document.getElementById('prestige-confirm-overlay')
+              : null;
+        if (openOverlay) {
+          const focusable = openOverlay.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          const list = Array.from(focusable).filter((el) => el.offsetParent !== null);
+          if (list.length === 0) return;
+          const i = list.indexOf(document.activeElement as HTMLElement);
+          if (e.shiftKey) {
+            if (i <= 0) {
+              e.preventDefault();
+              list[list.length - 1].focus();
+            }
+          } else {
+            if (i === -1 || i >= list.length - 1) {
+              e.preventDefault();
+              list[0].focus();
+            }
+          }
+        }
+        return;
+      }
       if (e.key !== 'Escape') return;
       const resetOverlay = document.getElementById('reset-confirm-overlay');
       const prestigeOverlay = document.getElementById('prestige-confirm-overlay');
@@ -310,6 +367,9 @@ export function mount(): void {
   const spaceKeyRepeatEl = document.getElementById('setting-space-key-repeat') as HTMLInputElement | null;
   const layoutEl = document.getElementById('setting-layout') as HTMLSelectElement | null;
   const pauseBackgroundEl = document.getElementById('setting-pause-background') as HTMLInputElement | null;
+  const themeEl = document.getElementById('setting-theme') as HTMLSelectElement | null;
+  const soundEl = document.getElementById('setting-sound') as HTMLInputElement | null;
+  const reducedMotionEl = document.getElementById('setting-reduced-motion') as HTMLInputElement | null;
   if (starfieldSpeedEl) starfieldSpeedEl.value = String(settings.starfieldSpeed);
   if (orbitLinesEl) orbitLinesEl.checked = settings.showOrbitLines;
   if (clickParticlesEl) clickParticlesEl.checked = settings.clickParticles;
@@ -317,6 +377,9 @@ export function mount(): void {
   if (spaceKeyRepeatEl) spaceKeyRepeatEl.checked = settings.spaceKeyRepeat;
   if (layoutEl) layoutEl.value = settings.layout;
   if (pauseBackgroundEl) pauseBackgroundEl.checked = settings.pauseWhenBackground;
+  if (themeEl) themeEl.value = settings.theme;
+  if (soundEl) soundEl.checked = settings.soundEnabled;
+  if (reducedMotionEl) reducedMotionEl.checked = settings.reducedMotion;
   if (starfieldSpeedEl) starfieldSpeedEl.addEventListener('change', () => {
     const s = getSettings();
     s.starfieldSpeed = Number(starfieldSpeedEl.value);
@@ -354,6 +417,23 @@ export function mount(): void {
     s.pauseWhenBackground = pauseBackgroundEl.checked;
     setSettings(s);
   });
+  if (themeEl) themeEl.addEventListener('change', () => {
+    const s = getSettings();
+    s.theme = themeEl.value as 'light' | 'dark';
+    setSettings(s);
+    applyThemeAndMotion();
+  });
+  if (soundEl) soundEl.addEventListener('change', () => {
+    const s = getSettings();
+    s.soundEnabled = soundEl.checked;
+    setSettings(s);
+  });
+  if (reducedMotionEl) reducedMotionEl.addEventListener('change', () => {
+    const s = getSettings();
+    s.reducedMotion = reducedMotionEl.checked;
+    setSettings(s);
+    applyThemeAndMotion();
+  });
 
   const exportBtn = document.getElementById('settings-export-btn');
   const importBtn = document.getElementById('settings-import-btn');
@@ -369,7 +449,7 @@ export function mount(): void {
       const ok = await handleImportSave(text);
       input.value = '';
       if (ok) location.reload();
-      else alert('Invalid save file.');
+      else alert(t('invalidSaveFile'));
     });
   }
 
@@ -545,4 +625,18 @@ export function mount(): void {
   const validTab = ['mine', 'base', 'upgrades', 'stats'].includes(savedTab) ? savedTab : DEFAULT_TAB;
   switchTab(validTab);
   applyLayout();
+
+  const offlineBanner = document.getElementById('offline-banner');
+  function updateOfflineBanner(): void {
+    if (!offlineBanner) return;
+    const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+    offlineBanner.hidden = !offline;
+    offlineBanner.setAttribute('aria-hidden', String(!offline));
+    if (offline) offlineBanner.textContent = t('offlineIndicator');
+  }
+  updateOfflineBanner();
+  window.addEventListener('online', updateOfflineBanner);
+  window.addEventListener('offline', updateOfflineBanner);
+
+  initTooltips();
 }

@@ -38,6 +38,10 @@ export function renderQuestSection(): void {
     const streak = getQuestStreak();
     const nextBonus = streak < QUEST_STREAK_MAX ? ` (streak +${Math.round(QUEST_STREAK_BONUS_PER_LEVEL * 100)}%)` : '';
     claimBtn.textContent = p.done ? `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡${nextBonus}` : 'Claim';
+    const tooltipText = p.done ? `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡ reward` : 'Complete the quest to claim the reward';
+    const wrap = claimBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? claimBtn.parentElement : null;
+    if (wrap) wrap.setAttribute('title', tooltipText);
+    else claimBtn.setAttribute('title', tooltipText);
     claimBtn.toggleAttribute('disabled', !p.done);
   }
   const streakHint = document.getElementById('quest-streak-hint');

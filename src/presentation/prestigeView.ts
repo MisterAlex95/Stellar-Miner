@@ -34,6 +34,15 @@ export function renderPrestigeSection(): void {
     player.prestigeLevel > 0
       ? `Prestige level ${player.prestigeLevel} — ${title} (+${player.prestigeLevel * 5}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`
       : `Reach ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to unlock Prestige.`;
+  const wrap = btnEl.parentElement?.classList.contains('btn-tooltip-wrap') ? btnEl.parentElement : null;
+  const tooltipText = canPrestige
+    ? 'Reset coins and planets to gain +5% production per prestige level forever'
+    : `Reach ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige`;
+  if (wrap) {
+    wrap.setAttribute('title', tooltipText);
+  } else {
+    btnEl.setAttribute('title', tooltipText);
+  }
   btnEl.toggleAttribute('disabled', !canPrestige);
   if (canPrestige && !lastCanPrestige) {
     btnEl.classList.add('prestige-btn--just-unlocked');

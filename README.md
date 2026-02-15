@@ -6,7 +6,9 @@ Idle game built with TypeScript and a Domain-Driven Design (DDD) structure. Mine
 
 - **TypeScript** (ES2022, strict)
 - **Vite** — dev server and build
-- **Vitest** — tests and coverage
+- **Vitest** — unit tests and coverage
+- **Playwright** — E2E tests
+- **ESLint** + **Prettier** — lint and format
 - **tsx** — run TypeScript directly
 
 ## Setup
@@ -29,10 +31,14 @@ yarn install
 | `npm run test` / `yarn test` | Run Vitest once |
 | `npm run test:watch` / `yarn test:watch` | Run Vitest in watch mode |
 | `npm run test:coverage` / `yarn test:coverage` | Run tests with coverage |
+| `npm run test:e2e` / `yarn test:e2e` | Run Playwright E2E tests (starts dev server) |
+| `npm run lint` / `yarn lint` | Run ESLint on `src` |
+| `npm run format` / `yarn format` | Format TypeScript with Prettier |
 
 ## Project structure
 
 ```
+e2e/                  # Playwright E2E tests (smoke.spec.ts)
 src/
 ├── domain/           # DDD core
 │   ├── entities/     # Player, Planet, Upgrade, GameEvent, Artifact
@@ -41,10 +47,12 @@ src/
 │   ├── events/       # CoinsMined, UpgradePurchased, EventTriggered, PrestigeActivated
 │   ├── services/     # UpgradeService, PlanetService, EventService, PrestigeService
 │   └── constants.ts  # Planet names, costs, prestige/crew bonuses
-├── application/      # gameState, handlers, catalogs, quests, progression, stats, format
-├── presentation/     # mount, stats/upgrade/planet/quest/combo/progression/prestige/crew views, toasts, StarfieldCanvas, MineZoneCanvas
-├── infrastructure/   # SaveLoadService (save/load/export/import, offline progress)
-├── settings.ts       # User settings (starfield, layout, pause when background, etc.)
+├── application/      # gameState, handlers, catalogs, quests, progression, stats, format,
+│                     # eventBus (subscribe/emit), strings (i18n t(key))
+├── presentation/     # mount, stats/upgrade/planet/quest/combo/progression/prestige/crew views,
+│                     # toasts, StarfieldCanvas, MineZoneCanvas
+├── infrastructure/   # SaveLoadService (save/load/export/import, version, validateSavePayload)
+├── settings.ts       # User settings: starfield, layout, pause when background, theme, sound, reducedMotion
 ├── main.ts           # Domain sanity check / CLI entry
 ├── game.ts           # Game bootstrap and loop
 └── index.ts          # Library entry (domain + infrastructure)
@@ -65,21 +73,21 @@ To use GitHub Pages: in the repo **Settings → Pages**, set **Source** to “Gi
 
 ## Documentation
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — DDD overview: domains, entities, value objects, aggregates, services, events, layered architecture, current flows, and code references.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — DDD overview: domains, entities, value objects, aggregates, services, events, layered architecture, current flows, code references, and implemented improvements.
 - [docs/IDEAS.md](docs/IDEAS.md) — Backlog of gameplay ideas for future features.
 
-## Planned improvements (roadmap)
+## Implemented improvements
 
-1. **Accessibility** — ARIA labels, keyboard navigation, focus management, reduced-motion support.
-2. **Error handling** — Centralized save/load handling, payload validation, optional retry, offline indicator.
-3. **Performance** — Throttle stats writes, batch DOM updates, requestIdleCallback for non-critical UI.
-4. **Testing** — E2E (e.g. Playwright) for critical paths; more unit tests for application layer.
-5. **i18n** — Extract UI strings for future localization.
-6. **Settings** — Document persisted settings; consider sound and theme options.
-7. **Save format** — Version field, migration path, validation before deserialize.
-8. **DevEx** — ESLint, Prettier, optional pre-commit hooks.
-9. **Docs** — Keep ARCHITECTURE and README in sync with code.
-10. **Observability** — Optional performance marks and event bus for key actions.
+1. **Accessibility** — ARIA on tabs/modals, keyboard (1–4 for tabs, Tab trap in modals, Escape to close), focus on first focusable when opening modals, **Reduce motion** setting + `data-reduced-motion` CSS.
+2. **Error handling** — Save retry once on failure, `isSavedSession` validation before deserialize, **Offline banner** when `navigator.onLine` is false.
+3. **Performance** — Stats history writes only when a new point is recorded; **requestIdleCallback** for stats panel updates in the game loop.
+4. **Testing** — **Playwright** E2E in `e2e/` (smoke + tabs); unit tests for **eventBus** and **gameState**.
+5. **i18n** — **`src/application/strings.ts`** with `t(key)`; used for invalid save message and offline banner.
+6. **Settings** — **Theme** (light/dark), **Sound effects** toggle, **Reduce motion**; all persisted in `settings.ts`.
+7. **Save format** — **`version: 1`** in payload, **`isSavedSession()`** type guard, migration for legacy (no version); **`SAVE_VERSION`** and **`validateSavePayload()`** in SaveLoadService.
+8. **DevEx** — **ESLint** (`.eslintrc.cjs`) + **Prettier** (`.prettierrc`), scripts **`lint`** and **`format`**.
+9. **Docs** — README and ARCHITECTURE kept in sync (this section and §11 in ARCHITECTURE).
+10. **Observability** — **`src/application/eventBus.ts`** (subscribe/emit for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed); **performance.mark** in game loop and save.
 
 ## License
 

@@ -10,6 +10,9 @@ import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
 import { getPlanetName } from '../domain/constants.js';
+import { emit } from '../application/eventBus.js';
+
+export const SAVE_VERSION = 1;
 
 const STORAGE_KEY = 'stellar-miner-session';
 const LAST_SAVE_KEY = 'stellar-miner-last-save';
@@ -22,15 +25,14 @@ const MAX_OFFLINE_MS = 12 * 60 * 60 * 1000; // cap 12h
 type SavedUpgrade = { id: string; name: string; cost: number; effect: { coinsPerSecond: number } };
 type SavedPlanet = { id: string; name: string; maxUpgrades: number; upgrades: SavedUpgrade[] };
 
-type SavedSession = {
+export type SavedSession = {
+  version?: number;
   id: string;
   player: {
     id: string;
     coins: number;
     productionRate: number;
-    /** New format: planets with upgrades. */
     planets?: SavedPlanet[];
-    /** Legacy: flat upgrades (migrated to one planet on load). */
     upgrades?: SavedUpgrade[];
     artifacts: Array<{ id: string; name: string; effect: unknown; isActive: boolean }>;
     prestigeLevel: number;
@@ -39,6 +41,18 @@ type SavedSession = {
   };
   activeEvents: Array<{ id: string; name: string; effect: { multiplier: number; durationMs: number } }>;
 };
+
+function isSavedSession(data: unknown): data is SavedSession {
+  if (!data || typeof data !== 'object') return false;
+  const o = data as Record<string, unknown>;
+  if (typeof o.id !== 'string') return false;
+  if (!o.player || typeof o.player !== 'object') return false;
+  const p = o.player as Record<string, unknown>;
+  if (typeof p.id !== 'string' || typeof p.coins !== 'number' || typeof p.productionRate !== 'number') return false;
+  if (!Array.isArray(p.artifacts) || typeof p.prestigeLevel !== 'number' || typeof p.totalCoinsEver !== 'number') return false;
+  if (!Array.isArray(o.activeEvents)) return false;
+  return true;
+}
 
 /** Infrastructure: persist game session to localStorage. */
 export class SaveLoadService implements ISaveLoadService {
@@ -58,28 +72,52 @@ export class SaveLoadService implements ISaveLoadService {
   }
 
   async save(session: GameSession): Promise<void> {
+    if (typeof performance !== 'undefined' && performance.mark) performance.mark('save-start');
     const payload = this.serialize(session);
-    if (typeof localStorage !== 'undefined') {
-      const now = Date.now();
+    if (typeof localStorage === 'undefined') return;
+    const now = Date.now();
+    try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      const lastSaveRaw = localStorage.getItem(LAST_SAVE_KEY);
-      const lastSave = lastSaveRaw ? parseInt(lastSaveRaw, 10) : 0;
-      const elapsed = lastSave > 0 ? now - lastSave : 0;
-      const statsRaw = localStorage.getItem(STATS_STORAGE_KEY);
-      const stats = statsRaw ? (JSON.parse(statsRaw) as { firstPlayedAt?: number; totalPlayTimeMs?: number }) : {};
-      const totalPlayTimeMs = (stats.totalPlayTimeMs ?? 0) + elapsed;
-      const firstPlayedAt = stats.firstPlayedAt ?? now;
-      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify({ firstPlayedAt, totalPlayTimeMs }));
-      localStorage.setItem(LAST_SAVE_KEY, String(now));
+    } catch (e) {
+      const err = e instanceof Error ? e.message : String(e);
+      emit('save_failed', { error: err });
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch {
+        emit('save_failed', { error: 'retry failed' });
+      }
+      return;
     }
+    const lastSaveRaw = localStorage.getItem(LAST_SAVE_KEY);
+    const lastSave = lastSaveRaw ? parseInt(lastSaveRaw, 10) : 0;
+    const elapsed = lastSave > 0 ? now - lastSave : 0;
+    const statsRaw = localStorage.getItem(STATS_STORAGE_KEY);
+    const stats = statsRaw ? (JSON.parse(statsRaw) as { firstPlayedAt?: number; totalPlayTimeMs?: number }) : {};
+    const totalPlayTimeMs = (stats.totalPlayTimeMs ?? 0) + elapsed;
+    const firstPlayedAt = stats.firstPlayedAt ?? now;
+    localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify({ firstPlayedAt, totalPlayTimeMs }));
+    localStorage.setItem(LAST_SAVE_KEY, String(now));
+    if (typeof performance !== 'undefined' && performance.mark) performance.mark('save-end');
+    emit('save_success', undefined);
   }
 
   async load(): Promise<GameSession | null> {
     if (typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const data = JSON.parse(raw) as SavedSession;
-    const session = this.deserialize(data);
+    let data: unknown;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+    if (!isSavedSession(data)) return null;
+    let session: GameSession;
+    try {
+      session = this.deserialize(data);
+    } catch {
+      return null;
+    }
     const lastSaveRaw = localStorage.getItem(LAST_SAVE_KEY);
     if (lastSaveRaw) {
       const lastSave = parseInt(lastSaveRaw, 10);
@@ -113,15 +151,27 @@ export class SaveLoadService implements ISaveLoadService {
   /** Import session from JSON string. Returns null if invalid. */
   importSession(json: string): GameSession | null {
     try {
-      const data = JSON.parse(json) as SavedSession;
+      const data = JSON.parse(json) as unknown;
+      if (!isSavedSession(data)) return null;
       return this.deserialize(data);
     } catch {
       return null;
     }
   }
 
+  /** Validate raw JSON string without deserializing. */
+  validateSavePayload(json: string): boolean {
+    try {
+      const data = JSON.parse(json) as unknown;
+      return isSavedSession(data);
+    } catch {
+      return false;
+    }
+  }
+
   private serialize(session: GameSession): SavedSession {
     return {
+      version: SAVE_VERSION,
       id: session.id,
       player: {
         id: session.player.id,
@@ -157,6 +207,8 @@ export class SaveLoadService implements ISaveLoadService {
   }
 
   private deserialize(data: SavedSession): GameSession {
+    const version = data.version ?? 0;
+    if (version > SAVE_VERSION) throw new Error('Unsupported save version');
     let planets: Planet[];
     if (data.player.planets && data.player.planets.length > 0) {
       planets = data.player.planets.map((p) => {

@@ -99,9 +99,10 @@ Events that occur in the domain and can trigger side effects.
 **Modules (src):**
 
 - **domain/** — Entities, value objects, aggregates, events, domain services
-- **application/** — Application entry and orchestration
-- **presentation/** — UI entry
-- **infrastructure/** — SaveLoadService, persistence
+- **application/** — gameState, handlers, catalogs, quests, progression, stats, format, eventBus, strings
+- **presentation/** — mount, views (stats, upgrade, planet, quest, combo, progression, prestige, crew, statistics), toasts, StarfieldCanvas, MineZoneCanvas
+- **infrastructure/** — SaveLoadService (save/load/export/import, version, validation)
+- **e2e/** — Playwright E2E tests
 
 ---
 
@@ -129,7 +130,9 @@ Events that occur in the domain and can trigger side effects.
 - **Catalogs & config**: `src/application/catalogs.ts` — UPGRADE_CATALOG, EVENT_CATALOG, combo/lucky/quest constants, storage keys.
 - **Handlers**: `src/application/handlers.ts` — mine click, buy upgrade/planet/slot, hire astronaut, prestige, quest claim, export/import save, settings, debug.
 - **Presentation**: `src/presentation/` — mount, statsView, upgradeListView, planetListView, questView, comboView, progressionView, prestigeView, crewView, statisticsView, toasts, StarfieldCanvas, MineZoneCanvas.
-- **Persistence**: `src/infrastructure/SaveLoadService.ts` — save/load/export/import, offline progress (capped); `src/settings.ts` — user settings (starfield, layout, pause when background, etc.).
+- **Persistence**: `src/infrastructure/SaveLoadService.ts` — save/load/export/import, offline progress (capped), `SAVE_VERSION`, `isSavedSession()`, `validateSavePayload()`; `src/settings.ts` — user settings (starfield, layout, pause when background, theme, soundEnabled, reducedMotion).
+- **Event bus**: `src/application/eventBus.ts` — `subscribe(kind, fn)`, `emit(kind, payload)` for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed.
+- **Strings**: `src/application/strings.ts` — `strings` map and `t(key)` for UI copy (invalid save, offline banner, etc.).
 
 ---
 
@@ -141,19 +144,21 @@ Events that occur in the domain and can trigger side effects.
 - **Quests**: Quest state in gameState; generate/claim in handlers; streak bonus; render in questView.
 - **Prestige**: PrestigeService + handlers; reset to one planet, prestige level +1, bonus to production.
 - **Events**: Game loop checks `nextEventAt`; handlers trigger random event from catalog; active events multiply production until they expire.
-- **Save/load**: SaveLoadService every 3s; on load, offline progress applied (capped 12h); export/import in settings UI.
+- **Save/load**: SaveLoadService every 3s; payload has `version: 1`; load/import validate with `isSavedSession()`; on load, offline progress applied (capped 12h); export/import in settings UI; retry once on save failure.
+- **Settings**: Persisted in localStorage (starfield speed, orbit lines, click particles, compact numbers, space repeat, layout, pause when background, **theme**, **sound**, **reduce motion**); theme and reduced motion applied via `data-theme` / `data-reduced-motion` on `<html>`.
+- **Offline**: Banner shown when `navigator.onLine` is false; copy from `strings.offlineIndicator`.
 
 ---
 
-## 11. Planned Improvements (Roadmap)
+## 11. Implemented Improvements
 
-1. **Accessibility (a11y)** — ARIA labels on interactive elements, keyboard navigation for tabs and buttons, focus management in modals, optional reduced-motion support for starfield and animations.
-2. **Error handling and resilience** — Centralized handling for save/load failures; validate save payload schema before deserialize; optional retry on localStorage quota; clear offline indicator when appropriate.
-3. **Performance** — Throttle stats history writes; debounce or batch DOM updates in the game loop where safe; consider `requestIdleCallback` for non-critical UI (e.g. statistics section).
-4. **Testing** — Add E2E tests (e.g. Playwright) for critical paths: load → mine → buy upgrade → prestige; increase unit coverage for application layer (handlers, gameState, quests).
-5. **Internationalization (i18n)** — Extract UI strings into a single module or key-value map so future i18n is straightforward; keep catalog data (upgrade names, event names) in one place.
-6. **Settings** — All settings already persisted in `settings.ts`; document in README; consider sound toggle and theme (dark/light) if not present.
-7. **Save format versioning and validation** — Add a version field to the saved payload; on load, migrate old versions or reject invalid/unknown; validate structure (e.g. type guard) before deserializing.
-8. **Developer experience** — Add ESLint and Prettier; optional pre-commit hook (lint-staged + husky) for typecheck and lint; document in README.
-9. **Documentation** — Keep this file and README in sync with code (planets, crew, quests, combo, stats, progression); reference IDEAS.md for future gameplay ideas.
-10. **Observability and debugging** — Optional performance marks for game loop and save; or a simple event bus for key actions (upgrade purchased, prestige) for future analytics without coupling to UI.
+1. **Accessibility** — ARIA on tablist/tabs/panels and modals; keyboard: 1–4 switch tabs, Tab trapped in open modal, Escape closes modal; focus moved to first focusable when opening settings/reset/prestige; **Reduce motion** setting with `data-reduced-motion` and matching CSS.
+2. **Error handling** — Save retries once on failure; **`isSavedSession()`** type guard before deserialize; **offline banner** when `navigator.onLine` is false (see `strings.offlineIndicator`).
+3. **Performance** — Stats history **only writes to storage when a new point is recorded**; **requestIdleCallback** for statistics section updates in the game loop.
+4. **Testing** — **Playwright** E2E in `e2e/` (smoke, mine zone, tabs); unit tests for **eventBus** and **gameState**.
+5. **i18n** — **`src/application/strings.ts`** with `t(key)`; used for invalid save and offline banner; catalog data remains in catalogs.
+6. **Settings** — **Theme** (light/dark), **Sound effects**, **Reduce motion** in `settings.ts` and settings UI; all persisted.
+7. **Save format** — **`version: 1`** in serialized payload; **`isSavedSession()`** validation; legacy (no version) still loads; **`SAVE_VERSION`** and **`validateSavePayload()`** in SaveLoadService.
+8. **DevEx** — **ESLint** (`.eslintrc.cjs`) and **Prettier** (`.prettierrc`) at repo root; **Playwright** (`playwright.config.ts`, `e2e/`); scripts **`npm run lint`**, **`npm run format`**, **`npm run test:e2e`**.
+9. **Documentation** — This file and README kept in sync; IDEAS.md for future gameplay.
+10. **Observability** — **`src/application/eventBus.ts`**: subscribe/emit for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed; **performance.mark** in game loop and in SaveLoadService save.

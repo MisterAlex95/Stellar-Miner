@@ -44,8 +44,7 @@ import {
   ACHIEVEMENTS_KEY,
   COMBO_MASTER_KEY,
 } from './catalogs.js';
-import { generateQuest } from './quests.js';
-import { getQuestProgress } from './quests.js';
+import { generateQuest, getQuestProgress, getQuestStreak } from './quests.js';
 import { saveQuestState } from './questState.js';
 import { incrementTotalClicksEver } from './achievements.js';
 import { checkAchievements } from './achievements.js';
@@ -72,6 +71,7 @@ import {
   showMiniMilestoneToast,
 } from '../presentation/toasts.js';
 import { claimQuest } from './quests.js';
+import { emit } from './eventBus.js';
 
 export function saveSession(): void {
   const session = getSession();
@@ -114,6 +114,7 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): void {
   if (player.astronautCount < def.requiredAstronauts) return;
   if (!player.spendAstronauts(def.requiredAstronauts)) return;
   upgradeService.purchaseUpgrade(player, upgrade, targetPlanet ?? null);
+  emit('upgrade_purchased', { upgradeId, planetId });
   if (player.upgrades.length === 1 && typeof localStorage !== 'undefined') {
     const key = 'stellar-miner-first-upgrade-toast';
     if (!localStorage.getItem(key)) {
@@ -166,6 +167,7 @@ export function handleBuyNewPlanet(): void {
   if (!planetService.canBuyNewPlanet(player)) return;
   const wasFirstPlanet = player.planets.length === 1;
   planetService.buyNewPlanet(player);
+  emit('planet_bought', { planetCount: player.planets.length });
   if (wasFirstPlanet && typeof localStorage !== 'undefined') {
     const key = 'stellar-miner-first-planet-toast';
     if (!localStorage.getItem(key)) {
@@ -197,6 +199,7 @@ export function handleHireAstronaut(): void {
   const player = session.player;
   const cost = getAstronautCost(player.astronautCount);
   if (!player.hireAstronaut(cost)) return;
+  emit('astronaut_hired', { count: player.astronautCount });
   if (player.astronautCount === 1 && typeof localStorage !== 'undefined') {
     const key = 'stellar-miner-first-astronaut-toast';
     if (!localStorage.getItem(key)) {
@@ -265,7 +268,7 @@ export function handleMineClick(e?: MouseEvent): void {
   if (e) showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical, comboMult: comboMult > 1 ? comboMult : undefined });
   if (superLucky) showSuperLuckyToast(coins);
   if (isCritical) showCriticalToast(coins);
-  mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY, { superLucky, critical: isCritical });
+  mineZoneCanvasApi?.onMineClick(e?.clientX, e?.clientY);
   if (superLucky || isCritical) {
     const app = document.getElementById('app');
     if (app) {
@@ -297,6 +300,7 @@ export function openPrestigeConfirmModal(): void {
   }
   overlay.classList.add('prestige-confirm-overlay--open');
   overlay.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => document.getElementById('prestige-confirm-cancel')?.focus());
 }
 
 export function closePrestigeConfirmModal(): void {
@@ -328,6 +332,7 @@ export function confirmPrestige(): void {
       showMiniMilestoneToast('First prestige!');
     }
   }
+  emit('prestige', { level: newPlayer.prestigeLevel });
   if ([2, 5, 10, 20].includes(newPlayer.prestigeLevel)) showPrestigeMilestoneToast(newPlayer.prestigeLevel);
   updateStats();
   renderUpgradeList();
@@ -346,6 +351,7 @@ export function handlePrestige(): void {
 }
 
 export function handleClaimQuest(): void {
+  const streak = getQuestStreak();
   const claimed = claimQuest({
     saveSession,
     updateStats,
@@ -355,6 +361,7 @@ export function handleClaimQuest(): void {
     showQuestStreakToast,
     checkAchievements,
   });
+  if (claimed) emit('quest_claimed', { streak });
   if (claimed) {
     const q = document.getElementById('quest-section');
     if (q) {
@@ -388,6 +395,7 @@ export function openSettings(): void {
   if (overlay) {
     overlay.classList.add('settings-overlay--open');
     overlay.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => document.getElementById('settings-close')?.focus());
   }
 }
 
@@ -410,6 +418,7 @@ export function openResetConfirmModal(): void {
   if (overlay) {
     overlay.classList.add('reset-confirm-overlay--open');
     overlay.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => document.getElementById('reset-confirm-cancel')?.focus());
   }
 }
 

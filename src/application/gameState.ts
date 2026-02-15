@@ -9,6 +9,7 @@ import { startStarfield } from '../presentation/StarfieldCanvas.js';
 import { createMineZoneCanvas } from '../presentation/MineZoneCanvas.js';
 import { loadQuestState } from './questState.js';
 import type { QuestState } from './questState.js';
+import { emit } from './eventBus.js';
 
 export type ActiveEventInstance = { event: GameEvent; endsAt: number };
 
@@ -139,6 +140,7 @@ export function getEventMultiplier(): number {
 
 export async function getOrCreateSession(): Promise<GameSession> {
   const loaded = await saveLoad.load();
+  emit('session_loaded', { fromStorage: !!loaded });
   if (loaded) return loaded;
   const player = Player.create('player-1');
   player.addCoins(0);
