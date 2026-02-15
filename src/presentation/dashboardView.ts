@@ -132,13 +132,13 @@ function buildDashboardHeroHtml(): string {
   let recommendedHtml = '';
   let recommendedLabel = '';
 
-  if (questDone) {
+  if (unlocked.has('quest') && questDone) {
     recommendedLabel = t('dashboardQuestReady');
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--claim" id="dashboard-do-claim">${t('claim')} ✓</button>`;
-  } else if (canPrestige) {
+  } else if (unlocked.has('prestige') && canPrestige) {
     recommendedLabel = t('dashboardPrestigeReady');
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--prestige" id="dashboard-do-prestige">${t('prestige')}</button>`;
-  } else if (nextUpgrade) {
+  } else if (unlocked.has('upgrades') && nextUpgrade) {
     recommendedLabel = tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--upgrade" id="dashboard-do-upgrade" data-upgrade-id="${nextUpgrade.def.id}" data-planet-id="${nextUpgrade.planetId ?? ''}">${tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) })} · ${nextUpgrade.cost}</button>`;
   } else if (unlocked.has('research') && !isResearchInProgress() && affordableResearch) {
@@ -157,7 +157,7 @@ function buildDashboardHeroHtml(): string {
       recommendedLabel = t('buyNewPlanet');
       recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
     }
-  } else if (nextGoal && effectiveRate.gt(0)) {
+  } else if (unlocked.has('upgrades') && nextGoal && effectiveRate.gt(0)) {
     const remaining = nextGoal.cost.sub(player.coins.value);
     if (remaining.gt(0)) {
       const min = minutesUntil(remaining, effectiveRate);
@@ -174,7 +174,7 @@ function buildDashboardHeroHtml(): string {
 
   let timeEstimateHtml = '';
   if (effectiveRate.gt(0)) {
-    if (milestone && !questDone && !canPrestige) {
+    if (milestone && unlocked.has(milestone.block.id) && !questDone && !canPrestige) {
       const remaining = new Decimal(milestone.coinsNeeded).sub(player.coins.value);
       if (remaining.gt(0)) {
         const min = minutesUntil(remaining, effectiveRate);
@@ -238,13 +238,13 @@ function updateDashboardHeroInPlace(): void {
   let recommendedHtml = '';
   let recommendedLabel = '';
 
-  if (questDone) {
+  if (unlocked.has('quest') && questDone) {
     recommendedLabel = t('dashboardQuestReady');
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--claim" id="dashboard-do-claim">${t('claim')} ✓</button>`;
-  } else if (canPrestige) {
+  } else if (unlocked.has('prestige') && canPrestige) {
     recommendedLabel = t('dashboardPrestigeReady');
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--prestige" id="dashboard-do-prestige">${t('prestige')}</button>`;
-  } else if (nextUpgrade) {
+  } else if (unlocked.has('upgrades') && nextUpgrade) {
     recommendedLabel = tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--upgrade" id="dashboard-do-upgrade" data-upgrade-id="${nextUpgrade.def.id}" data-planet-id="${nextUpgrade.planetId ?? ''}">${tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) })} · ${nextUpgrade.cost}</button>`;
   } else if (unlocked.has('research') && !isResearchInProgress() && affordableResearch) {
@@ -263,7 +263,7 @@ function updateDashboardHeroInPlace(): void {
       recommendedLabel = t('buyNewPlanet');
       recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
     }
-  } else if (nextGoal && effectiveRate.gt(0)) {
+  } else if (unlocked.has('upgrades') && nextGoal && effectiveRate.gt(0)) {
     const remaining = nextGoal.cost.sub(player.coins.value);
     if (remaining.gt(0)) {
       const min = minutesUntil(remaining, effectiveRate);
@@ -280,7 +280,7 @@ function updateDashboardHeroInPlace(): void {
 
   let timeText = '';
   if (effectiveRate.gt(0)) {
-    if (milestone && !questDone && !canPrestige) {
+    if (milestone && unlocked.has(milestone.block.id) && !questDone && !canPrestige) {
       const remaining = new Decimal(milestone.coinsNeeded).sub(player.coins.value);
       if (remaining.gt(0)) {
         const min = minutesUntil(remaining, effectiveRate);

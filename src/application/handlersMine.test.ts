@@ -37,12 +37,14 @@ describe('handlersMine', () => {
     setSession(new GameSession('s1', player));
   });
 
+  const fakeEvent = { clientX: 0, clientY: 0 } as MouseEvent;
+
   it('handleMineClick increases player coins', () => {
     const session = getSession();
     const player = session.player;
     const before = player.coins.value.toNumber();
 
-    handleMineClick();
+    handleMineClick(fakeEvent);
 
     expect(player.coins.value.toNumber()).toBeGreaterThan(before);
   });
@@ -52,16 +54,16 @@ describe('handlersMine', () => {
     const player = session.player;
     const before = player.coins.value.toNumber();
 
-    handleMineClick();
-    handleMineClick();
-    handleMineClick();
+    handleMineClick(fakeEvent);
+    handleMineClick(fakeEvent);
+    handleMineClick(fakeEvent);
 
     expect(player.coins.value.toNumber()).toBeGreaterThan(before);
     expect(player.coins.value.toNumber()).toBeGreaterThanOrEqual(before + 3);
   });
 
   it('calls saveSession after click', () => {
-    handleMineClick();
+    handleMineClick(fakeEvent);
     expect(saveSession).toHaveBeenCalled();
   });
 });
