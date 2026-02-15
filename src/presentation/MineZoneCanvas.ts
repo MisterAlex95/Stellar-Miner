@@ -462,6 +462,14 @@ function drawOnePlanet(
     }
   }
 
+  const labelY = cy - r - 6;
+  const fontSize = Math.max(10, Math.min(14, r * 0.5));
+  ctx.font = `${fontSize}px system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle = getThemeColor('--text-dim', '#8b909a');
+  ctx.fillText(view.name, cx, labelY);
+
   const stationCount = counts['orbital-station'] ?? 0;
   const orbitRadius = r + 10;
   if (stationCount > 0) {
