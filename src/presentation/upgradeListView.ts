@@ -6,6 +6,8 @@ import {
   createUpgrade,
   getUnlockedUpgradeTiers,
 } from '../application/catalogs.js';
+import { t, tParam } from '../application/strings.js';
+import { getCatalogUpgradeName, getCatalogUpgradeDesc, getCatalogUpgradeGroupLabel, getCatalogPlanetNameById } from '../application/i18nCatalogs.js';
 import { updateStats } from './statsView.js';
 
 export function getMaxBuyCount(upgradeId: string): number {
@@ -45,7 +47,7 @@ export function renderUpgradeList(): void {
 
     const header = document.createElement('div');
     header.className = 'upgrade-group-header';
-    header.textContent = group.label;
+    header.textContent = getCatalogUpgradeGroupLabel(group.label);
     listEl.appendChild(header);
 
     for (const def of groupDefs) {
@@ -54,42 +56,42 @@ export function renderUpgradeList(): void {
       const hasCrew = player.astronautCount >= def.requiredAstronauts;
       const canAfford = player.coins.gte(upgrade.cost);
       const canBuy = canAfford && hasFreeSlot && hasCrew;
-      const buyLabel = owned > 0 ? `+1` : `Buy`;
+      const buyLabel = owned > 0 ? t('buyLabelPlusOne') : t('buyLabel');
       const maxCount = getMaxBuyCount(def.id);
-      const maxLabel = maxCount > 1 ? `Max (${maxCount})` : `Max`;
+      const maxLabel = maxCount > 1 ? tParam('maxLabelCount', { n: maxCount }) : t('maxLabel');
 
       const costCoins = `${formatNumber(def.cost, settings.compactNumbers)} ⬡`;
       const costCrewLine =
         def.requiredAstronauts > 0
-          ? `${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}`
+          ? `${def.requiredAstronauts} crew`
           : '';
 
       let buyTitle = '';
       if (!canBuy) {
-        if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Need ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
-        else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
-        else if (!canAfford) buyTitle = `Need ${costCoins}${costCrewLine ? ` + ${costCrewLine}` : ''} to buy.`;
-        else buyTitle = `Need ${costCoins}${costCrewLine ? ` + ${costCrewLine}` : ''} and a free slot.`;
-      } else buyTitle = `Buy ${def.name} · ${costCoins}${costCrewLine ? ` + ${costCrewLine}` : ''}`;
+        if (!hasCrew && def.requiredAstronauts > 0) buyTitle = tParam('needAstronauts', { n: def.requiredAstronauts });
+        else if (!hasFreeSlot) buyTitle = t('noFreeSlot');
+        else if (!canAfford) buyTitle = tParam('needCoinsToBuy', { cost: costCoins, crew: costCrewLine ? ` + ${costCrewLine}` : '' });
+        else buyTitle = tParam('needCoinsAndSlot', { cost: costCoins });
+      } else buyTitle = tParam('buyUpgradeTitle', { name: getCatalogUpgradeName(def.id), cost: costCoins + (costCrewLine ? ` + ${costCrewLine}` : '') });
 
-      let maxTitle = 'Buy as many as you can afford with current slots';
+      let maxTitle = t('maxBuyTooltip');
       if (maxCount <= 0 || !hasCrew) {
-        if (!hasCrew && def.requiredAstronauts > 0) maxTitle = 'Need more crew to buy this upgrade.';
-        else if (!hasFreeSlot) maxTitle = 'No free slots. Add slots or buy a new planet.';
-        else if (!canAfford) maxTitle = `Need ${costCoins} to buy at least one.`;
-        else maxTitle = 'No free slots or not enough coins/crew to buy more.';
+        if (!hasCrew && def.requiredAstronauts > 0) maxTitle = t('needCrewToBuy');
+        else if (!hasFreeSlot) maxTitle = t('noFreeSlot');
+        else if (!canAfford) maxTitle = tParam('needCoinsForOne', { cost: costCoins });
+        else maxTitle = t('noSlotsOrCoins');
       }
 
       const crewBadge =
         def.requiredAstronauts > 0
-          ? `<span class="upgrade-crew-req" title="Cost in astronauts (spent when you buy)">${def.requiredAstronauts} crew</span>`
+          ? `<span class="upgrade-crew-req" title="${t('crewBadgeTitle')}">${def.requiredAstronauts} crew</span>`
           : '';
 
       const planetOptions = choosePlanet
-        ? planetsWithSlot.map((p) => `<option value="${p.id}">${p.name}</option>`).join('')
+        ? planetsWithSlot.map((p) => `<option value="${p.id}">${getCatalogPlanetNameById(p.id)}</option>`).join('')
         : '';
       const planetSelectHtml = choosePlanet
-        ? `<label class="upgrade-planet-label" for="planet-${def.id}">To</label><select class="upgrade-planet-select" id="planet-${def.id}" data-upgrade-id="${def.id}" aria-label="Assign to planet">${planetOptions}</select>`
+        ? `<label class="upgrade-planet-label" for="planet-${def.id}">${t('toPlanet')}</label><select class="upgrade-planet-select" id="planet-${def.id}" data-upgrade-id="${def.id}" aria-label="${t('assignToPlanet')}">${planetOptions}</select>`
         : '';
 
       const isRecommended = canBuy && !player.upgrades.some((u) => u.id === def.id);
@@ -100,14 +102,16 @@ export function renderUpgradeList(): void {
         (isRecommended ? ' upgrade-card--recommended' : '') +
         (!hasCrew && def.requiredAstronauts > 0 ? ' upgrade-card--needs-crew' : '');
       card.setAttribute('data-tier', String(def.tier));
+      const eachSec = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
+      const totalSec = owned > 0 ? ' · ' + tParam('totalPerSecond', { n: formatNumber(owned * def.coinsPerSecond, settings.compactNumbers) }) : '';
       card.innerHTML = `
         <div class="upgrade-info">
           <div class="upgrade-header">
-            <span class="upgrade-tier" aria-label="Tier ${def.tier}">T${def.tier}</span>
-            <div class="upgrade-name">${def.name}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}${crewBadge}${isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : ''}</div>
+            <span class="upgrade-tier" aria-label="${tParam('tierLabel', { n: def.tier })}">T${def.tier}</span>
+            <div class="upgrade-name">${getCatalogUpgradeName(def.id)}${owned > 0 ? `<span class="count-badge">×${owned}</span>` : ''}${crewBadge}${isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : ''}</div>
           </div>
-          <div class="upgrade-description">${def.description}</div>
-          <div class="upgrade-effect">+${formatNumber(def.coinsPerSecond, settings.compactNumbers)} /s each${owned > 0 ? ` · Total: +${formatNumber(owned * def.coinsPerSecond, settings.compactNumbers)}/s` : ''}</div>
+          <div class="upgrade-description">${getCatalogUpgradeDesc(def.id)}</div>
+          <div class="upgrade-effect">${eachSec}${totalSec}</div>
         </div>
         <div class="upgrade-cost">
           <span class="upgrade-cost-coins">${costCoins}</span>
@@ -145,31 +149,33 @@ export function updateUpgradeListInPlace(): void {
     const hasCrew = player.astronautCount >= def.requiredAstronauts;
     const canAfford = player.coins.gte(def.cost);
     const canBuy = canAfford && hasFreeSlot && hasCrew;
-    const buyLabel = owned > 0 ? '+1' : 'Buy';
+    const buyLabel = owned > 0 ? t('buyLabelPlusOne') : t('buyLabel');
     const maxCount = getMaxBuyCount(id);
-    const maxLabel = maxCount > 1 ? `Max (${maxCount})` : 'Max';
+    const maxLabel = maxCount > 1 ? tParam('maxLabelCount', { n: maxCount }) : t('maxLabel');
 
+    const costCoins = formatNumber(def.cost, settings.compactNumbers) + ' ⬡';
+    const costCrew = def.requiredAstronauts > 0 ? ` + ${def.requiredAstronauts} crew` : '';
     let buyTitle = '';
     if (!canBuy) {
-      if (!hasCrew && def.requiredAstronauts > 0) buyTitle = `Need ${def.requiredAstronauts} astronaut${def.requiredAstronauts > 1 ? 's' : ''}. Hire crew in the Crew section.`;
-      else if (!hasFreeSlot) buyTitle = 'No free slot. Add a slot to a planet or buy a new planet!';
-      else if (!canAfford) buyTitle = `Need ${formatNumber(def.cost, settings.compactNumbers)} ⬡${def.requiredAstronauts > 0 ? ` + ${def.requiredAstronauts} crew` : ''} to buy.`;
-      else buyTitle = `Need ${formatNumber(def.cost, settings.compactNumbers)} ⬡ and a free slot.`;
-    } else buyTitle = `Buy ${def.name} · ${formatNumber(def.cost, settings.compactNumbers)} ⬡${def.requiredAstronauts > 0 ? ` + ${def.requiredAstronauts} crew` : ''}`;
+      if (!hasCrew && def.requiredAstronauts > 0) buyTitle = tParam('needAstronauts', { n: def.requiredAstronauts });
+      else if (!hasFreeSlot) buyTitle = t('noFreeSlot');
+      else if (!canAfford) buyTitle = tParam('needCoinsToBuy', { cost: costCoins, crew: costCrew });
+      else buyTitle = tParam('needCoinsAndSlot', { cost: costCoins });
+    } else buyTitle = tParam('buyUpgradeTitle', { name: getCatalogUpgradeName(id), cost: costCoins + costCrew });
 
-    let maxTitle = 'Buy as many as you can afford with current slots';
+    let maxTitle = t('maxBuyTooltip');
     if (maxCount <= 0 || !hasCrew) {
-      if (!hasCrew && def.requiredAstronauts > 0) maxTitle = 'Need more crew to buy this upgrade.';
-      else if (!hasFreeSlot) maxTitle = 'No free slots. Add slots or buy a new planet.';
-      else if (!canAfford) maxTitle = `Need ${formatNumber(def.cost, settings.compactNumbers)} ⬡ to buy at least one.`;
-      else maxTitle = 'No free slots or not enough coins/crew to buy more.';
+      if (!hasCrew && def.requiredAstronauts > 0) maxTitle = t('needCrewToBuy');
+      else if (!hasFreeSlot) maxTitle = t('noFreeSlot');
+      else if (!canAfford) maxTitle = tParam('needCoinsForOne', { cost: costCoins });
+      else maxTitle = t('noSlotsOrCoins');
     }
 
     const isRecommended = canBuy && !player.upgrades.some((u) => u.id === id);
-    const crewBadge = def.requiredAstronauts > 0 ? `<span class="upgrade-crew-req" title="Cost in astronauts (spent when you buy)">${def.requiredAstronauts} crew</span>` : '';
+    const crewBadge = def.requiredAstronauts > 0 ? `<span class="upgrade-crew-req" title="${t('crewBadgeTitle')}">${def.requiredAstronauts} crew</span>` : '';
     const nameEl = card.querySelector('.upgrade-name');
     if (nameEl) {
-      nameEl.innerHTML = def.name + (owned > 0 ? `<span class="count-badge">×${owned}</span>` : '') + crewBadge + (isRecommended ? '<span class="upgrade-recommended">Recommended</span>' : '');
+      nameEl.innerHTML = getCatalogUpgradeName(id) + (owned > 0 ? `<span class="count-badge">×${owned}</span>` : '') + crewBadge + (isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : '');
     }
     const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
     if (select) {

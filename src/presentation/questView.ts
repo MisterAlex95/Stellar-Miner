@@ -3,6 +3,7 @@ import { formatNumber } from '../application/format.js';
 import { generateQuest, getQuestProgress, getQuestStreak, getQuestLastClaimAt } from '../application/quests.js';
 import { saveQuestState } from '../application/questState.js';
 import { QUEST_STREAK_WINDOW_MS, QUEST_STREAK_MAX, QUEST_STREAK_BONUS_PER_LEVEL } from '../application/catalogs.js';
+import { t, tParam } from '../application/strings.js';
 
 export function renderQuestSection(): void {
   const container = document.getElementById('quest-section');
@@ -37,8 +38,8 @@ export function renderQuestSection(): void {
   if (claimBtn) {
     const streak = getQuestStreak();
     const nextBonus = streak < QUEST_STREAK_MAX ? ` (streak +${Math.round(QUEST_STREAK_BONUS_PER_LEVEL * 100)}%)` : '';
-    claimBtn.textContent = p.done ? `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡${nextBonus}` : 'Claim';
-    const tooltipText = p.done ? `Claim ${formatNumber(Math.floor(q.reward), settings.compactNumbers)} ⬡ reward` : 'Complete the quest to claim the reward';
+    claimBtn.textContent = p.done ? tParam('claimRewardFormat', { reward: formatNumber(Math.floor(q.reward), settings.compactNumbers) }) + nextBonus : t('claim');
+    const tooltipText = p.done ? tParam('claimRewardFormat', { reward: formatNumber(Math.floor(q.reward), settings.compactNumbers) }) + ' reward' : t('completeQuestToClaim');
     const wrap = claimBtn.parentElement?.classList.contains('btn-tooltip-wrap') ? claimBtn.parentElement : null;
     if (wrap) wrap.setAttribute('title', tooltipText);
     else claimBtn.setAttribute('title', tooltipText);
@@ -49,8 +50,8 @@ export function renderQuestSection(): void {
     const streak = getQuestStreak();
     const lastClaim = getQuestLastClaimAt();
     const withinWindow = Date.now() - lastClaim <= QUEST_STREAK_WINDOW_MS;
-    if (streak > 0 && withinWindow) streakHint.textContent = `Streak ×${streak} · claim next within 5 min to keep it`;
-    else if (streak > 0) streakHint.textContent = 'Streak expired. Claim a quest to start a new streak.';
+    if (streak > 0 && withinWindow) streakHint.textContent = tParam('questStreakKeep', { n: streak });
+    else if (streak > 0) streakHint.textContent = t('streakExpired');
     else streakHint.textContent = '';
     streakHint.style.display = streak > 0 ? 'block' : 'none';
   }
