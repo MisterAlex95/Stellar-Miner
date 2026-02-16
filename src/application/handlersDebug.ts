@@ -8,7 +8,7 @@ import { ACHIEVEMENTS, getUnlockedAchievements } from './achievements.js';
 import { getCatalogAchievementName, getCatalogAchievementDesc } from './i18nCatalogs.js';
 import { t } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
-import { showEventToast } from '../presentation/toasts.js';
+import { getPresentationPort } from './uiBridge.js';
 
 const DEBUG_PANEL_ID = 'debug-panel';
 
@@ -27,7 +27,7 @@ export function triggerRandomEvent(): void {
   pushActiveEventInstance({ event, endsAt: Date.now() + event.effect.durationMs });
   incrementRunEventsTriggered();
   addDiscoveredEvent(event.id);
-  showEventToast(event);
+  getPresentationPort().showEventToast(event);
   notifyRefresh();
 }
 

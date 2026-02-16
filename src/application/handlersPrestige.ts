@@ -15,8 +15,7 @@ import {
 import { generateQuest } from './quests.js';
 import { saveQuestState } from './questState.js';
 import { clearResearch } from './research.js';
-import { showPrestigeMilestoneToast, showMiniMilestoneToast } from '../presentation/toasts.js';
-import { openOverlay, closeOverlay } from '../presentation/components/overlay.js';
+import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
 import { emit } from './eventBus.js';
 import { t, tParam } from './strings.js';
@@ -31,7 +30,7 @@ function refreshAfterPrestige(): void {
 }
 
 export function openPrestigeConfirmModal(): void {
-  openOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open', {
+  getPresentationPort().openOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open', {
     focusId: 'prestige-confirm-cancel',
     onOpen: () => {
       const session = getSession();
@@ -49,13 +48,13 @@ export function openPrestigeConfirmModal(): void {
 }
 
 export function closePrestigeConfirmModal(): void {
-  closeOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open');
+  getPresentationPort().closeOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open');
 }
 
 export function openPrestigeRewardsModal(): void {
   const listEl = document.getElementById('prestige-rewards-list');
   if (!listEl) return;
-  openOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open', {
+  getPresentationPort().openOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open', {
     focusId: 'prestige-rewards-close',
     onOpen: () => {
       listEl.innerHTML = '';
@@ -74,7 +73,7 @@ export function openPrestigeRewardsModal(): void {
 }
 
 export function closePrestigeRewardsModal(): void {
-  closeOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open');
+  getPresentationPort().closeOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open');
 }
 
 export function confirmPrestige(): void {
@@ -95,15 +94,16 @@ export function confirmPrestige(): void {
   notifyRefresh();
   setSessionClickCount(0);
   setSessionCoinsFromClicks(0);
+  const ui = getPresentationPort();
   if (newPlayer.prestigeLevel === 1 && typeof localStorage !== 'undefined') {
     const key = 'stellar-miner-first-prestige-toast';
     if (!localStorage.getItem(key)) {
       localStorage.setItem(key, '1');
-      showMiniMilestoneToast(t('firstPrestigeToast'));
+      ui.showMiniMilestoneToast(t('firstPrestigeToast'));
     }
   }
   emit('prestige', { level: newPlayer.prestigeLevel });
-  if (PRESTIGE_MILESTONE_LEVELS.includes(newPlayer.prestigeLevel)) showPrestigeMilestoneToast(newPlayer.prestigeLevel);
+  if (PRESTIGE_MILESTONE_LEVELS.includes(newPlayer.prestigeLevel)) ui.showPrestigeMilestoneToast(newPlayer.prestigeLevel);
   refreshAfterPrestige();
 }
 

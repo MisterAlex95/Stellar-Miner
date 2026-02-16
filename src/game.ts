@@ -1,4 +1,6 @@
 import './styles/index.css';
+import { setPresentationPort } from './application/uiBridge.js';
+import { createPresentationPort } from './presentation/presentationPortImpl.js';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
 import { mount, updateTabMenuVisibility, updateTabMoreActiveState, updateTabBadges, switchTab } from './presentation/mount.js';
 import {
@@ -44,6 +46,7 @@ import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';
 import { getElement } from './presentation/components/domUtils.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
+import { PANEL_IDS, getPanelElementId, type PanelId } from './application/panelConfig.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 80;
@@ -95,13 +98,13 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
 
 function runPanelUpdates(nowMs: number): void {
   runQuestIfDue(nowMs, () => true, updateQuestProgressStore);
-  runDashboardIfDue(nowMs, () => !getElement('panel-dashboard')?.hidden, updateDashboard);
-  runEmpireIfDue(nowMs, () => !getElement('panel-empire')?.hidden, () => {
+  runDashboardIfDue(nowMs, () => !getElement(getPanelElementId('dashboard'))?.hidden, updateDashboard);
+  runEmpireIfDue(nowMs, () => !getElement(getPanelElementId('empire'))?.hidden, () => {
     renderCrewSection();
     renderPrestigeSection();
   });
   runResearchIfDue(nowMs, () => {
-    const p = getElement('panel-research');
+    const p = getElement(getPanelElementId('research'));
     return !!p && !p.hidden && !isResearchInProgress();
   }, renderResearchSection);
   updateComboIndicator();
@@ -168,29 +171,38 @@ function gameLoop(now: number): void {
   requestAnimationFrame(gameLoop);
 }
 
+const PANEL_REFRESH_ACTIONS: Partial<Record<PanelId, () => void>> = {
+  upgrades: renderUpgradeList,
+  empire: renderPlanetList,
+  research: () => {
+    if (!isResearchInProgress()) renderResearchSection();
+  },
+  dashboard: updateDashboard,
+  stats: () => {
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => updateStatisticsSection(), { timeout: 50 });
+    } else {
+      updateStatisticsSection();
+    }
+  },
+};
+
 function createRefreshViews(): () => void {
   return () => {
     if (typeof performance !== 'undefined' && performance.mark) {
       performance.mark('refresh-start');
     }
     saveSession();
-    updateStats(); // includes renderPrestigeSection, renderCrewSection
-    if (isPanelHydrated('upgrades')) renderUpgradeList();
+    updateStats();
     updateQuestProgressStore();
-    if (isPanelHydrated('empire')) renderPlanetList();
-    if (isPanelHydrated('research')) renderResearchSection();
-    if (isPanelHydrated('dashboard')) updateDashboard();
+    for (const panelId of PANEL_IDS) {
+      const action = PANEL_REFRESH_ACTIONS[panelId];
+      if (action && isPanelHydrated(panelId)) action();
+    }
     updateProgressionVisibility();
     updateTabMenuVisibility();
     updateTabVisibility(switchTab);
     updateTabBadges();
-    if (isPanelHydrated('stats')) {
-      if (typeof requestIdleCallback !== 'undefined') {
-        requestIdleCallback(() => updateStatisticsSection(), { timeout: 50 });
-      } else {
-        updateStatisticsSection();
-      }
-    }
     if (typeof performance !== 'undefined' && performance.measure) {
       performance.mark('refresh-end');
       performance.measure('refresh', 'refresh-start', 'refresh-end');
@@ -199,6 +211,7 @@ function createRefreshViews(): () => void {
 }
 
 async function init(): Promise<void> {
+  setPresentationPort(createPresentationPort());
   const session = await getOrCreateSession();
   setSession(session);
   loadStatsHistory();

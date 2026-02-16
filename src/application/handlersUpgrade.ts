@@ -12,15 +12,14 @@ import { emit } from './eventBus.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getEffectiveUpgradeUsesSlot, getEffectiveRequiredAstronauts } from './research.js';
 import { getPlanetType, getPlanetTypeMultiplier } from './planetAffinity.js';
-import { flashUpgradeCard } from '../presentation/upgradeListView.js';
-import { showMiniMilestoneToast } from '../presentation/toasts.js';
+import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
 import { t, tParam } from './strings.js';
 
 function refreshAfterUpgrade(opts: { flashId?: string } = {}): void {
   notifyRefresh();
   checkAchievements();
-  if (opts.flashId) flashUpgradeCard(opts.flashId);
+  if (opts.flashId) getPresentationPort().flashUpgradeCard(opts.flashId);
 }
 
 /** Whether we need a planet with a raw free slot for this upgrade (effective = after research). */
@@ -99,7 +98,7 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): UpgradeB
     const key = 'stellar-miner-first-upgrade-toast';
     if (!localStorage.getItem(key)) {
       localStorage.setItem(key, '1');
-      showMiniMilestoneToast(t('firstUpgradeToast'));
+      getPresentationPort().showMiniMilestoneToast(t('firstUpgradeToast'));
     }
   }
   refreshAfterUpgrade({ flashId: upgradeId });

@@ -31,7 +31,7 @@ const RESET_LOCAL_STORAGE_KEYS: string[] = [
   'stellar-miner-first-astronaut-toast',
   'stellar-miner-first-prestige-toast',
 ];
-import { openOverlay, closeOverlay } from '../presentation/components/overlay.js';
+import { getPresentationPort } from './uiBridge.js';
 import { notifyRefresh } from './refreshSignal.js';
 
 export function updateLastSavedIndicator(): void {
@@ -53,14 +53,14 @@ export function updateLastSavedIndicator(): void {
 }
 
 export function openSettings(): void {
-  openOverlay('settings-overlay', 'settings-overlay--open', {
+  getPresentationPort().openOverlay('settings-overlay', 'settings-overlay--open', {
     focusId: 'settings-close',
     onOpen: updateLastSavedIndicator,
   });
 }
 
 export function closeSettings(): void {
-  closeOverlay('settings-overlay', 'settings-overlay--open');
+  getPresentationPort().closeOverlay('settings-overlay', 'settings-overlay--open');
 }
 
 export function applySettingsToUI(): void {
@@ -68,13 +68,13 @@ export function applySettingsToUI(): void {
 }
 
 export function openResetConfirmModal(): void {
-  openOverlay('reset-confirm-overlay', 'reset-confirm-overlay--open', {
+  getPresentationPort().openOverlay('reset-confirm-overlay', 'reset-confirm-overlay--open', {
     focusId: 'reset-confirm-cancel',
   });
 }
 
 export function closeResetConfirmModal(): void {
-  closeOverlay('reset-confirm-overlay', 'reset-confirm-overlay--open');
+  getPresentationPort().closeOverlay('reset-confirm-overlay', 'reset-confirm-overlay--open');
 }
 
 export function handleResetProgress(): void {

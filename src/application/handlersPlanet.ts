@@ -11,7 +11,7 @@ import { getAssignedAstronauts } from './crewHelpers.js';
 import { hasEffectiveFreeSlot } from './research.js';
 import { emit } from './eventBus.js';
 import { notifyRefresh } from './refreshSignal.js';
-import { showMiniMilestoneToast } from '../presentation/toasts.js';
+import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
 import { t, tParam } from './strings.js';
 
@@ -47,16 +47,17 @@ export function completeExpeditionIfDue(): void {
   const wasFirstPlanet = player.planets.length === 1;
   const outcome = planetService.completeExpedition(player, composition, Math.random);
   clearExpedition();
+  const ui = getPresentationPort();
   if (outcome.success && outcome.planetName) {
     emit('planet_bought', { planetCount: player.planets.length });
     if (outcome.deaths > 0) {
-      showMiniMilestoneToast(tParam('expeditionDiscoveredWithDeaths', {
+      ui.showMiniMilestoneToast(tParam('expeditionDiscoveredWithDeaths', {
         name: outcome.planetName,
         survivors: outcome.survivors,
         deaths: outcome.deaths,
       }));
     } else {
-      showMiniMilestoneToast(tParam('expeditionDiscoveredAllReturned', {
+      ui.showMiniMilestoneToast(tParam('expeditionDiscoveredAllReturned', {
         name: outcome.planetName,
         survivors: outcome.survivors,
       }));
@@ -65,11 +66,11 @@ export function completeExpeditionIfDue(): void {
       const key = 'stellar-miner-first-planet-toast';
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, '1');
-        showMiniMilestoneToast(t('firstNewPlanetToast'));
+        ui.showMiniMilestoneToast(t('firstNewPlanetToast'));
       }
     }
   } else {
-    showMiniMilestoneToast(tParam('expeditionFailed', { n: outcome.totalSent }));
+    ui.showMiniMilestoneToast(tParam('expeditionFailed', { n: outcome.totalSent }));
   }
   refreshAfterPlanetAction({ achievements: true });
 }
@@ -107,7 +108,7 @@ export function handleHireAstronaut(role: CrewRole = 'astronaut'): void {
     const key = 'stellar-miner-first-astronaut-toast';
     if (!localStorage.getItem(key)) {
       localStorage.setItem(key, '1');
-      showMiniMilestoneToast(t('firstAstronautToast'));
+      getPresentationPort().showMiniMilestoneToast(t('firstAstronautToast'));
     }
   }
   refreshAfterPlanetAction({ achievements: true });

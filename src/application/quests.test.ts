@@ -13,6 +13,7 @@ import { Planet } from '../domain/entities/Planet.js';
 import { Coins } from '../domain/value-objects/Coins.js';
 import { ProductionRate } from '../domain/value-objects/ProductionRate.js';
 import { QUEST_STREAK_KEY, QUEST_LAST_CLAIM_KEY } from './catalogs.js';
+import { setPresentationPort, getDefaultPresentationPort } from './uiBridge.js';
 
 describe('quests', () => {
   let storage: Record<string, string>;
@@ -280,16 +281,13 @@ describe('quests', () => {
   });
 
   it('claimQuest returns false when no quest or not done', () => {
-    expect(claimQuest({
-      notifyRefresh: vi.fn(),
-      showFloatingReward: vi.fn(),
-      showQuestStreakToast: vi.fn(),
-      checkAchievements: vi.fn(),
-    })).toBe(false);
+    expect(claimQuest({ notifyRefresh: vi.fn() })).toBe(false);
   });
 
   it('claimQuest returns true and runs callbacks when done', () => {
     const origDoc = globalThis.document;
+    const notifyRefresh = vi.fn();
+    setPresentationPort({ ...getDefaultPresentationPort(), showFloatingReward: vi.fn(), showQuestStreakToast: vi.fn() });
     vi.stubGlobal('document', { getElementById: () => null });
     const player = Player.create('p1');
     player.addCoins(10000);
@@ -297,15 +295,9 @@ describe('quests', () => {
     setQuestState({
       quest: { type: 'coins', target: 100, reward: 50, description: 'Reach 100 coins' },
     });
-    const callbacks = {
-      notifyRefresh: vi.fn(),
-      showFloatingReward: vi.fn(),
-      showQuestStreakToast: vi.fn(),
-      checkAchievements: vi.fn(),
-    };
-    const result = claimQuest(callbacks);
+    const result = claimQuest({ notifyRefresh });
     expect(result).toBe(true);
-    expect(callbacks.notifyRefresh).toHaveBeenCalled();
+    expect(notifyRefresh).toHaveBeenCalled();
     expect(getQuestState().quest).not.toBeNull();
     vi.stubGlobal('document', origDoc);
   });
@@ -320,12 +312,8 @@ describe('quests', () => {
       quest: { type: 'coins', target: 100, reward: 50, description: 'Reach 100 coins' },
     });
     const showFloatingReward = vi.fn();
-    claimQuest({
-      notifyRefresh: vi.fn(),
-      showFloatingReward,
-      showQuestStreakToast: vi.fn(),
-      checkAchievements: vi.fn(),
-    });
+    setPresentationPort({ ...getDefaultPresentationPort(), showFloatingReward, showQuestStreakToast: vi.fn() });
+    claimQuest({ notifyRefresh: vi.fn() });
     expect(showFloatingReward).toHaveBeenCalledWith(50, mockBtn);
   });
 
@@ -340,12 +328,8 @@ describe('quests', () => {
       quest: { type: 'coins', target: 100, reward: 50, description: 'Reach 100 coins' },
     });
     const showQuestStreakToast = vi.fn();
-    claimQuest({
-      notifyRefresh: vi.fn(),
-      showFloatingReward: vi.fn(),
-      showQuestStreakToast,
-      checkAchievements: vi.fn(),
-    });
+    setPresentationPort({ ...getDefaultPresentationPort(), showFloatingReward: vi.fn(), showQuestStreakToast });
+    claimQuest({ notifyRefresh: vi.fn() });
     expect(showQuestStreakToast).toHaveBeenCalled();
     const [streak, mult] = showQuestStreakToast.mock.calls[0];
     expect(streak).toBeGreaterThan(1);

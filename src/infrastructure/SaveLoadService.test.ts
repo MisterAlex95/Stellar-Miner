@@ -11,7 +11,16 @@ import { GameEvent } from '../domain/entities/GameEvent.js';
 import { Planet } from '../domain/entities/Planet.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import { toDecimal } from '../domain/bigNumber.js';
-import { RESEARCH_STORAGE_KEY } from '../application/research.js';
+import { RESEARCH_STORAGE_KEY, getResearchProductionMultiplier, getUnlockedResearch } from '../application/research.js';
+import { deserializeSession } from '../application/sessionSerialization.js';
+
+function createSaveLoadService(): SaveLoadService {
+  return new SaveLoadService({
+    deserialize: deserializeSession,
+    getResearchProductionMultiplier,
+    getUnlockedResearch,
+  });
+}
 
 describe('SaveLoadService', () => {
   let storage: Record<string, string>;
@@ -33,7 +42,7 @@ describe('SaveLoadService', () => {
     const player = Player.create('p1');
     player.addCoins(100);
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
 
     await service.save(session);
 
@@ -47,7 +56,7 @@ describe('SaveLoadService', () => {
   });
 
   it('load returns null when nothing stored', async () => {
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const result = await service.load();
     expect(result).toBeNull();
   });
@@ -55,7 +64,7 @@ describe('SaveLoadService', () => {
   it('load returns null when localStorage is undefined', async () => {
     const orig = globalThis.localStorage;
     vi.stubGlobal('localStorage', undefined);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const result = await service.load();
     expect(result).toBeNull();
     vi.stubGlobal('localStorage', orig);
@@ -66,7 +75,7 @@ describe('SaveLoadService', () => {
     vi.stubGlobal('localStorage', undefined);
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     await expect(service.save(session)).resolves.toBeUndefined();
     vi.stubGlobal('localStorage', orig);
   });
@@ -79,7 +88,7 @@ describe('SaveLoadService', () => {
     player.setProductionRate(player.productionRate.add(5));
     const evt = new GameEvent('e1', 'Event 1', new EventEffect(2, 5000));
     const session = new GameSession('session-1', player, [evt]);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
 
     await service.save(session);
     const loaded = await service.load();
@@ -111,7 +120,7 @@ describe('SaveLoadService', () => {
       0
     );
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
 
     await service.save(session);
     const loaded = await service.load();
@@ -127,7 +136,7 @@ describe('SaveLoadService', () => {
   it('clearProgress removes session from localStorage', async () => {
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     await service.save(session);
     expect(storage['stellar-miner-session']).toBeDefined();
 
@@ -155,7 +164,7 @@ describe('SaveLoadService', () => {
       activeEvents: [],
     };
     storage['stellar-miner-session'] = JSON.stringify(legacy);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
 
     const loaded = await service.load();
 
@@ -183,7 +192,7 @@ describe('SaveLoadService', () => {
       activeEvents: [],
     };
     storage['stellar-miner-session'] = JSON.stringify(legacy);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
 
     const loaded = await service.load();
 
@@ -201,7 +210,7 @@ describe('SaveLoadService', () => {
     player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
     player.setProductionRate(new ProductionRate(10));
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     await service.save(session);
 
     expect(service.getLastOfflineCoins()).toBe(0);
@@ -223,7 +232,7 @@ describe('SaveLoadService', () => {
     player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
     player.setProductionRate(new ProductionRate(10));
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     await service.save(session);
 
     vi.setSystemTime(1_000_000_000_000 + 120_000);
@@ -241,7 +250,7 @@ describe('SaveLoadService', () => {
     const player = Player.create('p1');
     player.addCoins(100);
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const json = service.exportSession(session);
     expect(typeof json).toBe('string');
     const data = JSON.parse(json);
@@ -250,7 +259,7 @@ describe('SaveLoadService', () => {
   });
 
   it('importSession returns null for invalid JSON', () => {
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     expect(service.importSession('not json')).toBeNull();
     expect(service.importSession('{}')).toBeNull();
   });
@@ -259,7 +268,7 @@ describe('SaveLoadService', () => {
     const player = Player.create('p1');
     player.addCoins(200);
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const json = service.exportSession(session);
     const loaded = service.importSession(json);
     expect(loaded).not.toBeNull();
@@ -270,7 +279,7 @@ describe('SaveLoadService', () => {
     storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const json = service.exportSession(session);
     const data = JSON.parse(json);
     expect(data.unlockedResearch).toEqual(['mining-theory', 'automation']);
@@ -279,7 +288,7 @@ describe('SaveLoadService', () => {
   it('importSession restores unlockedResearch to localStorage', () => {
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const json = service.exportSession(session);
     const data = JSON.parse(json);
     data.unlockedResearch = ['mining-theory', 'automation'];
@@ -291,13 +300,13 @@ describe('SaveLoadService', () => {
   it('validateSavePayload returns true for valid JSON', async () => {
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const json = service.exportSession(session);
     expect(service.validateSavePayload(json)).toBe(true);
   });
 
   it('validateSavePayload returns false for invalid', () => {
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     expect(service.validateSavePayload('{}')).toBe(false);
     expect(service.validateSavePayload('x')).toBe(false);
   });
@@ -314,7 +323,7 @@ describe('SaveLoadService', () => {
     });
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     await service.save(session);
     expect(emitSpy).toHaveBeenCalledWith('save_failed', expect.any(Object));
     emitSpy.mockRestore();
@@ -327,7 +336,7 @@ describe('SaveLoadService', () => {
     player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
     player.setProductionRate(new ProductionRate(10));
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     await service.save(session);
     vi.setSystemTime(1_000_000_000_000 + 13 * 60 * 60 * 1000);
     const loaded = await service.load();
@@ -343,7 +352,7 @@ describe('SaveLoadService', () => {
     player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
     player.setProductionRate(new ProductionRate(10));
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     await service.save(session);
     vi.setSystemTime(1_000_000_000_000 + 20 * 60 * 60 * 1000);
     const loaded = await service.load();
@@ -359,7 +368,7 @@ describe('SaveLoadService', () => {
     player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
     player.setProductionRate(new ProductionRate(10));
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     await service.save(session);
     vi.setSystemTime(1_000_000_000_000 + 30 * 60 * 60 * 1000);
     const loaded = await service.load();
@@ -387,7 +396,7 @@ describe('SaveLoadService', () => {
       activeEvents: [],
     });
     storage['stellar-miner-session'] = badPayload;
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const loaded = await service.load();
     expect(loaded).toBeNull();
   });
@@ -400,7 +409,7 @@ describe('SaveLoadService', () => {
     const endsAt = now + 5000;
     player.planets[0].addInstallingUpgrade(upgrade, startAt, endsAt, toDecimal(5));
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
 
     await service.save(session);
     const raw = storage['stellar-miner-session'];
@@ -419,7 +428,7 @@ describe('SaveLoadService', () => {
   it('save with runStats and expedition options includes them in payload', async () => {
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const runStats = {
       runStartTime: 1000,
       runCoinsEarned: 500,
@@ -444,7 +453,7 @@ describe('SaveLoadService', () => {
   it('load returns runStats, discoveredEventIds and expedition when present in stored payload', async () => {
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
-    const service = new SaveLoadService();
+    const service = createSaveLoadService();
     const runStats = {
       runStartTime: 1000,
       runCoinsEarned: 500,

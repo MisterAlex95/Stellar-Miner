@@ -33,13 +33,7 @@ import { getQuestProgress } from './quests.js';
 import { incrementTotalClicksEver } from './achievements.js';
 import { checkAchievements } from './achievements.js';
 import { checkAndShowMilestones } from './milestones.js';
-import { updateComboIndicator } from '../presentation/comboView.js';
-import {
-  showFloatingCoin,
-  showSuperLuckyToast,
-  showCriticalToast,
-  showDailyBonusToast,
-} from '../presentation/toasts.js';
+import { getPresentationPort } from './uiBridge.js';
 import { getResearchClickMultiplier } from './research.js';
 
 const SHAKE_DURATION_MS = 400;
@@ -95,7 +89,7 @@ export function handleMineClick(e?: MouseEvent): void {
       if (last != null && last !== '') {
         session.player.addCoins(DAILY_BONUS_COINS);
         addRunCoins(DAILY_BONUS_COINS);
-        showDailyBonusToast();
+        getPresentationPort().showDailyBonusToast();
       }
       localStorage.setItem(LAST_DAILY_BONUS_KEY, today);
     }
@@ -134,16 +128,17 @@ export function handleMineClick(e?: MouseEvent): void {
     clientY = clientY ?? center.y;
   }
 
-  showFloatingCoin(coinsExactForDisplay, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical });
-  if (superLucky) showSuperLuckyToast(coins);
-  if (isCritical) showCriticalToast(coins);
+  const ui = getPresentationPort();
+  ui.showFloatingCoin(coinsExactForDisplay, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical });
+  if (superLucky) ui.showSuperLuckyToast(coins);
+  if (isCritical) ui.showCriticalToast(coins);
   const clickResult = mineZoneCanvasApi?.onMineClick(clientX, clientY) as
     { hitShootingStar?: boolean } | undefined;
   if (clickResult?.hitShootingStar && typeof localStorage !== 'undefined') {
     localStorage.setItem(SHOOTING_STAR_CLICKED_KEY, '1');
   }
   if (superLucky || isCritical) triggerShake();
-  updateComboIndicator();
+  ui.updateComboIndicator();
   checkAndShowMilestones();
   checkAchievements();
   refreshAfterMine();

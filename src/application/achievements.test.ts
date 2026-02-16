@@ -11,8 +11,7 @@ import { setSession } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs.js';
-
-vi.mock('../presentation/toasts.js', () => ({ showAchievementToast: vi.fn() }));
+import { setPresentationPort, getDefaultPresentationPort } from './uiBridge.js';
 
 vi.mock('../data/achievements.json', async (importOriginal) => {
   const mod = await importOriginal() as { default: Array<{ id: string; name: string; type: string; value: number }> };
@@ -137,10 +136,11 @@ describe('achievements', () => {
     expect(expander?.check()).toBe(true);
   });
 
-  it('unlockAchievement shows toast when achievement found', async () => {
-    const toasts = await import('../presentation/toasts.js');
+  it('unlockAchievement shows toast when achievement found', () => {
+    const showAchievementToast = vi.fn();
+    setPresentationPort({ ...getDefaultPresentationPort(), showAchievementToast });
     unlockAchievement('first-click');
-    expect(toasts.showAchievementToast).toHaveBeenCalledWith('First steps');
+    expect(showAchievementToast).toHaveBeenCalledWith('First steps');
   });
 
   it('buildCheck default returns false for unknown type', () => {

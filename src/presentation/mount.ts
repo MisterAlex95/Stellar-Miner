@@ -16,6 +16,7 @@ import {
   handleMineClick,
   handleUpgradeBuy,
   handleUpgradeBuyMax,
+  showUpgradeInstallProgress,
   handleBuyNewPlanet,
   handleAddSlot,
   handleBuildHousing,
@@ -550,9 +551,15 @@ export function mount(): void {
       if (target.getAttribute('data-action') === 'max') {
         const maxCountAttr = target.getAttribute('data-max-count');
         const maxToBuy = maxCountAttr != null ? parseInt(maxCountAttr, 10) : undefined;
-        handleUpgradeBuyMax(upgradeId, planetId, Number.isFinite(maxToBuy) ? maxToBuy : undefined);
+        const result = handleUpgradeBuyMax(upgradeId, planetId, Number.isFinite(maxToBuy) ? maxToBuy : undefined);
+        if (result.bought > 0 && result.durations.length > 0 && card instanceof HTMLElement) {
+          showUpgradeInstallProgress(card, result.durations);
+        }
       } else {
-        handleUpgradeBuy(upgradeId, planetId);
+        const result = handleUpgradeBuy(upgradeId, planetId);
+        if (result.bought && result.durations.length > 0 && card instanceof HTMLElement) {
+          showUpgradeInstallProgress(card, result.durations);
+        }
       }
     });
   }

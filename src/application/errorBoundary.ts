@@ -3,7 +3,7 @@
  */
 
 import { t, type StringKey } from './strings.js';
-import { showToast } from '../presentation/components/toasts.js';
+import { getPresentationPort } from './uiBridge.js';
 
 export function withErrorBoundary<T extends (...args: unknown[]) => unknown>(fn: T): T {
   return ((...args: unknown[]) => {
@@ -12,7 +12,7 @@ export function withErrorBoundary<T extends (...args: unknown[]) => unknown>(fn:
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('[Stellar Miner]', err);
-      showToast(t('errorOccurred' as StringKey), 'negative', { duration: 5000 });
+      getPresentationPort().showToast(t('errorOccurred' as StringKey), 'negative', { duration: 5000 });
       throw err;
     }
   }) as T;

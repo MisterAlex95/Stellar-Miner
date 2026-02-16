@@ -1,7 +1,7 @@
 import { toDecimal } from '../domain/bigNumber.js';
 import { MILESTONES_STORAGE_KEY, MILESTONES } from './catalogs.js';
 import { getSession } from './gameState.js';
-import { showMilestoneToast } from '../presentation/toasts.js';
+import { getPresentationPort } from './uiBridge.js';
 
 export function getReachedMilestones(): number[] {
   if (typeof localStorage === 'undefined') return [];
@@ -30,7 +30,7 @@ export function checkAndShowMilestones(): void {
   for (const m of MILESTONES) {
     if (total.gte(m) && !reached.includes(m)) {
       markMilestoneReached(m);
-      showMilestoneToast(m);
+      getPresentationPort().showMilestoneToast(m);
       break;
     }
   }

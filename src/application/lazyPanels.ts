@@ -3,13 +3,15 @@
  * only render panel content when the user first switches to that tab.
  */
 
+import type { PanelId } from './panelConfig.js';
+
 const hydratedPanels = new Set<string>();
 
-export function markPanelHydrated(panelId: string): void {
+export function markPanelHydrated(panelId: PanelId | string): void {
   hydratedPanels.add(panelId);
 }
 
-export function isPanelHydrated(panelId: string): boolean {
+export function isPanelHydrated(panelId: PanelId | string): boolean {
   return hydratedPanels.has(panelId);
 }
 

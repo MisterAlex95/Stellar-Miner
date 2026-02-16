@@ -11,6 +11,7 @@ import {
 } from './catalogs.js';
 import { getSession, getQuestState, setQuestState, incrementRunQuestsClaimed, addRunCoins, getRunStats, getPrestigesToday } from './gameState.js';
 import { getResearchProductionMultiplier } from './research.js';
+import { getPresentationPort } from './uiBridge.js';
 import gameConfig from '../data/gameConfig.json';
 
 export type { QuestState, Quest };
@@ -320,9 +321,6 @@ export function getQuestLastClaimAt(): number {
 
 export type ClaimQuestCallbacks = {
   notifyRefresh: () => void;
-  showFloatingReward: (amount: number, anchor: HTMLElement) => void;
-  showQuestStreakToast: (streak: number, mult: number) => void;
-  checkAchievements: () => void;
 };
 
 export function claimQuest(callbacks: ClaimQuestCallbacks): boolean {
@@ -349,9 +347,9 @@ export function claimQuest(callbacks: ClaimQuestCallbacks): boolean {
   }
   saveQuestState(newState);
   callbacks.notifyRefresh();
+  const ui = getPresentationPort();
   const claimBtn = document.getElementById('quest-claim');
-  if (claimBtn) callbacks.showFloatingReward(reward, claimBtn);
-  if (streak > 1) callbacks.showQuestStreakToast(streak, bonusMult);
-  callbacks.checkAchievements();
+  if (claimBtn) ui.showFloatingReward(reward, claimBtn);
+  if (streak > 1) ui.showQuestStreakToast(streak, bonusMult);
   return true;
 }

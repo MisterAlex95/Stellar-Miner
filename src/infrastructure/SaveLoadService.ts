@@ -1,26 +1,11 @@
-import Decimal from 'break_infinity.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
-import { Player } from '../domain/entities/Player.js';
-import { Planet } from '../domain/entities/Planet.js';
-import { Upgrade } from '../domain/entities/Upgrade.js';
-import { GameEvent } from '../domain/entities/GameEvent.js';
-import { Artifact } from '../domain/entities/Artifact.js';
-import { Coins } from '../domain/value-objects/Coins.js';
-import { ProductionRate } from '../domain/value-objects/ProductionRate.js';
-import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
-import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
-import { generatePlanetName } from '../domain/constants.js';
-import { getUpgradeUsesSlot } from '../application/catalogs.js';
-import { getBaseProductionRateFromPlanets } from '../application/planetAffinity.js';
-import { toDecimal } from '../domain/bigNumber.js';
 import { emit } from '../application/eventBus.js';
-import {
-  RESEARCH_STORAGE_KEY,
-  getResearchProductionMultiplier,
-  getEffectiveRequiredAstronauts,
-  getUnlockedResearch,
-} from '../application/research.js';
+import { RESEARCH_STORAGE_KEY } from '../application/research.js';
+
+export type SessionDeserializer = (data: SavedSession) => GameSession;
+export type GetResearchProductionMultiplier = () => number;
+export type GetUnlockedResearch = () => string[];
 
 export const SAVE_VERSION = 1;
 
@@ -37,9 +22,9 @@ const DECAY_12_14H_MULT = 0.8;
 const DECAY_14_24H_MS = 10 * 60 * 60 * 1000;
 const DECAY_24H_PLUS_MULT = 0.5;
 
-type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
-type SavedInstallingUpgrade = { upgrade: SavedUpgrade; startAt?: number; endsAt: number; rateToAdd: number | string };
-type SavedPlanet = {
+export type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
+export type SavedInstallingUpgrade = { upgrade: SavedUpgrade; startAt?: number; endsAt: number; rateToAdd: number | string };
+export type SavedPlanet = {
   id: string;
   name: string;
   maxUpgrades: number;
@@ -108,11 +93,26 @@ function isSavedSession(data: unknown): data is SavedSession {
   return true;
 }
 
+export interface SaveLoadServiceOptions {
+  deserialize: SessionDeserializer;
+  getResearchProductionMultiplier?: GetResearchProductionMultiplier;
+  getUnlockedResearch?: GetUnlockedResearch;
+}
+
 /** Infrastructure: persist game session to localStorage. */
 export class SaveLoadService implements ISaveLoadService {
   private lastOfflineCoinsApplied = 0;
   private lastOfflineHoursApplied = 0;
   private lastOfflineWasCapped = false;
+  private readonly deserialize: SessionDeserializer;
+  private readonly getResearchProductionMultiplier: GetResearchProductionMultiplier;
+  private readonly getUnlockedResearch: GetUnlockedResearch;
+
+  constructor(options: SaveLoadServiceOptions) {
+    this.deserialize = options.deserialize;
+    this.getResearchProductionMultiplier = options.getResearchProductionMultiplier ?? (() => 1);
+    this.getUnlockedResearch = options.getUnlockedResearch ?? (() => []);
+  }
 
   getLastOfflineCoins(): number {
     const n = this.lastOfflineCoinsApplied;
@@ -192,6 +192,7 @@ export class SaveLoadService implements ISaveLoadService {
     } catch {
       return null;
     }
+    const getResearchMult = this.getResearchProductionMultiplier;
     const runStats = data.runStats && typeof data.runStats === 'object' ? (data.runStats as SavedRunStats) : undefined;
     const discoveredEventIds = Array.isArray(data.discoveredEventIds)
       ? (data.discoveredEventIds as string[]).filter((id) => typeof id === 'string')
@@ -210,7 +211,7 @@ export class SaveLoadService implements ISaveLoadService {
       const lastSave = parseInt(lastSaveRaw, 10);
       const elapsed = Date.now() - lastSave;
       if (elapsed >= MIN_OFFLINE_MS && session.player.productionRate.value.gt(0)) {
-        const researchMult = getResearchProductionMultiplier();
+        const researchMult = getResearchMult();
         let effectiveSeconds = 0;
         const elapsedSec = elapsed / 1000;
         const cap12hSec = FULL_CAP_OFFLINE_MS / 1000;
@@ -352,95 +353,9 @@ export class SaveLoadService implements ISaveLoadService {
       payload.discoveredEventIds = options.discoveredEventIds;
     }
     if (options?.expedition) payload.expedition = options.expedition;
-    const unlockedResearch = getUnlockedResearch();
+    const unlockedResearch = this.getUnlockedResearch();
     if (unlockedResearch.length > 0) payload.unlockedResearch = unlockedResearch;
     return payload;
   }
 
-  private deserialize(data: SavedSession): GameSession {
-    const version = data.version ?? 0;
-    if (version > SAVE_VERSION) throw new Error('Unsupported save version');
-    let planets: Planet[];
-    const mapUpgrade = (u: SavedUpgrade): Upgrade => {
-      if (u.effect == null || (typeof u.effect.coinsPerSecond !== 'number' && typeof u.effect.coinsPerSecond !== 'string')) {
-        throw new Error('Invalid upgrade effect');
-      }
-      return new Upgrade(
-        u.id,
-        u.name,
-        toDecimal(u.cost),
-        new UpgradeEffect(toDecimal(u.effect.coinsPerSecond)),
-        getUpgradeUsesSlot(u.id)
-      );
-    };
-    if (data.player.planets && data.player.planets.length > 0) {
-      planets = data.player.planets.map((p) => {
-        const visualSeed = p.visualSeed ?? Math.floor(Math.random() * 0xffff_ffff);
-        const savedInstalling = p.installingUpgrades ?? [];
-        const installingUpgrades = savedInstalling.map((i) => ({
-          upgrade: mapUpgrade(i.upgrade),
-          startAt: i.startAt ?? i.endsAt - 60_000,
-          endsAt: i.endsAt,
-          rateToAdd: toDecimal(i.rateToAdd),
-        }));
-        const planetName =
-          typeof p.name === 'string' && !/undefined/i.test(p.name)
-            ? p.name
-            : generatePlanetName(p.id);
-        const planet = new Planet(
-          p.id,
-          planetName,
-          p.maxUpgrades,
-          p.upgrades.map(mapUpgrade),
-          p.housing ?? 0,
-          p.assignedCrew ?? 0,
-          visualSeed,
-          installingUpgrades
-        );
-        return planet;
-      });
-    } else {
-      // Migration: old save had flat upgrades → put them on one planet
-      const upgrades = (data.player.upgrades ?? []).map(mapUpgrade);
-      const firstVisualSeed = Math.floor(Math.random() * 0xffff_ffff);
-      const first = new Planet('planet-1', generatePlanetName('planet-1'), 6, upgrades, 0, 0, firstVisualSeed);
-      planets = [first];
-    }
-    const artifacts = data.player.artifacts.map(
-      (a) => new Artifact(a.id, a.name, a.effect, a.isActive)
-    );
-    const productionRate = getBaseProductionRateFromPlanets(planets);
-    const crewByRole = data.player.crewByRole;
-    const veteranCount = data.player.veteranCount ?? 0;
-    const crewOrCount =
-      crewByRole && typeof crewByRole === 'object'
-        ? {
-            astronaut: crewByRole.astronaut ?? 0,
-            miner: crewByRole.miner ?? 0,
-            scientist: crewByRole.scientist ?? 0,
-            pilot: crewByRole.pilot ?? 0,
-            medic: crewByRole.medic ?? 0,
-            engineer: crewByRole.engineer ?? 0,
-          }
-        : (data.player.astronautCount ?? 0);
-    const crewAssignedToEquipment =
-      data.player.crewAssignedToEquipment ??
-      planets.reduce((sum, p) => sum + p.upgrades.reduce((s, u) => s + getEffectiveRequiredAstronauts(u.id), 0), 0);
-    const player = new Player(
-      data.player.id,
-      Coins.from(data.player.coins),
-      ProductionRate.from(productionRate),
-      planets,
-      artifacts,
-      data.player.prestigeLevel,
-      new Decimal(data.player.totalCoinsEver),
-      crewOrCount,
-      veteranCount,
-      crewAssignedToEquipment
-    );
-    const activeEvents = data.activeEvents.map(
-      (e) => new GameEvent(e.id, e.name, new EventEffect(e.effect.multiplier, e.effect.durationMs))
-    );
-    return new GameSession(data.id, player, activeEvents);
-  }
 }

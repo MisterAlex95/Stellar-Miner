@@ -11,9 +11,8 @@ import {
 } from './research.js';
 import { getCatalogUpgradeName } from './i18nCatalogs.js';
 import { t, tParam } from './strings.js';
-import { renderResearchSection } from '../presentation/researchView.js';
+import { getPresentationPort } from './uiBridge.js';
 import { notifyRefresh } from './refreshSignal.js';
-import { showMiniMilestoneToast } from '../presentation/toasts.js';
 import { checkAchievements } from './achievements.js';
 
 const RESEARCH_PROGRESS_DURATION_MS = 2500;
@@ -53,7 +52,7 @@ function refreshAfterResearch(researchId: string): void {
   removeResearchInProgress(researchId);
   researchProgressEndTimeMs.delete(researchId);
   notifyRefresh();
-  renderResearchSection();
+  getPresentationPort().renderResearchSection();
   const remainingIds = getResearchInProgressIds();
   for (const id of remainingIds) {
     const endMs = researchProgressEndTimeMs.get(id);
@@ -91,13 +90,13 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
       }
     }
     refreshAfterResearch(id);
-    showMiniMilestoneToast(result.message);
+    getPresentationPort().showMiniMilestoneToast(result.message);
     checkAchievements();
   } else {
     refreshAfterResearch(id);
     if (result.message.includes('failed')) {
       const msg = result.message.includes('Coins spent') ? t('researchFailedCoinsSpent') : t('researchFailedTryAgain');
-      showMiniMilestoneToast(msg);
+      getPresentationPort().showMiniMilestoneToast(msg);
     }
   }
 }
@@ -110,8 +109,8 @@ export function startResearchWithProgress(cardEl: HTMLElement, id: string): void
   if (!node || !canAttemptResearch(id) || !session.player.coins.gte(node.cost)) return;
 
   session.player.spendCoins(node.cost);
-  notifyRefresh();
-
+  // Do not call notifyRefresh() here: it would trigger renderResearchSection() and replace the DOM,
+  // removing the progress overlay we add below. Coins display updates via the game loop.
   const durationMs = RESEARCH_PROGRESS_DURATION_MS;
   const endTimeMs = Date.now() + durationMs;
   researchProgressEndTimeMs.set(id, endTimeMs);

@@ -6,9 +6,10 @@ import { SaveLoadService } from '../infrastructure/SaveLoadService.js';
 import { UpgradeService } from '../domain/services/UpgradeService.js';
 import { PlanetService } from '../domain/services/PlanetService.js';
 import { loadSettings, saveSettings, type Settings } from '../settings.js';
-import { startStarfield } from '../presentation/StarfieldCanvas.js';
-import { createMineZone3D } from '../presentation/MineZone3D.js';
+import type { StarfieldApi, MineZoneCanvasApi } from './canvasApis.js';
 import { loadQuestState } from './questState.js';
+import { deserializeSession } from './sessionSerialization.js';
+import { getResearchProductionMultiplier, getUnlockedResearch } from './research.js';
 import type { QuestState } from './questState.js';
 import { emit } from './eventBus.js';
 import { PRESTIGES_TODAY_KEY } from './catalogs.js';
@@ -68,7 +69,13 @@ let expeditionDurationMs = 0;
 
 let _saveLoadInstance: SaveLoadService | null = null;
 function getSaveLoadInstance(): SaveLoadService {
-  if (!_saveLoadInstance) _saveLoadInstance = new SaveLoadService();
+  if (!_saveLoadInstance) {
+    _saveLoadInstance = new SaveLoadService({
+      deserialize: deserializeSession,
+      getResearchProductionMultiplier,
+      getUnlockedResearch,
+    });
+  }
   return _saveLoadInstance;
 }
 /** Lazy-initialized to avoid circular dependency: SaveLoadService → research → strings → gameState → SaveLoadService */
@@ -83,8 +90,8 @@ export const saveLoad = new Proxy({} as SaveLoadService, {
 
 export const upgradeService = new UpgradeService();
 export const planetService = new PlanetService();
-export let starfieldApi: ReturnType<typeof startStarfield> | null = null;
-export let mineZoneCanvasApi: ReturnType<typeof createMineZone3D> | null = null;
+export let starfieldApi: StarfieldApi | null = null;
+export let mineZoneCanvasApi: MineZoneCanvasApi | null = null;
 
 export function getSession(): GameSession {
   return session;
@@ -271,11 +278,11 @@ export function incrementPrestigesToday(): void {
   } catch {}
 }
 
-export function setStarfieldApi(api: ReturnType<typeof startStarfield> | null): void {
+export function setStarfieldApi(api: StarfieldApi | null): void {
   starfieldApi = api;
 }
 
-export function setMineZoneCanvasApi(api: ReturnType<typeof createMineZone3D> | null): void {
+export function setMineZoneCanvasApi(api: MineZoneCanvasApi | null): void {
   mineZoneCanvasApi = api;
 }
 

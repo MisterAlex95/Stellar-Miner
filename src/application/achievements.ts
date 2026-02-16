@@ -3,7 +3,7 @@ import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY, SHOOTING_STAR_CLI
 import { getSession } from './gameState.js';
 import { getQuestStreak, getQuestLastClaimAt } from './quests.js';
 import { getUnlockedResearch } from './research.js';
-import { showAchievementToast } from '../presentation/toasts.js';
+import { getPresentationPort } from './uiBridge.js';
 import achievementsData from '../data/achievements.json';
 
 export type Achievement = { id: string; name: string; check: () => boolean; secret?: boolean };
@@ -84,7 +84,7 @@ export function unlockAchievement(id: string): void {
   set.add(id);
   if (typeof localStorage !== 'undefined') localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify([...set]));
   const a = ACHIEVEMENTS.find((x) => x.id === id);
-  if (a) showAchievementToast(a.name);
+  if (a) getPresentationPort().showAchievementToast(a.name);
 }
 
 /** Check and unlock at most one achievement per call, so we never flood with multiple toasts. */
