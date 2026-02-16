@@ -1,6 +1,5 @@
 import { createMineZoneCanvas } from './MineZoneCanvas.js';
-import { getSession, getSettings, getEventContext, setSettings, setMineZoneCanvasApi, getExpeditionEndsAt, planetService } from '../application/gameState.js';
-import { getUnlockedBlocks } from '../application/progression.js';
+import { getSettings, getEventContext, setMineZoneCanvasApi } from '../application/gameState.js';
 import { t, applyTranslations, type StringKey } from '../application/strings.js';
 import {
   openSettings,
@@ -26,12 +25,9 @@ import {
   startResearchWithProgress,
   handleExportSave,
   handleImportSave,
-  openDebugMenu,
+  handleDebugAction,
   closeDebugMenu,
   toggleDebugMenu,
-  handleDebugAction,
-  updateDebugPanel,
-  renderAchievementsList,
   renderAchievementsModalContent,
   updateLastSavedIndicator,
 } from '../application/handlers.js';
@@ -41,8 +37,9 @@ import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
 import { renderResearchSection } from './researchView.js';
+import { renderUpgradeList } from './upgradeListView.js';
 import { renderStatisticsSection } from './statisticsView.js';
-import { renderDashboardSection, updateDashboard, getNextAffordableUpgrade } from './dashboardView.js';
+import { renderDashboardSection, updateDashboard } from './dashboardView.js';
 import {
   bindIntroModal,
   updateProgressionVisibility,
@@ -51,19 +48,42 @@ import {
   dismissIntroModal,
 } from './progressionView.js';
 import { initTooltips } from './tooltip.js';
-import { APP_VERSION, hasNewUpdate, markUpdateSeen } from '../application/version.js';
+import { bindSettingsForm } from './bindSettingsForm.js';
+import { wireSettingsSubscribers } from '../application/refreshSubscribers.js';
+import { APP_VERSION, hasNewUpdate } from '../application/version.js';
 import { getChangelog } from '../application/changelog.js';
 import { buildChangelogHtml } from './components/changelog.js';
 import { buildDebugPanelHtml } from './components/debugPanel.js';
 import { getOpenOverlayElement, openOverlay, closeOverlay } from './components/overlay.js';
 import { getAppHtml } from './appShell.js';
-import { getQuestProgress } from '../application/quests.js';
-import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
-import { hasEffectiveFreeSlot } from '../application/research.js';
-import { RESEARCH_CATALOG, canAttemptResearch } from '../application/research.js';
+import {
+  switchTab,
+  updateTabMenuVisibility,
+  updateTabBadges,
+  updateTabMoreActiveState,
+  applyLayout,
+  getInitialTab,
+  replaceTabState,
+  pushTabState,
+  VALID_TAB_IDS,
+  HISTORY_STATE_KEY,
+  type TabId,
+} from './mount/mountTabs.js';
+import {
+  openInfoModal,
+  closeInfoModal,
+  openAchievementsModal,
+  closeAchievementsModal,
+  openSectionRulesModal,
+  closeSectionRulesModal,
+  isAnyModalOpen,
+  SECTION_RULES_OVERLAY_CLASS,
+  ACHIEVEMENTS_OVERLAY_ID,
+  ACHIEVEMENTS_OVERLAY_OPEN_CLASS,
+} from './mount/mountModals.js';
 
-const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
-const DEFAULT_TAB = 'mine';
+export { switchTab, updateTabMenuVisibility, updateTabBadges, updateTabMoreActiveState, applyLayout } from './mount/mountTabs.js';
+
 const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
 const CHART_HELP_OVERLAY_ID = 'chart-help-overlay';
@@ -81,331 +101,6 @@ const COLLAPSIBLE_SECTION_IDS = [
 ];
 const STATS_COMPACT_ENTER = 70;
 const STATS_COMPACT_LEAVE = 35;
-const VALID_TAB_IDS = ['mine', 'dashboard', 'empire', 'research', 'upgrades', 'stats'] as const;
-type TabId = (typeof VALID_TAB_IDS)[number];
-
-const HISTORY_STATE_KEY = 'tab';
-
-function getTabFromHash(): TabId | null {
-  if (typeof location === 'undefined' || !location.hash) return null;
-  const id = location.hash.slice(1).toLowerCase();
-  return VALID_TAB_IDS.includes(id as TabId) ? (id as TabId) : null;
-}
-
-function getInitialTab(): TabId {
-  const fromHash = getTabFromHash();
-  if (fromHash) return fromHash;
-  const stored =
-    typeof localStorage !== 'undefined' ? localStorage.getItem(TAB_STORAGE_KEY) : null;
-  return stored && VALID_TAB_IDS.includes(stored as TabId) ? (stored as TabId) : DEFAULT_TAB;
-}
-
-function pushTabState(tabId: string): void {
-  if (typeof history === 'undefined') return;
-  const url = `${location.pathname}${location.search}#${tabId}`;
-  history.pushState({ [HISTORY_STATE_KEY]: tabId }, '', url);
-}
-
-function replaceTabState(tabId: string): void {
-  if (typeof history === 'undefined') return;
-  const url = `${location.pathname}${location.search}#${tabId}`;
-  history.replaceState({ [HISTORY_STATE_KEY]: tabId }, '', url);
-}
-
-function isAnyModalOpen(): boolean {
-  return getOpenOverlayElement() !== null;
-}
-
-function openInfoModal(): void {
-  const list = document.getElementById('info-changelog-list');
-  openOverlay('info-overlay', 'info-overlay--open', {
-    focusId: 'info-close',
-    onOpen: () => {
-      markUpdateSeen();
-      updateVersionAndChangelogUI();
-      if (list) renderChangelogList(list);
-    },
-  });
-}
-
-function closeInfoModal(): void {
-  closeOverlay('info-overlay', 'info-overlay--open');
-}
-
-const ACHIEVEMENTS_OVERLAY_ID = 'achievements-overlay';
-const ACHIEVEMENTS_OVERLAY_OPEN_CLASS = 'achievements-overlay--open';
-
-function openAchievementsModal(): void {
-  const list = document.getElementById('achievements-modal-list');
-  openOverlay(ACHIEVEMENTS_OVERLAY_ID, ACHIEVEMENTS_OVERLAY_OPEN_CLASS, {
-    focusId: 'achievements-modal-close',
-    onOpen: () => {
-      if (list) renderAchievementsModalContent(list);
-    },
-  });
-}
-
-function closeAchievementsModal(): void {
-  closeOverlay(ACHIEVEMENTS_OVERLAY_ID, ACHIEVEMENTS_OVERLAY_OPEN_CLASS);
-}
-
-const SECTION_RULES_OVERLAY_CLASS = 'section-rules-overlay--open';
-
-/** Parses rules text: lines starting with "- " or "• " become list items; others become paragraphs. */
-function formatRulesContent(text: string): DocumentFragment {
-  const frag = document.createDocumentFragment();
-  const lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean);
-  let ul: HTMLUListElement | null = null;
-  for (const line of lines) {
-    const isListItem = line.startsWith('- ') || line.startsWith('• ');
-    const content = isListItem ? line.slice(2).trim() : line;
-    if (isListItem) {
-      if (!ul) {
-        ul = document.createElement('ul');
-        ul.className = 'section-rules-list';
-        frag.appendChild(ul);
-      }
-      const li = document.createElement('li');
-      li.textContent = content;
-      ul.appendChild(li);
-    } else {
-      ul = null;
-      const p = document.createElement('p');
-      p.textContent = content;
-      frag.appendChild(p);
-    }
-  }
-  return frag;
-}
-
-function openSectionRulesModal(rulesKey: string, titleKey: string): void {
-  const titleEl = document.getElementById('section-rules-title');
-  const bodyEl = document.getElementById('section-rules-body');
-  if (titleEl) titleEl.textContent = t(titleKey as StringKey);
-  if (bodyEl) {
-    bodyEl.innerHTML = '';
-    bodyEl.appendChild(formatRulesContent(t(rulesKey as StringKey)));
-  }
-  openOverlay('section-rules-overlay', SECTION_RULES_OVERLAY_CLASS, { focusId: 'section-rules-close' });
-}
-
-function closeSectionRulesModal(): void {
-  closeOverlay('section-rules-overlay', SECTION_RULES_OVERLAY_CLASS);
-}
-
-export function switchTab(tabId: string): void {
-  const tabs = document.querySelectorAll<HTMLElement>('.app-tab[data-tab]');
-  const panels = document.querySelectorAll('.app-tab-panel');
-  tabs.forEach((tab) => {
-    const isSelected = tab.getAttribute('data-tab') === tabId;
-    tab.classList.toggle('app-tab--active', isSelected);
-    tab.setAttribute('aria-selected', String(isSelected));
-  });
-  panels.forEach((panel) => {
-    const p = panel as HTMLElement;
-    const isSelected = p.getAttribute('data-tab') === tabId;
-    p.classList.toggle('app-tab-panel--active', isSelected);
-    p.hidden = !isSelected;
-  });
-  document.querySelectorAll<HTMLElement>('.app-tab-bottom[data-tab]').forEach((tab) => {
-    const isSelected = tab.getAttribute('data-tab') === tabId;
-    tab.classList.toggle('app-tab-bottom--active', isSelected);
-    tab.setAttribute('aria-selected', String(isSelected));
-  });
-  try {
-    localStorage.setItem(TAB_STORAGE_KEY, tabId);
-  } catch {
-    // ignore
-  }
-  if (tabId === 'research') renderResearchSection();
-  if (tabId === 'dashboard') renderDashboardSection();
-  document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
-    item.classList.toggle('app-tabs-menu-item--active', item.getAttribute('data-tab') === tabId);
-  });
-  document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
-    item.classList.toggle('app-tabs-bottom-menu-item--active', item.getAttribute('data-tab') === tabId);
-  });
-  const tabBottomMore = document.getElementById('tab-bottom-more');
-  const isOverflowTab = ['dashboard', 'research', 'upgrades', 'stats'].includes(tabId);
-  if (tabBottomMore) tabBottomMore.classList.toggle('app-tab-bottom-more--active', isOverflowTab);
-  const app = document.getElementById('app');
-  if (app) app.setAttribute('data-active-tab', tabId);
-  updateTabMoreActiveState();
-}
-
-/** Show menu items only when the tab is unlocked (progression). When unlocked, CSS media queries control at which viewport they appear. */
-export function updateTabMenuVisibility(): void {
-  const session = getSession();
-  const unlocked = getUnlockedBlocks(session);
-  const isUnlockedFor = (tabId: string) =>
-    tabId === 'mine' ||
-    tabId === 'dashboard' ||
-    (tabId === 'upgrades' && unlocked.has('upgrades')) ||
-    (tabId === 'empire' && (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
-    (tabId === 'research' && unlocked.has('research')) ||
-    (tabId === 'stats' && unlocked.has('upgrades'));
-  document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
-    const tabId = item.getAttribute('data-tab');
-    if (!tabId) return;
-    item.style.display = isUnlockedFor(tabId) ? '' : 'none';
-  });
-  document.querySelectorAll<HTMLElement>('.app-tab-bottom[data-tab]').forEach((tab) => {
-    const tabId = tab.getAttribute('data-tab');
-    if (!tabId) return;
-    tab.style.display = isUnlockedFor(tabId) ? '' : 'none';
-  });
-  document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
-    const tabId = item.getAttribute('data-tab');
-    if (!tabId) return;
-    item.style.display = isUnlockedFor(tabId) ? '' : 'none';
-  });
-  updateTabMoreWrapVisibility();
-  updateTabBottomMoreWrapVisibility();
-}
-
-/** Hide ⋯ button when no menu item is visible (dropdown would be empty). */
-function updateTabMoreWrapVisibility(): void {
-  const wrap = document.querySelector<HTMLElement>('.app-tabs-more-wrap');
-  if (!wrap) return;
-  const hasVisibleItem = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-menu-item')).some(
-    (el) => getComputedStyle(el).display !== 'none'
-  );
-  wrap.classList.toggle('app-tabs-more-wrap--empty', !hasVisibleItem);
-}
-
-/** Hide bottom ⋯ when no bottom menu item is visible. */
-function updateTabBottomMoreWrapVisibility(): void {
-  const wrap = document.querySelector<HTMLElement>('.app-tabs-bottom-more-wrap');
-  if (!wrap) return;
-  const hasVisibleItem = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item')).some(
-    (el) => getComputedStyle(el).display !== 'none'
-  );
-  wrap.classList.toggle('app-tabs-bottom-more-wrap--empty', !hasVisibleItem);
-}
-
-/** Update tab badges (dot) when there is something to do: quest claimable (Mine), prestige available (Empire), research attemptable (Research). */
-export function updateTabBadges(): void {
-  const session = getSession();
-  const unlocked = session ? getUnlockedBlocks(session) : new Set<string>();
-  const questProgress = getQuestProgress();
-  const questClaimable = questProgress?.done ?? false;
-  const canPrestige = session?.player.coins.gte(PRESTIGE_COIN_THRESHOLD) ?? false;
-  const prestigeUnlocked = unlocked.has('prestige');
-  const researchUnlocked = unlocked.has('research');
-  const hasAttemptableResearch =
-    researchUnlocked &&
-    session &&
-    RESEARCH_CATALOG.some((n) => canAttemptResearch(n.id) && session.player.coins.gte(n.cost));
-
-  const upgradesUnlocked = unlocked.has('upgrades');
-  const hasAffordableUpgrade = upgradesUnlocked && getNextAffordableUpgrade() !== null;
-
-  const empireUnlocked = unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige');
-  let hasEmpireAction = prestigeUnlocked && canPrestige;
-  if (session && !hasEmpireAction) {
-    const player = session.player;
-    if (unlocked.has('crew')) {
-      const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
-      const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
-      const atCap = player.astronautCount >= maxCrew;
-      if (!atCap && player.coins.gte(getAstronautCost(player.freeCrewCount))) hasEmpireAction = true;
-    }
-    if (!hasEmpireAction && unlocked.has('planets') && getExpeditionEndsAt() === null && planetService.canLaunchExpedition(player))
-      hasEmpireAction = true;
-    if (!hasEmpireAction && player.planets.some((p) => planetService.canAddSlot(player, p))) hasEmpireAction = true;
-    if (!hasEmpireAction && player.planets.some((p) => planetService.canBuildHousing(player, p, hasEffectiveFreeSlot)))
-      hasEmpireAction = true;
-  }
-
-  const questUnlocked = unlocked.has('quest');
-  setTabBadge('mine', questUnlocked && questClaimable);
-  setTabBadge('empire', empireUnlocked && hasEmpireAction);
-  setTabBadge('research', hasAttemptableResearch);
-  setTabBadge('dashboard', false);
-  setTabBadge('upgrades', hasAffordableUpgrade);
-  setTabBadge('stats', false);
-  updateTabMoreHasAction();
-}
-
-function updateTabMoreHasAction(): void {
-  const tabMore = document.getElementById('tab-more');
-  if (tabMore) {
-    const hasActionInOverflow = Array.from(document.querySelectorAll<HTMLElement>('.app-tab[data-tab]')).some(
-      (tab) => {
-        const isHidden = tab.offsetParent === null || getComputedStyle(tab).display === 'none';
-        return isHidden && tab.classList.contains('app-tab--has-action');
-      }
-    );
-    tabMore.classList.toggle('app-tab-more--has-action', hasActionInOverflow);
-  }
-  const tabBottomMore = document.getElementById('tab-bottom-more');
-  if (tabBottomMore) {
-    const hasActionInBottomMenu = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item')).some(
-      (item) => item.classList.contains('app-tabs-bottom-menu-item--has-action')
-    );
-    tabBottomMore.classList.toggle('app-tab-bottom-more--has-action', hasActionInBottomMenu);
-  }
-}
-
-function setTabBadge(tabId: string, visible: boolean): void {
-  const tabEl = document.getElementById(`tab-${tabId}`);
-  if (tabEl) tabEl.classList.toggle('app-tab--has-action', visible);
-  document.querySelectorAll(`.app-tabs-menu-item[data-tab="${tabId}"]`).forEach((el) => {
-    el.classList.toggle('app-tabs-menu-item--has-action', visible);
-  });
-  document.querySelectorAll(`.app-tabs-bottom-menu-item[data-tab="${tabId}"]`).forEach((el) => {
-    el.classList.toggle('app-tabs-bottom-menu-item--has-action', visible);
-  });
-  document.querySelectorAll(`.app-tab-bottom[data-tab="${tabId}"]`).forEach((el) => {
-    el.classList.toggle('app-tab-bottom--has-action', visible);
-  });
-}
-
-/** Update ⋯ button orange state: only active when current tab is hidden (in overflow menu). Call from switchTab and from game loop on resize. */
-export function updateTabMoreActiveState(): void {
-  const tabMore = document.getElementById('tab-more');
-  if (!tabMore) return;
-  const activeTab = document.querySelector<HTMLElement>('.app-tab[data-tab].app-tab--active');
-  const tabId = activeTab?.getAttribute('data-tab');
-  if (!tabId) return;
-  const activeTabEl = document.querySelector<HTMLElement>(`.app-tab[data-tab="${tabId}"]`);
-  const isActiveTabHidden = activeTabEl ? activeTabEl.offsetParent === null || getComputedStyle(activeTabEl).display === 'none' : false;
-  tabMore.classList.toggle('app-tab-more--active', isActiveTabHidden);
-}
-
-/** Apply layout mode: tabs (one panel at a time) or one-page (all sections stacked). */
-export function applyLayout(): void {
-  const layout = getSettings().layout;
-  const app = document.getElementById('app');
-  const tabsNav = document.querySelector('.app-tabs') as HTMLElement | null;
-  const panels = document.querySelectorAll<HTMLElement>('.app-tab-panel');
-  if (app) app.setAttribute('data-layout', layout);
-  if (layout === 'one-page') {
-    if (tabsNav) tabsNav.style.display = 'none';
-    panels.forEach((p) => {
-      p.style.display = 'block';
-      p.hidden = false;
-    });
-  } else {
-    if (tabsNav) tabsNav.style.display = '';
-    panels.forEach((p) => {
-      p.style.display = '';
-    });
-    const activeId =
-      document.querySelector('.app-tab--active')?.getAttribute('data-tab') ||
-      localStorage.getItem(TAB_STORAGE_KEY) ||
-      DEFAULT_TAB;
-    const validId = VALID_TAB_IDS.includes(activeId as (typeof VALID_TAB_IDS)[number]) ? activeId : DEFAULT_TAB;
-    switchTab(validId);
-  }
-}
-
-function applyThemeAndMotion(): void {
-  const s = getSettings();
-  const root = document.documentElement;
-  root.setAttribute('data-theme', s.theme);
-  root.setAttribute('data-reduced-motion', s.reducedMotion ? 'true' : 'false');
-}
 
 function renderChangelogList(container: HTMLElement): void {
   container.innerHTML = buildChangelogHtml(getChangelog());
@@ -420,6 +115,13 @@ export function updateVersionAndChangelogUI(): void {
     badge.classList.toggle('info-update-badge--visible', show);
     badge.setAttribute('aria-hidden', String(!show));
   }
+}
+
+function applyThemeAndMotion(): void {
+  const s = getSettings();
+  const root = document.documentElement;
+  root.setAttribute('data-theme', s.theme);
+  root.setAttribute('data-reduced-motion', s.reducedMotion ? 'true' : 'false');
 }
 
 export function mount(): void {
@@ -499,7 +201,7 @@ export function mount(): void {
   const infoOverlay = document.getElementById('info-overlay');
   const infoClose = document.getElementById('info-close');
   if (infoBtn && infoOverlay) {
-    infoBtn.addEventListener('click', openInfoModal);
+    infoBtn.addEventListener('click', () => openInfoModal(updateVersionAndChangelogUI, renderChangelogList));
     infoOverlay.addEventListener('click', (e) => {
       if (e.target === infoOverlay) closeInfoModal();
     });
@@ -614,89 +316,13 @@ export function mount(): void {
   subscribe('save_success', () => updateLastSavedIndicator());
 
   // --- Settings form: inputs, export/import, reset, achievements ---
-  const starfieldSpeedEl = document.getElementById('setting-starfield-speed') as HTMLSelectElement | null;
-  const orbitLinesEl = document.getElementById('setting-orbit-lines') as HTMLInputElement | null;
-  const clickParticlesEl = document.getElementById('setting-click-particles') as HTMLInputElement | null;
-  const compactNumbersEl = document.getElementById('setting-compact-numbers') as HTMLInputElement | null;
-  const spaceKeyRepeatEl = document.getElementById('setting-space-key-repeat') as HTMLInputElement | null;
-  const layoutEl = document.getElementById('setting-layout') as HTMLSelectElement | null;
-  const pauseBackgroundEl = document.getElementById('setting-pause-background') as HTMLInputElement | null;
-  const themeEl = document.getElementById('setting-theme') as HTMLSelectElement | null;
-  const languageEl = document.getElementById('setting-language') as HTMLSelectElement | null;
-  const soundEl = document.getElementById('setting-sound') as HTMLInputElement | null;
-  const reducedMotionEl = document.getElementById('setting-reduced-motion') as HTMLInputElement | null;
-  if (starfieldSpeedEl) starfieldSpeedEl.value = String(settings.starfieldSpeed);
-  if (orbitLinesEl) orbitLinesEl.checked = settings.showOrbitLines;
-  if (clickParticlesEl) clickParticlesEl.checked = settings.clickParticles;
-  if (compactNumbersEl) compactNumbersEl.checked = settings.compactNumbers;
-  if (spaceKeyRepeatEl) spaceKeyRepeatEl.checked = settings.spaceKeyRepeat;
-  if (layoutEl) layoutEl.value = settings.layout;
-  if (pauseBackgroundEl) pauseBackgroundEl.checked = settings.pauseWhenBackground;
-  if (themeEl) themeEl.value = settings.theme;
-  if (languageEl) languageEl.value = settings.language;
-  if (soundEl) soundEl.checked = settings.soundEnabled;
-  if (reducedMotionEl) reducedMotionEl.checked = settings.reducedMotion;
-  if (starfieldSpeedEl) starfieldSpeedEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.starfieldSpeed = Number(starfieldSpeedEl.value);
-    setSettings(s);
-  });
-  if (orbitLinesEl) orbitLinesEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.showOrbitLines = orbitLinesEl.checked;
-    setSettings(s);
-  });
-  if (clickParticlesEl) clickParticlesEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.clickParticles = clickParticlesEl.checked;
-    setSettings(s);
-  });
-  if (compactNumbersEl) compactNumbersEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.compactNumbers = compactNumbersEl.checked;
-    setSettings(s);
-    applySettingsToUI();
-  });
-  if (spaceKeyRepeatEl) spaceKeyRepeatEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.spaceKeyRepeat = spaceKeyRepeatEl.checked;
-    setSettings(s);
-  });
-  if (layoutEl) layoutEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.layout = layoutEl.value as 'tabs' | 'one-page';
-    setSettings(s);
+  wireSettingsSubscribers(() => {
+    applyThemeAndMotion();
     applyLayout();
-  });
-  if (pauseBackgroundEl) pauseBackgroundEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.pauseWhenBackground = pauseBackgroundEl.checked;
-    setSettings(s);
-  });
-  if (themeEl) themeEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.theme = themeEl.value as 'light' | 'dark';
-    setSettings(s);
-    applyThemeAndMotion();
-  });
-  if (languageEl) languageEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.language = languageEl.value as 'en' | 'fr';
-    setSettings(s);
-    applyTranslations();
     applySettingsToUI();
+    applyTranslations();
   });
-  if (soundEl) soundEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.soundEnabled = soundEl.checked;
-    setSettings(s);
-  });
-  if (reducedMotionEl) reducedMotionEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.reducedMotion = reducedMotionEl.checked;
-    setSettings(s);
-    applyThemeAndMotion();
-  });
+  bindSettingsForm();
 
   const exportBtn = document.getElementById('settings-export-btn');
   const importBtn = document.getElementById('settings-import-btn');

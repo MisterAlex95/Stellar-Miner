@@ -2,6 +2,7 @@
  * Shared overlay open/close behavior: add/remove open class, aria-hidden, optional focus and onOpen callback.
  * Use with overlays created via createModalOverlay or any div that uses a --open modifier class.
  */
+import { getElement } from './domUtils.js';
 
 export interface OverlaySpec {
   id: string;
@@ -34,13 +35,13 @@ export function openOverlay(
   openClass: string,
   options?: OpenOverlayOptions
 ): void {
-  const overlay = document.getElementById(overlayId);
+  const overlay = getElement(overlayId);
   if (!overlay) return;
   overlay.classList.add(openClass);
   overlay.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => {
     options?.onOpen?.();
-    if (options?.focusId) document.getElementById(options.focusId)?.focus();
+    if (options?.focusId) getElement(options.focusId)?.focus();
   });
 }
 
@@ -48,7 +49,7 @@ export function openOverlay(
  * Closes an overlay: removes openClass and sets aria-hidden="true".
  */
 export function closeOverlay(overlayId: string, openClass: string): void {
-  const overlay = document.getElementById(overlayId);
+  const overlay = getElement(overlayId);
   if (overlay) {
     overlay.classList.remove(openClass);
     overlay.setAttribute('aria-hidden', 'true');
@@ -59,7 +60,7 @@ export function closeOverlay(overlayId: string, openClass: string): void {
  * Returns true if the given overlay has its open class.
  */
 export function isOverlayOpen(overlayId: string, openClass: string): boolean {
-  const overlay = document.getElementById(overlayId);
+  const overlay = getElement(overlayId);
   return overlay?.classList.contains(openClass) ?? false;
 }
 
@@ -69,7 +70,7 @@ export function isOverlayOpen(overlayId: string, openClass: string): boolean {
  */
 export function getOpenOverlayElement(): HTMLElement | null {
   for (const { id, openClass } of OVERLAYS) {
-    if (isOverlayOpen(id, openClass)) return document.getElementById(id);
+    if (isOverlayOpen(id, openClass)) return getElement(id);
   }
   return null;
 }

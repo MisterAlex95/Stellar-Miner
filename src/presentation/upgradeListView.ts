@@ -10,7 +10,7 @@ import { getPlanetDisplayName } from '../application/solarSystems.js';
 import { t, tParam } from '../application/strings.js';
 import { formatNumber } from '../application/format.js';
 import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
-import { updateStats } from './statsView.js';
+import { notifyRefresh } from '../application/refreshSignal.js';
 import { updateTooltipForButton } from './components/buttonTooltip.js';
 import { getUpgradeCardState, buildUpgradeCardHtml } from './components/upgradeCard.js';
 
@@ -222,8 +222,7 @@ export function updateUpgradeListInPlace(): void {
     if (select) {
       const planetsForSelect = state.needsSlot ? player.getPlanetsWithFreeSlot() : player.planets;
       if (planetsForSelect.length !== select.options.length) {
-        updateStats();
-        renderUpgradeList();
+        notifyRefresh();
         return;
       }
       const selectedId = select.options[select.selectedIndex]?.value;

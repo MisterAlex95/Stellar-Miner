@@ -10,6 +10,7 @@ import {
   addRunCoins,
   updateRunMaxComboMult,
 } from './gameState.js';
+import { notifyRefresh } from './refreshSignal.js';
 import {
   LAST_DAILY_BONUS_KEY,
   DAILY_BONUS_COINS,
@@ -32,9 +33,6 @@ import { getQuestProgress } from './quests.js';
 import { incrementTotalClicksEver } from './achievements.js';
 import { checkAchievements } from './achievements.js';
 import { checkAndShowMilestones } from './milestones.js';
-import { updateStats } from '../presentation/statsView.js';
-import { renderUpgradeList } from '../presentation/upgradeListView.js';
-import { renderQuestSection } from '../presentation/questView.js';
 import { updateComboIndicator } from '../presentation/comboView.js';
 import {
   showFloatingCoin,
@@ -43,20 +41,16 @@ import {
   showDailyBonusToast,
 } from '../presentation/toasts.js';
 import { getResearchClickMultiplier } from './research.js';
-import { saveSession } from './handlersSave.js';
 
 const SHAKE_DURATION_MS = 400;
 
 function checkQuestProgress(): void {
   const p = getQuestProgress();
-  if (p?.done) renderQuestSection();
+  if (p?.done) notifyRefresh();
 }
 
 function refreshAfterMine(): void {
-  saveSession();
-  updateStats();
-  renderUpgradeList();
-  renderQuestSection();
+  notifyRefresh();
 }
 
 function triggerShake(): void {

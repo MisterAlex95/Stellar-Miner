@@ -119,7 +119,20 @@ Events that occur in the domain and can trigger side effects.
 
 ---
 
-## 9. Code References (TypeScript)
+## 9. Reactive UI Flow
+
+State changes trigger UI refresh through a batched pipeline:
+
+1. **Observables** (`gameState.ts`) — `sessionStore`, `settingsStore`, `activeEventsStore`, `questStateStore` hold reactive state.
+2. **Refresh signal** (`refreshSignal.ts`) — `notifyRefresh()` schedules listeners for the next `requestAnimationFrame`; multiple rapid calls coalesce into one.
+3. **Subscribers** (`refreshSubscribers.ts`) — `sessionStore` and domain events (upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired) call `notifyRefresh()`; `subscribeRefresh(refreshViews)` runs the full refresh.
+4. **Refresh views** (`game.ts`) — `createRefreshViews()` runs `saveSession`, `updateStats`, and renders only **hydrated** panels (see below).
+
+**Lazy loading** — Tab panels (upgrades, empire, research, dashboard, stats) render only when the user first switches to that tab. `lazyPanels.ts` tracks `hydratedPanels`; `switchTab` calls `markPanelHydrated(id)` and renders the panel; `createRefreshViews` skips non-hydrated panels to avoid unnecessary DOM work.
+
+---
+
+## 10. Code References (TypeScript)
 
 - **Player**: `src/domain/entities/Player.ts` — `Player.create(id)`, `addCoins`, `spendCoins`, `setProductionRate`, `planets`, `effectiveProductionRate`, `hireAstronaut`, `spendAstronauts`, `Player.createAfterPrestige`.
 - **Planet**: `src/domain/entities/Planet.ts` — `Planet.create`, `addUpgrade`, `hasFreeSlot`, `usedSlots`, `maxUpgrades`.
@@ -137,11 +150,14 @@ Events that occur in the domain and can trigger side effects.
 - **Version & changelog**: `src/application/version.ts`, `src/application/changelog.ts` — app version (from package.json at build), "What's new" modal; `src/data/changelog.json` (newest first).
 - **Persistence**: `src/infrastructure/SaveLoadService.ts` — save/load/export/import, offline progress (capped), `SAVE_VERSION`, `isSavedSession()`, `validateSavePayload()`; `src/settings.ts` — user settings (starfield, layout, pause when background, theme, soundEnabled, reducedMotion).
 - **Event bus**: `src/application/eventBus.ts` — `subscribe(kind, fn)`, `emit(kind, payload)` for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed.
-- **Strings**: `src/application/strings.ts` — `strings` map and `t(key)` for UI copy (invalid save, offline banner, etc.).
+- **Refresh signal**: `src/application/refreshSignal.ts` — `notifyRefresh()`, `subscribeRefresh(fn)`; batches calls into one rAF.
+- **Refresh subscribers**: `src/application/refreshSubscribers.ts` — `wireRefreshSubscribers`, `wireEventBusToRefresh`, `wireSettingsSubscribers`; wires observables and events to UI refresh.
+- **Lazy panels**: `src/application/lazyPanels.ts` — `markPanelHydrated`, `isPanelHydrated`, `resetPanelHydration`; tracks which tab panels have been rendered.
+- **Strings**: `src/application/strings.ts` — `strings` map and `t(key)` for UI copy (invalid save, offline banner, etc.); language modules in `strings/en.ts`, `strings/fr.ts`.
 
 ---
 
-## 10. Current Flows (Summary)
+## 11. Current Flows (Summary)
 
 - **Mine click**: Handlers → mine click (lucky/critical), combo tracking, coins, toasts; game loop applies passive production and event multiplier.
 - **Buy upgrade**: Handlers → PlanetService/UpgradeService (planet choice if multiple slots); persistence on interval.
@@ -155,7 +171,7 @@ Events that occur in the domain and can trigger side effects.
 
 ---
 
-## 11. Implemented Improvements
+## 12. Implemented Improvements
 
 1. **Accessibility** — ARIA on tablist/tabs/panels and modals; keyboard: 1–4 switch tabs, Tab trapped in open modal, Escape closes modal; focus moved to first focusable when opening settings/reset/prestige; **Reduce motion** setting with `data-reduced-motion` and matching CSS.
 2. **Error handling** — Save retries once on failure; **`isSavedSession()`** type guard before deserialize; **offline banner** when `navigator.onLine` is false (see `strings.offlineIndicator`).
@@ -172,7 +188,7 @@ Events that occur in the domain and can trigger side effects.
 
 ---
 
-## 12. Game rules (how to play)
+## 13. Game rules (how to play)
 
 Summary of the game’s rules and numbers. Exact values come from **balance.json**, **gameConfig.json**, **progression.json**, and the data catalogs.
 

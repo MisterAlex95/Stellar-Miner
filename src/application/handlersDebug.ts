@@ -7,11 +7,7 @@ import { pushActiveEventInstance } from './gameState.js';
 import { ACHIEVEMENTS, getUnlockedAchievements } from './achievements.js';
 import { getCatalogAchievementName, getCatalogAchievementDesc } from './i18nCatalogs.js';
 import { t } from './strings.js';
-import { updateStats } from '../presentation/statsView.js';
-import { renderUpgradeList } from '../presentation/upgradeListView.js';
-import { renderPlanetList } from '../presentation/planetListView.js';
-import { renderPrestigeSection } from '../presentation/prestigeView.js';
-import { saveSession } from './handlersSave.js';
+import { notifyRefresh } from './refreshSignal.js';
 import { showEventToast } from '../presentation/toasts.js';
 
 const DEBUG_PANEL_ID = 'debug-panel';
@@ -21,11 +17,7 @@ function getDebugPanel(): HTMLElement | null {
 }
 
 function refreshAfterDebugAction(): void {
-  saveSession();
-  updateStats();
-  renderUpgradeList();
-  renderPlanetList();
-  renderPrestigeSection();
+  notifyRefresh();
   updateDebugPanel();
 }
 
@@ -36,6 +28,7 @@ export function triggerRandomEvent(): void {
   incrementRunEventsTriggered();
   addDiscoveredEvent(event.id);
   showEventToast(event);
+  notifyRefresh();
 }
 
 export function openDebugMenu(): void {

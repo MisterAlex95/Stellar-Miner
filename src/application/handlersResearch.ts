@@ -11,12 +11,9 @@ import {
 } from './research.js';
 import { getCatalogUpgradeName } from './i18nCatalogs.js';
 import { t, tParam } from './strings.js';
-import { updateStats } from '../presentation/statsView.js';
-import { renderUpgradeList } from '../presentation/upgradeListView.js';
 import { renderResearchSection } from '../presentation/researchView.js';
-import { renderCrewSection } from '../presentation/crewView.js';
+import { notifyRefresh } from './refreshSignal.js';
 import { showMiniMilestoneToast } from '../presentation/toasts.js';
-import { saveSession } from './handlersSave.js';
 import { checkAchievements } from './achievements.js';
 
 const RESEARCH_PROGRESS_DURATION_MS = 2500;
@@ -52,12 +49,10 @@ function addProgressOverlayToCard(cardEl: HTMLElement, id: string, endTimeMs: nu
   }
 }
 
-function refreshAfterResearch(researchId: string, opts: { crew?: boolean } = {}): void {
+function refreshAfterResearch(researchId: string): void {
   removeResearchInProgress(researchId);
   researchProgressEndTimeMs.delete(researchId);
-  saveSession();
-  updateStats();
-  renderUpgradeList();
+  notifyRefresh();
   renderResearchSection();
   const remainingIds = getResearchInProgressIds();
   for (const id of remainingIds) {
@@ -65,7 +60,6 @@ function refreshAfterResearch(researchId: string, opts: { crew?: boolean } = {})
     const card = document.querySelector<HTMLElement>(`[data-research-id="${id}"]`);
     if (card && endMs) addProgressOverlayToCard(card, id, endMs);
   }
-  if (opts.crew) renderCrewSection();
 }
 
 export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?: boolean }): void {
@@ -96,7 +90,7 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
         needsCrewRefresh = true;
       }
     }
-    refreshAfterResearch(id, { crew: needsCrewRefresh });
+    refreshAfterResearch(id);
     showMiniMilestoneToast(result.message);
     checkAchievements();
   } else {
@@ -116,8 +110,7 @@ export function startResearchWithProgress(cardEl: HTMLElement, id: string): void
   if (!node || !canAttemptResearch(id) || !session.player.coins.gte(node.cost)) return;
 
   session.player.spendCoins(node.cost);
-  saveSession();
-  updateStats();
+  notifyRefresh();
 
   const durationMs = RESEARCH_PROGRESS_DURATION_MS;
   const endTimeMs = Date.now() + durationMs;

@@ -1,5 +1,49 @@
 [
   {
+    "version": "0.4.34",
+    "date": "2026-02-16",
+    "changes": [
+      "Batch DOM updates: notifyRefresh coalesces into requestAnimationFrame. Lazy load panels: upgrades, empire, research, dashboard, stats render only when first viewed.",
+      "Code organization: domHelper→domUtils, generic builders, components barrel. Split mount (mountTabs, mountModals), strings (en/fr), dashboard (dashboardHelpers).",
+      "Display: pause canvas when tab hidden; batch DOM reads in updateStats; will-change + contain on animated elements."
+    ]
+  },
+  {
+    "version": "0.4.33",
+    "date": "2026-02-16",
+    "changes": [
+      "activeEventsStore, questStateStore observables. Game loop: runProductionTick, runPanelUpdates, runCanvasUpdates. getElement DOM helper. withErrorBoundary for refresh. performance.measure for refresh timing."
+    ]
+  },
+  {
+    "version": "0.4.32",
+    "date": "2026-02-16",
+    "changes": [
+      "EventBus: wire domain events (upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired) to notifyRefresh. createThrottledRun for panel updates."
+    ]
+  },
+  {
+    "version": "0.4.31",
+    "date": "2026-02-16",
+    "changes": [
+      "Observable migration: refresh now includes updateProgressionVisibility, updateTabMenuVisibility, updateTabVisibility, updateTabBadges for reactive tab/progression UI."
+    ]
+  },
+  {
+    "version": "0.4.30",
+    "date": "2026-02-16",
+    "changes": [
+      "Observable migration: notifyRefresh in completeUpgradeInstallations, triggerRandomEvent. Refresh includes renderResearchSection, updateStatisticsSection. Removed redundant renderCrewSection/renderPrestigeSection from refresh (updateStats does them)."
+    ]
+  },
+  {
+    "version": "0.4.29",
+    "date": "2026-02-16",
+    "changes": [
+      "Observable pattern: sessionStore, settingsStore, refreshSignal. Handlers emit notifyRefresh; UI subscribes reactively. Dashboard in refresh."
+    ]
+  },
+  {
     "version": "0.4.27",
     "date": "2026-02-16",
     "changes": [

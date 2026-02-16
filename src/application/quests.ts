@@ -319,10 +319,7 @@ export function getQuestLastClaimAt(): number {
 }
 
 export type ClaimQuestCallbacks = {
-  saveSession: () => void;
-  updateStats: () => void;
-  renderUpgradeList: () => void;
-  renderQuestSection: () => void;
+  notifyRefresh: () => void;
   showFloatingReward: (amount: number, anchor: HTMLElement) => void;
   showQuestStreakToast: (streak: number, mult: number) => void;
   checkAchievements: () => void;
@@ -351,10 +348,7 @@ export function claimQuest(callbacks: ClaimQuestCallbacks): boolean {
     localStorage.setItem(QUEST_STREAK_KEY, String(streak));
   }
   saveQuestState(newState);
-  callbacks.saveSession();
-  callbacks.updateStats();
-  callbacks.renderUpgradeList();
-  callbacks.renderQuestSection();
+  callbacks.notifyRefresh();
   const claimBtn = document.getElementById('quest-claim');
   if (claimBtn) callbacks.showFloatingReward(reward, claimBtn);
   if (streak > 1) callbacks.showQuestStreakToast(streak, bonusMult);

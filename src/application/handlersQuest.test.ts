@@ -3,7 +3,7 @@ import { setSession, getSession, getQuestState, setQuestState } from './gameStat
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { handleClaimQuest } from './handlersQuest.js';
-import { saveSession } from './handlersSave.js';
+import { notifyRefresh } from './refreshSignal.js';
 
 vi.mock('../presentation/statsView.js', () => ({ updateStats: vi.fn() }));
 vi.mock('../presentation/upgradeListView.js', () => ({ renderUpgradeList: vi.fn() }));
@@ -13,7 +13,7 @@ vi.mock('../presentation/toasts.js', () => ({
   showQuestStreakToast: vi.fn(),
 }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
-vi.mock('./handlersSave.js', () => ({ saveSession: vi.fn() }));
+vi.mock('./refreshSignal.js', () => ({ notifyRefresh: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));
 
 describe('handlersQuest', () => {
@@ -85,11 +85,11 @@ describe('handlersQuest', () => {
     expect(getQuestState().quest).not.toBeNull();
   });
 
-  it('calls saveSession when claim succeeds', () => {
+  it('calls notifyRefresh when claim succeeds', () => {
     setQuestState({
       quest: { type: 'coins', target: 100, reward: 500, description: 'Reach 100 coins' },
     });
     handleClaimQuest();
-    expect(saveSession).toHaveBeenCalled();
+    expect(notifyRefresh).toHaveBeenCalled();
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Decimal } from '../domain/bigNumber.js';
-import { getPlanetBaseProduction, getPlanetEffectiveProduction } from './productionHelpers.js';
+import { getPlanetBaseProduction, getPlanetEffectiveProduction, getEstimatedClickRate } from './productionHelpers.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 
@@ -28,6 +28,20 @@ describe('productionHelpers', () => {
     const session = new GameSession('s1', player);
     const planet = { id: 'planet-1', upgrades: [{ id: 'drill-mk1', effect: { coinsPerSecond: new Decimal(10) } }] };
     expect(getPlanetEffectiveProduction(planet, session).toNumber()).toBe(0);
+  });
+
+  it('getEstimatedClickRate returns avgCoinsPerClick and coinsPerSecondFromClicks', () => {
+    const now = Date.now();
+    const result = getEstimatedClickRate({
+      clickTimestamps: [now - 500, now - 200],
+      now,
+      sessionClicks: 10,
+      sessionCoinsFromClicks: 15,
+      prestigeLevel: 0,
+    });
+    expect(result.avgCoinsPerClick).toBeGreaterThanOrEqual(0);
+    expect(result.clicksLastSecond).toBe(2);
+    expect(result.coinsPerSecondFromClicks).toBe(result.clicksLastSecond * result.avgCoinsPerClick);
   });
 
   it('getPlanetEffectiveProduction scales by planet share and research mult', () => {
