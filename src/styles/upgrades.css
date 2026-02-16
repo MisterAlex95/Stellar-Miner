@@ -430,6 +430,22 @@
 
   .upgrade-actions {
     flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .upgrade-buttons {
+    flex-direction: row;
+    width: 100%;
+    max-width: 12rem;
+    margin: 0 auto;
+    gap: 0.5rem;
+  }
+
+  .upgrade-btn--buy,
+  .upgrade-btn--max {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
   }
 
   .upgrade-btn {

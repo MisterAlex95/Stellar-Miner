@@ -161,6 +161,17 @@ export function renderUpgradeList(): void {
   }
 }
 
+/** Ids of upgrades that should currently be shown (same logic as renderUpgradeList). */
+function getCurrentUpgradeIdsToShow(): string[] {
+  const session = getSession();
+  if (!session) return [];
+  const player = session.player;
+  const ownedIds = player.upgrades.map((u) => u.id);
+  const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
+  const allUnlockedDefs = UPGRADE_CATALOG.filter((d) => unlockedTiers.has(d.tier)).sort((a, b) => a.tier - b.tier);
+  return allUnlockedDefs.slice(0, UPGRADE_DISPLAY_COUNT).map((d) => d.id);
+}
+
 export function updateUpgradeListInPlace(): void {
   const session = getSession();
   if (!session) return;
@@ -168,6 +179,18 @@ export function updateUpgradeListInPlace(): void {
   const settings = getSettings();
   const listEl = document.getElementById(UPGRADE_LIST_ID);
   if (!listEl) return;
+
+  const idsToShow = getCurrentUpgradeIdsToShow();
+  const currentCardIds = [...listEl.querySelectorAll('.upgrade-card')].map(
+    (card) => card.getAttribute('data-upgrade-id') ?? ''
+  );
+  const sameSet =
+    idsToShow.length === currentCardIds.length &&
+    idsToShow.every((id, i) => id === currentCardIds[i]);
+  if (!sameSet) {
+    renderUpgradeList();
+    return;
+  }
 
   const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
   const cards = listEl.querySelectorAll('.upgrade-card');

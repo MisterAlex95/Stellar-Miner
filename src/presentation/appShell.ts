@@ -477,7 +477,7 @@ function getTabsAndPanelsHtml(): string {
         <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats"><span data-i18n="tabStats">Stats</span></button>
       </div>
       <div class="app-tabs-more-wrap">
-        <button type="button" class="app-tab app-tab-more" id="tab-more" aria-haspopup="true" aria-expanded="false" aria-label="" data-i18n-aria-label="tabsMoreLabel">⋯</button>
+        <button type="button" class="app-tab app-tab-more" id="tab-more" aria-haspopup="true" aria-expanded="false" aria-label="" data-i18n-aria-label="tabsMoreLabel"><span class="app-tab-more-dots">⋯</span></button>
         <div class="app-tabs-menu" id="app-tabs-menu" role="menu" aria-label="" hidden>
           <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="stats" data-i18n="tabStats">Stats</button>
           <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
@@ -527,7 +527,7 @@ function getTabsAndPanelsHtml(): string {
       <button type="button" class="app-tab-bottom app-tab-bottom--active" role="tab" data-tab="mine" aria-selected="true"><span data-i18n="tabMine">Mine</span></button>
       <button type="button" class="app-tab-bottom" role="tab" data-tab="empire" aria-selected="false"><span data-i18n="tabBase">Empire</span></button>
       <div class="app-tabs-bottom-more-wrap">
-        <button type="button" class="app-tab-bottom app-tab-bottom-more" id="tab-bottom-more" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="tabsMoreLabel">⋯</button>
+        <button type="button" class="app-tab-bottom app-tab-bottom-more" id="tab-bottom-more" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="tabsMoreLabel"><span class="app-tab-more-dots">⋯</span></button>
         <div class="app-tabs-bottom-menu" id="app-tabs-bottom-menu" role="menu" aria-label="" hidden>
           <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="dashboard" data-i18n="tabDashboard">Dashboard</button>
           <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="research" data-i18n="tabResearch">Research</button>

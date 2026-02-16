@@ -171,13 +171,20 @@
   color: var(--bg-dark);
 }
 
-/* ⋯ green when a tab in the overflow menu has a potential action */
-.app-tab-more--has-action:not(.app-tab-more--active) {
+/* Orange background when selected; only the dots in green when a tab in the menu has a potential action */
+.app-tab-more--has-action.app-tab-more--active .app-tab-more-dots,
+.app-tab-more--has-action.app-tab-more--expanded .app-tab-more-dots {
+  color: var(--success);
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+/* ⋯ green when a tab in the overflow menu has a potential action (menu closed, active tab visible) */
+.app-tab-more--has-action:not(.app-tab-more--active):not(.app-tab-more--expanded) {
   color: var(--success);
   text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
 }
 
-.app-tab-more--has-action:not(.app-tab-more--active):hover {
+.app-tab-more--has-action:not(.app-tab-more--active):not(.app-tab-more--expanded):hover {
   color: var(--success);
 }
 
@@ -384,13 +391,20 @@
     color: var(--bg-dark);
   }
 
-  /* Bottom ⋯ green when an item in the menu has a potential action */
-  .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active) {
+  /* Orange background when selected; only the dots in green when a tab has a potential action */
+  .app-tab-bottom-more--has-action.app-tab-bottom-more--active .app-tab-more-dots,
+  .app-tab-bottom-more--has-action.app-tab-bottom-more--expanded .app-tab-more-dots {
+    color: var(--success);
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  }
+
+  /* Bottom ⋯ green when an item in the menu has a potential action (menu closed) */
+  .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active):not(.app-tab-bottom-more--expanded) {
     color: var(--success);
     text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
   }
 
-  .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active):hover {
+  .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active):not(.app-tab-bottom-more--expanded):hover {
     color: var(--success);
   }
 

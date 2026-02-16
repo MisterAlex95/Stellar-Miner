@@ -987,11 +987,17 @@ export function mount(): void {
   const appTabsMenu = document.getElementById('app-tabs-menu');
   function closeTabsMenu(): void {
     if (appTabsMenu) appTabsMenu.hidden = true;
-    if (tabMore) tabMore.setAttribute('aria-expanded', 'false');
+    if (tabMore) {
+      tabMore.setAttribute('aria-expanded', 'false');
+      tabMore.classList.remove('app-tab-more--expanded');
+    }
   }
   function openTabsMenu(): void {
     if (appTabsMenu) appTabsMenu.hidden = false;
-    if (tabMore) tabMore.setAttribute('aria-expanded', 'true');
+    if (tabMore) {
+      tabMore.setAttribute('aria-expanded', 'true');
+      tabMore.classList.add('app-tab-more--expanded');
+    }
   }
   if (tabMore && appTabsMenu) {
     tabMore.addEventListener('click', (e) => {
@@ -1023,11 +1029,17 @@ export function mount(): void {
   const appTabsBottomMenu = document.getElementById('app-tabs-bottom-menu');
   function closeBottomTabsMenu(): void {
     if (appTabsBottomMenu) appTabsBottomMenu.hidden = true;
-    if (tabBottomMore) tabBottomMore.setAttribute('aria-expanded', 'false');
+    if (tabBottomMore) {
+      tabBottomMore.setAttribute('aria-expanded', 'false');
+      tabBottomMore.classList.remove('app-tab-bottom-more--expanded');
+    }
   }
   function openBottomTabsMenu(): void {
     if (appTabsBottomMenu) appTabsBottomMenu.hidden = false;
-    if (tabBottomMore) tabBottomMore.setAttribute('aria-expanded', 'true');
+    if (tabBottomMore) {
+      tabBottomMore.setAttribute('aria-expanded', 'true');
+      tabBottomMore.classList.add('app-tab-bottom-more--expanded');
+    }
   }
   if (tabBottomMore && appTabsBottomMenu) {
     tabBottomMore.addEventListener('click', (e) => {
