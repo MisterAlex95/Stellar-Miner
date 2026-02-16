@@ -61,8 +61,37 @@ export function getNextAffordableUpgrade(): { def: { id: string }; cost: string;
   return null;
 }
 
-/** First upgrade (by tier) we cannot afford yet — for "~X min to [name]" when no affordable upgrade. */
-function getNextUpgradeGoal(): { def: { id: string }; cost: Decimal; name: string } | null {
+/** First upgrade (by tier) we cannot afford yet — for "~X min to [name]" only when slot+crew are OK (coin-only blocker). Uses unlocked research for slot/crew. */
+function getNextUpgradeGoalCoinOnly(): { def: { id: string }; cost: Decimal; name: string } | null {
+  const session = getSession();
+  if (!session) return null;
+  const player = session.player;
+  const settings = getSettings();
+  const planetWithSlot = player.getPlanetWithFreeSlot();
+  const hasFreeSlot = planetWithSlot !== null;
+  const defs = getOrderedUpgradeDefs(player);
+  for (const def of defs) {
+    const maxCount = getMaxBuyCount(def.id);
+    const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
+    if (!state.canBuy && state.canPlace && state.hasCrew) {
+      const owned = player.upgrades.filter((u) => u.id === def.id).length;
+      const cost = getUpgradeCost(def, owned);
+      return { def: { id: def.id }, cost, name: getCatalogUpgradeName(def.id) };
+    }
+  }
+  return null;
+}
+
+/** First upgrade (by tier) we cannot buy yet, with its card state — to recommend "add slot" or "hire crew" when blocked. */
+function getNextUpgradeGoalWithState(): {
+  def: { id: string };
+  cost: Decimal;
+  name: string;
+  canPlace: boolean;
+  hasCrew: boolean;
+  needsSlot: boolean;
+  crewReq: number;
+} | null {
   const session = getSession();
   if (!session) return null;
   const player = session.player;
@@ -76,7 +105,15 @@ function getNextUpgradeGoal(): { def: { id: string }; cost: Decimal; name: strin
     if (!state.canBuy) {
       const owned = player.upgrades.filter((u) => u.id === def.id).length;
       const cost = getUpgradeCost(def, owned);
-      return { def: { id: def.id }, cost, name: getCatalogUpgradeName(def.id) };
+      return {
+        def: { id: def.id },
+        cost,
+        name: getCatalogUpgradeName(def.id),
+        canPlace: state.canPlace,
+        hasCrew: state.hasCrew,
+        needsSlot: state.needsSlot,
+        crewReq: state.crewReq,
+      };
     }
   }
   return null;
@@ -126,10 +163,15 @@ function buildDashboardHeroHtml(): string {
   const expeditionEndsAt = getExpeditionEndsAt();
   const expeditionActive = expeditionEndsAt != null && expeditionEndsAt > Date.now();
   const nextUpgrade = getNextAffordableUpgrade();
-  const nextGoal = getNextUpgradeGoal();
+  const nextGoalCoinOnly = getNextUpgradeGoalCoinOnly();
+  const nextGoalWithState = getNextUpgradeGoalWithState();
   const affordableResearch = getNextAttemptableResearchAffordable();
+  const researchInProgress = isResearchInProgress();
   const canLaunchExpedition = planetService.canLaunchExpedition(player);
   const expeditionCost = planetService.getNewPlanetCost(player);
+  const expeditionCrewRequired = planetService.getExpeditionAstronautsRequired(player);
+  const hasCoinsForExpedition = player.coins.gte(expeditionCost);
+  const hasCrewForExpedition = player.astronautCount >= expeditionCrewRequired;
   const unlocked = getUnlockedBlocks(session);
   const milestone = getNextMilestone(session);
 
@@ -145,14 +187,17 @@ function buildDashboardHeroHtml(): string {
   } else if (unlocked.has('upgrades') && nextUpgrade) {
     recommendedLabel = tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--upgrade" id="dashboard-do-upgrade" data-upgrade-id="${nextUpgrade.def.id}" data-planet-id="${nextUpgrade.planetId ?? ''}">${tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) })} · ${nextUpgrade.cost}</button>`;
-  } else if (unlocked.has('research') && affordableResearch) {
+  } else if (unlocked.has('research') && affordableResearch && !researchInProgress) {
     recommendedLabel = tParam('dashboardStartResearch', { name: affordableResearch.name });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-research">${t('goToResearch')} →</button>`;
   } else if (!expeditionActive && unlocked.has('planets')) {
     if (canLaunchExpedition) {
       recommendedLabel = t('buyNewPlanet');
       recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
-    } else if (player.coins.value.lt(expeditionCost) && effectiveRate.gt(0)) {
+    } else if (hasCoinsForExpedition && !hasCrewForExpedition && unlocked.has('crew')) {
+      recommendedLabel = tParam('dashboardNeedCrewExpedition', { n: String(expeditionCrewRequired) });
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
+    } else if (!hasCoinsForExpedition && effectiveRate.gt(0)) {
       const remaining = expeditionCost.sub(player.coins.value);
       const min = minutesUntil(remaining, effectiveRate);
       recommendedLabel = tParam('dashboardTimeToExpedition', { min: min === Infinity ? '…' : String(min) });
@@ -161,12 +206,23 @@ function buildDashboardHeroHtml(): string {
       recommendedLabel = t('buyNewPlanet');
       recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
     }
-  } else if (unlocked.has('upgrades') && nextGoal && effectiveRate.gt(0)) {
-    const remaining = nextGoal.cost.sub(player.coins.value);
-    if (remaining.gt(0)) {
-      const min = minutesUntil(remaining, effectiveRate);
-      recommendedLabel = tParam('dashboardTimeTo', { min: min === Infinity ? '…' : String(min), target: nextGoal.name });
-      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
+  } else if (unlocked.has('upgrades') && nextGoalWithState) {
+    if (nextGoalCoinOnly && effectiveRate.gt(0)) {
+      const remaining = nextGoalCoinOnly.cost.sub(player.coins.value);
+      if (remaining.gt(0)) {
+        const min = minutesUntil(remaining, effectiveRate);
+        recommendedLabel = tParam('dashboardTimeTo', { min: min === Infinity ? '…' : String(min), target: nextGoalCoinOnly.name });
+        recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
+      } else {
+        recommendedLabel = t('dashboardKeepMining');
+        recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
+      }
+    } else if (!nextGoalWithState.canPlace && nextGoalWithState.needsSlot && unlocked.has('planets')) {
+      recommendedLabel = t('dashboardAddSlot');
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
+    } else if (!nextGoalWithState.hasCrew && nextGoalWithState.crewReq > 0 && unlocked.has('crew')) {
+      recommendedLabel = t('dashboardHireCrew');
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
     } else {
       recommendedLabel = t('dashboardKeepMining');
       recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
@@ -232,10 +288,15 @@ function updateDashboardHeroInPlace(): void {
   const expeditionEndsAt = getExpeditionEndsAt();
   const expeditionActive = expeditionEndsAt != null && expeditionEndsAt > Date.now();
   const nextUpgrade = getNextAffordableUpgrade();
-  const nextGoal = getNextUpgradeGoal();
+  const nextGoalCoinOnly = getNextUpgradeGoalCoinOnly();
+  const nextGoalWithState = getNextUpgradeGoalWithState();
   const affordableResearch = getNextAttemptableResearchAffordable();
+  const researchInProgress = isResearchInProgress();
   const canLaunchExpedition = planetService.canLaunchExpedition(player);
   const expeditionCost = planetService.getNewPlanetCost(player);
+  const expeditionCrewRequired = planetService.getExpeditionAstronautsRequired(player);
+  const hasCoinsForExpedition = player.coins.gte(expeditionCost);
+  const hasCrewForExpedition = player.astronautCount >= expeditionCrewRequired;
   const unlocked = getUnlockedBlocks(session);
   const milestone = getNextMilestone(session);
 
@@ -251,14 +312,17 @@ function updateDashboardHeroInPlace(): void {
   } else if (unlocked.has('upgrades') && nextUpgrade) {
     recommendedLabel = tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--upgrade" id="dashboard-do-upgrade" data-upgrade-id="${nextUpgrade.def.id}" data-planet-id="${nextUpgrade.planetId ?? ''}">${tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) })} · ${nextUpgrade.cost}</button>`;
-  } else if (unlocked.has('research') && affordableResearch) {
+  } else if (unlocked.has('research') && affordableResearch && !researchInProgress) {
     recommendedLabel = tParam('dashboardStartResearch', { name: affordableResearch.name });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-research">${t('goToResearch')} →</button>`;
   } else if (!expeditionActive && unlocked.has('planets')) {
     if (canLaunchExpedition) {
       recommendedLabel = t('buyNewPlanet');
       recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
-    } else if (player.coins.value.lt(expeditionCost) && effectiveRate.gt(0)) {
+    } else if (hasCoinsForExpedition && !hasCrewForExpedition && unlocked.has('crew')) {
+      recommendedLabel = tParam('dashboardNeedCrewExpedition', { n: String(expeditionCrewRequired) });
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
+    } else if (!hasCoinsForExpedition && effectiveRate.gt(0)) {
       const remaining = expeditionCost.sub(player.coins.value);
       const min = minutesUntil(remaining, effectiveRate);
       recommendedLabel = tParam('dashboardTimeToExpedition', { min: min === Infinity ? '…' : String(min) });
@@ -267,12 +331,23 @@ function updateDashboardHeroInPlace(): void {
       recommendedLabel = t('buyNewPlanet');
       recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
     }
-  } else if (unlocked.has('upgrades') && nextGoal && effectiveRate.gt(0)) {
-    const remaining = nextGoal.cost.sub(player.coins.value);
-    if (remaining.gt(0)) {
-      const min = minutesUntil(remaining, effectiveRate);
-      recommendedLabel = tParam('dashboardTimeTo', { min: min === Infinity ? '…' : String(min), target: nextGoal.name });
-      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
+  } else if (unlocked.has('upgrades') && nextGoalWithState) {
+    if (nextGoalCoinOnly && effectiveRate.gt(0)) {
+      const remaining = nextGoalCoinOnly.cost.sub(player.coins.value);
+      if (remaining.gt(0)) {
+        const min = minutesUntil(remaining, effectiveRate);
+        recommendedLabel = tParam('dashboardTimeTo', { min: min === Infinity ? '…' : String(min), target: nextGoalCoinOnly.name });
+        recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
+      } else {
+        recommendedLabel = t('dashboardKeepMining');
+        recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
+      }
+    } else if (!nextGoalWithState.canPlace && nextGoalWithState.needsSlot && unlocked.has('planets')) {
+      recommendedLabel = t('dashboardAddSlot');
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
+    } else if (!nextGoalWithState.hasCrew && nextGoalWithState.crewReq > 0 && unlocked.has('crew')) {
+      recommendedLabel = t('dashboardHireCrew');
+      recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-empire">${t('goToEmpire')} →</button>`;
     } else {
       recommendedLabel = t('dashboardKeepMining');
       recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-mine">${t('goToMine')} →</button>`;
@@ -682,7 +757,7 @@ export function renderDashboardSection(): void {
   if (!container) return;
 
   if (!session) {
-    container.innerHTML = '<p class="dashboard-empty">No game session.</p>';
+    container.innerHTML = `<p class="dashboard-empty">${t('dashboardEmpty')}</p>`;
     return;
   }
 

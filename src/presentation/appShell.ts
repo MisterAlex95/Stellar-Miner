@@ -41,7 +41,7 @@ function getModalsHtml(): string {
             <h3 class="settings-group-title" data-i18n="settingsGroupVisual">Visual</h3>
             <div class="settings-option">
               <label for="setting-language" data-i18n="language">Language</label>
-              <select id="setting-language" aria-label="Language">
+              <select id="setting-language" data-i18n-aria-label="language">
                 <option value="en" data-i18n="languageEn">English</option>
                 <option value="fr" data-i18n="languageFr">Français</option>
               </select>
@@ -68,7 +68,7 @@ function getModalsHtml(): string {
             </div>
             <div class="settings-option">
               <label for="setting-theme" data-i18n="theme">Theme</label>
-              <select id="setting-theme" aria-label="Theme">
+              <select id="setting-theme" data-i18n-aria-label="theme">
                 <option value="dark" data-i18n="themeDark">Dark</option>
                 <option value="light" data-i18n="themeLight">Light</option>
               </select>
@@ -90,7 +90,7 @@ function getModalsHtml(): string {
             </div>
             <div class="settings-option">
               <label for="setting-layout" data-i18n="layout">Layout</label>
-              <select id="setting-layout" aria-label="Layout mode">
+              <select id="setting-layout" data-i18n-aria-label="layout">
                 <option value="tabs" data-i18n="layoutTabs">Tabs</option>
                 <option value="one-page" data-i18n="layoutOnePage">One page</option>
               </select>
@@ -200,7 +200,7 @@ function getModalsHtml(): string {
       ariaDescribedBy: 'prestige-confirm-desc',
       bodyHtml: `
         <h2 id="prestige-confirm-title" data-i18n="prestigeConfirmTitle">Prestige?</h2>
-        <p id="prestige-confirm-desc" data-i18n="prestigeConfirmDesc">You'll reset to 0 coins and 1 planet. You keep your new Prestige level and +5% production per level forever.</p>
+        <p id="prestige-confirm-desc" data-i18n="prestigeConfirmDesc">You'll reset to 0 coins and 1 planet. You keep your new Prestige level and +4% production per level forever.</p>
         <p id="prestige-confirm-after" class="prestige-confirm-after"></p>
         <div class="prestige-confirm-actions">
           <button type="button" class="prestige-confirm-cancel" id="prestige-confirm-cancel" data-i18n="cancel">Cancel</button>
@@ -318,7 +318,7 @@ function getStatsHtml(): string {
             </div>
           </div>
           <span class="events-hint-wrap" id="events-hint-wrap">
-            <button type="button" class="events-hint-trigger" id="events-hint-trigger" aria-label="Events discovered" aria-haspopup="dialog" title="">?</button>
+            <button type="button" class="events-hint-trigger" id="events-hint-trigger" data-i18n-aria-label="eventsHintTitle" aria-haspopup="dialog" title="">?</button>
           </span>
         </div>
       </div>
@@ -350,7 +350,7 @@ function getTabsAndPanelsHtml(): string {
     rulesKey: 'crewRules',
     bodyHtml: `
           <p class="crew-hint" data-i18n="crewHint">Hire astronauts (no job at first). Unlock Miner, Scientist and Pilot via Research for bonuses. Resets on Prestige.</p>
-          <div class="crew-capacity-wrap" id="crew-capacity-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Crew capacity">
+          <div class="crew-capacity-wrap" id="crew-capacity-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-i18n-aria-label="crewCapacityAria">
             <div class="crew-capacity-fill" id="crew-capacity-fill">
               <div class="crew-capacity-segment crew-capacity-segment--astronaut" id="crew-capacity-segment-astronaut"></div>
               <div class="crew-capacity-segment crew-capacity-segment--miner" id="crew-capacity-segment-miner"></div>
@@ -428,7 +428,7 @@ function getTabsAndPanelsHtml(): string {
     dataBlock: 'planets',
     rulesKey: 'planetsRules',
     bodyHtml: `
-          <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +5% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots or build housing on a planet (+2 crew capacity per module, uses 1 slot).</p>
+          <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +4% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots or build housing on a planet (+2 crew capacity per module, uses 1 slot).</p>
           <div class="planet-list" id="planet-list"></div>
           <div class="expedition-area" id="expedition-area"></div>
         `,
@@ -440,7 +440,7 @@ function getTabsAndPanelsHtml(): string {
     dataBlock: 'prestige',
     rulesKey: 'prestigeRules',
     bodyHtml: `
-          <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +5% production per prestige level forever.</p>
+          <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +4% production per prestige level forever.</p>
           <div class="prestige-status" id="prestige-status"></div>
           <div class="prestige-actions">
             <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>

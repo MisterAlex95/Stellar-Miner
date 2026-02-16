@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.26",
+    "date": "2026-02-16",
+    "changes": [
+      "Dashboard \"Do this next\": smarter recommendations. Only suggests upgrades you can actually buy (coins + slot + crew); uses unlocked research for slot/crew. Time-to-upgrade only when the blocker is coins (slot and crew OK). Recommends \"Add a slot\" or \"Hire astronauts\" when the next upgrade is blocked by slot or crew; \"Need X astronauts for expedition\" when you have coins but not enough crew. Skips research suggestion when research is already in progress."
+    ]
+  },
+  {
     "version": "0.4.25",
     "date": "2026-02-16",
     "changes": [
