@@ -80,6 +80,16 @@ export class Planet {
     this.upgrades.push(upgrade);
   }
 
+  /**
+   * Remove one installed upgrade by id (last occurrence). Returns the removed upgrade or null if none.
+   */
+  removeUpgrade(upgradeId: string): Upgrade | null {
+    const idx = this.upgrades.findIndex((u) => u.id === upgradeId);
+    if (idx < 0) return null;
+    const [removed] = this.upgrades.splice(idx, 1);
+    return removed ?? null;
+  }
+
   /** Start installing an upgrade; it reserves a slot and will contribute production after endsAt (ms). */
   addInstallingUpgrade(upgrade: Upgrade, startAt: number, endsAt: number, rateToAdd: Decimal): void {
     if (upgrade.usesSlot && !this.hasFreeSlot()) throw new Error('Planet has no free upgrade slot');

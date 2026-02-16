@@ -15,6 +15,7 @@ import {
 import { generateQuest } from './quests.js';
 import { saveQuestState } from './questState.js';
 import { clearResearch } from './research.js';
+import { clearEverUnlockedUpgradeTiers } from './catalogs.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
 import { emit } from './eventBus.js';
@@ -91,6 +92,7 @@ export function confirmPrestige(): void {
   setQuestState(newQuestState);
   saveQuestState(newQuestState);
   clearResearch();
+  clearEverUnlockedUpgradeTiers();
   notifyRefresh();
   setSessionClickCount(0);
   setSessionCoinsFromClicks(0);

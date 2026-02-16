@@ -6,6 +6,7 @@ import {
   createUpgrade,
   getUpgradeCost,
   getUpgradeInstallDurationMs,
+  recordUnlockedUpgradeTier,
 } from './catalogs.js';
 import { upgradeService } from './gameState.js';
 import { emit } from './eventBus.js';
@@ -93,6 +94,7 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): UpgradeB
     return { bought: false, durations: [] };
   }
 
+  recordUnlockedUpgradeTier(def.tier);
   emit('upgrade_purchased', { upgradeId, planetId });
   if (player.upgrades.length === 1 && typeof localStorage !== 'undefined') {
     const key = 'stellar-miner-first-upgrade-toast';
@@ -190,7 +192,10 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string, maxToB
     ownedCount++;
   }
 
-  if (bought > 0) refreshAfterUpgrade();
+  if (bought > 0) {
+    recordUnlockedUpgradeTier(def.tier);
+    refreshAfterUpgrade();
+  }
   return { bought, durations };
 }
 
@@ -203,4 +208,28 @@ function resolveTargetPlanet(
     return needsSlot && !targetPlanet.hasFreeSlot() ? null : targetPlanet;
   }
   return needsSlot ? player.getPlanetWithFreeSlot() : player.planets[0] ?? null;
+}
+
+export type UpgradeUninstallResult = { uninstalled: boolean };
+
+/** Uninstall one copy of an upgrade from the given planet; refund cost and subtract production. */
+export function handleUpgradeUninstall(upgradeId: string, planetId: string): UpgradeUninstallResult {
+  const session = getSession();
+  if (!session) return { uninstalled: false };
+  const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
+  if (!def) return { uninstalled: false };
+  const player = session.player;
+  const planet = player.planets.find((p) => p.id === planetId);
+  if (!planet || !planet.upgrades.some((u) => u.id === upgradeId)) return { uninstalled: false };
+
+  const mult = getPlanetTypeMultiplier(def.id, getPlanetType(planet.name));
+  const removed = upgradeService.uninstallUpgrade(player, planet, upgradeId, mult);
+  if (!removed) return { uninstalled: false };
+
+  player.addCoins(removed.cost);
+  const crewRequired = getEffectiveRequiredAstronauts(def.id);
+  if (crewRequired > 0) player.unassignCrewFromEquipment(crewRequired);
+  notifyRefresh();
+  emit('upgrade_uninstalled', { upgradeId, planetId });
+  return { uninstalled: true };
 }

@@ -2,7 +2,7 @@ import { getSession, getSettings } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import {
   RESEARCH_CATALOG,
-  getResearchTreeRows,
+  getResearchTiers,
   getUnlockedResearch,
   canAttemptResearch,
   getUnlockPathIds,
@@ -62,7 +62,7 @@ function buildCardInfoHtml(
   parts.push(`<p class="research-card-desc">${escapeHtml(desc)}</p>`);
   if (modText && modText !== '—')
     parts.push(`<p class="research-card-mods research-card-mods-preview">${escapeHtml(t('researchEffectsLabel') + ' ' + modText)}</p>`);
-  if (prereqText)
+  if (prereqText && !done)
     parts.push(`<p class="research-card-prereq">${escapeHtml(tParam('researchRequires', { names: prereqText }))}</p>`);
   if (!done) {
     const chanceHtml =
@@ -76,46 +76,132 @@ function buildCardInfoHtml(
   return parts.join('');
 }
 
+/** Same as buildCardInfoHtml but omits cost/chance meta (used when meta is rendered in footer with Attempt button). */
+function buildCardInfoHtmlWithoutMeta(
+  desc: string,
+  modText: string,
+  prereqText: string,
+  _costStr: string,
+  _effectivePct: number,
+  _scientistBonusPct: number,
+  done: boolean
+): string {
+  const parts: string[] = [];
+  parts.push(`<p class="research-card-desc">${escapeHtml(desc)}</p>`);
+  if (modText && modText !== '—')
+    parts.push(`<p class="research-card-mods research-card-mods-preview">${escapeHtml(t('researchEffectsLabel') + ' ' + modText)}</p>`);
+  if (prereqText && !done)
+    parts.push(`<p class="research-card-prereq">${escapeHtml(tParam('researchRequires', { names: prereqText }))}</p>`);
+  return parts.join('');
+}
+
+function buildAttemptMetaHtml(
+  costStr: string,
+  effectivePct: number,
+  scientistBonusPct: number
+): string {
+  const chanceHtml =
+    scientistBonusPct > 0
+      ? `${tParam('percentSuccess', { pct: effectivePct })} ${tParam('researchScientistBonus', { pct: scientistBonusPct })}`
+      : tParam('percentSuccess', { pct: effectivePct });
+  return `<p class="research-card-meta"><span class="research-card-cost">${escapeHtml(costStr)} ⬡</span><span class="research-card-chance">${escapeHtml(chanceHtml)}</span></p>`;
+}
+
+const RESEARCH_TIER_COLLAPSED_KEY = 'stellar-miner-research-tier-collapsed';
+
+function loadCollapsedTiers(): Set<number> {
+  if (typeof localStorage === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(RESEARCH_TIER_COLLAPSED_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw) as unknown;
+    return new Set(Array.isArray(arr) ? arr.filter((x): x is number => typeof x === 'number') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCollapsedTiers(collapsed: Set<number>): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(RESEARCH_TIER_COLLAPSED_KEY, JSON.stringify([...collapsed]));
+}
+
+export function toggleResearchTierCollapsed(tier: number): void {
+  const collapsed = loadCollapsedTiers();
+  if (collapsed.has(tier)) collapsed.delete(tier);
+  else collapsed.add(tier);
+  saveCollapsedTiers(collapsed);
+  renderResearchSection();
+}
+
 export function renderResearchSection(): void {
   const listEl = document.getElementById('research-list');
   if (!listEl) return;
   const session = getSession();
   const settings = getSettings();
   const unlocked = getUnlockedResearch();
-  const rows = getResearchTreeRows();
+  const tiers = getResearchTiers();
+  const collapsedTiers = loadCollapsedTiers();
 
   const scientistCount = session?.player.crewByRole?.scientist ?? 0;
   const scientistMultiplier = getResearchSuccessChanceMultiplier(scientistCount);
   const scientistBonusPct = scientistCount > 0 ? Math.round((scientistMultiplier - 1) * 100) : 0;
 
-  const rowHtml = rows.map((rowNodes, rowIndex) => {
-    const nodeCards = rowNodes
-      .map((node) => {
-        const done = unlocked.includes(node.id);
-        const canAttempt = session && canAttemptResearch(node.id) && session.player.coins.gte(node.cost);
-        const effectiveChance = Math.min(1, node.successChance * scientistMultiplier);
-        const effectivePct = Math.round(effectiveChance * 100);
-        const prereqText =
-          node.prerequisites.length > 0
-            ? node.prerequisites
-                .map((id) => getCatalogResearchName(id))
-                .join(', ')
-            : '';
-        const modText = modifierText(node);
-        const unlockPathIds = getUnlockPathIds(node.id).concat(node.id);
-        const pathNames = unlockPathIds.map((id) => getCatalogResearchName(id));
-        return renderResearchCard(node, rowIndex, done, canAttempt, effectivePct, scientistBonusPct, prereqText, modText, pathNames, unlockPathIds, settings.compactNumbers);
-      })
-      .join('');
-    return `
-      <div class="research-tree-row" data-row="${rowIndex}" role="list">
+  const tierSections = tiers.map(({ tier, rows }) => {
+    const isCollapsed = collapsedTiers.has(tier);
+    const rowHtml = rows
+      .map((rowNodes) => {
+        const nodeCards = rowNodes
+          .map((node) => {
+            const done = unlocked.includes(node.id);
+            const canAttempt = session && canAttemptResearch(node.id) && session.player.coins.gte(node.cost);
+            const effectiveChance = Math.min(1, node.successChance * scientistMultiplier);
+            const effectivePct = Math.round(effectiveChance * 100);
+            const prereqText =
+              node.prerequisites.length > 0
+                ? node.prerequisites
+                    .map((id) => getCatalogResearchName(id))
+                    .join(', ')
+                : '';
+            const modText = modifierText(node);
+            const unlockPathIds = getUnlockPathIds(node.id).concat(node.id);
+            const pathNames = unlockPathIds.map((id) => getCatalogResearchName(id));
+            return renderResearchCard(
+              node,
+              tier - 1,
+              done,
+              canAttempt,
+              effectivePct,
+              scientistBonusPct,
+              prereqText,
+              modText,
+              pathNames,
+              unlockPathIds,
+              settings.compactNumbers
+            );
+          })
+          .join('');
+        return `
+      <div class="research-tree-row" data-row="${tier}" role="list">
         <div class="research-tree-row-nodes" style="--row-nodes: ${rowNodes.length}">${nodeCards}</div>
       </div>`;
+      })
+      .join('');
+    const ariaExpanded = !isCollapsed;
+    const toggleLabel = isCollapsed ? t('expandSection') : t('collapseSection');
+    return `
+    <div class="research-tier" data-tier="${tier}">
+      <button type="button" class="research-tier-toggle" data-tier="${tier}" aria-expanded="${ariaExpanded}" aria-label="${escapeAttr(tParam('tierLabel', { n: String(tier) }))} ${escapeAttr(toggleLabel)}">
+        <span class="research-tier-toggle-icon" aria-hidden="true">${isCollapsed ? '▶' : '▼'}</span>
+        <span class="research-tier-label">${tParam('tierLabel', { n: tier })}</span>
+      </button>
+      <div class="research-tier-body" ${isCollapsed ? 'hidden' : ''}>${rowHtml}</div>
+    </div>`;
   });
 
   listEl.innerHTML = `
     <div class="research-tree" role="tree" aria-label="${t('research')} tree">
-      ${rowHtml.join('')}
+      ${tierSections.join('')}
     </div>`;
 }
 
@@ -148,22 +234,33 @@ function renderResearchCard(
     return `
       <div class="research-card research-card--done" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem" aria-selected="true">
         <div class="research-card-header">
-          <span class="research-card-level" aria-hidden="true">${levelLabel}</span>
           <span class="research-card-name">${name}</span>
         </div>
         <div class="research-card-info-block">${cardInfoHtml}</div>
       </div>`;
   }
+  const infoBlockHtml = buildCardInfoHtmlWithoutMeta(
+    desc,
+    modText,
+    prereqText,
+    costStr,
+    effectivePct,
+    scientistBonusPct,
+    done
+  );
+  const metaHtml = buildAttemptMetaHtml(costStr, effectivePct, scientistBonusPct);
   return `
     <div class="research-card" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem">
       <div class="research-card-header">
-        <span class="research-card-level" aria-hidden="true">${levelLabel}</span>
         <span class="research-card-name">${name}</span>
       </div>
-      <div class="research-card-info-block">${cardInfoHtml}</div>
-      ${buttonWithTooltipHtml(
-        attemptTitle,
-        `<button type="button" class="research-attempt-btn" data-research-id="${node.id}" ${canAttempt ? '' : 'disabled'}>${t('attempt')}</button>`
-      )}
+      <div class="research-card-info-block">${infoBlockHtml}</div>
+      <div class="research-card-footer">
+        ${metaHtml}
+        ${buttonWithTooltipHtml(
+          attemptTitle,
+          `<button type="button" class="research-attempt-btn" data-research-id="${node.id}" ${canAttempt ? '' : 'disabled'}>${t('attempt')}</button>`
+        )}
+      </div>
     </div>`;
 }

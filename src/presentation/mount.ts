@@ -16,6 +16,7 @@ import {
   handleMineClick,
   handleUpgradeBuy,
   handleUpgradeBuyMax,
+  handleUpgradeUninstall,
   showUpgradeInstallProgress,
   handleBuyNewPlanet,
   handleAddSlot,
@@ -39,8 +40,15 @@ import { questProgressStore } from '../application/questProgressStore.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
 import { openPlanetDetail, closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from './planetDetailView.js';
-import { renderResearchSection } from './researchView.js';
+import { renderResearchSection, toggleResearchTierCollapsed } from './researchView.js';
 import { renderUpgradeList } from './upgradeListView.js';
+import {
+  openUpgradeChoosePlanetModal,
+  closeUpgradeChoosePlanetModal,
+  bindUpgradeChoosePlanetModal,
+  getPlanetsForInstallModal,
+} from './upgradeChoosePlanetModal.js';
+import { getSession } from '../application/gameState.js';
 import { renderStatisticsSection } from './statisticsView.js';
 import { renderDashboardSection, updateDashboard } from './dashboardView.js';
 import {
@@ -313,6 +321,7 @@ export function mount(): void {
       else if (document.getElementById(EVENTS_HINT_OVERLAY_ID)?.classList.contains(EVENTS_HINT_OPEN_CLASS)) closeEventsHintModal();
       else if (document.getElementById(CHART_HELP_OVERLAY_ID)?.classList.contains(CHART_HELP_OPEN_CLASS)) closeChartHelpModal();
       else if (document.getElementById(PLANET_DETAIL_OVERLAY_ID)?.classList.contains(PLANET_DETAIL_OPEN_CLASS)) closePlanetDetail();
+      else if (document.getElementById('upgrade-choose-planet-overlay')?.classList.contains('upgrade-choose-planet-overlay--open')) closeUpgradeChoosePlanetModal();
       else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
@@ -385,6 +394,8 @@ export function mount(): void {
       if (e.target === planetDetailOverlay) closePlanetDetail();
     });
   }
+
+  bindUpgradeChoosePlanetModal();
 
   updateVersionAndChangelogUI();
 
@@ -533,7 +544,6 @@ export function mount(): void {
       const clicked = e.target as HTMLElement;
       const card = clicked.closest('.upgrade-card');
       if (!card) return;
-      // Button may be wrapped in .btn-tooltip-wrap; click can land on the span so closest('button') misses.
       let target = clicked.closest('button.upgrade-btn') as HTMLButtonElement | null;
       if (!target) {
         const wrap = clicked.closest('.btn-tooltip-wrap');
@@ -543,22 +553,60 @@ export function mount(): void {
       e.preventDefault();
       const upgradeId = target.getAttribute('data-upgrade-id') ?? card.getAttribute('data-upgrade-id');
       if (!upgradeId) return;
-      const select = card?.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
-      let planetId: string | undefined = select?.value ?? undefined;
-      if (select && (!planetId || planetId === '') && select.options.length > 0) {
-        planetId = select.options[select.selectedIndex]?.value ?? select.options[0].value ?? undefined;
-      }
-      if (target.getAttribute('data-action') === 'max') {
-        const maxCountAttr = target.getAttribute('data-max-count');
-        const maxToBuy = maxCountAttr != null ? parseInt(maxCountAttr, 10) : undefined;
-        const result = handleUpgradeBuyMax(upgradeId, planetId, Number.isFinite(maxToBuy) ? maxToBuy : undefined);
-        if (result.bought > 0 && result.durations.length > 0 && card instanceof HTMLElement) {
-          showUpgradeInstallProgress(card, result.durations);
+      const session = getSession();
+      const player = session?.player;
+      const action = target.getAttribute('data-action');
+
+      if (action === 'uninstall') {
+        const uninstallPlanetsJson = target.getAttribute('data-uninstall-planets');
+        const uninstallPlanetId = target.getAttribute('data-uninstall-planet-id');
+        if (uninstallPlanetsJson) {
+          try {
+            const planets = JSON.parse(uninstallPlanetsJson) as { id: string; name: string }[];
+            if (planets.length > 0) {
+              openUpgradeChoosePlanetModal({ upgradeId, action: 'uninstall', planets });
+            }
+          } catch {
+            // ignore
+          }
+        } else if (uninstallPlanetId) {
+          handleUpgradeUninstall(upgradeId, uninstallPlanetId);
         }
-      } else {
-        const result = handleUpgradeBuy(upgradeId, planetId);
-        if (result.bought && result.durations.length > 0 && card instanceof HTMLElement) {
-          showUpgradeInstallProgress(card, result.durations);
+        return;
+      }
+
+      const multiPlanet = player && player.planets.length > 1;
+      const maxCountAttr = target.getAttribute('data-max-count');
+      const maxCount = maxCountAttr != null ? parseInt(maxCountAttr, 10) : undefined;
+
+      if (action === 'max') {
+        if (multiPlanet) {
+          const planets = getPlanetsForInstallModal(upgradeId);
+          if (planets.length > 0) {
+            openUpgradeChoosePlanetModal({ upgradeId, action: 'max', planets, maxCount: Number.isFinite(maxCount) ? maxCount : undefined });
+          }
+        } else {
+          const planetId = player?.planets[0]?.id;
+          const result = handleUpgradeBuyMax(upgradeId, planetId, Number.isFinite(maxCount) ? maxCount : undefined);
+          if (result.bought > 0 && result.durations.length > 0 && card instanceof HTMLElement) {
+            showUpgradeInstallProgress(card, result.durations);
+          }
+        }
+        return;
+      }
+
+      if (action === 'buy') {
+        if (multiPlanet) {
+          const planets = getPlanetsForInstallModal(upgradeId);
+          if (planets.length > 0) {
+            openUpgradeChoosePlanetModal({ upgradeId, action: 'buy', planets });
+          }
+        } else {
+          const planetId = player?.planets[0]?.id;
+          const result = handleUpgradeBuy(upgradeId, planetId);
+          if (result.bought && result.durations.length > 0 && card instanceof HTMLElement) {
+            showUpgradeInstallProgress(card, result.durations);
+          }
         }
       }
     });
@@ -571,7 +619,16 @@ export function mount(): void {
   const researchList = document.getElementById('research-list');
   if (researchList) {
     researchList.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest('.research-attempt-btn');
+      const target = e.target as HTMLElement;
+      const tierToggle = target.closest('.research-tier-toggle');
+      if (tierToggle) {
+        const tierAttr = (tierToggle as HTMLElement).getAttribute('data-tier');
+        if (tierAttr) {
+          toggleResearchTierCollapsed(Number(tierAttr));
+        }
+        return;
+      }
+      const btn = target.closest('.research-attempt-btn');
       if (!btn || (btn as HTMLButtonElement).disabled) return;
       const id = (btn as HTMLElement).getAttribute('data-research-id');
       if (!id) return;

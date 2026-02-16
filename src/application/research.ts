@@ -251,6 +251,30 @@ export function getResearchTreeRows(): ResearchNode[][] {
   return rows;
 }
 
+/** Research grouped by tier (tier = catalog row + 1). Each tier has display rows (chunks of up to MAX_NODES_PER_STAGE). */
+export type ResearchTierGroup = { tier: number; rows: ResearchNode[][] };
+
+export function getResearchTiers(): ResearchTierGroup[] {
+  const byRow = new Map<number, ResearchNode[]>();
+  for (const node of RESEARCH_CATALOG) {
+    const list = byRow.get(node.row) ?? [];
+    list.push(node);
+    byRow.set(node.row, list);
+  }
+  const result: ResearchTierGroup[] = [];
+  const maxRow = Math.max(...byRow.keys(), 0);
+  for (let r = 0; r <= maxRow; r++) {
+    const list = byRow.get(r) ?? [];
+    list.sort((a, b) => a.col - b.col);
+    const rows: ResearchNode[][] = [];
+    for (let i = 0; i < list.length; i += MAX_NODES_PER_STAGE) {
+      rows.push(list.slice(i, i + MAX_NODES_PER_STAGE));
+    }
+    if (rows.length > 0) result.push({ tier: r + 1, rows });
+  }
+  return result;
+}
+
 /** For each gap between rows, returns segments to draw: parent index in row above, child index in row below. */
 export function getResearchBranchSegments(): { fromIdx: number; toIdx: number }[][] {
   const rows = getResearchTreeRows();

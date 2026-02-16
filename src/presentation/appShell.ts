@@ -302,6 +302,23 @@ function getModalsHtml(): string {
         </div>
       `,
     }),
+    createModalOverlay({
+      overlayId: 'upgrade-choose-planet-overlay',
+      overlayClass: 'upgrade-choose-planet-overlay',
+      dialogClass: 'upgrade-choose-planet-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'upgrade-choose-planet-title',
+      bodyHtml: `
+        <div class="upgrade-choose-planet-header">
+          <h2 id="upgrade-choose-planet-title" class="upgrade-choose-planet-title"></h2>
+          <button type="button" class="upgrade-choose-planet-close" id="upgrade-choose-planet-close" data-i18n-aria-label="close">×</button>
+        </div>
+        <div class="upgrade-choose-planet-list" id="upgrade-choose-planet-list" role="list"></div>
+        <div class="upgrade-choose-planet-actions">
+          <button type="button" class="upgrade-choose-planet-cancel" id="upgrade-choose-planet-cancel" data-i18n="cancel">Cancel</button>
+        </div>
+      `,
+    }),
   ].join('\n');
 }
 
@@ -508,11 +525,11 @@ function getTabsAndPanelsHtml(): string {
       <div class="app-tabs-more-wrap">
         <button type="button" class="app-tab app-tab-more" id="tab-more" aria-haspopup="true" aria-expanded="false" aria-label="" data-i18n-aria-label="tabsMoreLabel"><span class="app-tab-more-dots">⋯</span></button>
         <div class="app-tabs-menu" id="app-tabs-menu" role="menu" aria-label="" hidden>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="stats" data-i18n="tabStats">Stats</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="research" data-i18n="tabResearch">Research</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="empire" data-i18n="tabBase">Empire</button>
           <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="dashboard" data-i18n="tabDashboard">Dashboard</button>
+          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="empire" data-i18n="tabBase">Empire</button>
+          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="research" data-i18n="tabResearch">Research</button>
+          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
+          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="stats" data-i18n="tabStats">Stats</button>
         </div>
       </div>
     </nav>

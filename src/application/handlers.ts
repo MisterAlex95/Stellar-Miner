@@ -1,6 +1,11 @@
 export { saveSession, handleExportSave, handleImportSave } from './handlersSave.js';
 export { handleMineClick } from './handlersMine.js';
-export { handleUpgradeBuy, handleUpgradeBuyMax, showUpgradeInstallProgress } from './handlersUpgrade.js';
+export {
+  handleUpgradeBuy,
+  handleUpgradeBuyMax,
+  handleUpgradeUninstall,
+  showUpgradeInstallProgress,
+} from './handlersUpgrade.js';
 export {
   handleBuyNewPlanet,
   completeExpeditionIfDue,

@@ -23,6 +23,10 @@ export class ProductionRate {
     return new ProductionRate(this.value.add(rate));
   }
 
+  subtract(rate: DecimalSource): ProductionRate {
+    return new ProductionRate(this.value.sub(toDecimal(rate)));
+  }
+
   applyMultiplier(multiplier: number): ProductionRate {
     return new ProductionRate(this.value.mul(multiplier));
   }

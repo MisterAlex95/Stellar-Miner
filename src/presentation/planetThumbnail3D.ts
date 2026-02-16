@@ -255,15 +255,12 @@ function renderOnePlanet(
 
 function tick(): void {
   globalTime += 0.016;
-  const listEl = document.getElementById('planet-list');
-  if (listEl) {
-    listEl.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
-      const name = canvas.getAttribute('data-planet-name');
-      const seedAttr = canvas.getAttribute('data-planet-visual-seed');
-      const vs = seedAttr !== null && seedAttr !== '' ? parseInt(seedAttr, 10) : undefined;
-      if (name) renderOnePlanet(canvas, name, vs);
-    });
-  }
+  document.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
+    const name = canvas.getAttribute('data-planet-name');
+    const seedAttr = canvas.getAttribute('data-planet-visual-seed');
+    const vs = seedAttr !== null && seedAttr !== '' ? parseInt(seedAttr, 10) : undefined;
+    if (name) renderOnePlanet(canvas, name, vs);
+  });
   thumbRafId = requestAnimationFrame(tick);
 }
 
@@ -283,9 +280,7 @@ export function stopPlanetThumbnail3DLoop(): void {
  * Render all currently visible planet thumbnails and start the animation loop.
  */
 export function renderPlanetThumbnails(): void {
-  const listEl = document.getElementById('planet-list');
-  if (!listEl) return;
-  listEl.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
+  document.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
     const name = canvas.getAttribute('data-planet-name');
     const seedAttr = canvas.getAttribute('data-planet-visual-seed');
     const vs = seedAttr !== null && seedAttr !== '' ? parseInt(seedAttr, 10) : undefined;

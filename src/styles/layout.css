@@ -253,7 +253,7 @@
 }
 
 /* Menu items: show only when their tab is hidden (same breakpoints as below).
-   Order: Stats, Upgrades, Research, Empire, Dashboard (right to left). */
+   Order follows tab order: Dashboard, Empire, Research, Upgrades, Stats. */
 .app-tabs-menu-item {
   display: none;
 }

@@ -92,6 +92,25 @@ export function getUpgradeUsesSlot(upgradeId: string): boolean {
   return def?.usesSlot !== false;
 }
 
+const EVER_UNLOCKED_TIERS_KEY = 'stellar-miner-ever-unlocked-upgrade-tiers';
+
+function loadEverUnlockedTiers(): Set<number> {
+  if (typeof localStorage === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(EVER_UNLOCKED_TIERS_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw) as unknown;
+    return new Set(Array.isArray(arr) ? arr.filter((x): x is number => typeof x === 'number') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveEverUnlockedTiers(tiers: Set<number>): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(EVER_UNLOCKED_TIERS_KEY, JSON.stringify([...tiers]));
+}
+
 /** Tiers the player has unlocked for display. Tier 1 always; tier n+1 from owning tier n. */
 export function getUnlockedUpgradeTiers(ownedUpgradeIds: string[]): Set<number> {
   const ownedTiers = new Set<number>();
@@ -102,6 +121,39 @@ export function getUnlockedUpgradeTiers(ownedUpgradeIds: string[]): Set<number> 
   const unlocked = new Set<number>([1]);
   for (const t of ownedTiers) unlocked.add(t + 1);
   return unlocked;
+}
+
+/**
+ * Tiers to use for displaying upgrade cards. Merges current unlock (from ownership) with tiers
+ * ever unlocked this run, so cards stay visible after uninstalling all copies. Reset on prestige.
+ */
+export function getDisplayUnlockedUpgradeTiers(ownedUpgradeIds: string[]): Set<number> {
+  const fromOwned = getUnlockedUpgradeTiers(ownedUpgradeIds);
+  const everUnlocked = loadEverUnlockedTiers();
+  const merged = new Set<number>(fromOwned);
+  for (const t of everUnlocked) merged.add(t);
+  return merged;
+}
+
+/** Call when the player buys an upgrade so that tier (and the next) stay visible after uninstalling all. */
+export function recordUnlockedUpgradeTier(tier: number): void {
+  const set = loadEverUnlockedTiers();
+  let changed = false;
+  if (!set.has(tier)) {
+    set.add(tier);
+    changed = true;
+  }
+  if (!set.has(tier + 1)) {
+    set.add(tier + 1);
+    changed = true;
+  }
+  if (changed) saveEverUnlockedTiers(set);
+}
+
+/** Clear ever-unlocked tiers (e.g. on prestige). */
+export function clearEverUnlockedUpgradeTiers(): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.removeItem(EVER_UNLOCKED_TIERS_KEY);
 }
 
 export const EVENT_CATALOG: GameEvent[] = (eventsData as { id: string; name: string; effect: { multiplier: number; durationMs: number } }[]).map(

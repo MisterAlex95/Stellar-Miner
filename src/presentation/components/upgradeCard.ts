@@ -7,6 +7,7 @@ import { formatNumber } from '../../application/format.js';
 import {
   type UpgradeDef,
   createUpgrade,
+  getUpgradeCost,
 } from '../../application/catalogs.js';
 import {
   getEffectiveUpgradeUsesSlot,
@@ -17,6 +18,7 @@ import {
   getCatalogUpgradeName,
   getCatalogUpgradeDesc,
 } from '../../application/i18nCatalogs.js';
+import { getPlanetDisplayName } from '../../application/solarSystems.js';
 import { buttonWithTooltipHtml } from './buttonTooltip.js';
 import { escapeAttr } from './domUtils.js';
 
@@ -36,6 +38,11 @@ export interface UpgradeCardState {
   buyTitle: string;
   maxTitle: string;
   isRecommended: boolean;
+  canUninstall: boolean;
+  uninstallTitle: string;
+  uninstallRefundCoins: string;
+  /** Planets that have at least one of this upgrade (for uninstall planet choice). */
+  planetsWithUpgrade: { id: string; name: string }[];
 }
 
 export function getUpgradeCardState(
@@ -83,6 +90,17 @@ export function getUpgradeCardState(
 
   const isRecommended = canBuy && !player.upgrades.some((u) => u.id === def.id);
 
+  const canUninstall = owned > 0;
+  const uninstallRefundCoins =
+    owned > 0 ? formatNumber(getUpgradeCost(def, owned - 1), settings.compactNumbers) : '';
+  const uninstallTitle = canUninstall ? tParam('uninstallTitle', { cost: uninstallRefundCoins }) : '';
+  const planetsWithUpgrade = player.planets
+    .filter((p) => p.upgrades.some((u) => u.id === def.id))
+    .map((p) => {
+      const idx = player.planets.findIndex((pl) => pl.id === p.id);
+      return { id: p.id, name: getPlanetDisplayName(p.name, idx >= 0 ? idx : 0) };
+    });
+
   return {
     def,
     owned,
@@ -99,6 +117,10 @@ export function getUpgradeCardState(
     buyTitle,
     maxTitle,
     isRecommended,
+    canUninstall,
+    uninstallTitle,
+    uninstallRefundCoins,
+    planetsWithUpgrade,
   };
 }
 
@@ -109,51 +131,59 @@ export interface BuildUpgradeCardHtmlOptions {
 
 export function buildUpgradeCardHtml(state: UpgradeCardState, options: BuildUpgradeCardHtmlOptions): string {
   const settings = getSettings();
-  const { def, owned, canBuy, hasCrew, maxCount, costCoins, costCrewLine, buyLabel, maxLabel, buyTitle, maxTitle, isRecommended } = state;
+  const {
+    def,
+    owned,
+    canBuy,
+    hasCrew,
+    maxCount,
+    costCoins,
+    costCrewLine,
+    buyLabel,
+    maxLabel,
+    buyTitle,
+    maxTitle,
+    isRecommended,
+    canUninstall,
+    uninstallTitle,
+    uninstallRefundCoins,
+    planetsWithUpgrade,
+  } = state;
   const { choosePlanet, planetsForSelect } = options;
 
-  const planetOptions =
-    planetsForSelect.length > 0
-      ? planetsForSelect
-          .map((p, i) => `<option value="${escapeAttr(p.id)}"${i === 0 ? ' selected' : ''}>${escapeAttr(p.name)}</option>`)
-          .join('')
-      : '';
-  const planetSelectHtml = choosePlanet
-    ? `<label class="upgrade-planet-label" for="planet-${escapeAttr(def.id)}">${t('toPlanet')}</label><select class="upgrade-planet-select" id="planet-${escapeAttr(def.id)}" data-upgrade-id="${escapeAttr(def.id)}" aria-label="${escapeAttr(t('assignToPlanet'))}">${planetOptions}</select>`
-    : '';
+  // When multiple planets, we use a modal to choose; no dropdown in the card.
+  const planetSelectHtml = '';
 
-  const eachSec = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
+  const rateStr = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
   const totalSec = owned > 0 ? ' · ' + tParam('totalPerSecond', { n: formatNumber(owned * def.coinsPerSecond, settings.compactNumbers) }) : '';
-  const slotCostText = getEffectiveUpgradeUsesSlot(def.id) ? t('upgradeUsesSlot') : t('upgradeNoSlot');
+  const needsSlot = getEffectiveUpgradeUsesSlot(def.id);
+  const slotCostSuffix = needsSlot ? ` · ${t('upgradeUsesSlot')}` : '';
 
+  const desc = getCatalogUpgradeDesc(def.id);
   return `
-    <div class="upgrade-info">
-      <div class="upgrade-header">
+    <div class="upgrade-strip">
+      <div class="upgrade-strip-seg upgrade-strip-seg--identity">
         <span class="upgrade-tier" aria-label="${escapeAttr(tParam('tierLabel', { n: def.tier }))}" data-tier="${def.tier}">T${def.tier}</span>
         <div class="upgrade-title-row">
           <span class="upgrade-name">${getCatalogUpgradeName(def.id)}</span>
           ${owned > 0 ? `<span class="upgrade-count-badge">×${owned}</span>` : ''}
           ${isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : ''}
+          <span class="upgrade-title-row-right"><span class="upgrade-title-row-output" aria-live="polite"><span class="upgrade-effect-chip">${rateStr}</span>${owned > 0 ? totalSec : ''}</span><span class="upgrade-title-row-cost">${costCoins}${costCrewLine ? ` ${costCrewLine}` : ''}${slotCostSuffix}</span></span>
         </div>
+        <span class="upgrade-description" title="${escapeAttr(desc)}">${desc}</span>
       </div>
-      <p class="upgrade-description">${getCatalogUpgradeDesc(def.id)}</p>
-      <div class="upgrade-effect" aria-live="polite">
-        <span class="upgrade-effect-each">${eachSec}</span>
-        ${owned > 0 ? `<span class="upgrade-effect-total">${totalSec}</span>` : ''}
-      </div>
-    </div>
-    <div class="upgrade-right">
-      <div class="upgrade-cost">
-        <span class="upgrade-cost-coins">${costCoins}</span>
-        ${costCrewLine ? `<span class="upgrade-cost-crew">${costCrewLine}</span>` : ''}
-        <span class="upgrade-cost-slot">· ${slotCostText}</span>
-      </div>
-      <div class="upgrade-actions">
+      <div class="upgrade-strip-seg upgrade-strip-seg--actions">
         ${planetSelectHtml}
         <div class="upgrade-buttons">
           ${buttonWithTooltipHtml(buyTitle, `<button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>`)}
           ${buttonWithTooltipHtml(maxTitle, `<button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" data-max-count="${maxCount}" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button>`)}
         </div>
       </div>
+      ${canUninstall ? `
+      <div class="upgrade-strip-seg upgrade-strip-seg--uninstall">
+        <div class="upgrade-uninstall-line">
+          ${buttonWithTooltipHtml(uninstallTitle, `<button class="upgrade-btn upgrade-uninstall-btn" type="button" data-upgrade-id="${def.id}" data-action="uninstall"${planetsWithUpgrade.length === 1 ? ` data-uninstall-planet-id="${escapeAttr(planetsWithUpgrade[0].id)}"` : ` data-uninstall-planets="${escapeAttr(JSON.stringify(planetsWithUpgrade))}"`}>${t('uninstallLabel')}</button>`)}
+        </div>
+      </div>` : ''}
     </div>`;
 }

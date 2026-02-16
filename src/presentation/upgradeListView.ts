@@ -1,7 +1,7 @@
 import { getSession, getSettings } from '../application/gameState.js';
 import {
   UPGRADE_CATALOG,
-  getUnlockedUpgradeTiers,
+  getDisplayUnlockedUpgradeTiers,
   getUpgradeCost,
   UPGRADE_DISPLAY_COUNT,
 } from '../application/catalogs.js';
@@ -127,7 +127,7 @@ export function renderUpgradeList(): void {
   const hasAnyPlanet = player.planets.length > 0;
 
   const ownedIds = player.upgrades.map((u) => u.id);
-  const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
+  const unlockedTiers = getDisplayUnlockedUpgradeTiers(ownedIds);
   const allUnlockedDefs = UPGRADE_CATALOG.filter((d) => unlockedTiers.has(d.tier)).sort((a, b) => a.tier - b.tier);
   const defsToShow = allUnlockedDefs.slice(0, UPGRADE_DISPLAY_COUNT);
 
@@ -152,6 +152,7 @@ export function renderUpgradeList(): void {
       (!state.hasCrew && state.crewReq > 0 ? ' upgrade-card--needs-crew' : '');
     card.setAttribute('data-tier', String(def.tier));
     card.setAttribute('data-upgrade-id', def.id);
+    card.setAttribute('data-owned', String(state.owned));
     card.innerHTML = buildUpgradeCardHtml(state, {
       choosePlanet,
       planetsForSelect,
@@ -167,7 +168,7 @@ function getCurrentUpgradeIdsToShow(): string[] {
   if (!session) return [];
   const player = session.player;
   const ownedIds = player.upgrades.map((u) => u.id);
-  const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
+  const unlockedTiers = getDisplayUnlockedUpgradeTiers(ownedIds);
   const allUnlockedDefs = UPGRADE_CATALOG.filter((d) => unlockedTiers.has(d.tier)).sort((a, b) => a.tier - b.tier);
   return allUnlockedDefs.slice(0, UPGRADE_DISPLAY_COUNT).map((d) => d.id);
 }
@@ -194,6 +195,23 @@ export function updateUpgradeListInPlace(): void {
 
   const hasFreeSlot = player.getPlanetWithFreeSlot() !== null;
   const cards = listEl.querySelectorAll('.upgrade-card');
+  let needsFullRender = false;
+  for (const card of cards) {
+    const id = (card.querySelector('.upgrade-btn--buy')?.getAttribute('data-upgrade-id') ?? card.getAttribute('data-upgrade-id')) ?? null;
+    if (!id) continue;
+    const def = UPGRADE_CATALOG.find((d) => d.id === id);
+    if (!def) continue;
+    const prevOwned = card.getAttribute('data-owned');
+    const state = getUpgradeCardState(def, player, settings, hasFreeSlot, getMaxBuyCount(id));
+    if (prevOwned !== null && String(state.owned) !== prevOwned) {
+      needsFullRender = true;
+      break;
+    }
+  }
+  if (needsFullRender) {
+    renderUpgradeList();
+    return;
+  }
   for (const card of cards) {
     const buyBtn = card.querySelector('.upgrade-btn--buy');
     const id = (buyBtn?.getAttribute('data-upgrade-id') ?? card.getAttribute('data-upgrade-id')) ?? null;
@@ -205,18 +223,14 @@ export function updateUpgradeListInPlace(): void {
 
     const titleRow = card.querySelector('.upgrade-title-row');
     if (titleRow) {
+      const rateStr = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
+      const totalSec = state.owned > 0 ? ' · ' + tParam('totalPerSecond', { n: formatNumber(state.owned * def.coinsPerSecond, settings.compactNumbers) }) : '';
+      const slotCostSuffix = state.needsSlot ? ` · ${t('upgradeUsesSlot')}` : '';
       titleRow.innerHTML =
         `<span class="upgrade-name">${getCatalogUpgradeName(id)}</span>` +
         (state.owned > 0 ? `<span class="upgrade-count-badge">×${state.owned}</span>` : '') +
-        (state.isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : '');
-    }
-    const effectEl = card.querySelector('.upgrade-effect');
-    if (effectEl) {
-      const eachSec = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
-      const totalSec = state.owned > 0 ? ' · ' + tParam('totalPerSecond', { n: formatNumber(state.owned * def.coinsPerSecond, settings.compactNumbers) }) : '';
-      effectEl.innerHTML =
-        `<span class="upgrade-effect-each">${eachSec}</span>` +
-        (state.owned > 0 ? `<span class="upgrade-effect-total">${totalSec}</span>` : '');
+        (state.isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : '') +
+        `<span class="upgrade-title-row-right"><span class="upgrade-title-row-output" aria-live="polite"><span class="upgrade-effect-chip">${rateStr}</span>${totalSec}</span><span class="upgrade-title-row-cost">${state.costCoins}${state.costCrewLine ? ` ${state.costCrewLine}` : ''}${slotCostSuffix}</span></span>`;
     }
     const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
     if (select) {
@@ -250,6 +264,7 @@ export function updateUpgradeListInPlace(): void {
     }
     card.classList.toggle('upgrade-card--recommended', state.isRecommended);
     card.classList.toggle('upgrade-card--needs-crew', !state.hasCrew && state.crewReq > 0);
+    card.setAttribute('data-owned', String(state.owned));
     if (card instanceof HTMLElement) attachInstallProgressOverlays(card, id);
   }
 }

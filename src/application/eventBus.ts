@@ -5,6 +5,7 @@
 
 export type GameEventKind =
   | 'upgrade_purchased'
+  | 'upgrade_uninstalled'
   | 'prestige'
   | 'quest_claimed'
   | 'planet_bought'
@@ -15,6 +16,7 @@ export type GameEventKind =
 
 export type GameEventPayload = {
   upgrade_purchased: { upgradeId: string; planetId?: string };
+  upgrade_uninstalled: { upgradeId: string; planetId: string };
   prestige: { level: number };
   quest_claimed: { streak: number };
   planet_bought: { planetCount: number };

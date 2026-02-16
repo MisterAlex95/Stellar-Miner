@@ -46,4 +46,23 @@ export class UpgradeService {
     }
     return createUpgradePurchased(player.id, upgrade.id);
   }
+
+  /**
+   * Remove one installed upgrade from the planet and subtract its production from the player.
+   * productionMultiplier must match what was used when the upgrade was installed (e.g. planet type multiplier).
+   * Returns the removed upgrade or null if none found. Caller is responsible for refunding coins and unassigning crew.
+   */
+  uninstallUpgrade(
+    player: Player,
+    planet: Planet,
+    upgradeId: string,
+    productionMultiplier: number = 1
+  ): Upgrade | null {
+    if (!player.planets.includes(planet)) return null;
+    const removed = planet.removeUpgrade(upgradeId);
+    if (!removed) return null;
+    const rate = removed.effect.coinsPerSecond.mul(productionMultiplier);
+    player.setProductionRate(player.productionRate.subtract(rate));
+    return removed;
+  }
 }

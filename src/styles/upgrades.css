@@ -8,7 +8,7 @@
 .upgrade-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .upgrade-group-header {
@@ -34,13 +34,13 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-left-width: 4px;
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  min-height: 72px;
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   flex-shrink: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -185,6 +185,148 @@
 .upgrade-card[data-tier="9"] { --upgrade-tier-color: #7c3aed; border-left-color: #7c3aed; }
 .upgrade-card[data-tier="10"] { --upgrade-tier-color: #4f46e5; border-left-color: #4f46e5; }
 
+/* Strip layout: row 1 = identity (full width), row 2 = actions + uninstall */
+.upgrade-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.upgrade-strip-seg {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.15rem 0;
+}
+
+.upgrade-strip-seg:not(:first-child) {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  padding-left: 0.75rem;
+}
+
+.upgrade-strip-seg--identity {
+  flex: 1 1 100%;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  border-left: none !important;
+  padding-left: 0 !important;
+}
+
+.upgrade-strip-seg--identity .upgrade-tier {
+  margin-right: 0.1rem;
+}
+
+.upgrade-strip-seg--identity .upgrade-title-row {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.upgrade-title-row-right {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.upgrade-title-row-output {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.upgrade-title-row-cost {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.upgrade-strip-seg--identity .upgrade-description {
+  width: 100%;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.upgrade-strip-seg--output .upgrade-effect-inline {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.upgrade-effect-chip {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--bg-dark);
+  background: var(--success);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.upgrade-strip-seg--cost .upgrade-cost {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.upgrade-strip-seg--actions {
+  flex-shrink: 0;
+  border-left: none !important;
+  padding-left: 0 !important;
+}
+
+.upgrade-strip-seg--actions .upgrade-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.upgrade-strip-seg--actions .upgrade-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+}
+
+.upgrade-strip-seg--uninstall {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.upgrade-strip-seg--uninstall .upgrade-uninstall-line {
+  margin-top: 0;
+  flex-wrap: nowrap;
+}
+
 .upgrade-info {
   flex: 1;
   min-width: 0;
@@ -192,21 +334,21 @@
 
 .upgrade-header {
   display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 0.35rem;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
 }
 
 .upgrade-tier {
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--bg-dark);
   background: var(--upgrade-tier-color, var(--text-dim));
-  padding: 0.2rem 0.45rem;
-  border-radius: 6px;
+  padding: 0.18rem 0.4rem;
+  border-radius: 4px;
   flex-shrink: 0;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .upgrade-title-row {
@@ -218,85 +360,84 @@
 }
 
 .upgrade-name {
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text);
+  line-height: 1.3;
 }
 
 .upgrade-count-badge {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--bg-dark);
   background: var(--upgrade-tier-color, var(--success));
-  padding: 0.12rem 0.4rem;
-  border-radius: 6px;
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
   white-space: nowrap;
 }
 
-.upgrade-description {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  margin: 0 0 0.4rem 0;
-  line-height: 1.35;
-}
-
-.upgrade-effect {
+.upgrade-meta-line {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--success);
-  padding: 0.25rem 0.5rem;
-  background: rgba(34, 197, 94, 0.08);
-  border-radius: 6px;
-  border-left: 3px solid rgba(34, 197, 94, 0.4);
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.15rem;
+  line-height: 1.4;
 }
 
-.upgrade-effect-total {
-  color: var(--text);
+.upgrade-meta-sep {
+  color: var(--text-dim);
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.upgrade-effect-inline {
+  font-size: 0.82rem;
   font-weight: 600;
+  color: var(--success);
+}
+
+.upgrade-meta-line .upgrade-description {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .upgrade-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.6rem;
+  gap: 0.35rem;
   flex-shrink: 0;
 }
 
-.upgrade-cost {
+.upgrade-right-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.25rem 0.5rem;
+}
+
+.upgrade-right .upgrade-cost {
   font-family: 'Orbitron', sans-serif;
-  text-align: right;
-  padding: 0.35rem 0.6rem;
-  background: var(--bg-panel);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-
-.upgrade-cost-coins {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--accent);
+  padding: 0.28rem 0.5rem;
+  background: var(--bg-panel);
+  border-radius: 6px;
+  border: 1px solid var(--border);
   white-space: nowrap;
+  line-height: 1.3;
 }
 
-.upgrade-cost-crew {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-
-.upgrade-cost-slot {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  white-space: nowrap;
-}
 
 .upgrade-affinity-info {
   display: inline-flex;
@@ -323,30 +464,29 @@
 .upgrade-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
   flex-shrink: 0;
 }
 
 .upgrade-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  align-items: stretch;
-  width: 5rem;
+  flex-direction: row;
+  gap: 0.25rem;
+  align-items: center;
   flex-shrink: 0;
 }
 
 .upgrade-btn--buy,
 .upgrade-btn--max {
-  min-width: 5rem;
-  width: 100%;
+  min-width: 3.5rem;
+  padding: 0.32rem 0.55rem;
+  font-size: 0.78rem;
   box-sizing: border-box;
   text-align: center;
+  line-height: 1.3;
 }
 
 .upgrade-btn--max {
-  font-size: 0.7rem;
-  padding: 0.35rem 0.6rem;
   opacity: 0.9;
 }
 
@@ -354,33 +494,89 @@
   opacity: 1;
 }
 
+/* Uninstall: single line in card body (left column), subtle */
+.upgrade-uninstall-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+.upgrade-uninstall-line .upgrade-uninstall-planet-select {
+  font-size: 0.75rem;
+  padding: 0.22rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text);
+  max-width: 6rem;
+  min-height: 1.6rem;
+}
+
+.upgrade-uninstall-sep {
+  color: var(--text-dim);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.upgrade-uninstall-refund {
+  font-variant-numeric: tabular-nums;
+}
+
+.upgrade-uninstall-btn {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  min-width: auto;
+  width: auto;
+  background: rgba(42, 47, 61, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+}
+
+.upgrade-uninstall-btn:hover:not(:disabled) {
+  background: rgba(42, 47, 61, 0.9);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.upgrade-uninstall-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .upgrade-planet-label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
   white-space: nowrap;
 }
 
 .upgrade-planet-select {
-  font-size: 0.75rem;
-  padding: 0.35rem 0.5rem;
-  border-radius: 6px;
+  font-size: 0.76rem;
+  padding: 0.24rem 0.4rem;
+  border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--bg-panel);
   color: var(--text);
-  max-width: 7rem;
+  max-width: 6rem;
 }
 
 .upgrade-btn {
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  padding: 0.38rem 0.65rem;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg-panel);
   color: var(--text);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  line-height: 1.25;
 }
 
 .upgrade-btn:hover:not(:disabled) {
@@ -411,46 +607,33 @@
 
 @media (max-width: 360px) {
   .upgrade-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
     padding: 0.6rem 0.75rem;
   }
 
-  .upgrade-right {
-    order: -1;
+  .upgrade-strip {
+    flex-direction: column;
     align-items: stretch;
+    gap: 0.4rem;
   }
 
-  .upgrade-cost {
-    order: -1;
-    align-items: center;
-    justify-content: flex-start;
+  .upgrade-strip-seg:not(:first-child) {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-left: 0;
+    padding-top: 0.4rem;
+    margin-top: 0.1rem;
   }
 
-  .upgrade-actions {
+  .upgrade-strip-seg--identity {
+    flex: 0 0 auto;
+  }
+
+  .upgrade-strip-seg--actions .upgrade-buttons {
     flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .upgrade-buttons {
-    flex-direction: row;
-    width: 100%;
-    max-width: 12rem;
-    margin: 0 auto;
-    gap: 0.5rem;
-  }
-
-  .upgrade-btn--buy,
-  .upgrade-btn--max {
-    flex: 1 1 0;
-    min-width: 0;
-    width: auto;
   }
 
   .upgrade-btn {
     min-height: 44px;
-    flex: 1;
   }
 
   .upgrade-group-header {
@@ -459,7 +642,7 @@
 }
 
 @media (min-width: 361px) and (max-width: 767px) {
-  .upgrade-btn {
+  .upgrade-strip-seg--actions .upgrade-btn {
     min-height: 44px;
   }
 }

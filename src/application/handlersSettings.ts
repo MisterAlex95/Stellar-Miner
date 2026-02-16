@@ -14,6 +14,7 @@ import {
   ACHIEVEMENTS_KEY,
   COMBO_MASTER_KEY,
   PRESTIGES_TODAY_KEY,
+  clearEverUnlockedUpgradeTiers,
 } from './catalogs.js';
 
 const RESET_LOCAL_STORAGE_KEYS: string[] = [
@@ -80,6 +81,7 @@ export function closeResetConfirmModal(): void {
 export function handleResetProgress(): void {
   saveLoad.clearProgress();
   clearProgression();
+  clearEverUnlockedUpgradeTiers();
   if (typeof localStorage !== 'undefined') {
     RESET_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
   }
