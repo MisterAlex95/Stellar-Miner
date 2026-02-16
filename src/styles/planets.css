@@ -115,6 +115,13 @@
   height: 48px;
   border-radius: 50%;
   display: block;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.planet-card-visual:hover {
+  transform: scale(1.08);
+  filter: brightness(1.15);
 }
 
 .planet-card-name-wrap {
@@ -311,17 +318,6 @@
 .build-housing-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* Planet card clickable thumbnail */
-.planet-card-visual {
-  cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
-}
-
-.planet-card-visual:hover {
-  transform: scale(1.08);
-  filter: brightness(1.15);
 }
 
 /* Planet detail modal */
