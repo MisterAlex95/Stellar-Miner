@@ -48,6 +48,8 @@ let lastQuestRenderMs = 0;
 let lastDashboardRenderMs = 0;
 let lastEmpireRenderMs = 0;
 let lastResearchRenderMs = 0;
+let lastStatsUpdateMs = 0;
+const STATS_UPDATE_INTERVAL_MS = 100;
 let lastEventsUnlocked = false;
 let pageWasHidden = document.visibilityState === 'hidden';
 
@@ -96,9 +98,12 @@ function gameLoop(now: number): void {
     session.player.addCoins(rateDec.mul(dt));
     const earned = rateDec.mul(dt).toNumber();
     if (Number.isFinite(earned)) addRunCoins(earned);
-    updateStats();
   }
   updateUpgradeListInPlace();
+  if (nowMs - lastStatsUpdateMs >= STATS_UPDATE_INTERVAL_MS) {
+    lastStatsUpdateMs = nowMs;
+    updateStats();
+  }
   recordStatsIfDue(
     nowMs,
     session.player.coins.value,

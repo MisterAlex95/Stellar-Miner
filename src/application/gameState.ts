@@ -13,6 +13,7 @@ import type { QuestState } from './questState.js';
 import { emit } from './eventBus.js';
 import { PRESTIGES_TODAY_KEY } from './catalogs.js';
 import { CREW_ROLES, type ExpeditionComposition } from '../domain/constants.js';
+import { createObservableStore } from './observableStore.js';
 
 export type ActiveEventInstance = { event: GameEvent; endsAt: number };
 
@@ -70,12 +71,16 @@ export const planetService = new PlanetService();
 export let starfieldApi: ReturnType<typeof startStarfield> | null = null;
 export let mineZoneCanvasApi: ReturnType<typeof createMineZoneCanvas> | null = null;
 
+/** Observable session store. Subscribe to react to session changes (load, prestige, reset). */
+export const sessionStore = createObservableStore<GameSession | null>(null as GameSession | null);
+
 export function getSession(): GameSession {
   return session;
 }
 
 export function setSession(s: GameSession): void {
   session = s;
+  sessionStore.set(s);
 }
 
 export function getActiveEventInstances(): ActiveEventInstance[] {

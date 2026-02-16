@@ -51,6 +51,7 @@ import {
   dismissIntroModal,
 } from './progressionView.js';
 import { initTooltips } from './tooltip.js';
+import { bindSettingsForm } from './bindSettingsForm.js';
 import { APP_VERSION, hasNewUpdate, markUpdateSeen } from '../application/version.js';
 import { getChangelog } from '../application/changelog.js';
 import { buildChangelogHtml } from './components/changelog.js';
@@ -614,89 +615,7 @@ export function mount(): void {
   subscribe('save_success', () => updateLastSavedIndicator());
 
   // --- Settings form: inputs, export/import, reset, achievements ---
-  const starfieldSpeedEl = document.getElementById('setting-starfield-speed') as HTMLSelectElement | null;
-  const orbitLinesEl = document.getElementById('setting-orbit-lines') as HTMLInputElement | null;
-  const clickParticlesEl = document.getElementById('setting-click-particles') as HTMLInputElement | null;
-  const compactNumbersEl = document.getElementById('setting-compact-numbers') as HTMLInputElement | null;
-  const spaceKeyRepeatEl = document.getElementById('setting-space-key-repeat') as HTMLInputElement | null;
-  const layoutEl = document.getElementById('setting-layout') as HTMLSelectElement | null;
-  const pauseBackgroundEl = document.getElementById('setting-pause-background') as HTMLInputElement | null;
-  const themeEl = document.getElementById('setting-theme') as HTMLSelectElement | null;
-  const languageEl = document.getElementById('setting-language') as HTMLSelectElement | null;
-  const soundEl = document.getElementById('setting-sound') as HTMLInputElement | null;
-  const reducedMotionEl = document.getElementById('setting-reduced-motion') as HTMLInputElement | null;
-  if (starfieldSpeedEl) starfieldSpeedEl.value = String(settings.starfieldSpeed);
-  if (orbitLinesEl) orbitLinesEl.checked = settings.showOrbitLines;
-  if (clickParticlesEl) clickParticlesEl.checked = settings.clickParticles;
-  if (compactNumbersEl) compactNumbersEl.checked = settings.compactNumbers;
-  if (spaceKeyRepeatEl) spaceKeyRepeatEl.checked = settings.spaceKeyRepeat;
-  if (layoutEl) layoutEl.value = settings.layout;
-  if (pauseBackgroundEl) pauseBackgroundEl.checked = settings.pauseWhenBackground;
-  if (themeEl) themeEl.value = settings.theme;
-  if (languageEl) languageEl.value = settings.language;
-  if (soundEl) soundEl.checked = settings.soundEnabled;
-  if (reducedMotionEl) reducedMotionEl.checked = settings.reducedMotion;
-  if (starfieldSpeedEl) starfieldSpeedEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.starfieldSpeed = Number(starfieldSpeedEl.value);
-    setSettings(s);
-  });
-  if (orbitLinesEl) orbitLinesEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.showOrbitLines = orbitLinesEl.checked;
-    setSettings(s);
-  });
-  if (clickParticlesEl) clickParticlesEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.clickParticles = clickParticlesEl.checked;
-    setSettings(s);
-  });
-  if (compactNumbersEl) compactNumbersEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.compactNumbers = compactNumbersEl.checked;
-    setSettings(s);
-    applySettingsToUI();
-  });
-  if (spaceKeyRepeatEl) spaceKeyRepeatEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.spaceKeyRepeat = spaceKeyRepeatEl.checked;
-    setSettings(s);
-  });
-  if (layoutEl) layoutEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.layout = layoutEl.value as 'tabs' | 'one-page';
-    setSettings(s);
-    applyLayout();
-  });
-  if (pauseBackgroundEl) pauseBackgroundEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.pauseWhenBackground = pauseBackgroundEl.checked;
-    setSettings(s);
-  });
-  if (themeEl) themeEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.theme = themeEl.value as 'light' | 'dark';
-    setSettings(s);
-    applyThemeAndMotion();
-  });
-  if (languageEl) languageEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.language = languageEl.value as 'en' | 'fr';
-    setSettings(s);
-    applyTranslations();
-    applySettingsToUI();
-  });
-  if (soundEl) soundEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.soundEnabled = soundEl.checked;
-    setSettings(s);
-  });
-  if (reducedMotionEl) reducedMotionEl.addEventListener('change', () => {
-    const s = getSettings();
-    s.reducedMotion = reducedMotionEl.checked;
-    setSettings(s);
-    applyThemeAndMotion();
-  });
+  bindSettingsForm(applySettingsToUI, applyLayout, applyThemeAndMotion, applyTranslations);
 
   const exportBtn = document.getElementById('settings-export-btn');
   const importBtn = document.getElementById('settings-import-btn');

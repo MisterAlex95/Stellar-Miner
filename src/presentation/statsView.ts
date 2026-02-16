@@ -16,15 +16,15 @@ import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { getMaxAstronauts, CREW_ROLES, type CrewRole, type CrewJobRole } from '../domain/constants.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
-import { EVENT_INTERVAL_MS, EVENT_CATALOG, getCurrentComboMultiplier } from '../application/catalogs.js';
+import { EVENT_INTERVAL_MS, EVENT_CATALOG } from '../application/catalogs.js';
 import { getDiscoveredEventIds } from '../application/gameState.js';
 import { getNextMilestone, getUnlockedBlocks } from '../application/progression.js';
 import {
   getResearchProductionMultiplier,
   getResearchProductionPercent,
   getUnlockedCrewRoles,
-  getExpectedCoinsPerClick,
 } from '../application/research.js';
+import { getEstimatedClickRate } from '../application/productionHelpers.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogEventName } from '../application/i18nCatalogs.js';
 import { formatDuration } from '../application/playTimeStats.js';
@@ -70,18 +70,14 @@ export function updateProductionDisplay(dt: number): void {
   const researchMult = getResearchProductionMultiplier();
   const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
   const now = Date.now();
-  const clickTimestamps = getClickTimestamps();
-  const clicksLastSecond = clickTimestamps.filter((t) => t > now - 1000).length;
-  const sessionClicks = getSessionClickCount();
-  const sessionCoinsFromClicks = getSessionCoinsFromClicks();
-  const baseExpected = getExpectedCoinsPerClick(session.player.prestigeLevel);
-  const comboMult = getCurrentComboMultiplier(clickTimestamps, now);
-  const avgCoinsPerClick =
-    sessionClicks > 0
-      ? Math.max(sessionCoinsFromClicks / sessionClicks, baseExpected * comboMult)
-      : baseExpected * comboMult;
-  const clickRate = clicksLastSecond * avgCoinsPerClick;
-  const target = productionRate.add(clickRate);
+  const { coinsPerSecondFromClicks } = getEstimatedClickRate({
+    clickTimestamps: getClickTimestamps(),
+    now,
+    sessionClicks: getSessionClickCount(),
+    sessionCoinsFromClicks: getSessionCoinsFromClicks(),
+    prestigeLevel: session.player.prestigeLevel,
+  });
+  const target = productionRate.add(coinsPerSecondFromClicks);
   const settings = getSettings();
   const rateEl = document.getElementById('production-value');
   if (!rateEl) return;
@@ -121,17 +117,14 @@ export function syncProductionDisplay(): void {
   const researchMult = getResearchProductionMultiplier();
   const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
   const now = Date.now();
-  const clickTimestamps = getClickTimestamps();
-  const clicksLastSecond = clickTimestamps.filter((t) => t > now - 1000).length;
-  const sessionClicks = getSessionClickCount();
-  const sessionCoinsFromClicks = getSessionCoinsFromClicks();
-  const baseExpected = getExpectedCoinsPerClick(session.player.prestigeLevel);
-  const comboMult = getCurrentComboMultiplier(clickTimestamps, now);
-  const avgCoinsPerClick =
-    sessionClicks > 0
-      ? Math.max(sessionCoinsFromClicks / sessionClicks, baseExpected * comboMult)
-      : baseExpected * comboMult;
-  const target = productionRate.add(clicksLastSecond * avgCoinsPerClick);
+  const { coinsPerSecondFromClicks } = getEstimatedClickRate({
+    clickTimestamps: getClickTimestamps(),
+    now,
+    sessionClicks: getSessionClickCount(),
+    sessionCoinsFromClicks: getSessionCoinsFromClicks(),
+    prestigeLevel: session.player.prestigeLevel,
+  });
+  const target = productionRate.add(coinsPerSecondFromClicks);
   displayedProduction = target.toNumber();
   const rateEl = document.getElementById('production-value');
   if (rateEl) {
@@ -237,20 +230,15 @@ export function updateStats(): void {
     if (researchPct > 0) parts.push(`+${researchPct}% ${t('breakdownResearch')}`);
     if (eventMult > 1) parts.push(`×${eventMult.toFixed(1)} ${t('breakdownEvent')}`);
     const now = Date.now();
-    const clicksLastSecond = getClickTimestamps().filter((ts) => ts > now - 1000).length;
-    if (clicksLastSecond > 0) {
-      const now = Date.now();
-      const clickTimestamps = getClickTimestamps();
-      const sessionClicks = getSessionClickCount();
-      const sessionCoinsFromClicks = getSessionCoinsFromClicks();
-      const baseExpected = getExpectedCoinsPerClick(player.prestigeLevel);
-      const comboMult = getCurrentComboMultiplier(clickTimestamps, now);
-      const avgCoinsPerClick =
-        sessionClicks > 0
-          ? Math.max(sessionCoinsFromClicks / sessionClicks, baseExpected * comboMult)
-          : baseExpected * comboMult;
-      const clickRate = clicksLastSecond * avgCoinsPerClick;
-      parts.push(tParam('productionClicksRateOnly', { rate: formatNumber(clickRate, settings.compactNumbers) }));
+    const { coinsPerSecondFromClicks } = getEstimatedClickRate({
+      clickTimestamps: getClickTimestamps(),
+      now,
+      sessionClicks: getSessionClickCount(),
+      sessionCoinsFromClicks: getSessionCoinsFromClicks(),
+      prestigeLevel: player.prestigeLevel,
+    });
+    if (coinsPerSecondFromClicks > 0) {
+      parts.push(tParam('productionClicksRateOnly', { rate: formatNumber(coinsPerSecondFromClicks, settings.compactNumbers) }));
     }
     breakdownEl.textContent = parts.length > 0 ? parts.join(' · ') : '';
     breakdownEl.style.display = parts.length > 0 ? '' : 'none';
@@ -271,17 +259,14 @@ export function updateStats(): void {
         const researchMult = getResearchProductionMultiplier();
         const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
         const now = Date.now();
-        const clicksLastSecond = getClickTimestamps().filter((t) => t > now - 1000).length;
-        const clickTimestamps = getClickTimestamps();
-        const sessionClicks = getSessionClickCount();
-        const sessionCoinsFromClicks = getSessionCoinsFromClicks();
-        const baseExpected = getExpectedCoinsPerClick(session.player.prestigeLevel);
-        const comboMult = getCurrentComboMultiplier(clickTimestamps, now);
-        const avgCoinsPerClick =
-          sessionClicks > 0
-            ? Math.max(sessionCoinsFromClicks / sessionClicks, baseExpected * comboMult)
-            : baseExpected * comboMult;
-        const totalRate = productionRate.add(clicksLastSecond * avgCoinsPerClick);
+        const { coinsPerSecondFromClicks } = getEstimatedClickRate({
+          clickTimestamps: getClickTimestamps(),
+          now,
+          sessionClicks: getSessionClickCount(),
+          sessionCoinsFromClicks: getSessionCoinsFromClicks(),
+          prestigeLevel: session.player.prestigeLevel,
+        });
+        const totalRate = productionRate.add(coinsPerSecondFromClicks);
         if (totalRate.gt(0)) {
           const secs = remaining.div(totalRate).toNumber();
           const ms = Number.isFinite(secs) && secs >= 0 ? secs * 1000 : 0;

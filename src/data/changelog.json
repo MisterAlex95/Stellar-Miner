@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.28",
+    "date": "2026-02-16",
+    "changes": [
+      "Code quality: Observable store for reactive state, extracted getEstimatedClickRate to productionHelpers, throttled stats updates (100ms), bindSettingsForm helper for settings UI."
+    ]
+  },
+  {
     "version": "0.4.27",
     "date": "2026-02-16",
     "changes": [
