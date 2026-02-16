@@ -55,6 +55,11 @@ function attachInstallProgressOverlays(cardEl: HTMLElement, upgradeId: string): 
     cardEl.classList.add('upgrade-card--installing');
   }
 
+  const storedTotal = container.getAttribute('data-install-total');
+  const total = Math.max(ranges.length, storedTotal ? Number(storedTotal) : 0);
+  if (total > 0) container.setAttribute('data-install-total', String(total));
+  const current = total - ranges.length + 1;
+
   const item = container.querySelector('.upgrade-install-progress-item') as HTMLElement;
   const fill = container.querySelector('.upgrade-install-progress-fill') as HTMLElement | null;
   const labelEl = container.querySelector('.upgrade-install-progress-label') as HTMLElement | null;
@@ -63,7 +68,7 @@ function attachInstallProgressOverlays(cardEl: HTMLElement, upgradeId: string): 
     item.setAttribute('data-ends-at', String(first.endsAt));
   }
   if (labelEl) {
-    labelEl.textContent = tParam('upgradingCount', { current: '1', total: String(ranges.length) });
+    labelEl.textContent = tParam('upgradingCount', { current: String(current), total: String(total) });
   }
   if (fill && Number.isFinite(first.startAt) && Number.isFinite(first.endsAt)) {
     const totalMs = Math.max(1, first.endsAt - first.startAt);
