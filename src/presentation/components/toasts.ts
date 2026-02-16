@@ -1,6 +1,8 @@
 /**
  * Shared toast implementation: show a message in the event-toasts container with a variant and duration.
  */
+import { getElement } from './domUtils.js';
+
 export const TOAST_CONTAINER_ID = 'event-toasts';
 
 export type ToastVariant =
@@ -27,7 +29,7 @@ export function showToast(
   variant: ToastVariant,
   options?: { duration?: number }
 ): void {
-  const container = document.getElementById(TOAST_CONTAINER_ID);
+  const container = getElement(TOAST_CONTAINER_ID);
   if (!container) return;
   const el = document.createElement('div');
   el.className = 'event-toast' + (variant ? ' event-toast--' + variant : '');

@@ -41,7 +41,7 @@ import { showOfflineToast } from './presentation/toasts.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
 import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';
-import { getElement } from './presentation/components/domHelper.js';
+import { getElement } from './presentation/components/domUtils.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
 
 let lastTime = performance.now();

@@ -1,0 +1,15 @@
+/**
+ * Presentation components barrel. Re-exports for cleaner imports.
+ */
+
+export { escapeAttr, escapeHtml, getElement } from './domUtils.js';
+export { createProgressBar, createProgressBarWithWrap } from './progressBar.js';
+export { createModalOverlay } from './modal.js';
+export { createGameplayBlock } from './gameplayBlock.js';
+export { emptyStateHtml } from './emptyState.js';
+export { createStatisticsCard, createStatisticsCardWide, createStatisticsGroup } from './statisticsCard.js';
+export { createEventBadgeHtml } from './eventBadge.js';
+export { buttonWithTooltipHtml } from './buttonTooltip.js';
+export { showToast, TOAST_CONTAINER_ID } from './toasts.js';
+export { openOverlay, closeOverlay, isOverlayOpen, getOpenOverlayElement, OVERLAYS } from './overlay.js';
+export { createLabelValueCard, createBadge } from './builders.js';

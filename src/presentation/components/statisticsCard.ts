@@ -2,13 +2,17 @@
  * Statistics section: card and group HTML builders for the Statistics tab.
  */
 import { escapeHtml } from './domUtils.js';
+import { createLabelValueCard } from './builders.js';
 
 export function createStatisticsCard(label: string, statId: string): string {
-  return `
-    <div class="statistics-card">
-      <span class="statistics-card-label">${escapeHtml(label)}</span>
-      <span class="statistics-card-value" data-stat-id="${escapeHtml(statId)}">—</span>
-    </div>`;
+  return createLabelValueCard({
+    label,
+    valueHtml: '—',
+    cardClass: 'statistics-card',
+    labelClass: 'statistics-card-label',
+    valueClass: 'statistics-card-value',
+    statId,
+  });
 }
 
 export interface StatisticsCardWideOptions {

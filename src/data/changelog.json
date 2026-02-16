@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.35",
+    "date": "2026-02-16",
+    "changes": [
+      "Code organization: consolidated domHelper into domUtils (getElement, escapeAttr, escapeHtml). Generic builders (createLabelValueCard, createBadge). Components barrel index. statisticsCard uses createLabelValueCard."
+    ]
+  },
+  {
     "version": "0.4.34",
     "date": "2026-02-16",
     "changes": [
