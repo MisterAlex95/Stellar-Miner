@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.33",
+    "date": "2026-02-16",
+    "changes": [
+      "activeEventsStore, questStateStore observables. Game loop: runProductionTick, runPanelUpdates, runCanvasUpdates. getElement DOM helper. withErrorBoundary for refresh. performance.measure for refresh timing."
+    ]
+  },
+  {
     "version": "0.4.32",
     "date": "2026-02-16",
     "changes": [

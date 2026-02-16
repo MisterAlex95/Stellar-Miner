@@ -40,6 +40,8 @@ import { completeUpgradeInstallations } from './application/upgradeInstallation.
 import { showOfflineToast } from './presentation/toasts.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
 import { createThrottledRun } from './application/runIfDue.js';
+import { withErrorBoundary } from './application/errorBoundary.js';
+import { getElement } from './presentation/components/domHelper.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 150;
@@ -54,6 +56,87 @@ let lastStatsUpdateMs = 0;
 const STATS_UPDATE_INTERVAL_MS = 100;
 let lastEventsUnlocked = false;
 let pageWasHidden = document.visibilityState === 'hidden';
+
+function runProductionTick(session: ReturnType<typeof getSession>, dt: number, nowMs: number): void {
+  completeExpeditionIfDue();
+  completeUpgradeInstallations(session, nowMs);
+  updateExpeditionProgress();
+  const eventsUnlocked = getUnlockedBlocks(session).has('events');
+  if (eventsUnlocked) {
+    if (!lastEventsUnlocked) setNextEventAt(nowMs + FIRST_EVENT_DELAY_MS);
+    lastEventsUnlocked = true;
+    if (nowMs >= getNextEventAt()) {
+      triggerRandomEvent();
+      setNextEventAt(nowMs + EVENT_INTERVAL_MS);
+    }
+  } else {
+    lastEventsUnlocked = false;
+  }
+  const eventMult = getEventMultiplier();
+  const researchMult = getResearchProductionMultiplier();
+  const rateDec = session.player.effectiveProductionRate.mul(eventMult * researchMult);
+  const shouldProduce = !getSettings().pauseWhenBackground || document.visibilityState !== 'hidden';
+  if (rateDec.gt(0) && shouldProduce) {
+    session.player.addCoins(rateDec.mul(dt));
+    const earned = rateDec.mul(dt).toNumber();
+    if (Number.isFinite(earned)) addRunCoins(earned);
+  }
+  updateUpgradeListInPlace();
+  if (nowMs - lastStatsUpdateMs >= STATS_UPDATE_INTERVAL_MS) {
+    lastStatsUpdateMs = nowMs;
+    updateStats();
+  }
+  recordStatsIfDue(nowMs, session.player.coins.value, rateDec, session.player.totalCoinsEver, getSessionClickCount(), getSessionCoinsFromClicks());
+  updateCoinDisplay(dt);
+  updateProductionDisplay(dt);
+}
+
+function runPanelUpdates(nowMs: number): void {
+  runQuestIfDue(nowMs, () => true, renderQuestSection);
+  runDashboardIfDue(nowMs, () => !getElement('panel-dashboard')?.hidden, updateDashboard);
+  runEmpireIfDue(nowMs, () => !getElement('panel-empire')?.hidden, () => {
+    renderCrewSection();
+    renderPrestigeSection();
+  });
+  runResearchIfDue(nowMs, () => {
+    const p = getElement('panel-research');
+    return !!p && !p.hidden && !isResearchInProgress();
+  }, renderResearchSection);
+  updateComboIndicator();
+  updateProgressionVisibility();
+  updateTabVisibility(switchTab);
+  updateTabMenuVisibility();
+  updateTabBadges();
+  updateTabMoreActiveState();
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(() => updateStatisticsSection(), { timeout: 100 });
+  } else {
+    updateStatisticsSection();
+  }
+  const debugPanel = getElement('debug-panel');
+  if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) updateDebugPanel();
+}
+
+function runCanvasUpdates(session: ReturnType<typeof getSession>, canvasDt: number): void {
+  const planetViews = session.player.planets.map((p, index) => {
+    const upgradeCounts: Record<string, number> = {};
+    for (const u of p.upgrades) upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
+    return {
+      id: p.id,
+      name: p.name,
+      displayName: getPlanetDisplayName(p.name, index),
+      usedSlots: p.usedSlots,
+      maxUpgrades: p.maxUpgrades,
+      upgradeCounts,
+      visualSeed: p.visualSeed,
+    };
+  });
+  starfieldApi?.update(canvasDt);
+  if (document.visibilityState !== 'hidden') starfieldApi?.draw();
+  mineZoneCanvasApi?.setPlanets(planetViews);
+  mineZoneCanvasApi?.update(canvasDt);
+  if (document.visibilityState !== 'hidden') mineZoneCanvasApi?.draw();
+}
 
 function gameLoop(now: number): void {
   if (typeof performance !== 'undefined' && performance.mark) performance.mark('game-loop-start');
@@ -73,102 +156,20 @@ function gameLoop(now: number): void {
   const dt = (now - lastTime) / 1000;
   lastTime = now;
   const canvasDt = document.visibilityState === 'hidden' ? 0 : dt;
-
   const nowMs = Date.now();
-  completeExpeditionIfDue();
-  completeUpgradeInstallations(session, nowMs);
-  updateExpeditionProgress();
-  const eventsUnlocked = getUnlockedBlocks(session).has('events');
-  if (eventsUnlocked) {
-    if (!lastEventsUnlocked) {
-      setNextEventAt(nowMs + FIRST_EVENT_DELAY_MS);
-    }
-    lastEventsUnlocked = true;
-    if (nowMs >= getNextEventAt()) {
-      triggerRandomEvent();
-      setNextEventAt(nowMs + EVENT_INTERVAL_MS);
-    }
-  } else {
-    lastEventsUnlocked = false;
-  }
 
-  const eventMult = getEventMultiplier();
-  const researchMult = getResearchProductionMultiplier();
-  const rateDec = session.player.effectiveProductionRate.mul(eventMult * researchMult);
-  const shouldProduce = !getSettings().pauseWhenBackground || document.visibilityState !== 'hidden';
-  if (rateDec.gt(0) && shouldProduce) {
-    session.player.addCoins(rateDec.mul(dt));
-    const earned = rateDec.mul(dt).toNumber();
-    if (Number.isFinite(earned)) addRunCoins(earned);
-  }
-  updateUpgradeListInPlace();
-  if (nowMs - lastStatsUpdateMs >= STATS_UPDATE_INTERVAL_MS) {
-    lastStatsUpdateMs = nowMs;
-    updateStats();
-  }
-  recordStatsIfDue(
-    nowMs,
-    session.player.coins.value,
-    rateDec,
-    session.player.totalCoinsEver,
-    getSessionClickCount(),
-    getSessionCoinsFromClicks()
-  );
-  updateCoinDisplay(dt);
-  updateProductionDisplay(dt);
-  runQuestIfDue(nowMs, () => true, renderQuestSection);
-  runDashboardIfDue(nowMs, () => !document.getElementById('panel-dashboard')?.hidden, updateDashboard);
-  runEmpireIfDue(nowMs, () => !document.getElementById('panel-empire')?.hidden, () => {
-    renderCrewSection();
-    renderPrestigeSection();
-  });
-  runResearchIfDue(nowMs, () => {
-    const p = document.getElementById('panel-research');
-    return !!p && !p.hidden && !isResearchInProgress();
-  }, renderResearchSection);
-  const planetViews = session.player.planets.map((p, index) => {
-    const upgradeCounts: Record<string, number> = {};
-    for (const u of p.upgrades) {
-      upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
-    }
-    return {
-      id: p.id,
-      name: p.name,
-      displayName: getPlanetDisplayName(p.name, index),
-      usedSlots: p.usedSlots,
-      maxUpgrades: p.maxUpgrades,
-      upgradeCounts,
-      visualSeed: p.visualSeed,
-    };
-  });
-  starfieldApi?.update(canvasDt);
-  if (document.visibilityState !== 'hidden') starfieldApi?.draw();
-  mineZoneCanvasApi?.setPlanets(planetViews);
-  mineZoneCanvasApi?.update(canvasDt);
-  if (document.visibilityState !== 'hidden') mineZoneCanvasApi?.draw();
-
-  updateComboIndicator();
-  updateProgressionVisibility();
-  updateTabVisibility(switchTab);
-  updateTabMenuVisibility();
-  updateTabBadges();
-  updateTabMoreActiveState();
-  if (typeof requestIdleCallback !== 'undefined') {
-    requestIdleCallback(() => updateStatisticsSection(), { timeout: 100 });
-  } else {
-    updateStatisticsSection();
-  }
-
-  const debugPanel = document.getElementById('debug-panel');
-  if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) {
-    updateDebugPanel();
-  }
+  runProductionTick(session, dt, nowMs);
+  runPanelUpdates(nowMs);
+  runCanvasUpdates(session, canvasDt);
 
   requestAnimationFrame(gameLoop);
 }
 
 function createRefreshViews(): () => void {
   return () => {
+    if (typeof performance !== 'undefined' && performance.mark) {
+      performance.mark('refresh-start');
+    }
     saveSession();
     updateStats(); // includes renderPrestigeSection, renderCrewSection
     renderUpgradeList();
@@ -185,6 +186,10 @@ function createRefreshViews(): () => void {
     } else {
       updateStatisticsSection();
     }
+    if (typeof performance !== 'undefined' && performance.measure) {
+      performance.mark('refresh-end');
+      performance.measure('refresh', 'refresh-start', 'refresh-end');
+    }
   };
 }
 
@@ -192,7 +197,7 @@ async function init(): Promise<void> {
   const session = await getOrCreateSession();
   setSession(session);
   loadStatsHistory();
-  wireRefreshSubscribers(createRefreshViews());
+  wireRefreshSubscribers(withErrorBoundary(createRefreshViews()));
   wireEventBusToRefresh();
   const offlineCoins = saveLoad.getLastOfflineCoins();
   const offlineHours = saveLoad.getLastOfflineHours();

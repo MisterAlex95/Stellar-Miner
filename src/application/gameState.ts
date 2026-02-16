@@ -23,6 +23,14 @@ export const settingsStore = createObservableStore<Settings>(loadSettings());
 
 export type ActiveEventInstance = { event: GameEvent; endsAt: number };
 
+/** Observable active events. Emits when events are pushed or set. */
+export const activeEventsStore = createObservableStore<ActiveEventInstance[]>([]);
+
+const initialQuestState = loadQuestState();
+
+/** Observable quest state. Emits when quest changes (claim, new quest). */
+export const questStateStore = createObservableStore<QuestState>(initialQuestState);
+
 export type SavedExpedition = { endsAt: number; composition: ExpeditionComposition; durationMs: number };
 
 export type RunStats = {
@@ -38,7 +46,7 @@ let activeEventInstances: ActiveEventInstance[] = [];
 let nextEventAt = 0;
 let gameStartTime = 0;
 let settings: Settings = settingsStore.get();
-let questState: QuestState = loadQuestState();
+let questState: QuestState = initialQuestState;
 let lastCoinsForBump: Decimal = new Decimal(0);
 let clickTimestamps: number[] = [];
 let sessionClickCount = 0;
@@ -92,10 +100,12 @@ export function getActiveEventInstances(): ActiveEventInstance[] {
 
 export function setActiveEventInstances(arr: ActiveEventInstance[]): void {
   activeEventInstances = arr;
+  activeEventsStore.set([...arr]);
 }
 
 export function pushActiveEventInstance(inst: ActiveEventInstance): void {
   activeEventInstances.push(inst);
+  activeEventsStore.set([...activeEventInstances]);
 }
 
 export function getNextEventAt(): number {
@@ -130,6 +140,7 @@ export function getQuestState(): QuestState {
 
 export function setQuestState(q: QuestState): void {
   questState = q;
+  questStateStore.set(q);
 }
 
 export function getLastCoinsForBump(): Decimal {
@@ -313,6 +324,7 @@ export function getEventContext(): { activeEventIds: string[] } {
 export function getEventMultiplier(): number {
   const now = Date.now();
   activeEventInstances = activeEventInstances.filter((a) => a.endsAt > now);
+  activeEventsStore.set([...activeEventInstances]);
   let mult = 1;
   for (const a of activeEventInstances) mult *= a.event.effect.multiplier;
   return mult;
