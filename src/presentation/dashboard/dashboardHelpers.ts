@@ -10,7 +10,7 @@ import { RESEARCH_CATALOG, canAttemptResearch } from '../../application/research
 import type { ResearchNode } from '../../application/research.js';
 import { getMaxBuyCount } from '../upgradeListView.js';
 
-/** Ordered upgrade defs (by tier) the player can see. */
+/** Ordered upgrade defs (by tier) the player can see. Next tier unlocks only when install is finished. */
 export function getOrderedUpgradeDefs(player: { upgrades: { id: string }[] }) {
   const ownedIds = player.upgrades.map((u) => u.id);
   const unlockedTiers = getUnlockedUpgradeTiers(ownedIds);
