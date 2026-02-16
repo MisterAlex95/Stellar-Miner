@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.35",
+    "date": "2026-02",
+    "changes": [
+      "Interactive planet detail: click a planet thumbnail in the Empire tab to open a full-screen modal with a large rotating planet, drag-to-rotate interaction, and detailed stats (type, production, slots, housing, crew, moons, rings/belt, installed upgrades)."
+    ]
+  },
+  {
     "version": "0.4.34",
     "date": "2026-02-16",
     "changes": [

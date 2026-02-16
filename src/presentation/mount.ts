@@ -36,6 +36,7 @@ import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
+import { openPlanetDetail, closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from './planetDetailView.js';
 import { renderResearchSection } from './researchView.js';
 import { renderUpgradeList } from './upgradeListView.js';
 import { renderStatisticsSection } from './statisticsView.js';
@@ -309,6 +310,7 @@ export function mount(): void {
       else if (document.getElementById(ACHIEVEMENTS_OVERLAY_ID)?.classList.contains(ACHIEVEMENTS_OVERLAY_OPEN_CLASS)) closeAchievementsModal();
       else if (document.getElementById(EVENTS_HINT_OVERLAY_ID)?.classList.contains(EVENTS_HINT_OPEN_CLASS)) closeEventsHintModal();
       else if (document.getElementById(CHART_HELP_OVERLAY_ID)?.classList.contains(CHART_HELP_OPEN_CLASS)) closeChartHelpModal();
+      else if (document.getElementById(PLANET_DETAIL_OVERLAY_ID)?.classList.contains(PLANET_DETAIL_OPEN_CLASS)) closePlanetDetail();
       else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
@@ -371,6 +373,15 @@ export function mount(): void {
   if (prestigeRewardsClose) prestigeRewardsClose.addEventListener('click', closePrestigeRewardsModal);
   if (prestigeRewardsOverlayEl) {
     prestigeRewardsOverlayEl.addEventListener('click', (e) => { if (e.target === prestigeRewardsOverlayEl) closePrestigeRewardsModal(); });
+  }
+
+  const planetDetailClose = document.getElementById('planet-detail-close');
+  const planetDetailOverlay = document.getElementById(PLANET_DETAIL_OVERLAY_ID);
+  if (planetDetailClose) planetDetailClose.addEventListener('click', closePlanetDetail);
+  if (planetDetailOverlay) {
+    planetDetailOverlay.addEventListener('click', (e) => {
+      if (e.target === planetDetailOverlay) closePlanetDetail();
+    });
   }
 
   updateVersionAndChangelogUI();
@@ -449,6 +460,12 @@ export function mount(): void {
     planetList.addEventListener('click', (e: Event) => {
       const clicked = e.target instanceof Element ? e.target : null;
       if (!clicked) return;
+      const planetCanvas = clicked.closest('.planet-card-visual');
+      if (planetCanvas) {
+        const planetId = (planetCanvas as HTMLElement).getAttribute('data-planet-id');
+        if (planetId) openPlanetDetail(planetId);
+        return;
+      }
       const addSlotBtn = clicked.closest('.add-slot-btn');
       if (addSlotBtn) {
         const id = (addSlotBtn as HTMLElement).getAttribute('data-planet-id');
