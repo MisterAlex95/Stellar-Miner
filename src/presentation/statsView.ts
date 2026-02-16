@@ -13,7 +13,7 @@ import {
 } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
-import { getMaxAstronauts } from '../domain/constants.js';
+import { getMaxAstronauts, CREW_ROLES, type CrewRole, type CrewJobRole } from '../domain/constants.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
 import { EVENT_INTERVAL_MS, EVENT_CATALOG } from '../application/catalogs.js';
@@ -22,6 +22,7 @@ import { getNextMilestone, getUnlockedBlocks } from '../application/progression.
 import {
   getResearchProductionMultiplier,
   getResearchProductionPercent,
+  getUnlockedCrewRoles,
 } from '../application/research.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogEventName } from '../application/i18nCatalogs.js';
@@ -141,7 +142,8 @@ export function updateStats(): void {
   const assignedCrew = session ? getAssignedAstronauts(session) : 0;
   const totalCrew = player.astronautCount;
   const freeCrew = totalCrew - assignedCrew;
-  const showCrew = totalCrew > 0;
+  const crewUnlocked = getUnlockedBlocks(session).has('crew');
+  const showCrew = crewUnlocked && totalCrew > 0;
   if (crewLineEl) {
     crewLineEl.textContent = showCrew ? tParam('crewStatFormat', { n: freeCrew }) : '';
     crewLineEl.style.display = showCrew ? 'block' : 'none';
@@ -153,16 +155,22 @@ export function updateStats(): void {
   const crewByJobEl = document.getElementById('crew-stat-by-job');
   if (crewByJobEl) {
     if (showCrew) {
-      const { astronaut, miner, scientist, pilot, medic, engineer } = player.crewByRole;
+      const unlockedJobs = getUnlockedCrewRoles();
+      const crewStatRoleKeys: Record<CrewRole, StringKey> = {
+        astronaut: 'crewStatRoleAstronauts',
+        miner: 'crewStatRoleMiners',
+        scientist: 'crewStatRoleScientists',
+        pilot: 'crewStatRolePilots',
+        medic: 'crewStatRoleMedics',
+        engineer: 'crewStatRoleEngineers',
+      };
       const parts: string[] = [];
-      if (astronaut > 0) parts.push(`<span class="crew-stat-role crew-stat-role--astronaut">${astronaut} ${t('crewStatRoleAstronauts')}</span>`);
-      parts.push(
-        `<span class="crew-stat-role crew-stat-role--miner">${miner} ${t('crewStatRoleMiners')}</span>`,
-        `<span class="crew-stat-role crew-stat-role--scientist">${scientist} ${t('crewStatRoleScientists')}</span>`,
-        `<span class="crew-stat-role crew-stat-role--pilot">${pilot} ${t('crewStatRolePilots')}</span>`,
-        `<span class="crew-stat-role crew-stat-role--medic">${medic} ${t('crewStatRoleMedics')}</span>`,
-        `<span class="crew-stat-role crew-stat-role--engineer">${engineer} ${t('crewStatRoleEngineers')}</span>`
-      );
+      for (const role of CREW_ROLES) {
+        const isUnlocked = role === 'astronaut' || unlockedJobs.includes(role as CrewJobRole);
+        if (!isUnlocked) continue;
+        const n = player.crewByRole[role];
+        parts.push(`<span class="crew-stat-role crew-stat-role--${role}">${n} ${t(crewStatRoleKeys[role])}</span>`);
+      }
       crewByJobEl.innerHTML = parts.join(', ');
     } else {
       crewByJobEl.textContent = '';
@@ -170,7 +178,9 @@ export function updateStats(): void {
     crewByJobEl.style.display = showCrew ? 'block' : 'none';
   }
   const crewCompactEl = document.getElementById('stats-compact-crew');
+  const crewCompactCard = document.getElementById('crew-compact-card');
   if (crewCompactEl) crewCompactEl.textContent = String(totalCrew);
+  if (crewCompactCard) crewCompactCard.style.display = crewUnlocked ? '' : 'none';
   const lastCoinsForBump = getLastCoinsForBump();
   if (coinsCard && player.coins.value.gt(lastCoinsForBump)) {
     coinsCard.classList.add('stat-card--bump');
