@@ -163,9 +163,9 @@ export function createPlanetScene(
   /* ── scene ──────────────────────────────────── */
   const scene = new THREE.Scene();
 
-  /* ── camera ─────────────────────────────────── */
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 0, 3.2);
+  /* ── camera: FOV and distance so planet + rings + belt + moons all fit in frame ── */
+  const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 100);
+  camera.position.set(0, 0, 6);
 
   /* ── renderer ───────────────────────────────── */
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -248,9 +248,7 @@ export function createPlanetScene(
       depthWrite: false,
     });
     const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    /* Ring geometry is already in XZ plane (equator); small X tilt so it stays visible */
-    const ringTilt = 0.3 + (hashStr(planetName + 'tilt') % 20) / 100;
-    ringMesh.rotation.x = -ringTilt;
+    /* Ring geometry is in XZ plane (equator); no tilt so it stays at hemisphere level */
     planetMesh.add(ringMesh);
   }
 
@@ -272,8 +270,7 @@ export function createPlanetScene(
     for (let i = 0; i < beltCount; i++) {
       const angle = (i / beltCount) * Math.PI * 2 + (hashStr(planetName + 'a' + i) % 100) / 100 * 0.3;
       const r = beltR + (hashStr(planetName + 'r' + i) % 100) / 100 * beltSpread - beltSpread / 2;
-      const y = (hashStr(planetName + 'y' + i) % 100) / 100 * 0.12 - 0.06;
-      dummy.position.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
+      dummy.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
       const s = 0.6 + (hashStr(planetName + 's' + i) % 100) / 100 * 0.8;
       dummy.scale.set(s, s, s);
       dummy.rotation.set(
@@ -286,9 +283,8 @@ export function createPlanetScene(
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
     beltGroup.add(instancedMesh);
-    const beltTilt = hasRings ? Math.PI / 2 - (0.3 + (hashStr(planetName + 'tilt') % 20) / 100) : Math.PI / 2 - 0.15;
-    beltGroup.rotation.x = beltTilt;
-    scene.add(beltGroup);
+    /* no tilt: belt stays in equatorial plane (XZ) at hemisphere level */
+    planetMesh.add(beltGroup);
   }
 
   /* ── moons (with procedural textures) ────────── */
@@ -316,7 +312,7 @@ export function createPlanetScene(
       metalness: 0.02,
     });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-    scene.add(moonMesh);
+    planetMesh.add(moonMesh);
     moons.push({ mesh: moonMesh, orbitR, speed, phase });
   }
 
@@ -337,12 +333,17 @@ export function createPlanetScene(
   const stars = new THREE.Points(starGeo, starMat);
   scene.add(stars);
 
-  /* ── orbit controls (manual, lightweight) ────── */
+  /* ── orbit controls (manual + inertia) ─────────── */
   let isPointerDown = false;
   let prevX = 0;
   let prevY = 0;
   let rotX = 0;
   let rotY = 0;
+  let velRotX = 0;
+  let velRotY = 0;
+  const dragSensitivity = 0.005;
+  const inertiaFactor = 0.018;
+  const friction = 0.94;
   let autoRotateSpeed = 0.15;
 
   const canvas = renderer.domElement;
@@ -361,9 +362,11 @@ export function createPlanetScene(
     if (!isPointerDown) return;
     const dx = e.clientX - prevX;
     const dy = e.clientY - prevY;
-    rotY += dx * 0.005;
-    rotX += dy * 0.005;
+    rotY += dx * dragSensitivity;
+    rotX += dy * dragSensitivity;
     rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotX));
+    velRotY = dx * inertiaFactor;
+    velRotX = dy * inertiaFactor;
     prevX = e.clientX;
     prevY = e.clientY;
   }
@@ -379,10 +382,10 @@ export function createPlanetScene(
   canvas.addEventListener('pointerup', onPointerUp);
   canvas.addEventListener('pointercancel', onPointerUp);
 
-  /* zoom with scroll wheel */
+  /* zoom with scroll wheel (max z so rings/belt/moons stay visible) */
   function onWheel(e: WheelEvent): void {
     e.preventDefault();
-    camera.position.z = Math.max(1.8, Math.min(6, camera.position.z + e.deltaY * 0.003));
+    camera.position.z = Math.max(1.8, Math.min(8, camera.position.z + e.deltaY * 0.003));
   }
   canvas.addEventListener('wheel', onWheel, { passive: false });
 
@@ -395,8 +398,15 @@ export function createPlanetScene(
     const dt = 1 / 60;
     time += dt;
 
-    /* auto-rotate + manual rotation */
-    if (!isPointerDown) rotY += autoRotateSpeed * dt;
+    /* when not dragging: apply inertia velocity then decay it; then auto-rotate */
+    if (!isPointerDown) {
+      rotY += velRotY;
+      rotX += velRotX;
+      rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotX));
+      velRotY *= friction;
+      velRotX *= friction;
+      rotY += autoRotateSpeed * dt;
+    }
     planetMesh.rotation.y = rotY;
     planetMesh.rotation.x = rotX + tilt;
     atmMesh.rotation.y = rotY;
