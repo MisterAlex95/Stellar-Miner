@@ -15,7 +15,12 @@ import { getUpgradeUsesSlot } from '../application/catalogs.js';
 import { getBaseProductionRateFromPlanets } from '../application/planetAffinity.js';
 import { toDecimal } from '../domain/bigNumber.js';
 import { emit } from '../application/eventBus.js';
-import { RESEARCH_STORAGE_KEY, getResearchProductionMultiplier, getEffectiveRequiredAstronauts } from '../application/research.js';
+import {
+  RESEARCH_STORAGE_KEY,
+  getResearchProductionMultiplier,
+  getEffectiveRequiredAstronauts,
+  getUnlockedResearch,
+} from '../application/research.js';
 
 export const SAVE_VERSION = 1;
 
@@ -84,6 +89,8 @@ export type SavedSession = {
   runStats?: SavedRunStats;
   discoveredEventIds?: string[];
   expedition?: SavedExpedition;
+  /** Unlocked research node ids (restored on import so click/production modifiers work). */
+  unlockedResearch?: string[];
 };
 
 function isSavedSession(data: unknown): data is SavedSession {
@@ -255,12 +262,17 @@ export class SaveLoadService implements ISaveLoadService {
     return JSON.stringify(this.serialize(session));
   }
 
-  /** Import session from JSON string. Returns null if invalid. */
+  /** Import session from JSON string. Returns null if invalid. Restores unlocked research to localStorage when present. */
   importSession(json: string): GameSession | null {
     try {
       const data = JSON.parse(json) as unknown;
       if (!isSavedSession(data)) return null;
-      return this.deserialize(data);
+      const session = this.deserialize(data);
+      if (typeof localStorage !== 'undefined' && Array.isArray(data.unlockedResearch)) {
+        const ids = data.unlockedResearch.filter((id: unknown) => typeof id === 'string') as string[];
+        if (ids.length > 0) localStorage.setItem(RESEARCH_STORAGE_KEY, JSON.stringify(ids));
+      }
+      return session;
     } catch {
       return null;
     }
@@ -340,6 +352,8 @@ export class SaveLoadService implements ISaveLoadService {
       payload.discoveredEventIds = options.discoveredEventIds;
     }
     if (options?.expedition) payload.expedition = options.expedition;
+    const unlockedResearch = getUnlockedResearch();
+    if (unlockedResearch.length > 0) payload.unlockedResearch = unlockedResearch;
     return payload;
   }
 
@@ -369,9 +383,13 @@ export class SaveLoadService implements ISaveLoadService {
           endsAt: i.endsAt,
           rateToAdd: toDecimal(i.rateToAdd),
         }));
+        const planetName =
+          typeof p.name === 'string' && !/undefined/i.test(p.name)
+            ? p.name
+            : generatePlanetName(p.id);
         const planet = new Planet(
           p.id,
-          p.name,
+          planetName,
           p.maxUpgrades,
           p.upgrades.map(mapUpgrade),
           p.housing ?? 0,

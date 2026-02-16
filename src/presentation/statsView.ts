@@ -16,13 +16,14 @@ import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { getMaxAstronauts, CREW_ROLES, type CrewRole, type CrewJobRole } from '../domain/constants.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
-import { EVENT_INTERVAL_MS, EVENT_CATALOG } from '../application/catalogs.js';
+import { EVENT_INTERVAL_MS, EVENT_CATALOG, getCurrentComboMultiplier } from '../application/catalogs.js';
 import { getDiscoveredEventIds } from '../application/gameState.js';
 import { getNextMilestone, getUnlockedBlocks } from '../application/progression.js';
 import {
   getResearchProductionMultiplier,
   getResearchProductionPercent,
   getUnlockedCrewRoles,
+  getExpectedCoinsPerClick,
 } from '../application/research.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogEventName } from '../application/i18nCatalogs.js';
@@ -69,10 +70,16 @@ export function updateProductionDisplay(dt: number): void {
   const researchMult = getResearchProductionMultiplier();
   const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
   const now = Date.now();
-  const clicksLastSecond = getClickTimestamps().filter((t) => t > now - 1000).length;
+  const clickTimestamps = getClickTimestamps();
+  const clicksLastSecond = clickTimestamps.filter((t) => t > now - 1000).length;
   const sessionClicks = getSessionClickCount();
   const sessionCoinsFromClicks = getSessionCoinsFromClicks();
-  const avgCoinsPerClick = sessionClicks > 0 ? sessionCoinsFromClicks / sessionClicks : 1;
+  const baseExpected = getExpectedCoinsPerClick(session.player.prestigeLevel);
+  const comboMult = getCurrentComboMultiplier(clickTimestamps, now);
+  const avgCoinsPerClick =
+    sessionClicks > 0
+      ? Math.max(sessionCoinsFromClicks / sessionClicks, baseExpected * comboMult)
+      : baseExpected * comboMult;
   const clickRate = clicksLastSecond * avgCoinsPerClick;
   const target = productionRate.add(clickRate);
   const settings = getSettings();
@@ -114,10 +121,16 @@ export function syncProductionDisplay(): void {
   const researchMult = getResearchProductionMultiplier();
   const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
   const now = Date.now();
-  const clicksLastSecond = getClickTimestamps().filter((t) => t > now - 1000).length;
+  const clickTimestamps = getClickTimestamps();
+  const clicksLastSecond = clickTimestamps.filter((t) => t > now - 1000).length;
   const sessionClicks = getSessionClickCount();
   const sessionCoinsFromClicks = getSessionCoinsFromClicks();
-  const avgCoinsPerClick = sessionClicks > 0 ? sessionCoinsFromClicks / sessionClicks : 1;
+  const baseExpected = getExpectedCoinsPerClick(session.player.prestigeLevel);
+  const comboMult = getCurrentComboMultiplier(clickTimestamps, now);
+  const avgCoinsPerClick =
+    sessionClicks > 0
+      ? Math.max(sessionCoinsFromClicks / sessionClicks, baseExpected * comboMult)
+      : baseExpected * comboMult;
   const target = productionRate.add(clicksLastSecond * avgCoinsPerClick);
   displayedProduction = target.toNumber();
   const rateEl = document.getElementById('production-value');
@@ -179,7 +192,7 @@ export function updateStats(): void {
   }
   const crewCompactEl = document.getElementById('stats-compact-crew');
   const crewCompactCard = document.getElementById('crew-compact-card');
-  if (crewCompactEl) crewCompactEl.textContent = String(totalCrew);
+  if (crewCompactEl) crewCompactEl.textContent = String(showCrew ? freeCrew : totalCrew);
   if (crewCompactCard) crewCompactCard.style.display = crewUnlocked ? '' : 'none';
   const lastCoinsForBump = getLastCoinsForBump();
   if (coinsCard && player.coins.value.gt(lastCoinsForBump)) {
@@ -225,7 +238,20 @@ export function updateStats(): void {
     if (eventMult > 1) parts.push(`×${eventMult.toFixed(1)} ${t('breakdownEvent')}`);
     const now = Date.now();
     const clicksLastSecond = getClickTimestamps().filter((ts) => ts > now - 1000).length;
-    if (clicksLastSecond > 0) parts.push(tParam('productionClicksEstimate', { n: String(clicksLastSecond) }));
+    if (clicksLastSecond > 0) {
+      const now = Date.now();
+      const clickTimestamps = getClickTimestamps();
+      const sessionClicks = getSessionClickCount();
+      const sessionCoinsFromClicks = getSessionCoinsFromClicks();
+      const baseExpected = getExpectedCoinsPerClick(player.prestigeLevel);
+      const comboMult = getCurrentComboMultiplier(clickTimestamps, now);
+      const avgCoinsPerClick =
+        sessionClicks > 0
+          ? Math.max(sessionCoinsFromClicks / sessionClicks, baseExpected * comboMult)
+          : baseExpected * comboMult;
+      const clickRate = clicksLastSecond * avgCoinsPerClick;
+      parts.push(tParam('productionClicksRateOnly', { rate: formatNumber(clickRate, settings.compactNumbers) }));
+    }
     breakdownEl.textContent = parts.length > 0 ? parts.join(' · ') : '';
     breakdownEl.style.display = parts.length > 0 ? '' : 'none';
   }
@@ -246,9 +272,15 @@ export function updateStats(): void {
         const productionRate = session.player.effectiveProductionRate.mul(eventMult * researchMult);
         const now = Date.now();
         const clicksLastSecond = getClickTimestamps().filter((t) => t > now - 1000).length;
+        const clickTimestamps = getClickTimestamps();
         const sessionClicks = getSessionClickCount();
         const sessionCoinsFromClicks = getSessionCoinsFromClicks();
-        const avgCoinsPerClick = sessionClicks > 0 ? sessionCoinsFromClicks / sessionClicks : 1;
+        const baseExpected = getExpectedCoinsPerClick(session.player.prestigeLevel);
+        const comboMult = getCurrentComboMultiplier(clickTimestamps, now);
+        const avgCoinsPerClick =
+          sessionClicks > 0
+            ? Math.max(sessionCoinsFromClicks / sessionClicks, baseExpected * comboMult)
+            : baseExpected * comboMult;
         const totalRate = productionRate.add(clicksLastSecond * avgCoinsPerClick);
         if (totalRate.gt(0)) {
           const secs = remaining.div(totalRate).toNumber();

@@ -115,7 +115,7 @@ export function renderCrewSection(): void {
     crewEmptyState.setAttribute('aria-hidden', String(!showEmpty));
   }
   const crewSummaryLabel = document.getElementById('crew-section-summary');
-  if (crewSummaryLabel) crewSummaryLabel.textContent = totalCrew > 0 ? `${totalCrew} crew` : '';
+  if (crewSummaryLabel) crewSummaryLabel.textContent = totalCrew > 0 ? tParam('crewSectionCount', { n: String(totalCrew) }) : '';
   if (totalCrew === 0) {
     crewSummaryEl.textContent = tParam('noCrewYetMax', { max: maxCrew });
   } else if (assigned > 0) {

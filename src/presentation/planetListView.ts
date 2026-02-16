@@ -84,7 +84,7 @@ function buildPlanetCardHtml(
   const housingBtn = hasSlot
     ? buttonWithTooltipHtml(housingTooltip, `<button type="button" class="build-housing-btn" data-planet-id="${p.id}" ${canBuildHousing ? '' : 'disabled'}>${tParam('buildHousingBtn', { cost: formatNumber(housingCost, settings.compactNumbers) })}</button>`)
     : '';
-  return `<div class="planet-card" data-planet-id="${p.id}" title="${cardTitle}">
+  return `<div class="planet-card" data-planet-id="${p.id}">
     <div class="planet-card-header">
       <canvas class="planet-card-visual" width="72" height="48" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" data-planet-visual-seed="${p.visualSeed ?? ''}" aria-hidden="true"></canvas>
       <div class="planet-card-name-wrap">
@@ -93,7 +93,6 @@ function buildPlanetCardHtml(
       </div>
     </div>
     <div class="planet-card-slots"><span class="planet-slot-value">${effectiveUsed}/${p.maxUpgrades}</span> ${t('slots')}</div>
-    ${p.installingUpgrades.length > 0 ? `<div class="planet-card-installing-wrap" data-planet-id="${p.id}"><span class="planet-card-installing-label">${tParam('upgradeInstallingCount', { n: String(p.installingUpgrades.length) })}</span><div class="planet-installing-progress-track"><div class="planet-installing-progress-fill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div></div>` : ''}
     ${prodLine}
     <div class="planet-card-actions">
       ${buttonWithTooltipHtml(slotBtnTitle, `<button type="button" class="add-slot-btn" data-planet-id="${p.id}" ${canAddSlot ? '' : 'disabled'}>${tParam('addSlotBtn', { cost: formatNumber(addSlotCost, settings.compactNumbers) })}</button>`)}
@@ -141,7 +140,7 @@ export function renderPlanetList(): void {
         .map(({ planet, index }) => buildPlanetCardHtml(planet, index, player, session, settings))
         .join('');
       return `<section class="planet-system ${isCollapsed ? 'planet-system--collapsed' : ''}" data-system-index="${g.systemIndex}" aria-label="${escapeAttr(g.systemName)}">
-        <button type="button" class="planet-system-header" aria-expanded="${expanded}" aria-controls="planet-system-planets-${g.systemIndex}" id="planet-system-toggle-${g.systemIndex}" title="${toggleTitle}">
+        <button type="button" class="planet-system-header" aria-expanded="${expanded}" aria-controls="planet-system-planets-${g.systemIndex}" id="planet-system-toggle-${g.systemIndex}" >
           <span class="planet-system-toggle-icon" aria-hidden="true">${toggleIcon}</span>
           <span class="planet-system-name">${escapeAttr(g.systemName)}</span>
         </button>
@@ -225,25 +224,3 @@ export function updateExpeditionProgress(): void {
   updateExpeditionProgressDom(progressWrap, endsAt, getExpeditionDurationMs());
 }
 
-/** Call from game loop to refresh installing upgrade progress bars on planet cards. */
-export function updateInstallingProgress(): void {
-  const session = getSession();
-  if (!session) return;
-  const listEl = document.getElementById('planet-list');
-  if (!listEl) return;
-  const now = Date.now();
-  listEl.querySelectorAll<HTMLElement>('.planet-card-installing-wrap').forEach((wrap) => {
-    const planetId = wrap.getAttribute('data-planet-id');
-    const planet = planetId ? session.player.planets.find((p) => p.id === planetId) : null;
-    if (!planet || planet.installingUpgrades.length === 0) return;
-    const soonest = planet.installingUpgrades.reduce((a, b) => (a.endsAt <= b.endsAt ? a : b));
-    const totalMs = Math.max(1, soonest.endsAt - soonest.startAt);
-    const progress = Math.min(1, Math.max(0, (now - soonest.startAt) / totalMs));
-    const fill = wrap.querySelector('.planet-installing-progress-fill') as HTMLElement | null;
-    if (fill) {
-      const pct = Math.round(progress * 100);
-      fill.style.width = `${pct}%`;
-      fill.setAttribute('aria-valuenow', String(pct));
-    }
-  });
-}

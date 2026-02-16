@@ -125,7 +125,5 @@ function handleOut(e: MouseEvent): void {
 }
 
 export function initTooltips(): void {
-  getTooltipEl();
-  document.body.addEventListener('mouseover', handleOver, true);
-  document.body.addEventListener('mouseout', handleOut, true);
+  // Hover tooltips disabled: no listeners, no tooltip element.
 }

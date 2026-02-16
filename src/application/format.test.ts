@@ -27,6 +27,11 @@ describe('format', () => {
     expect(formatNumber(d400).length).toBeGreaterThan(0);
   });
 
+  it('formatNumber compact uses toString when exponent > 308 and beyond suffix range', () => {
+    const beyondSuffix = new Decimal('1e1000');
+    expect(formatNumber(beyondSuffix, true)).toBe(beyondSuffix.toString());
+  });
+
   it('formatNumber with compact false uses toLocaleString', () => {
     expect(formatNumber(1234, false)).toBe('1,234');
     expect(formatNumber(0, false)).toBe('0');

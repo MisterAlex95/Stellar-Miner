@@ -57,6 +57,7 @@ export function renderQuestSection(): void {
   }
   const questSummaryEl = document.getElementById('quest-section-summary');
   if (questSummaryEl) {
-    questSummaryEl.textContent = p.done ? 'Claim!' : `${typeof p.current === 'number' ? p.current : p.current.toNumber()}/${p.target}`;
+    const compact = settings?.compactNumbers ?? true;
+    questSummaryEl.textContent = p.done ? 'Claim!' : `${formatNumber(p.current, compact)} / ${formatNumber(p.target, compact)}`;
   }
 }

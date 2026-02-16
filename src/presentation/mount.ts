@@ -76,6 +76,7 @@ const COLLAPSIBLE_SECTION_IDS = [
   'research-section',
   'upgrades-section',
   'statistics-section',
+  'dashboard-section',
 ];
 const STATS_COMPACT_ENTER = 70;
 const STATS_COMPACT_LEAVE = 35;
@@ -219,6 +220,7 @@ export function updateTabMenuVisibility(): void {
   const session = getSession();
   const unlocked = getUnlockedBlocks(session);
   const isUnlockedFor = (tabId: string) =>
+    tabId === 'mine' ||
     tabId === 'dashboard' ||
     (tabId === 'upgrades' && unlocked.has('upgrades')) ||
     (tabId === 'empire' && (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
@@ -228,6 +230,11 @@ export function updateTabMenuVisibility(): void {
     const tabId = item.getAttribute('data-tab');
     if (!tabId) return;
     item.style.display = isUnlockedFor(tabId) ? '' : 'none';
+  });
+  document.querySelectorAll<HTMLElement>('.app-tab-bottom[data-tab]').forEach((tab) => {
+    const tabId = tab.getAttribute('data-tab');
+    if (!tabId) return;
+    tab.style.display = isUnlockedFor(tabId) ? '' : 'none';
   });
   document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
     const tabId = item.getAttribute('data-tab');
@@ -292,7 +299,8 @@ export function updateTabBadges(): void {
       hasEmpireAction = true;
   }
 
-  setTabBadge('mine', questClaimable);
+  const questUnlocked = unlocked.has('quest');
+  setTabBadge('mine', questUnlocked && questClaimable);
   setTabBadge('empire', empireUnlocked && hasEmpireAction);
   setTabBadge('research', hasAttemptableResearch);
   setTabBadge('dashboard', false);

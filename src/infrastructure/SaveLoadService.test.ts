@@ -10,6 +10,8 @@ import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
 import { Planet } from '../domain/entities/Planet.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
+import { toDecimal } from '../domain/bigNumber.js';
+import { RESEARCH_STORAGE_KEY } from '../application/research.js';
 
 describe('SaveLoadService', () => {
   let storage: Record<string, string>;
@@ -264,6 +266,28 @@ describe('SaveLoadService', () => {
     expect(loaded!.player.coins.value.toNumber()).toBe(200);
   });
 
+  it('exportSession includes unlockedResearch when present', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    const player = Player.create('p1');
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    const json = service.exportSession(session);
+    const data = JSON.parse(json);
+    expect(data.unlockedResearch).toEqual(['mining-theory', 'automation']);
+  });
+
+  it('importSession restores unlockedResearch to localStorage', () => {
+    const player = Player.create('p1');
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+    const json = service.exportSession(session);
+    const data = JSON.parse(json);
+    data.unlockedResearch = ['mining-theory', 'automation'];
+    const loaded = service.importSession(JSON.stringify(data));
+    expect(loaded).not.toBeNull();
+    expect(storage[RESEARCH_STORAGE_KEY]).toBe(JSON.stringify(['mining-theory', 'automation']));
+  });
+
   it('validateSavePayload returns true for valid JSON', async () => {
     const player = Player.create('p1');
     const session = new GameSession('session-1', player);
@@ -366,6 +390,30 @@ describe('SaveLoadService', () => {
     const service = new SaveLoadService();
     const loaded = await service.load();
     expect(loaded).toBeNull();
+  });
+
+  it('round-trip save and load restores planet with installingUpgrades', async () => {
+    const player = Player.create('p1');
+    const upgrade = new Upgrade('drill', 'Drill', 100, new UpgradeEffect(5));
+    const now = Date.now();
+    const startAt = now;
+    const endsAt = now + 5000;
+    player.planets[0].addInstallingUpgrade(upgrade, startAt, endsAt, toDecimal(5));
+    const session = new GameSession('session-1', player);
+    const service = new SaveLoadService();
+
+    await service.save(session);
+    const raw = storage['stellar-miner-session'];
+    const data = JSON.parse(raw);
+    expect(data.player.planets[0].installingUpgrades).toHaveLength(1);
+    expect(data.player.planets[0].installingUpgrades[0].upgrade.id).toBe('drill');
+    expect(data.player.planets[0].installingUpgrades[0].endsAt).toBe(endsAt);
+
+    const loaded = await service.load();
+    expect(loaded).not.toBeNull();
+    const s = loaded!.session;
+    expect(s.player.planets[0].installingUpgrades).toHaveLength(1);
+    expect(s.player.planets[0].installingUpgrades[0].upgrade.id).toBe('drill');
   });
 
   it('save with runStats and expedition options includes them in payload', async () => {

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Planet, UPGRADES_PER_PLANET } from './Planet.js';
 import { Upgrade } from './Upgrade.js';
 import { UpgradeEffect } from '../value-objects/UpgradeEffect.js';
+import { HOUSING_ASTRONAUT_CAPACITY } from '../constants.js';
 
 describe('Planet', () => {
   it('create returns planet with default max upgrades', () => {
@@ -74,6 +75,18 @@ describe('Planet', () => {
     const p = Planet.create('p1', 'Titan', 1);
     p.addUpgrade(new Upgrade('u1', 'U1', 1, new UpgradeEffect(1)));
     expect(() => p.addHousing()).toThrow('Planet has no free slot for housing');
+  });
+
+  it('maxAssignedCrew and setAssignedCrew', () => {
+    const p = Planet.create('p1', 'Titan', 6);
+    expect(p.maxAssignedCrew).toBe(0);
+    p.addHousing();
+    p.addHousing();
+    expect(p.maxAssignedCrew).toBe(2 * HOUSING_ASTRONAUT_CAPACITY);
+    p.setAssignedCrew(4);
+    expect(p.assignedCrew).toBe(4);
+    p.setAssignedCrew(100);
+    expect(p.assignedCrew).toBe(2 * HOUSING_ASTRONAUT_CAPACITY);
   });
 
   it('constructor copies upgrades array', () => {

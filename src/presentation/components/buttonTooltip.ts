@@ -5,19 +5,14 @@ import { escapeAttr } from './domUtils.js';
 
 /**
  * Returns HTML for a span.btn-tooltip-wrap wrapping the given button HTML.
- * Use when building markup that needs a title tooltip on a button.
+ * Tooltip on hover is disabled; title is not set.
  */
 export function buttonWithTooltipHtml(title: string, buttonHtml: string, wrapClass?: string): string {
   const cls = 'btn-tooltip-wrap' + (wrapClass ? ' ' + wrapClass : '');
-  return `<span class="${escapeAttr(cls)}" title="${escapeAttr(title)}">${buttonHtml}</span>`;
+  return `<span class="${escapeAttr(cls)}">${buttonHtml}</span>`;
 }
 
 /**
- * Sets the tooltip for a button: if the button is inside a .btn-tooltip-wrap, updates that span's title; otherwise the button's title.
+ * No-op: hover tooltips are disabled. Kept for API compatibility.
  */
-export function updateTooltipForButton(button: HTMLElement, title: string): void {
-  const wrap =
-    button.parentElement?.classList.contains('btn-tooltip-wrap') ? button.parentElement : null;
-  if (wrap) wrap.setAttribute('title', title);
-  else button.setAttribute('title', title);
-}
+export function updateTooltipForButton(_button: HTMLElement, _title: string): void {}

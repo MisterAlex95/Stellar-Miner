@@ -25,7 +25,7 @@ import { getResearchProductionMultiplier, isResearchInProgress } from './applica
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
 import { updateStatisticsSection } from './presentation/statisticsView.js';
 import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
-import { renderPlanetList, updateExpeditionProgress, updateInstallingProgress } from './presentation/planetListView.js';
+import { renderPlanetList, updateExpeditionProgress } from './presentation/planetListView.js';
 import { renderResearchSection } from './presentation/researchView.js';
 import { renderCrewSection } from './presentation/crewView.js';
 import { renderPrestigeSection } from './presentation/prestigeView.js';
@@ -74,7 +74,6 @@ function gameLoop(now: number): void {
   completeExpeditionIfDue();
   completeUpgradeInstallations(session, nowMs);
   updateExpeditionProgress();
-  updateInstallingProgress();
   const eventsUnlocked = getUnlockedBlocks(session).has('events');
   if (eventsUnlocked) {
     if (!lastEventsUnlocked) {
@@ -188,6 +187,7 @@ async function init(): Promise<void> {
   setStarfieldApi(startStarfield(getSettings, getEventContext));
   mount();
   updateTabVisibility(switchTab);
+  updateTabMenuVisibility();
   syncCoinDisplay();
   syncProductionDisplay();
   updateStats();

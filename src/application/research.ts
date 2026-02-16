@@ -7,6 +7,7 @@ import { getUpgradeUsesSlot, UPGRADE_CATALOG } from './catalogs.js';
 import {
   SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST,
   SCIENTIST_RESEARCH_SUCCESS_CAP,
+  PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL,
   type CrewJobRole,
   CREW_JOB_ROLES,
 } from '../domain/constants.js';
@@ -118,6 +119,14 @@ export function getResearchProductionPercent(): number {
 /** Total +% click from research (e.g. 12 for +12%). Rounded for display. */
 export function getResearchClickPercent(): number {
   return Math.round((getResearchClickMultiplier() - 1) * 100);
+}
+
+/** Expected coins per normal click (base 1 × research × prestige). Used for rate display and stats. Research always applied for display; prestige bonus only from level 2. */
+export function getExpectedCoinsPerClick(prestigeLevel: number): number {
+  const researchMult = getResearchClickMultiplier();
+  const prestigeMult =
+    prestigeLevel >= 2 ? 1 + (prestigeLevel - 1) * (PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL / 100) : 1;
+  return Math.max(1, 1 * researchMult * prestigeMult);
 }
 
 /** Research success chance multiplier from scientists (1 + scientistBonus, capped). Used in attemptResearch. */
@@ -388,11 +397,24 @@ export function clearResearch(): void {
   localStorage.removeItem(RESEARCH_STORAGE_KEY);
 }
 
-/** True while the "construction" progress bar is running; skip re-rendering research list. */
-let researchInProgress = false;
-export function isResearchInProgress(): boolean {
-  return researchInProgress;
+/** Research IDs currently running the "construction" progress bar. Enables parallel research. */
+const researchInProgressIds = new Set<string>();
+
+/** Whether any research is in progress (no arg) or this specific one (with id). */
+export function isResearchInProgress(id?: string): boolean {
+  if (id !== undefined) return researchInProgressIds.has(id);
+  return researchInProgressIds.size > 0;
 }
-export function setResearchInProgress(value: boolean): void {
-  researchInProgress = value;
+
+export function addResearchInProgress(id: string): void {
+  researchInProgressIds.add(id);
+}
+
+export function removeResearchInProgress(id: string): void {
+  researchInProgressIds.delete(id);
+}
+
+/** IDs of researches currently in progress (for restoring progress bars after re-render). */
+export function getResearchInProgressIds(): string[] {
+  return Array.from(researchInProgressIds);
 }

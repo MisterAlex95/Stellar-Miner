@@ -26,7 +26,14 @@ import {
 } from '../application/catalogs.js';
 import { getUnlockedBlocks } from '../application/progression.js';
 import type { BlockId } from '../application/progression.js';
-import { getResearchProductionMultiplier, getResearchProductionPercent, getResearchClickPercent, getEffectiveUsedSlots, getUnlockedResearch } from '../application/research.js';
+import {
+  getResearchProductionMultiplier,
+  getResearchProductionPercent,
+  getResearchClickPercent,
+  getEffectiveUsedSlots,
+  getUnlockedResearch,
+  getExpectedCoinsPerClick,
+} from '../application/research.js';
 import { RESEARCH_CATALOG } from '../application/research.js';
 import { getComboName } from '../application/catalogs.js';
 import { t, tParam } from '../application/strings.js';
@@ -157,7 +164,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
         </div>
         <div class="statistics-charts-row">
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('coinsOverTime')} <span class="statistics-chart-help" data-chart-title="coinsOverTime" data-chart-desc="chartDescCoins" title="${t('chartDescCoins').replace(/"/g, '&quot;')}" aria-label="${t('chartDescCoins').replace(/"/g, '&quot;')}">?</span></div>
+            <div class="statistics-chart-label">${t('coinsOverTime')} <span class="statistics-chart-help" data-chart-title="coinsOverTime" data-chart-desc="chartDescCoins" aria-label="${t('chartDescCoins').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-coins" width="260" height="120" role="img" aria-label="${t('chartAriaCoins')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-coins">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins"></span>
@@ -166,7 +173,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('productionOverTime')} <span class="statistics-chart-help" data-chart-title="productionOverTime" data-chart-desc="chartDescProduction" title="${t('chartDescProduction').replace(/"/g, '&quot;')}" aria-label="${t('chartDescProduction').replace(/"/g, '&quot;')}">?</span></div>
+            <div class="statistics-chart-label">${t('productionOverTime')} <span class="statistics-chart-help" data-chart-title="productionOverTime" data-chart-desc="chartDescProduction" aria-label="${t('chartDescProduction').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-production" width="260" height="120" role="img" aria-label="${t('chartAriaProduction')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-production">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--production"></span>
@@ -175,7 +182,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('totalCoinsEverChart')} <span class="statistics-chart-help" data-chart-title="totalCoinsEverChart" data-chart-desc="chartDescTotalEver" title="${t('chartDescTotalEver').replace(/"/g, '&quot;')}" aria-label="${t('chartDescTotalEver').replace(/"/g, '&quot;')}">?</span></div>
+            <div class="statistics-chart-label">${t('totalCoinsEverChart')} <span class="statistics-chart-help" data-chart-title="totalCoinsEverChart" data-chart-desc="chartDescTotalEver" aria-label="${t('chartDescTotalEver').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-total-ever" width="260" height="120" role="img" aria-label="${t('chartAriaTotalEver')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-total-ever">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--total-ever"></span>
@@ -184,7 +191,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('coinsGainedPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsGainedPerPeriod" data-chart-desc="chartDescCoinsGained" title="${t('chartDescCoinsGained').replace(/"/g, '&quot;')}" aria-label="${t('chartDescCoinsGained').replace(/"/g, '&quot;')}">?</span></div>
+            <div class="statistics-chart-label">${t('coinsGainedPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsGainedPerPeriod" data-chart-desc="chartDescCoinsGained" aria-label="${t('chartDescCoinsGained').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-coins-gained" width="260" height="120" role="img" aria-label="${t('chartAriaCoinsGained')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-coins-gained">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-gained"></span>
@@ -193,7 +200,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('coinsPerClickPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsPerClickPerPeriod" data-chart-desc="chartDescCoinsPerClickPerPeriod" title="${t('chartDescCoinsPerClickPerPeriod').replace(/"/g, '&quot;')}" aria-label="${t('chartDescCoinsPerClickPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
+            <div class="statistics-chart-label">${t('coinsPerClickPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsPerClickPerPeriod" data-chart-desc="chartDescCoinsPerClickPerPeriod" aria-label="${t('chartDescCoinsPerClickPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-coins-per-click" width="260" height="120" role="img" aria-label="${t('chartAriaCoinsPerClickPerPeriod')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-coins-per-click">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-per-click"></span>
@@ -202,7 +209,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('clicksPerPeriod')} <span class="statistics-chart-help" data-chart-title="clicksPerPeriod" data-chart-desc="chartDescClicksPerPeriod" title="${t('chartDescClicksPerPeriod').replace(/"/g, '&quot;')}" aria-label="${t('chartDescClicksPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
+            <div class="statistics-chart-label">${t('clicksPerPeriod')} <span class="statistics-chart-help" data-chart-title="clicksPerPeriod" data-chart-desc="chartDescClicksPerPeriod" aria-label="${t('chartDescClicksPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-clicks" width="260" height="120" role="img" aria-label="${t('chartAriaClicks')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-clicks">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--clicks"></span>
@@ -211,7 +218,7 @@ export function renderStatisticsSection(container: HTMLElement): void {
             </div>
           </div>
           <div class="statistics-chart-wrap">
-            <div class="statistics-chart-label">${t('coinsFromClicksPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsFromClicksPerPeriod" data-chart-desc="chartDescCoinsFromClicksPerPeriod" title="${t('chartDescCoinsFromClicksPerPeriod').replace(/"/g, '&quot;')}" aria-label="${t('chartDescCoinsFromClicksPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
+            <div class="statistics-chart-label">${t('coinsFromClicksPerPeriod')} <span class="statistics-chart-help" data-chart-title="coinsFromClicksPerPeriod" data-chart-desc="chartDescCoinsFromClicksPerPeriod" aria-label="${t('chartDescCoinsFromClicksPerPeriod').replace(/"/g, '&quot;')}">?</span></div>
             <canvas class="statistics-chart" id="chart-coins-from-clicks" width="260" height="120" role="img" aria-label="${t('chartAriaCoinsFromClicks')}"></canvas>
             <div class="statistics-chart-legend" id="chart-legend-coins-from-clicks">
               <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-from-clicks"></span>
@@ -576,7 +583,9 @@ export function updateStatisticsSection(): void {
   }
   setStat('achievements-unlocked', String(getUnlockedAchievements().size));
   setStat('achievements-total', String(ACHIEVEMENTS.length));
-  setStat('coins-per-click-avg', sessionClicks > 0 ? formatNumber(avgCoinsPerClick, compact) : '—');
+  const coinsPerClickDisplay =
+    sessionClicks > 0 ? avgCoinsPerClick : getExpectedCoinsPerClick(player.prestigeLevel);
+  setStat('coins-per-click-avg', formatNumber(coinsPerClickDisplay, compact));
 
   const hoverChanged =
     chartHoverState?.canvasId !== lastDrawnHover?.canvasId || chartHoverState?.index !== lastDrawnHover?.index;

@@ -145,7 +145,7 @@ function buildDashboardHeroHtml(): string {
   } else if (unlocked.has('upgrades') && nextUpgrade) {
     recommendedLabel = tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--upgrade" id="dashboard-do-upgrade" data-upgrade-id="${nextUpgrade.def.id}" data-planet-id="${nextUpgrade.planetId ?? ''}">${tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) })} · ${nextUpgrade.cost}</button>`;
-  } else if (unlocked.has('research') && !isResearchInProgress() && affordableResearch) {
+  } else if (unlocked.has('research') && affordableResearch) {
     recommendedLabel = tParam('dashboardStartResearch', { name: affordableResearch.name });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-research">${t('goToResearch')} →</button>`;
   } else if (!expeditionActive && unlocked.has('planets')) {
@@ -251,7 +251,7 @@ function updateDashboardHeroInPlace(): void {
   } else if (unlocked.has('upgrades') && nextUpgrade) {
     recommendedLabel = tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--upgrade" id="dashboard-do-upgrade" data-upgrade-id="${nextUpgrade.def.id}" data-planet-id="${nextUpgrade.planetId ?? ''}">${tParam('dashboardBuyOne', { name: getCatalogUpgradeName(nextUpgrade.def.id) })} · ${nextUpgrade.cost}</button>`;
-  } else if (unlocked.has('research') && !isResearchInProgress() && affordableResearch) {
+  } else if (unlocked.has('research') && affordableResearch) {
     recommendedLabel = tParam('dashboardStartResearch', { name: affordableResearch.name });
     recommendedHtml = `<button type="button" class="dashboard-hero-btn dashboard-hero-btn--goto" id="dashboard-goto-research">${t('goToResearch')} →</button>`;
   } else if (!expeditionActive && unlocked.has('planets')) {

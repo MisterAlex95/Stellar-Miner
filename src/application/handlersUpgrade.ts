@@ -69,12 +69,21 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): UpgradeB
   if (needsSlot && !player.getPlanetWithFreeSlot()) return { bought: false, durations: [] };
   if (planetId && targetPlanet && needsSlot && !targetPlanet.hasFreeSlot()) return { bought: false, durations: [] };
   const crewRequired = getEffectiveRequiredAstronauts(def.id);
-  if (crewRequired > 0 && player.freeCrewCount < crewRequired) return { bought: false, durations: [] };
+  if (crewRequired > 0 && player.freeAstronautCount < crewRequired) return { bought: false, durations: [] };
   if (crewRequired > 0 && !player.assignCrewToEquipment(crewRequired)) return { bought: false, durations: [] };
+  // Update crew UI immediately so the player sees the count drop on click
+  if (crewRequired > 0) {
+    updateStats();
+    renderCrewSection();
+  }
 
   const planet = resolveTargetPlanet(player, targetPlanet, needsSlot);
   if (!planet) {
-    if (crewRequired > 0) player.unassignCrewFromEquipment(crewRequired);
+    if (crewRequired > 0) {
+      player.unassignCrewFromEquipment(crewRequired);
+      updateStats();
+      renderCrewSection();
+    }
     return { bought: false, durations: [] };
   }
 
@@ -91,7 +100,11 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): UpgradeB
     Date.now()
   );
   if (!event) {
-    if (crewRequired > 0) player.unassignCrewFromEquipment(crewRequired);
+    if (crewRequired > 0) {
+      player.unassignCrewFromEquipment(crewRequired);
+      updateStats();
+      renderCrewSection();
+    }
     return { bought: false, durations: [] };
   }
 
@@ -160,7 +173,7 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string, maxToB
   while (true) {
     if (maxToBuy !== undefined && bought >= maxToBuy) break;
     const nextCost = getUpgradeCost(def, ownedCount);
-    if (!player.coins.gte(nextCost) || (crewRequired > 0 && player.freeCrewCount < crewRequired)) break;
+    if (!player.coins.gte(nextCost) || (crewRequired > 0 && player.freeAstronautCount < crewRequired)) break;
 
     const target = resolveTargetPlanet(
       player,

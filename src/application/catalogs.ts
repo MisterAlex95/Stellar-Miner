@@ -130,6 +130,13 @@ export function getComboName(mult: number): string {
   return 'Combo';
 }
 
+/** Current combo multiplier from recent timestamps (same formula as handleMineClick). Used for production display so click rate reflects combo. */
+export function getCurrentComboMultiplier(timestamps: number[], nowMs: number): number {
+  const recent = timestamps.filter((t) => t > nowMs - COMBO_WINDOW_MS);
+  if (recent.length < COMBO_MIN_CLICKS) return 1;
+  return Math.min(COMBO_MAX_MULT, 1 + (recent.length - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL);
+}
+
 export const LUCKY_CLICK_CHANCE = L.luckyClickChance;
 export const LUCKY_MIN = L.luckyMin;
 export const LUCKY_MAX = L.luckyMax;

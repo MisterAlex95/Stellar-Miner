@@ -6,7 +6,7 @@ import {
   resetStatsHistory,
   type HistoryPoint,
 } from './statsHistory.js';
-import { STATS_HISTORY_STORAGE_KEY } from './catalogs.js';
+import { STATS_HISTORY_STORAGE_KEY, STATS_LONG_TERM_MAX_POINTS } from './catalogs.js';
 
 describe('statsHistory', () => {
   let storage: Record<string, string>;
@@ -51,6 +51,18 @@ describe('statsHistory', () => {
     loadStatsHistory();
     expect(getStatsHistory('recent')).toHaveLength(1);
     expect(getStatsHistory('longTerm')).toHaveLength(1);
+  });
+
+  it('loadStatsHistory trims longTerm to STATS_LONG_TERM_MAX_POINTS', () => {
+    const longTerm = Array.from({ length: STATS_LONG_TERM_MAX_POINTS + 5 }, (_, i) => ({
+      t: i,
+      coins: i,
+      production: 0,
+      totalCoinsEver: i,
+    }));
+    storage[STATS_HISTORY_STORAGE_KEY] = JSON.stringify({ recent: [], longTerm });
+    loadStatsHistory();
+    expect(getStatsHistory('longTerm')).toHaveLength(STATS_LONG_TERM_MAX_POINTS);
   });
 
   it('loadStatsHistory handles parse error', () => {

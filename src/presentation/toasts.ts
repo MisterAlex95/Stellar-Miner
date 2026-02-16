@@ -2,7 +2,7 @@ import { formatNumber } from '../application/format.js';
 import { getSettings } from '../application/gameState.js';
 import { DAILY_BONUS_COINS } from '../application/catalogs.js';
 import { t, tParam } from '../application/strings.js';
-import { getCatalogComboName, getCatalogEventName } from '../application/i18nCatalogs.js';
+import { getCatalogEventName } from '../application/i18nCatalogs.js';
 import type { GameEvent } from '../domain/entities/GameEvent.js';
 import { showToast } from './components/toasts.js';
 import {
@@ -59,23 +59,27 @@ export function showQuestStreakToast(streak: number, mult: number): void {
   );
 }
 
+/** Format click amount for display: integer as "N", decimal as "N.N" so multipliers (combo, research) are visible. */
+function formatFloatingCoinAmount(amount: number): string {
+  const rounded = Math.round(amount);
+  if (Math.abs(amount - rounded) < 0.005) return String(rounded);
+  return amount.toFixed(1).replace(/\.?0+$/, '');
+}
+
 export function showFloatingCoin(
   amount: number,
   clientX: number,
   clientY: number,
-  options?: { lucky?: boolean; superLucky?: boolean; critical?: boolean; comboMult?: number }
+  options?: { lucky?: boolean; superLucky?: boolean; critical?: boolean }
 ): void {
   const zone = document.getElementById('mine-zone');
   const floats = document.getElementById('mine-zone-floats');
   if (!zone || !floats) return;
+  const formatted = formatFloatingCoinAmount(amount);
   const displayText =
-    options?.critical ? `✧ CRITICAL +${amount}` : options?.superLucky ? `★ +${amount}` : `+${amount}`;
+    options?.critical ? `✧ CRITICAL +${formatted}` : options?.superLucky ? `★ +${formatted}` : `+${formatted}`;
   const variant = options?.critical ? 'critical' : options?.superLucky ? 'super-lucky' : options?.lucky ? 'lucky' : 'default';
-  const comboText =
-    options?.comboMult && options.comboMult > 1 && !options?.critical
-      ? `${getCatalogComboName(options.comboMult)} ×${options.comboMult.toFixed(1)}`
-      : undefined;
-  showFloatingCoinComponent(displayText, clientX, clientY, { zone, floats }, { variant, comboText });
+  showFloatingCoinComponent(displayText, clientX, clientY, { zone, floats }, { variant });
 }
 
 export function showMilestoneToast(coins: number): void {

@@ -116,11 +116,13 @@ export function handleMineClick(e?: MouseEvent): void {
   if (superLucky) baseCoins = SUPER_LUCKY_MIN + Math.floor(Math.random() * (SUPER_LUCKY_MAX - SUPER_LUCKY_MIN + 1));
   else if (isLucky) baseCoins = LUCKY_MIN + Math.floor(Math.random() * (LUCKY_MAX - LUCKY_MIN + 1));
   const effectiveComboMult = clickBonusesUnlocked ? comboMult : 1;
-  let coins = Math.max(1, Math.round(baseCoins * effectiveComboMult));
-  if (isCritical) coins *= 2;
-  const researchClickMult = prestigeLevel >= 1 ? getResearchClickMultiplier() : 1;
+  const researchClickMult = getResearchClickMultiplier();
   const prestigeClickMult = prestigeLevel >= 2 ? 1 + (prestigeLevel - 1) * (PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL / 100) : 1;
-  coins = Math.max(1, Math.round(coins * researchClickMult * prestigeClickMult));
+  const rewardResearchMult = prestigeLevel >= 1 ? researchClickMult : 1;
+  const rewardPrestigeMult = prestigeLevel >= 2 ? prestigeClickMult : 1;
+  const baseWithComboAndCriticalForReward = baseCoins * effectiveComboMult * (isCritical ? 2 : 1);
+  const coinsExactForDisplay = Math.max(1, baseCoins * comboMult * (isCritical ? 2 : 1) * researchClickMult * prestigeClickMult);
+  const coins = Math.max(1, Math.round(baseWithComboAndCriticalForReward * rewardResearchMult * rewardPrestigeMult));
 
   session.player.addCoins(coins);
   addRunCoins(coins);
@@ -137,7 +139,7 @@ export function handleMineClick(e?: MouseEvent): void {
     clientY = clientY ?? center.y;
   }
 
-  showFloatingCoin(coins, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical, comboMult: comboMult > 1 ? comboMult : undefined });
+  showFloatingCoin(coinsExactForDisplay, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical });
   if (superLucky) showSuperLuckyToast(coins);
   if (isCritical) showCriticalToast(coins);
   mineZoneCanvasApi?.onMineClick(clientX, clientY);

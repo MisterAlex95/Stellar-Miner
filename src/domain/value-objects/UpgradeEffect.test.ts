@@ -20,4 +20,13 @@ describe('UpgradeEffect', () => {
       'UpgradeEffect.coinsPerSecond must be finite'
     );
   });
+
+  it('throws when coinsPerSecond is negative', () => {
+    expect(() => new UpgradeEffect(-1)).toThrow(
+      'UpgradeEffect.coinsPerSecond must be non-negative'
+    );
+    expect(() => new UpgradeEffect(-0.1)).toThrow(
+      'UpgradeEffect.coinsPerSecond must be non-negative'
+    );
+  });
 });

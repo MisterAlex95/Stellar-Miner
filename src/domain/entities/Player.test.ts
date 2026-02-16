@@ -164,6 +164,23 @@ describe('Player', () => {
     expect(after.totalCoinsEver.eq(p.totalCoinsEver)).toBe(true);
   });
 
+  it('effectiveProductionRate applies overcrowding malus when crew exceeds cap', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(100),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      { astronaut: 20, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 },
+      0,
+      0
+    );
+    const rate = p.effectiveProductionRate.toNumber();
+    expect(rate).toBeLessThan(100);
+  });
+
   it('effectiveProductionRate applies crew (miner) bonus', () => {
     const p = new Player(
       'p1',
@@ -252,5 +269,66 @@ describe('Player', () => {
     expect(p.astronautCount).toBe(5);
     p.addAstronauts(0);
     expect(p.astronautCount).toBe(5);
+  });
+
+  it('assignCrewToEquipment uses only astronauts and deducts from astronaut pool', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(0),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      3
+    );
+    expect(p.freeAstronautCount).toBe(3);
+    expect(p.assignCrewToEquipment(0)).toBe(true);
+    expect(p.assignCrewToEquipment(2)).toBe(true);
+    expect(p.crewAssignedToEquipment).toBe(2);
+    expect(p.freeAstronautCount).toBe(1);
+    expect(p.crewByRole.astronaut).toBe(1);
+    expect(p.assignCrewToEquipment(5)).toBe(false);
+  });
+
+  it('unassignCrewFromEquipment decreases assigned and by default returns crew to astronaut pool', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(0),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      { astronaut: 0, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 },
+      0,
+      4
+    );
+    p.unassignCrewFromEquipment(0);
+    expect(p.crewAssignedToEquipment).toBe(4);
+    p.unassignCrewFromEquipment(2);
+    expect(p.crewAssignedToEquipment).toBe(2);
+    expect(p.freeAstronautCount).toBe(2);
+    p.unassignCrewFromEquipment(10);
+    expect(p.crewAssignedToEquipment).toBe(0);
+    expect(p.freeAstronautCount).toBe(4);
+  });
+
+  it('unassignCrewFromEquipment with returnToAstronautPool false does not add back to astronaut', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(0),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      { astronaut: 0, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 },
+      0,
+      3
+    );
+    p.unassignCrewFromEquipment(2, false);
+    expect(p.crewAssignedToEquipment).toBe(1);
+    expect(p.freeAstronautCount).toBe(0);
   });
 });

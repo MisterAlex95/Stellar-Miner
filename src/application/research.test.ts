@@ -6,6 +6,7 @@ import {
   getResearchClickMultiplier,
   getResearchProductionPercent,
   getResearchClickPercent,
+  getExpectedCoinsPerClick,
   getResearchSuccessChanceMultiplier,
   getSlotFreeUpgradeIdsFromResearch,
   getCrewFreeUpgradeIdsFromResearch,
@@ -27,7 +28,11 @@ import {
   attemptResearch,
   clearResearch,
   isResearchInProgress,
-  setResearchInProgress,
+  addResearchInProgress,
+  removeResearchInProgress,
+  getUnlockedCrewRoles,
+  getModifierCrewEntries,
+  getCrewFreedByUnlockingNode,
   RESEARCH_STORAGE_KEY,
 } from './research.js';
 import { Player } from '../domain/entities/Player.js';
@@ -55,6 +60,11 @@ describe('research', () => {
     expect(getUnlockedResearch()).toEqual([]);
   });
 
+  it('getUnlockedResearch returns empty when storage has invalid JSON', () => {
+    storage[RESEARCH_STORAGE_KEY] = 'not valid json';
+    expect(getUnlockedResearch()).toEqual([]);
+  });
+
   it('getResearchProductionMultiplier returns 1 when none unlocked', () => {
     expect(getResearchProductionMultiplier()).toBe(1);
   });
@@ -68,6 +78,20 @@ describe('research', () => {
     expect(getResearchClickMultiplier()).toBeGreaterThan(1);
   });
 
+  it('getExpectedCoinsPerClick returns 1 for prestige 0 when no research', () => {
+    expect(getExpectedCoinsPerClick(0)).toBe(1);
+  });
+
+  it('getExpectedCoinsPerClick reflects research even at prestige 0 (for display)', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    expect(getExpectedCoinsPerClick(0)).toBeGreaterThan(1);
+  });
+
+  it('getExpectedCoinsPerClick reflects research when prestige >= 1', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'automation']);
+    expect(getExpectedCoinsPerClick(1)).toBeGreaterThan(1);
+  });
+
   it('getResearchProductionPercent and getResearchClickPercent', () => {
     expect(getResearchProductionPercent()).toBe(0);
     expect(getResearchClickPercent()).toBe(0);
@@ -76,6 +100,25 @@ describe('research', () => {
   it('getResearchProductionPercent returns percent when unlocked', () => {
     storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory']);
     expect(getResearchProductionPercent()).toBeCloseTo(5, 1);
+  });
+
+  it('getUnlockedCrewRoles returns roles from unlocked nodes', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory']);
+    expect(getUnlockedCrewRoles()).toContain('miner');
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'survey-systems']);
+    expect(getUnlockedCrewRoles()).toContain('scientist');
+  });
+
+  it('getModifierCrewEntries and getCrewFreedByUnlockingNode', () => {
+    const node = RESEARCH_CATALOG.find((n) => n.id === 'precision-drilling')!;
+    const entries = getModifierCrewEntries(node);
+    expect(entries.length).toBeGreaterThan(0);
+    const freed = getCrewFreedByUnlockingNode(node, [
+      { id: 'asteroid-rig' },
+      { id: 'orbital-station' },
+      { id: 'orbital-station' },
+    ]);
+    expect(freed).toBeGreaterThan(0);
   });
 
   it('getResearchSuccessChanceMultiplier returns 1 when no scientists', () => {
@@ -277,11 +320,19 @@ describe('research', () => {
     vi.stubGlobal('localStorage', orig);
   });
 
-  it('isResearchInProgress and setResearchInProgress', () => {
+  it('isResearchInProgress and add/removeResearchInProgress', () => {
     expect(isResearchInProgress()).toBe(false);
-    setResearchInProgress(true);
+    expect(isResearchInProgress('x')).toBe(false);
+    addResearchInProgress('x');
     expect(isResearchInProgress()).toBe(true);
-    setResearchInProgress(false);
+    expect(isResearchInProgress('x')).toBe(true);
+    expect(isResearchInProgress('y')).toBe(false);
+    addResearchInProgress('y');
+    expect(isResearchInProgress()).toBe(true);
+    removeResearchInProgress('x');
+    expect(isResearchInProgress('x')).toBe(false);
+    expect(isResearchInProgress('y')).toBe(true);
+    removeResearchInProgress('y');
     expect(isResearchInProgress()).toBe(false);
   });
 });

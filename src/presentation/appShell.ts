@@ -14,12 +14,12 @@ function getHeaderHtml(): string {
         </div>
         <span class="header-actions">
           <span class="info-btn-wrap">
-            <button type="button" class="info-btn" id="info-btn" data-i18n-title="whatsNew" data-i18n-aria-label="whatsNew" title="What's new">
+            <button type="button" class="info-btn" id="info-btn" data-i18n-aria-label="whatsNew">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
             </button>
-            <span class="info-update-badge" id="info-update-badge" aria-hidden="true" title="New update"></span>
+            <span class="info-update-badge" id="info-update-badge" aria-hidden="true"></span>
           </span>
-          <button type="button" class="settings-btn" id="settings-btn" data-i18n-title="settings" data-i18n-aria-label="openSettings">
+          <button type="button" class="settings-btn" id="settings-btn" data-i18n-aria-label="openSettings">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-1.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v1.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-1.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
         </span>
@@ -115,8 +115,8 @@ function getModalsHtml(): string {
             <h3 class="settings-group-title" data-i18n="settingsGroupSaveData">Save & data</h3>
           <div class="settings-option settings-save-export">
             <div class="settings-save-buttons">
-              <button type="button" class="settings-export-btn" id="settings-export-btn" title="Copy save to clipboard and download as file" data-i18n="exportSave">Export save</button>
-              <button type="button" class="settings-import-btn" id="settings-import-btn" title="Load a previously exported save (replaces current)" data-i18n="importSave">Import save</button>
+              <button type="button" class="settings-export-btn" id="settings-export-btn" data-i18n="exportSave">Export save</button>
+              <button type="button" class="settings-import-btn" id="settings-import-btn" data-i18n="importSave">Import save</button>
             </div>
             <input type="file" id="settings-import-file" accept=".json,application/json" class="settings-import-file" aria-hidden="true" />
             <p class="settings-last-saved" id="last-saved-indicator" aria-live="polite"></p>
@@ -287,7 +287,7 @@ function getStatsHtml(): string {
         <div class="stat-coins-extra stat-coins-extra--sub" id="crew-stat-by-job" aria-live="polite"></div>
       </div>
       <div class="stat-card stat-card--crew stats-compact-only" id="crew-compact-card" aria-hidden="true">
-        <div class="stat-label" data-i18n="crew">Crew</div>
+        <div class="stat-label" data-i18n="astronautsLabel">Astronauts</div>
         <div class="stat-value" id="stats-compact-crew">0</div>
       </div>
       <div class="stat-card stat-card--production" id="production-stat-card" data-i18n-title="productionTitle">
@@ -504,9 +504,17 @@ function getTabsAndPanelsHtml(): string {
       ${questBlock}
     </div>
     <div class="app-tab-panel" id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" data-tab="dashboard" hidden>
-      <section class="dashboard-section" id="dashboard-section" aria-labelledby="dashboard-title">
-        <h2 id="dashboard-title" class="dashboard-title" data-i18n="dashboardTitle">Dashboard</h2>
-        <div id="dashboard-content" class="dashboard-content"></div>
+      <section class="gameplay-block gameplay-block--unlocked dashboard-section" id="dashboard-section" aria-labelledby="dashboard-title">
+        <div class="gameplay-block-header">
+          <h2 id="dashboard-title" class="dashboard-title" data-i18n="dashboardTitle">Dashboard</h2>
+          <span class="gameplay-block-summary" id="dashboard-section-summary" aria-hidden="true"></span>
+          <div class="gameplay-block-header-actions">
+            <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>
+          </div>
+        </div>
+        <div class="gameplay-block-body">
+          <div id="dashboard-content" class="dashboard-content"></div>
+        </div>
       </section>
     </div>
     <div class="app-tab-panel" id="panel-empire" role="tabpanel" aria-labelledby="tab-empire" data-tab="empire" hidden>

@@ -15,6 +15,10 @@
   color: var(--text);
 }
 
+.dashboard-section.gameplay-block .gameplay-block-header .dashboard-title {
+  margin-bottom: 0;
+}
+
 .dashboard-content {
   display: flex;
   flex-direction: column;

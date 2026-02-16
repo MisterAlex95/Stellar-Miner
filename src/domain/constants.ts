@@ -138,10 +138,11 @@ function hash(s: string): number {
 
 /** Generates a deterministic, varied planet name from planetId (e.g. "planet-3" → "Kel Drift"). */
 export function generatePlanetName(planetId: string): string {
-  const h = hash(planetId);
+  const id = typeof planetId === 'string' ? planetId : String(planetId ?? '');
+  const h = hash(id);
   const a = PLANET_NAME_PARTS_A[h % PLANET_NAME_PARTS_A.length];
   const b = PLANET_NAME_PARTS_B[(h >> 16) % PLANET_NAME_PARTS_B.length];
-  return `${a} ${b}`;
+  return `${a ?? 'Unknown'} ${b ?? 'Reach'}`;
 }
 
 /** Crew: astronauts. Production bonus per astronaut (e.g. 0.02 = +2% each). Legacy / fallback. */

@@ -121,6 +121,13 @@ describe('achievements', () => {
     expect(getUnlockedAchievements().has('first-click')).toBe(true);
   });
 
+  it('checkAchievements does nothing when no achievement can unlock', () => {
+    unlockAchievement('first-click');
+    const before = getUnlockedAchievements().size;
+    checkAchievements();
+    expect(getUnlockedAchievements().size).toBe(before);
+  });
+
   it('totalSlotsGreaterThan check uses session slots', () => {
     const player = Player.create('p1');
     player.planets[0].addSlot();

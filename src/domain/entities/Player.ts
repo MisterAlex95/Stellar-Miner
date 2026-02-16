@@ -72,9 +72,14 @@ export class Player {
     this.crewAssignedToEquipment = Math.max(0, crewAssignedToEquipment);
   }
 
-  /** Free crew (all roles). Used for bonuses and for "can buy upgrade" (need enough free to assign). */
+  /** Free crew (all roles). Used for capacity, bonuses, expedition, etc. */
   get freeCrewCount(): number {
     return CREW_ROLES.reduce((s, r) => s + (this.crewByRole[r] ?? 0), 0);
+  }
+
+  /** Free astronauts only. Upgrades that require crew take from this pool (cannot use miners/scientists/etc). */
+  get freeAstronautCount(): number {
+    return this.crewByRole.astronaut ?? 0;
   }
 
   /** Total crew = free (by role) + assigned to equipment. Used for capacity and UI total. */
@@ -152,22 +157,27 @@ export class Player {
 
   /**
    * Assign crew to equipment (when buying an upgrade that costs crew).
-   * Uses the free pool only — does not deduct from miner/scientist/pilot. Returns true if enough free crew.
+   * Takes only from the astronaut role (not miners/scientists/etc). Returns true if enough free astronauts.
    */
   assignCrewToEquipment(count: number): boolean {
     if (count <= 0) return true;
-    if (this.freeCrewCount < count) return false;
+    if (this.freeAstronautCount < count) return false;
+    (this as { crewByRole: CrewByRole }).crewByRole.astronaut = this.crewByRole.astronaut - count;
     (this as { crewAssignedToEquipment: number }).crewAssignedToEquipment += count;
     return true;
   }
 
-  /** Remove crew from equipment (rollback when upgrade purchase fails). */
-  unassignCrewFromEquipment(count: number): void {
+  /**
+   * Remove crew from equipment.
+   * @param returnToAstronautPool - If true (default), freed crew go back to the astronaut pool (e.g. upgrade purchase rollback). If false, they do not (e.g. research then adds them as miners).
+   */
+  unassignCrewFromEquipment(count: number, returnToAstronautPool: boolean = true): void {
     if (count <= 0) return;
-    (this as { crewAssignedToEquipment: number }).crewAssignedToEquipment = Math.max(
-      0,
-      this.crewAssignedToEquipment - count
-    );
+    const n = Math.min(count, this.crewAssignedToEquipment);
+    (this as { crewAssignedToEquipment: number }).crewAssignedToEquipment = Math.max(0, this.crewAssignedToEquipment - n);
+    if (returnToAstronautPool && n > 0) {
+      (this as { crewByRole: CrewByRole }).crewByRole.astronaut = this.crewByRole.astronaut + n;
+    }
   }
 
   /** Spend astronauts from crew by role (e.g. for expeditions). Deducts in order: miner, scientist, pilot. Returns true if enough. */

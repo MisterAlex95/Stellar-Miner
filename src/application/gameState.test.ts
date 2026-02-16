@@ -66,6 +66,11 @@ describe('gameState', () => {
     expect(s?.player.id).toBe('player-1');
   });
 
+  it('saveLoad proxy returns undefined for non-existent property', () => {
+    const v = (saveLoad as unknown as Record<string, unknown>)['nonexistent'];
+    expect(v).toBeUndefined();
+  });
+
   it('getEventMultiplier returns 1 when no active events', () => {
     expect(getEventMultiplier()).toBe(1);
   });

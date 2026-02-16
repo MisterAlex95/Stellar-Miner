@@ -182,6 +182,34 @@ describe('PlanetService', () => {
     expect(outcome.survivors).toBe(0);
   });
 
+  it('launchExpedition with pilot saves one survivor when roll would kill all', () => {
+    const player = Player.create('p1');
+    const service = new PlanetService();
+    const cost = service.getNewPlanetCost(player);
+    const required = service.getExpeditionAstronautsRequired(player);
+    player.addCoins(cost);
+    const playerWithPilot = new Player(
+      player.id,
+      player.coins,
+      player.productionRate,
+      player.planets,
+      player.artifacts,
+      player.prestigeLevel,
+      player.totalCoinsEver,
+      { astronaut: Math.max(0, required - 1), miner: 0, scientist: 0, pilot: 1, medic: 0, engineer: 0 },
+      0,
+      0
+    );
+    const composition = { astronaut: Math.max(0, required - 1), miner: 0, scientist: 0, pilot: 1, medic: 0, engineer: 0 };
+    const allDeathRoll = () => 0;
+    const outcome = service.launchExpedition(playerWithPilot, composition, allDeathRoll);
+    expect(outcome.success).toBe(true);
+    expect(outcome.survivors).toBe(1);
+    expect(outcome.deaths).toBe(required - 1);
+    expect(playerWithPilot.planets).toHaveLength(2);
+    expect(playerWithPilot.veteranCount).toBe(1);
+  });
+
   it('launchExpedition when all die: no planet, no astronauts back', () => {
     const player = Player.create('p1');
     const service = new PlanetService();

@@ -133,7 +133,7 @@ function renderResearchCard(
   const attemptTitle = canAttempt ? tParam('researchAttemptTooltip', { pct }) : t('researchAttemptDisabled');
   if (done) {
     return `
-      <div class="research-card research-card--done" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem" aria-selected="true" title="${pathAttr}">
+      <div class="research-card research-card--done" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem" aria-selected="true">
         <div class="research-card-header">
           <span class="research-card-level" aria-hidden="true">${levelLabel}</span>
           <span class="research-card-name">${name}</span>
@@ -142,7 +142,7 @@ function renderResearchCard(
       </div>`;
   }
   return `
-    <div class="research-card" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem" title="${pathAttr}">
+    <div class="research-card" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem">
       <div class="research-card-header">
         <span class="research-card-level" aria-hidden="true">${levelLabel}</span>
         <span class="research-card-name">${name}</span>

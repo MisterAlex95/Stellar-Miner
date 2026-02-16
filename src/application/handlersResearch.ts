@@ -3,8 +3,10 @@ import {
   attemptResearch,
   canAttemptResearch,
   getCrewFreedByUnlockingNode,
-  setResearchInProgress,
+  addResearchInProgress,
+  removeResearchInProgress,
   isResearchInProgress,
+  getResearchInProgressIds,
   RESEARCH_CATALOG,
 } from './research.js';
 import { getCatalogUpgradeName } from './i18nCatalogs.js';
@@ -19,12 +21,50 @@ import { checkAchievements } from './achievements.js';
 
 const RESEARCH_PROGRESS_DURATION_MS = 2500;
 
-function refreshAfterResearch(opts: { crew?: boolean } = {}): void {
+/** End timestamp (Date.now()) per research id, for restoring progress bars after re-render. */
+const researchProgressEndTimeMs = new Map<string, number>();
+
+function addProgressOverlayToCard(cardEl: HTMLElement, id: string, endTimeMs: number): void {
+  const now = Date.now();
+  const remainingMs = Math.max(0, endTimeMs - now);
+  const elapsedMs = RESEARCH_PROGRESS_DURATION_MS - remainingMs;
+  const widthPercent = Math.min(100, (elapsedMs / RESEARCH_PROGRESS_DURATION_MS) * 100);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'research-progress-overlay';
+  overlay.setAttribute('aria-live', 'polite');
+  overlay.setAttribute('aria-busy', 'true');
+  overlay.innerHTML =
+    '<div class="research-progress-track"><div class="research-progress-fill"></div></div><span class="research-progress-label">' +
+    t('researching') +
+    '</span>';
+  cardEl.appendChild(overlay);
+  cardEl.classList.add('research-card--in-progress');
+  const fillEl = overlay.querySelector('.research-progress-fill') as HTMLElement;
+  if (fillEl) {
+    fillEl.style.width = `${widthPercent}%`;
+    if (remainingMs > 0) {
+      requestAnimationFrame(() => {
+        fillEl.style.width = '100%';
+        fillEl.style.transition = `width ${remainingMs}ms linear`;
+      });
+    }
+  }
+}
+
+function refreshAfterResearch(researchId: string, opts: { crew?: boolean } = {}): void {
+  removeResearchInProgress(researchId);
+  researchProgressEndTimeMs.delete(researchId);
   saveSession();
   updateStats();
   renderUpgradeList();
   renderResearchSection();
-  setResearchInProgress(false);
+  const remainingIds = getResearchInProgressIds();
+  for (const id of remainingIds) {
+    const endMs = researchProgressEndTimeMs.get(id);
+    const card = document.querySelector<HTMLElement>(`[data-research-id="${id}"]`);
+    if (card && endMs) addProgressOverlayToCard(card, id, endMs);
+  }
   if (opts.crew) renderCrewSection();
 }
 
@@ -51,16 +91,16 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
     if (node) {
       const freed = getCrewFreedByUnlockingNode(node, session.player.upgrades);
       if (freed > 0) {
-        session.player.unassignCrewFromEquipment(freed);
+        session.player.unassignCrewFromEquipment(freed, false);
         session.player.addAstronauts(freed, 'miner');
         needsCrewRefresh = true;
       }
     }
-    refreshAfterResearch({ crew: needsCrewRefresh });
+    refreshAfterResearch(id, { crew: needsCrewRefresh });
     showMiniMilestoneToast(result.message);
     checkAchievements();
   } else {
-    refreshAfterResearch();
+    refreshAfterResearch(id);
     if (result.message.includes('failed')) {
       const msg = result.message.includes('Coins spent') ? t('researchFailedCoinsSpent') : t('researchFailedTryAgain');
       showMiniMilestoneToast(msg);
@@ -69,7 +109,7 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
 }
 
 export function startResearchWithProgress(cardEl: HTMLElement, id: string): void {
-  if (isResearchInProgress()) return;
+  if (isResearchInProgress(id)) return;
   const session = getSession();
   if (!session) return;
   const node = RESEARCH_CATALOG.find((n) => n.id === id);
@@ -80,20 +120,10 @@ export function startResearchWithProgress(cardEl: HTMLElement, id: string): void
   updateStats();
 
   const durationMs = RESEARCH_PROGRESS_DURATION_MS;
-  const overlay = document.createElement('div');
-  overlay.className = 'research-progress-overlay';
-  overlay.setAttribute('aria-live', 'polite');
-  overlay.setAttribute('aria-busy', 'true');
-  overlay.innerHTML = '<div class="research-progress-track"><div class="research-progress-fill"></div></div><span class="research-progress-label">' + t('researching') + '</span>';
-  cardEl.appendChild(overlay);
-  cardEl.classList.add('research-card--in-progress');
-  const fillEl = overlay.querySelector('.research-progress-fill') as HTMLElement;
-  if (fillEl) {
-    requestAnimationFrame(() => {
-      fillEl.style.width = '100%';
-    });
-  }
-  setResearchInProgress(true);
+  const endTimeMs = Date.now() + durationMs;
+  researchProgressEndTimeMs.set(id, endTimeMs);
+  addResearchInProgress(id);
+  addProgressOverlayToCard(cardEl, id, endTimeMs);
   setTimeout(() => {
     handleResearchAttempt(id, { coinsAlreadySpent: true });
   }, durationMs);
