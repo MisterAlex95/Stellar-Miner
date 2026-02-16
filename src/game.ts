@@ -190,6 +190,10 @@ function createRefreshViews(): () => void {
     renderPlanetList();
     renderResearchSection();
     updateDashboard();
+    updateProgressionVisibility();
+    updateTabMenuVisibility();
+    updateTabVisibility(switchTab);
+    updateTabBadges();
     if (typeof requestIdleCallback !== 'undefined') {
       requestIdleCallback(() => updateStatisticsSection(), { timeout: 50 });
     } else {

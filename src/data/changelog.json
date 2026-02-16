@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.31",
+    "date": "2026-02-16",
+    "changes": [
+      "Observable migration: refresh now includes updateProgressionVisibility, updateTabMenuVisibility, updateTabVisibility, updateTabBadges for reactive tab/progression UI."
+    ]
+  },
+  {
     "version": "0.4.30",
     "date": "2026-02-16",
     "changes": [
