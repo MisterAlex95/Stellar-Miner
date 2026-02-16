@@ -111,6 +111,10 @@
   margin-top: 0.15rem;
 }
 
+.crew-stat-role--astronaut {
+  color: var(--crew-astronaut);
+}
+
 .crew-stat-role--miner {
   color: var(--crew-miner);
 }
@@ -121,6 +125,14 @@
 
 .crew-stat-role--pilot {
   color: var(--crew-pilot);
+}
+
+.crew-stat-role--medic {
+  color: var(--crew-medic);
+}
+
+.crew-stat-role--engineer {
+  color: var(--crew-engineer);
 }
 
 .production-live {

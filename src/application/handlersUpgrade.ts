@@ -145,7 +145,7 @@ export function showUpgradeInstallProgress(cardEl: HTMLElement, durations: numbe
 
 export type UpgradeBuyMaxResult = { bought: number; durations: number[] };
 
-export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): UpgradeBuyMaxResult {
+export function handleUpgradeBuyMax(upgradeId: string, planetId?: string, maxToBuy?: number): UpgradeBuyMaxResult {
   const session = getSession();
   if (!session) return { bought: 0, durations: [] };
   const def = UPGRADE_CATALOG.find((d) => d.id === upgradeId);
@@ -158,6 +158,7 @@ export function handleUpgradeBuyMax(upgradeId: string, planetId?: string): Upgra
   const durations: number[] = [];
 
   while (true) {
+    if (maxToBuy !== undefined && bought >= maxToBuy) break;
     const nextCost = getUpgradeCost(def, ownedCount);
     if (!player.coins.gte(nextCost) || (crewRequired > 0 && player.freeCrewCount < crewRequired)) break;
 

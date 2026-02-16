@@ -20,12 +20,18 @@
   --tooltip-max-sm: 420px;
 
   /* Crew role accents */
+  --crew-astronaut: #94a3b8;
+  --crew-astronaut-bg: rgba(148, 163, 184, 0.12);
   --crew-miner: #f59e0b;
   --crew-miner-bg: rgba(245, 158, 11, 0.12);
   --crew-scientist: #38bdf8;
   --crew-scientist-bg: rgba(56, 189, 248, 0.12);
   --crew-pilot: #a78bfa;
   --crew-pilot-bg: rgba(167, 139, 250, 0.12);
+  --crew-medic: #10b981;
+  --crew-medic-bg: rgba(16, 185, 129, 0.12);
+  --crew-engineer: #f97316;
+  --crew-engineer-bg: rgba(249, 115, 22, 0.12);
   --crew-equipment: #64748b;
   --crew-free: rgba(255, 255, 255, 0.08);
 }

@@ -6,8 +6,7 @@ import {
   getAddSlotCost,
   generatePlanetName,
   getExpeditionAstronautsRequired,
-  EXPEDITION_DEATH_CHANCE,
-  EXPEDITION_MIN_DEATH_CHANCE,
+  getExpeditionDeathChanceWithMedics,
   getHousingCost,
   CREW_ROLES,
   type ExpeditionComposition,
@@ -21,10 +20,24 @@ export type ExpeditionOutcome = {
   planetName?: string;
 };
 
-/** Build default composition: fill required from pool (miners first, then scientist, pilot). */
+/** Build default composition: fill required from pool (astronauts first, then job roles). */
 function defaultComposition(player: Player, required: number): ExpeditionComposition {
-  const comp: ExpeditionComposition = { miner: 0, scientist: 0, pilot: 0 };
-  const order = ['miner', 'scientist', 'pilot'] as const;
+  const comp: ExpeditionComposition = {
+    astronaut: 0,
+    miner: 0,
+    scientist: 0,
+    pilot: 0,
+    medic: 0,
+    engineer: 0,
+  };
+  const order: (keyof ExpeditionComposition)[] = [
+    'astronaut',
+    'miner',
+    'scientist',
+    'pilot',
+    'medic',
+    'engineer',
+  ];
   let left = required;
   for (const r of order) {
     const take = Math.min(left, player.crewByRole[r]);
@@ -50,10 +63,10 @@ export class PlanetService {
     const required = this.getExpeditionAstronautsRequired(player);
     if (!player.coins.gte(cost) || player.astronautCount < required) return false;
     if (composition) {
-      const sum = CREW_ROLES.reduce((s, r) => s + composition[r], 0);
+      const sum = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
       if (sum !== required) return false;
       for (const r of CREW_ROLES) {
-        if (player.crewByRole[r] < composition[r]) return false;
+        if ((player.crewByRole[r] ?? 0) < (composition[r] ?? 0)) return false;
       }
     }
     return true;
@@ -77,9 +90,10 @@ export class PlanetService {
     composition: ExpeditionComposition,
     roll: () => number = Math.random
   ): ExpeditionOutcome {
-    const totalSent = CREW_ROLES.reduce((s, r) => s + composition[r], 0);
-    const pilotCount = composition.pilot;
-    const deathChance = Math.max(EXPEDITION_MIN_DEATH_CHANCE, EXPEDITION_DEATH_CHANCE);
+    const totalSent = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
+    const pilotCount = composition.pilot ?? 0;
+    const medicCount = composition.medic ?? 0;
+    const deathChance = getExpeditionDeathChanceWithMedics(medicCount);
     let deaths = 0;
     for (let i = 0; i < totalSent; i++) {
       if (roll() < deathChance) deaths++;
@@ -122,9 +136,10 @@ export class PlanetService {
       return { success: false, totalSent: 0, survivors: 0, deaths: 0 };
     }
     player.spendCoins(cost);
-    const totalSent = CREW_ROLES.reduce((s, r) => s + composition[r], 0);
-    const pilotCount = composition.pilot;
-    const deathChance = Math.max(EXPEDITION_MIN_DEATH_CHANCE, EXPEDITION_DEATH_CHANCE);
+    const totalSent = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
+    const pilotCount = composition.pilot ?? 0;
+    const medicCount = composition.medic ?? 0;
+    const deathChance = getExpeditionDeathChanceWithMedics(medicCount);
     let deaths = 0;
     for (let i = 0; i < totalSent; i++) {
       if (rollFn() < deathChance) deaths++;

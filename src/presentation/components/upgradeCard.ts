@@ -46,7 +46,12 @@ export function getUpgradeCardState(
   maxCount: number
 ): UpgradeCardState {
   const owned = player.upgrades.filter((u) => u.id === def.id).length;
-  const upgrade = createUpgrade(def, owned);
+  const installingCount = player.planets.reduce(
+    (s, p) => s + p.installingUpgrades.filter((i) => i.upgrade.id === def.id).length,
+    0
+  );
+  const ownedForCost = owned + installingCount;
+  const upgrade = createUpgrade(def, ownedForCost);
   const crewReq = getEffectiveRequiredAstronauts(def.id);
   const hasCrew = player.freeCrewCount >= crewReq;
   const canAfford = player.coins.gte(upgrade.cost);
@@ -147,7 +152,7 @@ export function buildUpgradeCardHtml(state: UpgradeCardState, options: BuildUpgr
         ${planetSelectHtml}
         <div class="upgrade-buttons">
           ${buttonWithTooltipHtml(buyTitle, `<button class="upgrade-btn upgrade-btn--buy" type="button" data-upgrade-id="${def.id}" data-action="buy" ${canBuy ? '' : 'disabled'}>${buyLabel}</button>`)}
-          ${buttonWithTooltipHtml(maxTitle, `<button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button>`)}
+          ${buttonWithTooltipHtml(maxTitle, `<button class="upgrade-btn upgrade-btn--max" type="button" data-upgrade-id="${def.id}" data-action="max" data-max-count="${maxCount}" ${maxCount > 0 && hasCrew ? '' : 'disabled'}>${maxLabel}</button>`)}
         </div>
       </div>
     </div>`;

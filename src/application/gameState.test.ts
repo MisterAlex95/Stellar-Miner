@@ -360,19 +360,19 @@ describe('gameState', () => {
   });
 
   it('setExpeditionInProgress and getExpeditionForSave', () => {
-    setExpeditionInProgress(1000, { miner: 1, scientist: 0, pilot: 0 }, 5000);
+    setExpeditionInProgress(1000, { astronaut: 0, miner: 1, scientist: 0, pilot: 0, medic: 0, engineer: 0 }, 5000);
     expect(getExpeditionEndsAt()).toBe(1000);
-    expect(getExpeditionComposition()).toEqual({ miner: 1, scientist: 0, pilot: 0 });
+    expect(getExpeditionComposition()).toEqual({ astronaut: 0, miner: 1, scientist: 0, pilot: 0, medic: 0, engineer: 0 });
     expect(getExpeditionDurationMs()).toBe(5000);
     const saved = getExpeditionForSave();
     expect(saved).not.toBeNull();
     expect(saved!.endsAt).toBe(1000);
-    expect(saved!.composition).toEqual({ miner: 1, scientist: 0, pilot: 0 });
+    expect(saved!.composition).toEqual({ astronaut: 0, miner: 1, scientist: 0, pilot: 0, medic: 0, engineer: 0 });
     expect(saved!.durationMs).toBe(5000);
   });
 
   it('clearExpedition clears expedition state', () => {
-    setExpeditionInProgress(1000, { miner: 1, scientist: 0, pilot: 0 }, 5000);
+    setExpeditionInProgress(1000, { astronaut: 0, miner: 1, scientist: 0, pilot: 0, medic: 0, engineer: 0 }, 5000);
     clearExpedition();
     expect(getExpeditionEndsAt()).toBeNull();
     expect(getExpeditionForSave()).toBeNull();
@@ -381,11 +381,11 @@ describe('gameState', () => {
   it('setExpeditionFromPayload with valid payload restores expedition', () => {
     setExpeditionFromPayload({
       endsAt: 2000,
-      composition: { miner: 2, scientist: 1, pilot: 0 },
+      composition: { astronaut: 0, miner: 2, scientist: 1, pilot: 0, medic: 0, engineer: 0 },
       durationMs: 10000,
     });
     expect(getExpeditionEndsAt()).toBe(2000);
-    expect(getExpeditionComposition()).toEqual({ miner: 2, scientist: 1, pilot: 0 });
+    expect(getExpeditionComposition()).toEqual({ astronaut: 0, miner: 2, scientist: 1, pilot: 0, medic: 0, engineer: 0 });
     expect(getExpeditionDurationMs()).toBe(10000);
   });
 
@@ -395,11 +395,11 @@ describe('gameState', () => {
       composition: { miner: 1 },
       durationMs: 5000,
     });
-    expect(getExpeditionComposition()).toEqual({ miner: 1, scientist: 0, pilot: 0 });
+    expect(getExpeditionComposition()).toEqual({ astronaut: 0, miner: 1, scientist: 0, pilot: 0, medic: 0, engineer: 0 });
   });
 
   it('setExpeditionFromPayload with null clears expedition', () => {
-    setExpeditionInProgress(1000, { miner: 1, scientist: 0, pilot: 0 }, 5000);
+    setExpeditionInProgress(1000, { astronaut: 0, miner: 1, scientist: 0, pilot: 0, medic: 0, engineer: 0 }, 5000);
     setExpeditionFromPayload(null);
     expect(getExpeditionEndsAt()).toBeNull();
   });

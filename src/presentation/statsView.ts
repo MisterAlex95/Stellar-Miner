@@ -19,7 +19,10 @@ import { renderCrewSection } from './crewView.js';
 import { EVENT_INTERVAL_MS, EVENT_CATALOG } from '../application/catalogs.js';
 import { getDiscoveredEventIds } from '../application/gameState.js';
 import { getNextMilestone, getUnlockedBlocks } from '../application/progression.js';
-import { getResearchProductionMultiplier, getResearchProductionPercent } from '../application/research.js';
+import {
+  getResearchProductionMultiplier,
+  getResearchProductionPercent,
+} from '../application/research.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogEventName } from '../application/i18nCatalogs.js';
 import { formatDuration } from '../application/playTimeStats.js';
@@ -150,12 +153,17 @@ export function updateStats(): void {
   const crewByJobEl = document.getElementById('crew-stat-by-job');
   if (crewByJobEl) {
     if (showCrew) {
-      const { miner, scientist, pilot } = player.crewByRole;
-      crewByJobEl.innerHTML = [
+      const { astronaut, miner, scientist, pilot, medic, engineer } = player.crewByRole;
+      const parts: string[] = [];
+      if (astronaut > 0) parts.push(`<span class="crew-stat-role crew-stat-role--astronaut">${astronaut} ${t('crewStatRoleAstronauts')}</span>`);
+      parts.push(
         `<span class="crew-stat-role crew-stat-role--miner">${miner} ${t('crewStatRoleMiners')}</span>`,
         `<span class="crew-stat-role crew-stat-role--scientist">${scientist} ${t('crewStatRoleScientists')}</span>`,
         `<span class="crew-stat-role crew-stat-role--pilot">${pilot} ${t('crewStatRolePilots')}</span>`,
-      ].join(', ');
+        `<span class="crew-stat-role crew-stat-role--medic">${medic} ${t('crewStatRoleMedics')}</span>`,
+        `<span class="crew-stat-role crew-stat-role--engineer">${engineer} ${t('crewStatRoleEngineers')}</span>`
+      );
+      crewByJobEl.innerHTML = parts.join(', ');
     } else {
       crewByJobEl.textContent = '';
     }
@@ -180,7 +188,13 @@ export function updateStats(): void {
     const planetBonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
     const prestigeBonus = player.prestigeLevel > 0 ? player.prestigeLevel * 5 : 0;
     const minerBonus = 1 + player.crewByRole.miner * 0.02;
-    const otherCrewBonus = 1 + (player.crewByRole.scientist + player.crewByRole.pilot) * 0.01;
+    const otherCrewBonus =
+      1 +
+      (player.crewByRole.scientist +
+        player.crewByRole.pilot +
+        player.crewByRole.medic +
+        player.crewByRole.engineer) *
+        0.01;
     const veteranBonus = 1 + player.veteranCount * 0.005;
     const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
     const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);

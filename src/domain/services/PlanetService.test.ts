@@ -49,7 +49,7 @@ describe('PlanetService', () => {
     player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
     player.hireAstronaut(getAstronautCost(0));
     player.hireAstronaut(getAstronautCost(1));
-    const composition = { miner: required, scientist: 0, pilot: 0 };
+    const composition = { astronaut: required, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 };
     expect(service.canLaunchExpedition(player, composition)).toBe(true);
   });
 
@@ -61,7 +61,9 @@ describe('PlanetService', () => {
     player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
     player.hireAstronaut(getAstronautCost(0));
     player.hireAstronaut(getAstronautCost(1));
-    expect(service.canLaunchExpedition(player, { miner: required - 1, scientist: 0, pilot: 0 })).toBe(false);
+    expect(service.canLaunchExpedition(player, { astronaut: required - 1, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 })).toBe(
+      false
+    );
   });
 
   it('canLaunchExpedition is false when crew in composition exceeds player crew', () => {
@@ -71,7 +73,7 @@ describe('PlanetService', () => {
     const required = service.getExpeditionAstronautsRequired(player);
     player.addCoins(cost.add(getAstronautCost(0)));
     player.hireAstronaut(getAstronautCost(0));
-    expect(service.canLaunchExpedition(player, { miner: required, scientist: 0, pilot: 0 })).toBe(false);
+    expect(service.canLaunchExpedition(player, { astronaut: required, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 })).toBe(false);
   });
 
   it('startExpedition spends coins and crew and returns composition on success', () => {
@@ -85,7 +87,14 @@ describe('PlanetService', () => {
     const result = service.startExpedition(player);
     expect(result.started).toBe(true);
     if (result.started) {
-      expect(result.composition.miner + result.composition.scientist + result.composition.pilot).toBe(required);
+      const total =
+        (result.composition.astronaut ?? 0) +
+        result.composition.miner +
+        result.composition.scientist +
+        result.composition.pilot +
+        (result.composition.medic ?? 0) +
+        (result.composition.engineer ?? 0);
+      expect(total).toBe(required);
     }
     expect(player.planets).toHaveLength(1);
   });
@@ -107,7 +116,9 @@ describe('PlanetService', () => {
     player.hireAstronaut(getAstronautCost(1));
     const startResult = service.startExpedition(player);
     expect(startResult.started).toBe(true);
-    const composition = startResult.started ? startResult.composition : { miner: required, scientist: 0, pilot: 0 };
+    const composition = startResult.started
+      ? startResult.composition
+      : { astronaut: required, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 };
     const outcome = service.completeExpedition(player, composition, () => 1);
     expect(outcome.success).toBe(true);
     expect(outcome.survivors).toBe(required);
@@ -118,7 +129,7 @@ describe('PlanetService', () => {
   it('completeExpedition with pilot saves one survivor when all would die', () => {
     const player = Player.create('p1');
     const service = new PlanetService();
-    const composition = { miner: 1, scientist: 0, pilot: 1 };
+    const composition = { astronaut: 0, miner: 1, scientist: 0, pilot: 1, medic: 0, engineer: 0 };
     const outcome = service.completeExpedition(player, composition, () => 0);
     expect(outcome.success).toBe(true);
     expect(outcome.survivors).toBe(1);
@@ -135,7 +146,7 @@ describe('PlanetService', () => {
     player.addCoins(cost.add(getAstronautCost(0)).add(getAstronautCost(1)));
     player.hireAstronaut(getAstronautCost(0));
     player.hireAstronaut(getAstronautCost(1));
-    const composition = { miner: required, scientist: 0, pilot: 0 };
+    const composition = { astronaut: required, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 };
     const outcome = service.launchExpedition(player, composition, () => 1);
     expect(outcome.success).toBe(true);
     expect(player.planets).toHaveLength(2);

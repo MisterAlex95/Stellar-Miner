@@ -7,9 +7,13 @@ import { getUpgradeUsesSlot, UPGRADE_CATALOG } from './catalogs.js';
 import {
   SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST,
   SCIENTIST_RESEARCH_SUCCESS_CAP,
+  type CrewJobRole,
+  CREW_JOB_ROLES,
 } from '../domain/constants.js';
 import type { Planet } from '../domain/entities/Planet.js';
 import type { Player } from '../domain/entities/Player.js';
+import { t, tParam } from './strings.js';
+import type { StringKey } from './strings.js';
 
 export const RESEARCH_STORAGE_KEY = 'stellar-miner-research';
 
@@ -26,6 +30,8 @@ export type ResearchModifiers = {
   crewFreeUpgrades?: string[];
   /** Per-upgrade crew requirement reduction from this node (e.g. { "orbital-station": 1 } => 1 fewer crew). */
   crewReduction?: Record<string, number>;
+  /** Crew job role unlocked when this node is unlocked (e.g. "miner" → can hire Miners). */
+  unlocksCrewRole?: CrewJobRole;
 };
 
 export type ResearchNode = {
@@ -66,6 +72,19 @@ function saveUnlocked(ids: string[]): void {
 
 export function getUnlockedResearch(): string[] {
   return loadUnlocked();
+}
+
+/** Crew job roles unlockable via research (miner, scientist, pilot). Astronaut is always available when Crew section is unlocked. */
+export function getUnlockedCrewRoles(): CrewJobRole[] {
+  const unlocked = loadUnlocked();
+  const roles: CrewJobRole[] = [];
+  for (const node of RESEARCH_CATALOG) {
+    if (unlocked.includes(node.id)) {
+      const role = node.modifiers.unlocksCrewRole;
+      if (role && CREW_JOB_ROLES.includes(role) && !roles.includes(role)) roles.push(role);
+    }
+  }
+  return roles;
 }
 
 /** Sum of a percent modifier from all unlocked nodes (e.g. productionPercent or clickPercent). */
@@ -333,6 +352,16 @@ export function attemptResearch(
     const mods: string[] = [];
     if (node.modifiers.productionPercent) mods.push(`+${node.modifiers.productionPercent}% production`);
     if (node.modifiers.clickPercent) mods.push(`+${node.modifiers.clickPercent}% click`);
+    if (node.modifiers.unlocksCrewRole) {
+      const roleKeys: Record<CrewJobRole, StringKey> = {
+        miner: 'crewRoleMiner',
+        scientist: 'crewRoleScientist',
+        pilot: 'crewRolePilot',
+        medic: 'crewRoleMedic',
+        engineer: 'crewRoleEngineer',
+      };
+      mods.push(tParam('researchUnlocksJob', { role: t(roleKeys[node.modifiers.unlocksCrewRole]) }));
+    }
     const slotEntries = getModifierSlotEntries(node);
     if (slotEntries.length) {
       mods.push(

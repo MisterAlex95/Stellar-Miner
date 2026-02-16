@@ -767,7 +767,9 @@ export function mount(): void {
         planetId = select.options[select.selectedIndex]?.value ?? select.options[0].value ?? undefined;
       }
       if (target.getAttribute('data-action') === 'max') {
-        handleUpgradeBuyMax(upgradeId, planetId);
+        const maxCountAttr = target.getAttribute('data-max-count');
+        const maxToBuy = maxCountAttr != null ? parseInt(maxCountAttr, 10) : undefined;
+        handleUpgradeBuyMax(upgradeId, planetId, Number.isFinite(maxToBuy) ? maxToBuy : undefined);
       } else {
         handleUpgradeBuy(upgradeId, planetId);
       }

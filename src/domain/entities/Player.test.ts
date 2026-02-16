@@ -173,7 +173,7 @@ describe('Player', () => {
       [],
       0,
       0,
-      { miner: 10, scientist: 0, pilot: 0 },
+      { astronaut: 0, miner: 10, scientist: 0, pilot: 0, medic: 0, engineer: 0 },
       0
     );
     expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(110.92, 2);

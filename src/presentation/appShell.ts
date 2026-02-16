@@ -325,25 +325,36 @@ function getTabsAndPanelsHtml(): string {
     dataBlock: 'crew',
     rulesKey: 'crewRules',
     bodyHtml: `
-          <p class="crew-hint" data-i18n="crewHint">Hire astronauts by role. Miners boost production; scientists improve research; pilots help expeditions. Resets on Prestige.</p>
+          <p class="crew-hint" data-i18n="crewHint">Hire astronauts (no job at first). Unlock Miner, Scientist and Pilot via Research for bonuses. Resets on Prestige.</p>
           <div class="crew-capacity-wrap" id="crew-capacity-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Crew capacity">
             <div class="crew-capacity-fill" id="crew-capacity-fill">
+              <div class="crew-capacity-segment crew-capacity-segment--astronaut" id="crew-capacity-segment-astronaut"></div>
               <div class="crew-capacity-segment crew-capacity-segment--miner" id="crew-capacity-segment-miner"></div>
               <div class="crew-capacity-segment crew-capacity-segment--scientist" id="crew-capacity-segment-scientist"></div>
               <div class="crew-capacity-segment crew-capacity-segment--pilot" id="crew-capacity-segment-pilot"></div>
+              <div class="crew-capacity-segment crew-capacity-segment--medic" id="crew-capacity-segment-medic"></div>
+              <div class="crew-capacity-segment crew-capacity-segment--engineer" id="crew-capacity-segment-engineer"></div>
               <div class="crew-capacity-segment crew-capacity-segment--equipment" id="crew-capacity-segment-equipment"></div>
               <div class="crew-capacity-segment crew-capacity-segment--free" id="crew-capacity-segment-free"></div>
             </div>
           </div>
           <div class="crew-summary" id="crew-summary" aria-live="polite">No crew yet</div>
           <div class="crew-role-cards" id="crew-role-cards">
+            <div class="crew-role-card crew-role-card--astronaut" id="crew-role-card-astronaut">
+              <div class="crew-role-card-header">
+                <span class="crew-role-card-name" data-i18n="crewRoleAstronaut">Astronaut</span>
+                <span class="crew-role-card-count" id="crew-role-count-astronaut">0</span>
+              </div>
+              <div class="crew-role-card-effect" id="crew-role-effect-astronaut"></div>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="astronaut"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--astronaut" id="hire-astronaut-astronaut" data-role="astronaut"><span class="crew-btn-role">Astronaut</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
+            </div>
             <div class="crew-role-card crew-role-card--miner" id="crew-role-card-miner">
               <div class="crew-role-card-header">
                 <span class="crew-role-card-name" data-i18n="crewRoleMiner">Miner</span>
                 <span class="crew-role-card-count" id="crew-role-count-miner">0</span>
               </div>
               <div class="crew-role-card-effect" id="crew-role-effect-miner"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="miner"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--miner" id="hire-astronaut-miner" data-role="miner"><span class="crew-btn-text">Miner</span></button></span>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="miner"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--miner" id="hire-astronaut-miner" data-role="miner"><span class="crew-btn-role">Miner</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
             </div>
             <div class="crew-role-card crew-role-card--scientist" id="crew-role-card-scientist">
               <div class="crew-role-card-header">
@@ -351,7 +362,7 @@ function getTabsAndPanelsHtml(): string {
                 <span class="crew-role-card-count" id="crew-role-count-scientist">0</span>
               </div>
               <div class="crew-role-card-effect" id="crew-role-effect-scientist"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="scientist"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--scientist" id="hire-astronaut-scientist" data-role="scientist"><span class="crew-btn-text">Scientist</span></button></span>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="scientist"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--scientist" id="hire-astronaut-scientist" data-role="scientist"><span class="crew-btn-role">Scientist</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
             </div>
             <div class="crew-role-card crew-role-card--pilot" id="crew-role-card-pilot">
               <div class="crew-role-card-header">
@@ -359,7 +370,23 @@ function getTabsAndPanelsHtml(): string {
                 <span class="crew-role-card-count" id="crew-role-count-pilot">0</span>
               </div>
               <div class="crew-role-card-effect" id="crew-role-effect-pilot"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="pilot"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--pilot" id="hire-astronaut-pilot" data-role="pilot"><span class="crew-btn-text">Pilot</span></button></span>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="pilot"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--pilot" id="hire-astronaut-pilot" data-role="pilot"><span class="crew-btn-role">Pilot</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
+            </div>
+            <div class="crew-role-card crew-role-card--medic" id="crew-role-card-medic">
+              <div class="crew-role-card-header">
+                <span class="crew-role-card-name" data-i18n="crewRoleMedic">Medic</span>
+                <span class="crew-role-card-count" id="crew-role-count-medic">0</span>
+              </div>
+              <div class="crew-role-card-effect" id="crew-role-effect-medic"></div>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="medic"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--medic" id="hire-astronaut-medic" data-role="medic"><span class="crew-btn-role">Medic</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
+            </div>
+            <div class="crew-role-card crew-role-card--engineer" id="crew-role-card-engineer">
+              <div class="crew-role-card-header">
+                <span class="crew-role-card-name" data-i18n="crewRoleEngineer">Engineer</span>
+                <span class="crew-role-card-count" id="crew-role-count-engineer">0</span>
+              </div>
+              <div class="crew-role-card-effect" id="crew-role-effect-engineer"></div>
+              <span class="btn-tooltip-wrap crew-role-wrap" data-role="engineer"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--engineer" id="hire-astronaut-engineer" data-role="engineer"><span class="crew-btn-role">Engineer</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
             </div>
           </div>
           <div class="crew-in-modules" id="crew-in-modules" aria-live="polite"></div>

@@ -1,9 +1,15 @@
 import { Decimal } from './bigNumber.js';
 import balance from '../data/balance.json';
 
-export type CrewRole = 'miner' | 'scientist' | 'pilot';
+/** All crew roles: generic (no job bonus) + jobs unlocked via research. */
+export type CrewRole = 'astronaut' | 'miner' | 'scientist' | 'pilot' | 'medic' | 'engineer';
 
-export const CREW_ROLES: CrewRole[] = ['miner', 'scientist', 'pilot'];
+/** Roles that give production/research/expedition bonuses. Unlocked via research. */
+export type CrewJobRole = 'miner' | 'scientist' | 'pilot' | 'medic' | 'engineer';
+
+export const CREW_ROLES: CrewRole[] = ['astronaut', 'miner', 'scientist', 'pilot', 'medic', 'engineer'];
+
+export const CREW_JOB_ROLES: CrewJobRole[] = ['miner', 'scientist', 'pilot', 'medic', 'engineer'];
 
 export type CrewByRole = Record<CrewRole, number>;
 
@@ -16,6 +22,7 @@ const B = balance as {
   expeditionMaxAstronauts: number;
   expeditionDeathChance: number;
   expeditionMinDeathChance?: number;
+  expeditionMedicDeathChanceReductionPerMedic?: number;
   expeditionDurationBaseMs?: number;
   expeditionDurationPerPlanetMs?: number;
   planetProductionBonus: number;
@@ -70,6 +77,17 @@ export const EXPEDITION_DEATH_CHANCE = B.expeditionDeathChance;
 
 /** Minimum death chance (0–1). */
 export const EXPEDITION_MIN_DEATH_CHANCE = B.expeditionMinDeathChance ?? 0.05;
+
+/** Death chance reduction per medic in expedition (0–1). E.g. 0.02 = 2% less per medic. */
+const MEDIC_DEATH_REDUCTION = B.expeditionMedicDeathChanceReductionPerMedic ?? 0.02;
+
+/** Effective expedition death chance given number of medics in the composition. */
+export function getExpeditionDeathChanceWithMedics(medicCount: number): number {
+  return Math.max(
+    EXPEDITION_MIN_DEATH_CHANCE,
+    EXPEDITION_DEATH_CHANCE - medicCount * MEDIC_DEATH_REDUCTION
+  );
+}
 
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */
 export const PLANET_PRODUCTION_BONUS = B.planetProductionBonus;

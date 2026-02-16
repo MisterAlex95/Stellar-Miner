@@ -10,12 +10,18 @@ html[data-theme="light"] {
   --success: #059669;
   --muted: #9ca3af;
   --panel-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --crew-astronaut: #64748b;
+  --crew-astronaut-bg: rgba(100, 116, 139, 0.1);
   --crew-miner: #b45309;
   --crew-miner-bg: rgba(180, 83, 9, 0.1);
   --crew-scientist: #0284c7;
   --crew-scientist-bg: rgba(2, 132, 199, 0.1);
   --crew-pilot: #7c3aed;
   --crew-pilot-bg: rgba(124, 58, 237, 0.1);
+  --crew-medic: #059669;
+  --crew-medic-bg: rgba(5, 150, 105, 0.1);
+  --crew-engineer: #ea580c;
+  --crew-engineer-bg: rgba(234, 88, 12, 0.1);
   --crew-equipment: #475569;
   --crew-free: rgba(0, 0, 0, 0.06);
 }

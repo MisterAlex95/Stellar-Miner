@@ -44,7 +44,14 @@ type SavedPlanet = {
   visualSeed?: number;
   installingUpgrades?: SavedInstallingUpgrade[];
 };
-type SavedCrewByRole = { miner?: number; scientist?: number; medic?: number; pilot?: number };
+type SavedCrewByRole = {
+  astronaut?: number;
+  miner?: number;
+  scientist?: number;
+  pilot?: number;
+  medic?: number;
+  engineer?: number;
+};
 
 export type SavedRunStats = {
   runStartTime: number;
@@ -390,9 +397,12 @@ export class SaveLoadService implements ISaveLoadService {
     const crewOrCount =
       crewByRole && typeof crewByRole === 'object'
         ? {
+            astronaut: crewByRole.astronaut ?? 0,
             miner: crewByRole.miner ?? 0,
             scientist: crewByRole.scientist ?? 0,
             pilot: crewByRole.pilot ?? 0,
+            medic: crewByRole.medic ?? 0,
+            engineer: crewByRole.engineer ?? 0,
           }
         : (data.player.astronautCount ?? 0);
     const crewAssignedToEquipment =

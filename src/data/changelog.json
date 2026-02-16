@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.4.20",
+    "date": "2026-02-16",
+    "changes": [
+      "Two new crew jobs: Medic (unlock via Basic Refining) and Engineer (unlock via Efficiency). Medics reduce expedition death chance by 2% each; Engineers give +0.8% production each."
+    ]
+  },
+  {
+    "version": "0.4.19",
+    "date": "2026-02-16",
+    "changes": [
+      "Crew: you first hire Astronauts (no job). Unlock Miner, Scientist and Pilot via Research (Mining Theory, Survey Systems, Orbital Engineering) to hire specialists and get their bonuses."
+    ]
+  },
+  {
     "version": "0.4.18",
     "date": "2026-02-16",
     "changes": [

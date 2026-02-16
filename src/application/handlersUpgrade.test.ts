@@ -4,8 +4,8 @@ import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { handleUpgradeBuy, handleUpgradeBuyMax } from './handlersUpgrade.js';
 import { completeUpgradeInstallations } from './upgradeInstallation.js';
-/** Generous delay so all upgrades (variable duration by tier/cost) finish in tests. */
-const INSTALL_WAIT_MS = 10000;
+/** Generous delay so all upgrades (variable duration by tier/cost) finish in tests. Must exceed gameConfig install formula (e.g. drill-mk1 ~25s). */
+const INSTALL_WAIT_MS = 60_000;
 
 vi.mock('../presentation/statsView.js', () => ({ updateStats: vi.fn() }));
 vi.mock('../presentation/upgradeListView.js', () => ({

@@ -16,13 +16,21 @@ import {
   getMaxAstronauts,
   type CrewRole,
   type CrewByRole,
+  type ExpeditionComposition,
   CREW_ROLES,
 } from '../constants.js';
 
-const DEFAULT_CREW_BY_ROLE: CrewByRole = { miner: 0, scientist: 0, pilot: 0 };
+const DEFAULT_CREW_BY_ROLE: CrewByRole = {
+  astronaut: 0,
+  miner: 0,
+  scientist: 0,
+  pilot: 0,
+  medic: 0,
+  engineer: 0,
+};
 
-/** Order to deduct crew when spending (e.g. for expeditions). Not used for upgrades — upgrades take from free pool only. */
-const SPEND_ORDER: CrewRole[] = ['miner', 'scientist', 'pilot'];
+/** Order to deduct crew when spending (e.g. for expeditions). Generic astronauts first, then job roles. */
+const SPEND_ORDER: CrewRole[] = ['astronaut', 'miner', 'scientist', 'pilot', 'medic', 'engineer'];
 
 /** Aggregate root: player and their progression. Holds planets, crew (astronauts by role + assigned to equipment), veterans, artifacts, coins. */
 export class Player {
@@ -31,7 +39,7 @@ export class Player {
 
   public readonly totalCoinsEver: Decimal;
 
-  /** Crew count per role (miner, scientist, pilot). These are the "free" pool — bonuses apply to them; upgrades do not deduct from them. */
+  /** Crew count per role (astronaut = no job, miner/scientist/pilot = jobs unlocked via research). Free pool for capacity and equipment. */
   public readonly crewByRole: CrewByRole;
 
   /** Crew assigned to equipment (upgrades that cost crew). Taken from the free pool when buying; miner/scientist/pilot counts stay unchanged. */
@@ -58,15 +66,15 @@ export class Player {
       this.crewByRole = { ...DEFAULT_CREW_BY_ROLE, ...crewByRoleOrAstronautCount };
     } else {
       const n = typeof crewByRoleOrAstronautCount === 'number' ? crewByRoleOrAstronautCount : 0;
-      this.crewByRole = { ...DEFAULT_CREW_BY_ROLE, miner: n };
+      this.crewByRole = { ...DEFAULT_CREW_BY_ROLE, astronaut: n };
     }
     this.veteranCount = Math.max(0, veteranCount);
     this.crewAssignedToEquipment = Math.max(0, crewAssignedToEquipment);
   }
 
-  /** Free crew (miner + scientist + pilot). Used for bonuses and for "can buy upgrade" (need enough free to assign). */
+  /** Free crew (all roles). Used for bonuses and for "can buy upgrade" (need enough free to assign). */
   get freeCrewCount(): number {
-    return CREW_ROLES.reduce((s, r) => s + this.crewByRole[r], 0);
+    return CREW_ROLES.reduce((s, r) => s + (this.crewByRole[r] ?? 0), 0);
   }
 
   /** Total crew = free (by role) + assigned to equipment. Used for capacity and UI total. */
@@ -107,12 +115,18 @@ export class Player {
     return this.planets.filter((p) => p.hasFreeSlot());
   }
 
-  /** Production rate from upgrades × planet bonus × prestige × crew (by role) × veterans × morale. */
+  /** Production rate from upgrades × planet bonus × prestige × crew jobs (miner/scientist/pilot only) × veterans × morale. */
   get effectiveProductionRate(): Decimal {
     const planetBonus = 1 + (this.planets.length - 1) * PLANET_PRODUCTION_BONUS;
     const prestigeBonus = 1 + this.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL;
     const minerBonus = 1 + this.crewByRole.miner * MINER_PRODUCTION_BONUS;
-    const otherCrewBonus = 1 + (this.crewByRole.scientist + this.crewByRole.pilot) * OTHER_CREW_PRODUCTION_BONUS;
+    const otherCrewBonus =
+      1 +
+      (this.crewByRole.scientist +
+        this.crewByRole.pilot +
+        this.crewByRole.medic +
+        this.crewByRole.engineer) *
+        OTHER_CREW_PRODUCTION_BONUS;
     const veteranBonus = 1 + this.veteranCount * VETERAN_PRODUCTION_BONUS;
     const totalCrewAndVeterans = this.astronautCount + this.veteranCount;
     const totalHousing = this.planets.reduce((s, p) => s + p.housingCount, 0);
@@ -129,7 +143,7 @@ export class Player {
   }
 
   /** Hire one astronaut in the given role if the player can afford the cost. Returns true if hired. */
-  hireAstronaut(cost: DecimalSource, role: CrewRole = 'miner'): boolean {
+  hireAstronaut(cost: DecimalSource, role: CrewRole = 'astronaut'): boolean {
     if (!this.coins.gte(cost)) return false;
     this.spendCoins(cost);
     (this as { crewByRole: CrewByRole }).crewByRole[role] = this.crewByRole[role] + 1;
@@ -186,12 +200,12 @@ export class Player {
   }
 
   /** Spend crew from composition (for expedition). Returns true if enough of each role. */
-  spendCrewByComposition(comp: { miner: number; scientist: number; pilot: number }): boolean {
+  spendCrewByComposition(comp: ExpeditionComposition): boolean {
     for (const r of CREW_ROLES) {
-      if (this.crewByRole[r] < comp[r]) return false;
+      if (this.crewByRole[r] < (comp[r] ?? 0)) return false;
     }
     for (const r of CREW_ROLES) {
-      (this as { crewByRole: CrewByRole }).crewByRole[r] = this.crewByRole[r] - comp[r];
+      (this as { crewByRole: CrewByRole }).crewByRole[r] = this.crewByRole[r] - (comp[r] ?? 0);
     }
     return true;
   }

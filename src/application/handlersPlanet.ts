@@ -100,7 +100,7 @@ export function handleBuildHousing(planetId: string): void {
   refreshAfterPlanetAction({ crew: true });
 }
 
-export function handleHireAstronaut(role: CrewRole = 'miner'): void {
+export function handleHireAstronaut(role: CrewRole = 'astronaut'): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;

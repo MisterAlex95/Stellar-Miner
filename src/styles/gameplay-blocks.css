@@ -243,12 +243,16 @@
   transition: width 0.25s ease-out;
 }
 
-.crew-capacity-segment--miner {
-  background: var(--crew-miner);
+.crew-capacity-segment--astronaut {
+  background: var(--crew-astronaut);
 }
 
-.crew-capacity-segment--miner:first-child {
+.crew-capacity-segment--astronaut:first-child {
   border-radius: 4px 0 0 4px;
+}
+
+.crew-capacity-segment--miner {
+  background: var(--crew-miner);
 }
 
 .crew-capacity-segment--scientist {
@@ -257,6 +261,14 @@
 
 .crew-capacity-segment--pilot {
   background: var(--crew-pilot);
+}
+
+.crew-capacity-segment--medic {
+  background: var(--crew-medic);
+}
+
+.crew-capacity-segment--engineer {
+  background: var(--crew-engineer);
 }
 
 .crew-capacity-segment--equipment {
@@ -301,17 +313,31 @@
   gap: 0.5rem;
 }
 
-.crew-role-card--miner {
-  border-left: 3px solid var(--crew-miner);
+.crew-role-card--astronaut {
+  border-left: 3px solid var(--crew-astronaut);
 }
 
-.crew-role-card--scientist {
-  border-left: 3px solid var(--crew-scientist);
+/* Job cards (miner, scientist, etc.) hidden until unlocked via Research; JS adds .crew-role-card--unlocked to show */
+.crew-role-card--miner,
+.crew-role-card--scientist,
+.crew-role-card--pilot,
+.crew-role-card--medic,
+.crew-role-card--engineer {
+  display: none;
+}
+.crew-role-card--miner.crew-role-card--unlocked,
+.crew-role-card--scientist.crew-role-card--unlocked,
+.crew-role-card--pilot.crew-role-card--unlocked,
+.crew-role-card--medic.crew-role-card--unlocked,
+.crew-role-card--engineer.crew-role-card--unlocked {
+  display: flex;
 }
 
-.crew-role-card--pilot {
-  border-left: 3px solid var(--crew-pilot);
-}
+.crew-role-card--miner { border-left: 3px solid var(--crew-miner); }
+.crew-role-card--scientist { border-left: 3px solid var(--crew-scientist); }
+.crew-role-card--pilot { border-left: 3px solid var(--crew-pilot); }
+.crew-role-card--medic { border-left: 3px solid var(--crew-medic); }
+.crew-role-card--engineer { border-left: 3px solid var(--crew-engineer); }
 
 .crew-role-card-header {
   display: flex;
@@ -394,6 +420,17 @@
   transform: translateY(0);
 }
 
+.hire-astronaut-btn--astronaut {
+  border-color: var(--crew-astronaut);
+  background: var(--crew-astronaut-bg);
+  color: var(--crew-astronaut);
+}
+
+.hire-astronaut-btn--astronaut:hover:not(:disabled) {
+  background: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 0 14px rgba(148, 163, 184, 0.3);
+}
+
 .hire-astronaut-btn--miner {
   border-color: var(--crew-miner);
   background: var(--crew-miner-bg);
@@ -427,10 +464,45 @@
   box-shadow: 0 0 14px rgba(167, 139, 250, 0.3);
 }
 
+.hire-astronaut-btn--medic {
+  border-color: var(--crew-medic);
+  background: var(--crew-medic-bg);
+  color: var(--crew-medic);
+}
+
+.hire-astronaut-btn--medic:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.22);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+}
+
+.hire-astronaut-btn--engineer {
+  border-color: var(--crew-engineer);
+  background: var(--crew-engineer-bg);
+  color: var(--crew-engineer);
+}
+
+.hire-astronaut-btn--engineer:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.22);
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.3);
+}
+
 .hire-astronaut-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
+}
+
+.hire-astronaut-btn .crew-btn-role {
+  font-weight: 600;
+}
+
+.hire-astronaut-btn .crew-btn-sep {
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+.hire-astronaut-btn .crew-btn-cost {
+  font-weight: 600;
 }
 
 .hire-astronaut-btn .crew-btn-icon {

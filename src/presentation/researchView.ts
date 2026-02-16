@@ -10,15 +10,26 @@ import {
   getModifierCrewEntries,
   type ResearchNode,
 } from '../application/research.js';
-import { t, tParam } from '../application/strings.js';
+import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogResearchName, getCatalogResearchDesc, getCatalogUpgradeName } from '../application/i18nCatalogs.js';
+import type { CrewJobRole } from '../domain/constants.js';
 import { escapeAttr, escapeHtml } from './components/domUtils.js';
 import { buttonWithTooltipHtml } from './components/buttonTooltip.js';
+
+const CREW_JOB_ROLE_KEYS: Record<CrewJobRole, StringKey> = {
+  miner: 'crewRoleMiner',
+  scientist: 'crewRoleScientist',
+  pilot: 'crewRolePilot',
+  medic: 'crewRoleMedic',
+  engineer: 'crewRoleEngineer',
+};
 
 function modifierText(node: ResearchNode): string {
   const parts: string[] = [];
   if (node.modifiers.productionPercent) parts.push(`+${node.modifiers.productionPercent}% production`);
   if (node.modifiers.clickPercent) parts.push(`+${node.modifiers.clickPercent}% click`);
+  if (node.modifiers.unlocksCrewRole)
+    parts.push(tParam('researchUnlocksJob', { role: t(CREW_JOB_ROLE_KEYS[node.modifiers.unlocksCrewRole]) }));
   const slotEntries = getModifierSlotEntries(node);
   if (slotEntries.length)
     parts.push(
