@@ -66,7 +66,7 @@ function buildPlanetCardHtml(
     : '';
   return `<div class="planet-card" data-planet-id="${p.id}">
     <div class="planet-card-header">
-      <canvas class="planet-card-visual" width="72" height="48" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" data-planet-visual-seed="${p.visualSeed ?? ''}" aria-hidden="true"></canvas>
+      <canvas class="planet-card-visual" width="112" height="112" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" data-planet-visual-seed="${p.visualSeed ?? ''}" aria-hidden="true"></canvas>
       <div class="planet-card-name-wrap">
         <span class="planet-card-name">${planetDisplayName(p, index)}</span>
         ${buttonWithTooltipHtml(planetInfoTooltip, `<span class="planet-card-info" aria-label="${t('planetInfoTitle')}">ℹ</span>`, 'planet-card-info-wrap')}
