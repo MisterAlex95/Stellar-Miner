@@ -190,6 +190,7 @@ function createRefreshViews(): () => void {
     renderCrewSection();
     renderPrestigeSection();
     renderPlanetList();
+    updateDashboard();
   };
 }
 
