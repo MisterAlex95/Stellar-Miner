@@ -269,6 +269,20 @@ function getModalsHtml(): string {
       `,
     }),
     createModalOverlay({
+      overlayId: 'planet-detail-overlay',
+      overlayClass: 'planet-detail-overlay',
+      dialogClass: 'planet-detail-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'planet-detail-title',
+      bodyHtml: `
+        <div class="planet-detail-header">
+          <h2 id="planet-detail-title" data-i18n="planetDetailTitle">Planet details</h2>
+          <button type="button" class="planet-detail-close" id="planet-detail-close" data-i18n-aria-label="close">×</button>
+        </div>
+        <div class="planet-detail-body" id="planet-detail-body"></div>
+      `,
+    }),
+    createModalOverlay({
       overlayId: 'section-rules-overlay',
       overlayClass: 'section-rules-overlay',
       dialogClass: 'section-rules-modal',

@@ -18,6 +18,7 @@ import { drawPlanetSphereToCanvas } from './MineZoneCanvas.js';
 import { buttonWithTooltipHtml, updateTooltipForButton } from './components/buttonTooltip.js';
 import { escapeAttr } from './components/domUtils.js';
 import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
+import { openPlanetDetail } from './planetDetailView.js';
 
 /** Which solar system indices are collapsed (persisted for the session across re-renders). */
 const collapsedSolarSystems = new Set<number>();

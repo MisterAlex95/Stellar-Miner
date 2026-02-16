@@ -20,6 +20,7 @@ export const OVERLAYS: OverlaySpec[] = [
   { id: 'prestige-rewards-overlay', openClass: 'prestige-rewards-overlay--open' },
   { id: 'events-hint-overlay', openClass: 'events-hint-overlay--open' },
   { id: 'chart-help-overlay', openClass: 'chart-help-overlay--open' },
+  { id: 'planet-detail-overlay', openClass: 'planet-detail-overlay--open' },
 ];
 
 export interface OpenOverlayOptions {
