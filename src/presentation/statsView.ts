@@ -4,7 +4,9 @@ import {
   getSettings,
   getEventMultiplier,
   getLastCoinsForBump,
+  getLastCoinsBumpAtMs,
   setLastCoinsForBump,
+  setLastCoinsBumpAtMs,
   getNextEventAt,
   getActiveEventInstances,
   getClickTimestamps,
@@ -208,9 +210,14 @@ export function updateStats(): void {
   if (crewCompactEl) crewCompactEl.textContent = String(showCrew ? freeCrew : totalCrew);
   if (crewCompactCard) crewCompactCard.style.display = crewUnlocked ? '' : 'none';
   const lastCoinsForBump = getLastCoinsForBump();
-  if (coinsCard && player.coins.value.gt(lastCoinsForBump)) {
+  const nowMs = Date.now();
+  const bumpThrottleMs = 1200;
+  const coinsIncreased = player.coins.value.gt(lastCoinsForBump);
+  const throttleOk = nowMs - getLastCoinsBumpAtMs() >= bumpThrottleMs;
+  if (coinsCard && coinsIncreased && throttleOk) {
     coinsCard.classList.add('stat-card--bump');
     setTimeout(() => coinsCard.classList.remove('stat-card--bump'), 400);
+    setLastCoinsBumpAtMs(nowMs);
   }
   setLastCoinsForBump(player.coins.value);
 

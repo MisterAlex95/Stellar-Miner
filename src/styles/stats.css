@@ -40,8 +40,8 @@
 
 @keyframes stat-bump {
   0% { transform: scale(1); }
-  25% { transform: scale(1.02); }
-  50% { transform: scale(0.99); }
+  35% { transform: scale(1.012); }
+  70% { transform: scale(0.996); }
   100% { transform: scale(1); }
 }
 

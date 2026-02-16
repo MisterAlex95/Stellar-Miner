@@ -222,7 +222,7 @@ export function createMineZone3D(
   /* ── three.js scene ─────────────────────────── */
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
-  camera.position.set(0, 8, 12);
+  camera.position.set(0, 6, 10);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -439,7 +439,8 @@ export function createMineZone3D(
             transparent: true, side: THREE.DoubleSide, depthWrite: false,
           });
           const ring = new THREE.Mesh(rg, rm);
-          ring.rotation.x = Math.PI / 2 - 0.35;
+          /* Ring geometry is in XZ plane (equator); small X tilt so it stays visible and centered */
+          ring.rotation.x = -0.35;
           pGroup.add(ring);
         }
 
@@ -493,13 +494,13 @@ export function createMineZone3D(
       systems3D.push({ group, star, starLight, planets });
     }
 
-    /* adjust camera for number of systems */
+    /* adjust camera for number of systems (zoomed in a bit) */
     if (nSys <= 1) {
-      camera.position.set(0, 6, 10);
+      camera.position.set(0, 4.5, 7.5);
     } else if (nSys <= 4) {
-      camera.position.set(0, 14, 18);
+      camera.position.set(0, 10.5, 13.5);
     } else {
-      camera.position.set(0, 22 + nSys * 2, 28 + nSys * 2);
+      camera.position.set(0, 17 + nSys * 1.6, 22 + nSys * 1.6);
     }
     camera.lookAt(0, 0, 0);
   }

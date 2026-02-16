@@ -248,9 +248,10 @@ export function createPlanetScene(
       depthWrite: false,
     });
     const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    /* Ring geometry is already in XZ plane (equator); small X tilt so it stays visible */
     const ringTilt = 0.3 + (hashStr(planetName + 'tilt') % 20) / 100;
-    ringMesh.rotation.x = Math.PI / 2 - ringTilt;
-    scene.add(ringMesh);
+    ringMesh.rotation.x = -ringTilt;
+    planetMesh.add(ringMesh);
   }
 
   /* ── asteroid belt ──────────────────────────── */

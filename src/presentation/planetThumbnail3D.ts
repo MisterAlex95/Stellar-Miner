@@ -149,9 +149,9 @@ function ensureRenderer(): void {
 
   scene = new THREE.Scene();
 
-  /* camera slightly above and to the side for depth */
-  camera = new THREE.PerspectiveCamera(32, 1, 0.1, 20);
-  camera.position.set(0.3, 0.4, 3.2);
+  /* FOV wide enough so sphere + atmosphere + rings (outer 1.55) all fit in the circular thumbnail */
+  camera = new THREE.PerspectiveCamera(52, 1, 0.1, 20);
+  camera.position.set(0.08, 0.1, 3.85);
   camera.lookAt(0, 0, 0);
 
   /* lighting: key + fill + rim for 3D depth */
@@ -185,19 +185,21 @@ function ensureRenderer(): void {
   atmMesh = new THREE.Mesh(aGeo, atmMatRef);
   scene.add(atmMesh);
 
-  /* rings */
-  const rg = makeRingGeo(1.25, 1.85, 80);
+  /* rings: inner/outer a bit closer to planet so the ring sits more centered in the thumbnail */
+  const rg = makeRingGeo(1.12, 1.55, 80);
   ringMatRef = new THREE.ShaderMaterial({
     vertexShader: ringVert, fragmentShader: ringFrag,
     uniforms: {
       uCI: { value: new THREE.Color(0xc8c0b0) },
       uCO: { value: new THREE.Color(0x8a8478) },
-      uOp: { value: 0.55 },
+      uOp: { value: 0.72 },
     },
     transparent: true, side: THREE.DoubleSide, depthWrite: false,
   });
   ringMesh = new THREE.Mesh(rg, ringMatRef);
-  ringMesh.rotation.x = Math.PI / 2 - 0.35;
+  /* tilt rings toward camera so they're clearly visible (not edge-on) in the thumbnail */
+  ringMesh.rotation.x = Math.PI / 2 - 0.55;
+  ringMesh.renderOrder = 5;
   scene.add(ringMesh);
 }
 

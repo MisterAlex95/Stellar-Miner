@@ -10,6 +10,8 @@
   overflow: hidden;
   min-height: 320px;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
   animation: mine-zone-pulse 3s ease-in-out infinite;
   -webkit-tap-highlight-color: transparent;
   tap-highlight-color: transparent;

@@ -30,6 +30,8 @@ function buildPlanetCardHtml(
   session: GameSession,
   settings: { compactNumbers: boolean }
 ): string {
+  const systemIndex = Math.floor(index / PLANETS_PER_SOLAR_SYSTEM);
+  const systemName = getSolarSystemName(systemIndex);
   const planetDisplayName = (pl: { name: string }, i: number) => getPlanetDisplayName(pl.name, i);
   const addSlotCost = planetService.getAddSlotCost(p);
   const canAddSlot = planetService.canAddSlot(player, p);
@@ -68,7 +70,10 @@ function buildPlanetCardHtml(
     <div class="planet-card-header">
       <canvas class="planet-card-visual" width="112" height="112" data-planet-id="${p.id}" data-planet-name="${escapeAttr(p.name)}" data-planet-visual-seed="${p.visualSeed ?? ''}" aria-hidden="true"></canvas>
       <div class="planet-card-name-wrap">
-        <span class="planet-card-name">${planetDisplayName(p, index)}</span>
+        <div class="planet-card-name-block">
+          <span class="planet-card-name">${escapeAttr(p.name)}</span>
+          <span class="planet-card-system-name">${escapeAttr(systemName)}</span>
+        </div>
         ${buttonWithTooltipHtml(planetInfoTooltip, `<span class="planet-card-info" aria-label="${t('planetInfoTitle')}">ℹ</span>`, 'planet-card-info-wrap')}
       </div>
     </div>

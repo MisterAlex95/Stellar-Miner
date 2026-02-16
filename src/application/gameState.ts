@@ -48,6 +48,7 @@ let gameStartTime = 0;
 let settings: Settings = settingsStore.get();
 let questState: QuestState = initialQuestState;
 let lastCoinsForBump: Decimal = new Decimal(0);
+let lastCoinsBumpAtMs = 0;
 let clickTimestamps: number[] = [];
 let sessionClickCount = 0;
 let sessionCoinsFromClicks = 0;
@@ -149,6 +150,14 @@ export function getLastCoinsForBump(): Decimal {
 
 export function setLastCoinsForBump(n: number | Decimal): void {
   lastCoinsForBump = n instanceof Decimal ? n : new Decimal(n);
+}
+
+export function getLastCoinsBumpAtMs(): number {
+  return lastCoinsBumpAtMs;
+}
+
+export function setLastCoinsBumpAtMs(ms: number): void {
+  lastCoinsBumpAtMs = ms;
 }
 
 export function getClickTimestamps(): number[] {
