@@ -25,6 +25,7 @@ import {
   SUPER_LUCKY_MAX,
   CRITICAL_CLICK_CHANCE,
   COMBO_MASTER_KEY,
+  SHOOTING_STAR_CLICKED_KEY,
 } from './catalogs.js';
 import { PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL } from '../domain/constants.js';
 import { getQuestProgress } from './quests.js';
@@ -142,7 +143,11 @@ export function handleMineClick(e?: MouseEvent): void {
   showFloatingCoin(coinsExactForDisplay, clientX, clientY, { lucky: isLucky, superLucky, critical: isCritical });
   if (superLucky) showSuperLuckyToast(coins);
   if (isCritical) showCriticalToast(coins);
-  mineZoneCanvasApi?.onMineClick(clientX, clientY);
+  const clickResult = mineZoneCanvasApi?.onMineClick(clientX, clientY) as
+    { hitShootingStar?: boolean } | undefined;
+  if (clickResult?.hitShootingStar && typeof localStorage !== 'undefined') {
+    localStorage.setItem(SHOOTING_STAR_CLICKED_KEY, '1');
+  }
   if (superLucky || isCritical) triggerShake();
   updateComboIndicator();
   checkAndShowMilestones();

@@ -32,6 +32,7 @@ import {
   handleDebugAction,
   updateDebugPanel,
   renderAchievementsList,
+  renderAchievementsModalContent,
   updateLastSavedIndicator,
 } from '../application/handlers.js';
 import { subscribe } from '../application/eventBus.js';
@@ -129,6 +130,23 @@ function openInfoModal(): void {
 
 function closeInfoModal(): void {
   closeOverlay('info-overlay', 'info-overlay--open');
+}
+
+const ACHIEVEMENTS_OVERLAY_ID = 'achievements-overlay';
+const ACHIEVEMENTS_OVERLAY_OPEN_CLASS = 'achievements-overlay--open';
+
+function openAchievementsModal(): void {
+  const list = document.getElementById('achievements-modal-list');
+  openOverlay(ACHIEVEMENTS_OVERLAY_ID, ACHIEVEMENTS_OVERLAY_OPEN_CLASS, {
+    focusId: 'achievements-modal-close',
+    onOpen: () => {
+      if (list) renderAchievementsModalContent(list);
+    },
+  });
+}
+
+function closeAchievementsModal(): void {
+  closeOverlay(ACHIEVEMENTS_OVERLAY_ID, ACHIEVEMENTS_OVERLAY_OPEN_CLASS);
 }
 
 const SECTION_RULES_OVERLAY_CLASS = 'section-rules-overlay--open';
@@ -488,6 +506,17 @@ export function mount(): void {
   }
   if (infoClose) infoClose.addEventListener('click', closeInfoModal);
 
+  const achievementsBtn = document.getElementById('achievements-btn');
+  const achievementsOverlay = document.getElementById(ACHIEVEMENTS_OVERLAY_ID);
+  const achievementsModalClose = document.getElementById('achievements-modal-close');
+  if (achievementsBtn && achievementsOverlay) {
+    achievementsBtn.addEventListener('click', openAchievementsModal);
+    achievementsOverlay.addEventListener('click', (e) => {
+      if (e.target === achievementsOverlay) closeAchievementsModal();
+    });
+  }
+  if (achievementsModalClose) achievementsModalClose.addEventListener('click', closeAchievementsModal);
+
   const sectionRulesClose = document.getElementById('section-rules-close');
   const sectionRulesGotIt = document.getElementById('section-rules-got-it');
   const sectionRulesOverlay = document.getElementById('section-rules-overlay');
@@ -575,6 +604,7 @@ export function mount(): void {
       else if (isIntroOverlayOpen()) dismissIntroModal();
       else if (document.getElementById('section-rules-overlay')?.classList.contains(SECTION_RULES_OVERLAY_CLASS)) closeSectionRulesModal();
       else if (document.getElementById('info-overlay')?.classList.contains('info-overlay--open')) closeInfoModal();
+      else if (document.getElementById(ACHIEVEMENTS_OVERLAY_ID)?.classList.contains(ACHIEVEMENTS_OVERLAY_OPEN_CLASS)) closeAchievementsModal();
       else if (document.getElementById(EVENTS_HINT_OVERLAY_ID)?.classList.contains(EVENTS_HINT_OPEN_CLASS)) closeEventsHintModal();
       else if (document.getElementById(CHART_HELP_OVERLAY_ID)?.classList.contains(CHART_HELP_OPEN_CLASS)) closeChartHelpModal();
       else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
@@ -715,18 +745,6 @@ export function mount(): void {
   if (prestigeRewardsClose) prestigeRewardsClose.addEventListener('click', closePrestigeRewardsModal);
   if (prestigeRewardsOverlayEl) {
     prestigeRewardsOverlayEl.addEventListener('click', (e) => { if (e.target === prestigeRewardsOverlayEl) closePrestigeRewardsModal(); });
-  }
-
-  const achievementsToggle = document.getElementById('achievements-toggle-btn');
-  const achievementsList = document.getElementById('achievements-list');
-  if (achievementsToggle && achievementsList) {
-    achievementsToggle.addEventListener('click', () => {
-      const isOpen = achievementsList.getAttribute('aria-hidden') !== 'true';
-      achievementsList.setAttribute('aria-hidden', String(isOpen));
-      achievementsToggle.setAttribute('aria-expanded', String(!isOpen));
-      achievementsList.classList.toggle('achievements-list--open', !isOpen);
-      if (!isOpen) renderAchievementsList(achievementsList);
-    });
   }
 
   updateVersionAndChangelogUI();

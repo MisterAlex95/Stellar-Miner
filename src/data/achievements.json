@@ -30,5 +30,6 @@
   {"id":"first-slot","name":"Expander","type":"totalSlotsGreaterThan","value":6},
   {"id":"speed-run","name":"Speed run","type":"totalCoinsEver","value":2000000,"secret":true},
   {"id":"research-10","name":"Scientist","type":"researchNodesUnlocked","value":10},
-  {"id":"research-full","name":"Lab complete","type":"researchNodesUnlocked","value":38,"secret":true}
+  {"id":"research-full","name":"Lab complete","type":"researchNodesUnlocked","value":38,"secret":true},
+  {"id":"shooting-star","name":"Wish upon a star","type":"shootingStarClicked","value":1}
 ]

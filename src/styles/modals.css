@@ -188,6 +188,113 @@
   border-top: 1px solid var(--border);
 }
 
+/* Achievements modal */
+.achievements-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.achievements-overlay--open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.achievements-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+
+.achievements-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.achievements-modal-header h2 {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.achievements-modal-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.achievements-modal-close:hover {
+  color: var(--text);
+  background: var(--bg-card);
+}
+
+.achievements-modal-body {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  max-height: min(60vh, 400px);
+  scrollbar-gutter: stable;
+}
+
+.achievements-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.achievement-modal-item {
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.achievement-modal-item:last-child {
+  border-bottom: none;
+}
+
+.achievement-modal-item--unlocked {
+  color: var(--text);
+}
+
+.achievement-modal-item--unlocked .achievement-modal-name {
+  color: var(--accent);
+}
+
+.achievement-modal-item--locked {
+  color: var(--text-dim);
+}
+
+.achievement-modal-desc {
+  margin: 0.25rem 0 0 1.25rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
 /* Reset confirm */
 .reset-confirm-overlay {
   position: fixed;

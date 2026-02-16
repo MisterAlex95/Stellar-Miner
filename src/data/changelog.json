@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.22",
+    "date": "2026-02-16",
+    "changes": [
+      "Achievements: new trophy button in header (next to info and settings) opens a dedicated Achievements modal with list and descriptions (hidden achievements show ??? until unlocked). New achievement: click a shooting star in the mine zone (Wish upon a star). Achievements removed from Settings modal."
+    ]
+  },
+  {
     "version": "0.4.21",
     "date": "2026-02-16",
     "changes": [

@@ -972,6 +972,48 @@ function drawSpatialSystem(): void {
   }
 }
 
+const SHOOTING_STAR_HIT_RADIUS = 28;
+
+function getShootingStarSegment(): { tailX: number; tailY: number; headX: number; headY: number } | null {
+  if (!shootingStar) return null;
+  const s = shootingStar;
+  const speed = Math.hypot(s.vx, s.vy) || 1;
+  const k = SHOOTING_STAR_LENGTH / speed;
+  return {
+    tailX: s.x - s.vx * k,
+    tailY: s.y - s.vy * k,
+    headX: s.x,
+    headY: s.y,
+  };
+}
+
+function isPointNearShootingStar(px: number, py: number): boolean {
+  const seg = getShootingStarSegment();
+  if (!seg) return false;
+  const { tailX: ax, tailY: ay, headX: bx, headY: by } = seg;
+  const vx = bx - ax;
+  const vy = by - ay;
+  const wx = px - ax;
+  const wy = py - ay;
+  const c1 = wx * vx + wy * vy;
+  const c2 = vx * vx + vy * vy;
+  let cx: number;
+  let cy: number;
+  if (c1 <= 0) {
+    cx = ax;
+    cy = ay;
+  } else if (c2 <= c1) {
+    cx = bx;
+    cy = by;
+  } else {
+    const t = c1 / c2;
+    cx = ax + t * vx;
+    cy = ay + t * vy;
+  }
+  const dist = Math.hypot(px - cx, py - cy);
+  return dist <= SHOOTING_STAR_HIT_RADIUS;
+}
+
 function drawShootingStar(): void {
   if (!ctx || !shootingStar) return;
   const s = shootingStar;
@@ -1226,12 +1268,13 @@ export function createMineZoneCanvas(
       clientX?: number,
       clientY?: number,
       options?: { superLucky?: boolean; critical?: boolean }
-    ) {
-      if (getMineZoneSettings?.()?.clickParticles === false) return;
+    ): { hitShootingStar?: boolean } {
       const rect = container.getBoundingClientRect();
       const x = clientX != null ? clientX - rect.left : width / 2;
       const y = clientY != null ? clientY - rect.top : height / 2;
-      emitBurst(x, y, options);
+      const hitShootingStar = clientX != null && clientY != null && isPointNearShootingStar(x, y);
+      if (getMineZoneSettings?.()?.clickParticles !== false) emitBurst(x, y, options);
+      return { hitShootingStar };
     },
     setPlanets(planetViews: PlanetView[]) {
       const list = planetViews.map((p) => ({ ...p, upgradeCounts: { ...p.upgradeCounts } }));

@@ -257,6 +257,7 @@ const achievementNamesEn: Record<string, string> = {
   'speed-run': 'Speed run',
   'research-10': 'Scientist',
   'research-full': 'Lab complete',
+  'shooting-star': 'Wish upon a star',
 };
 
 const achievementNamesFr: Record<string, string> = {
@@ -292,6 +293,79 @@ const achievementNamesFr: Record<string, string> = {
   'speed-run': 'Course rapide',
   'research-10': 'Scientifique',
   'research-full': 'Labo complet',
+  'shooting-star': 'Un vœu sur une étoile',
+};
+
+const achievementDescsEn: Record<string, string> = {
+  'first-click': 'Perform your first mine click.',
+  'clicks-100': 'Reach 100 total clicks.',
+  'clicks-1k': 'Reach 1,000 total clicks.',
+  'clicks-10k': 'Reach 10,000 total clicks.',
+  'clicks-50k': 'Reach 50,000 total clicks.',
+  'clicks-100k': 'Reach 100,000 total clicks.',
+  'first-upgrade': 'Buy your first upgrade.',
+  'upgrades-10': 'Own 10 upgrades.',
+  'upgrades-25': 'Own 25 upgrades.',
+  'upgrades-50': 'Own 50 upgrades.',
+  'upgrades-100': 'Own 100 upgrades.',
+  'first-astronaut': 'Hire your first astronaut.',
+  'astronauts-5': 'Have 5 astronauts.',
+  'astronauts-20': 'Have 20 astronauts.',
+  'first-prestige': 'Prestige once.',
+  'prestige-5': 'Reach prestige level 5.',
+  'prestige-10': 'Reach prestige level 10.',
+  'prestige-15': 'Reach prestige level 15.',
+  'prestige-25': 'Reach prestige level 25 (secret).',
+  'planets-3': 'Discover 3 planets.',
+  'planets-10': 'Discover 10 planets.',
+  'coins-50k': 'Earn 50K total coins ever.',
+  'coins-500k': 'Earn 500K total coins ever.',
+  'coins-10m': 'Earn 10M total coins ever.',
+  'coins-1b': 'Earn 1B total coins ever.',
+  'quest-streak-3': 'Reach a quest streak of 3.',
+  'first-quest': 'Claim your first quest.',
+  'combo-master': 'Reach max combo multiplier (secret).',
+  'first-slot': 'Have more than 6 total upgrade slots.',
+  'speed-run': 'Earn 2M total coins ever (secret).',
+  'research-10': 'Unlock 10 research nodes.',
+  'research-full': 'Unlock all research nodes (secret).',
+  'shooting-star': 'Click a shooting star in the mine zone.',
+};
+
+const achievementDescsFr: Record<string, string> = {
+  'first-click': 'Effectuez votre premier clic de mine.',
+  'clicks-100': 'Atteignez 100 clics au total.',
+  'clicks-1k': 'Atteignez 1 000 clics au total.',
+  'clicks-10k': 'Atteignez 10 000 clics au total.',
+  'clicks-50k': 'Atteignez 50 000 clics au total.',
+  'clicks-100k': 'Atteignez 100 000 clics au total.',
+  'first-upgrade': 'Achetez votre premier upgrade.',
+  'upgrades-10': 'Possédez 10 upgrades.',
+  'upgrades-25': 'Possédez 25 upgrades.',
+  'upgrades-50': 'Possédez 50 upgrades.',
+  'upgrades-100': 'Possédez 100 upgrades.',
+  'first-astronaut': 'Recrutez votre premier astronaute.',
+  'astronauts-5': 'Ayez 5 astronautes.',
+  'astronauts-20': 'Ayez 20 astronautes.',
+  'first-prestige': 'Prestige une fois.',
+  'prestige-5': 'Atteignez le niveau de prestige 5.',
+  'prestige-10': 'Atteignez le niveau de prestige 10.',
+  'prestige-15': 'Atteignez le niveau de prestige 15.',
+  'prestige-25': 'Atteignez le niveau de prestige 25 (secret).',
+  'planets-3': 'Découvrez 3 planètes.',
+  'planets-10': 'Découvrez 10 planètes.',
+  'coins-50k': 'Gagnez 50K pièces au total.',
+  'coins-500k': 'Gagnez 500K pièces au total.',
+  'coins-10m': 'Gagnez 10M pièces au total.',
+  'coins-1b': 'Gagnez 1B pièces au total.',
+  'quest-streak-3': 'Atteignez une série de 3 quêtes.',
+  'first-quest': 'Validez votre première quête.',
+  'combo-master': 'Atteignez le multiplicateur de combo max (secret).',
+  'first-slot': 'Avoir plus de 6 emplacements d’upgrade au total.',
+  'speed-run': 'Gagnez 2M pièces au total (secret).',
+  'research-10': 'Débloquez 10 nœuds de recherche.',
+  'research-full': 'Débloquez tous les nœuds de recherche (secret).',
+  'shooting-star': 'Cliquez sur une étoile filante dans la zone de mine.',
 };
 
 const comboNamesEn: Record<string, string> = {
@@ -392,6 +466,11 @@ export function getCatalogEventName(id: string): string {
 export function getCatalogAchievementName(id: string): string {
   const names = lang() === 'fr' ? achievementNamesFr : achievementNamesEn;
   return names[id] ?? ACHIEVEMENTS.find((a) => a.id === id)?.name ?? id;
+}
+
+export function getCatalogAchievementDesc(id: string): string {
+  const descs = lang() === 'fr' ? achievementDescsFr : achievementDescsEn;
+  return descs[id] ?? '';
 }
 
 /** Combo tier key from mult (e.g. 1.6 -> mega). */

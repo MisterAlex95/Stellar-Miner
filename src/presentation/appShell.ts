@@ -19,6 +19,9 @@ function getHeaderHtml(): string {
             </button>
             <span class="info-update-badge" id="info-update-badge" aria-hidden="true"></span>
           </span>
+          <button type="button" class="achievements-btn" id="achievements-btn" data-i18n-aria-label="openAchievements">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          </button>
           <button type="button" class="settings-btn" id="settings-btn" data-i18n-aria-label="openSettings">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-1.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v1.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-1.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
@@ -121,10 +124,6 @@ function getModalsHtml(): string {
             <input type="file" id="settings-import-file" accept=".json,application/json" class="settings-import-file" aria-hidden="true" />
             <p class="settings-last-saved" id="last-saved-indicator" aria-live="polite"></p>
           </div>
-          <div class="settings-option settings-achievements">
-            <button type="button" class="achievements-toggle-btn" id="achievements-toggle-btn" aria-expanded="false" data-i18n="achievements">Achievements</button>
-            <div class="achievements-list" id="achievements-list" aria-hidden="true"></div>
-          </div>
           <div class="settings-option settings-reset">
             <button type="button" class="reset-btn" id="settings-reset-btn" data-i18n="resetProgress">Reset progress</button>
           </div>
@@ -157,6 +156,22 @@ function getModalsHtml(): string {
             <span class="info-version-value" id="info-version-value">–</span>
           </div>
           <div class="info-changelog-list" id="info-changelog-list"></div>
+        </div>
+      `,
+    }),
+    createModalOverlay({
+      overlayId: 'achievements-overlay',
+      overlayClass: 'achievements-overlay',
+      dialogClass: 'achievements-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'achievements-modal-title',
+      bodyHtml: `
+        <div class="achievements-modal-header">
+          <h2 id="achievements-modal-title" data-i18n="achievementsTitle">Achievements</h2>
+          <button type="button" class="achievements-modal-close" id="achievements-modal-close" data-i18n-aria-label="close">×</button>
+        </div>
+        <div class="achievements-modal-body">
+          <div class="achievements-modal-list" id="achievements-modal-list"></div>
         </div>
       `,
     }),

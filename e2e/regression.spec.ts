@@ -435,11 +435,14 @@ test.describe('Settings extended', () => {
     await page.locator('#settings-close').click();
   });
 
-  test('settings has achievements toggle', async ({ page, gotoApp }) => {
+  test('achievements button opens achievements modal', async ({ page, gotoApp }) => {
     await gotoApp();
-    await page.locator('#settings-btn').click();
-    await expect(page.locator('#achievements-toggle-btn')).toBeVisible();
-    await page.locator('#settings-close').click();
+    await expect(page.locator('#achievements-btn')).toBeVisible();
+    await page.locator('#achievements-btn').click();
+    await expect(page.locator('#achievements-overlay.achievements-overlay--open')).toBeVisible();
+    await expect(page.locator('#achievements-modal-list')).toBeVisible();
+    await page.locator('#achievements-modal-close').click();
+    await expect(page.locator('#achievements-overlay.achievements-overlay--open')).not.toBeVisible();
   });
 
   test('settings has reset progress button', async ({ page, gotoApp }) => {

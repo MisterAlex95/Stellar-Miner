@@ -35,4 +35,5 @@ export {
   updateDebugPanel,
   handleDebugAction,
   renderAchievementsList,
+  renderAchievementsModalContent,
 } from './handlersDebug.js';
