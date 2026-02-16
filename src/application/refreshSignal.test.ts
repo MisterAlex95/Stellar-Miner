@@ -24,4 +24,38 @@ describe('refreshSignal', () => {
     notifyRefresh();
     expect(fn).toHaveBeenCalledTimes(1);
   });
+
+  it('notifyRefresh runs synchronously when requestAnimationFrame is undefined', () => {
+    const raf = globalThis.requestAnimationFrame;
+    // @ts-expect-error - simulate env without rAF (e.g. Node, SSR)
+    globalThis.requestAnimationFrame = undefined;
+    try {
+      const fn = vi.fn();
+      subscribeRefresh(fn);
+      notifyRefresh();
+      expect(fn).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.requestAnimationFrame = raf;
+    }
+  });
+
+  it('notifyRefresh uses requestAnimationFrame when available', () => {
+    const raf = globalThis.requestAnimationFrame;
+    const mockRaf = vi.fn((cb: () => void) => {
+      cb();
+      return 1;
+    });
+    // @ts-expect-error - inject mock rAF
+    globalThis.requestAnimationFrame = mockRaf;
+    try {
+      const fn = vi.fn();
+      subscribeRefresh(fn);
+      notifyRefresh();
+      expect(mockRaf).toHaveBeenCalledTimes(1);
+      expect(fn).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.requestAnimationFrame = raf;
+    }
+  });
+
 });
