@@ -28,6 +28,7 @@ export function triggerRandomEvent(): void {
   incrementRunEventsTriggered();
   addDiscoveredEvent(event.id);
   showEventToast(event);
+  notifyRefresh();
 }
 
 export function openDebugMenu(): void {

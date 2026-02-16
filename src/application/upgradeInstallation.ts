@@ -1,5 +1,6 @@
 import { Decimal } from '../domain/bigNumber.js';
 import type { GameSession } from '../domain/aggregates/GameSession.js';
+import { notifyRefresh } from './refreshSignal.js';
 
 /** Run installation ticks on all planets; add completed upgrade rates to player production. Call from game loop. */
 export function completeUpgradeInstallations(session: GameSession, nowMs: number): void {
@@ -10,5 +11,6 @@ export function completeUpgradeInstallations(session: GameSession, nowMs: number
   }
   if (totalAdded.gt(0)) {
     session.player.setProductionRate(session.player.productionRate.add(totalAdded));
+    notifyRefresh();
   }
 }

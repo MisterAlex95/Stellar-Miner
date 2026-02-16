@@ -1,9 +1,16 @@
 [
   {
+    "version": "0.4.30",
+    "date": "2026-02-16",
+    "changes": [
+      "Observable migration: notifyRefresh in completeUpgradeInstallations, triggerRandomEvent. Refresh includes renderResearchSection, updateStatisticsSection. Removed redundant renderCrewSection/renderPrestigeSection from refresh (updateStats does them)."
+    ]
+  },
+  {
     "version": "0.4.29",
     "date": "2026-02-16",
     "changes": [
-      "Observable pattern: sessionStore, settingsStore, refreshSignal. Handlers emit notifyRefresh; UI subscribes reactively. Decoupled application from presentation."
+      "Observable pattern: sessionStore, settingsStore, refreshSignal. Handlers emit notifyRefresh; UI subscribes reactively. Dashboard in refresh."
     ]
   },
   {

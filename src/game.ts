@@ -184,13 +184,17 @@ function gameLoop(now: number): void {
 function createRefreshViews(): () => void {
   return () => {
     saveSession();
-    updateStats();
+    updateStats(); // includes renderPrestigeSection, renderCrewSection
     renderUpgradeList();
     renderQuestSection();
-    renderCrewSection();
-    renderPrestigeSection();
     renderPlanetList();
+    renderResearchSection();
     updateDashboard();
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => updateStatisticsSection(), { timeout: 50 });
+    } else {
+      updateStatisticsSection();
+    }
   };
 }
 
