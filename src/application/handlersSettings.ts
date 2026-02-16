@@ -31,10 +31,8 @@ const RESET_LOCAL_STORAGE_KEYS: string[] = [
   'stellar-miner-first-astronaut-toast',
   'stellar-miner-first-prestige-toast',
 ];
-import { updateStats } from '../presentation/statsView.js';
-import { renderUpgradeList } from '../presentation/upgradeListView.js';
-import { renderPlanetList } from '../presentation/planetListView.js';
 import { openOverlay, closeOverlay } from '../presentation/components/overlay.js';
+import { notifyRefresh } from './refreshSignal.js';
 
 export function updateLastSavedIndicator(): void {
   const el = document.getElementById('last-saved-indicator');
@@ -66,9 +64,7 @@ export function closeSettings(): void {
 }
 
 export function applySettingsToUI(): void {
-  updateStats();
-  renderUpgradeList();
-  renderPlanetList();
+  notifyRefresh();
 }
 
 export function openResetConfirmModal(): void {

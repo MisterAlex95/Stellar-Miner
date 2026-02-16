@@ -10,21 +10,13 @@ import { getMaxAstronauts, getAstronautCost, getExpeditionDurationMs, type CrewR
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { hasEffectiveFreeSlot } from './research.js';
 import { emit } from './eventBus.js';
-import { updateStats } from '../presentation/statsView.js';
-import { renderUpgradeList } from '../presentation/upgradeListView.js';
-import { renderPlanetList } from '../presentation/planetListView.js';
-import { renderCrewSection } from '../presentation/crewView.js';
+import { notifyRefresh } from './refreshSignal.js';
 import { showMiniMilestoneToast } from '../presentation/toasts.js';
 import { checkAchievements } from './achievements.js';
 import { t, tParam } from './strings.js';
-import { saveSession } from './handlersSave.js';
 
-function refreshAfterPlanetAction(opts: { crew?: boolean; achievements?: boolean } = {}): void {
-  saveSession();
-  updateStats();
-  renderUpgradeList();
-  renderPlanetList();
-  if (opts.crew) renderCrewSection();
+function refreshAfterPlanetAction(opts: { achievements?: boolean } = {}): void {
+  notifyRefresh();
   if (opts.achievements) checkAchievements();
 }
 
@@ -39,7 +31,7 @@ export function handleBuyNewPlanet(): void {
   const durationMs = getExpeditionDurationMs(player.planets.length);
   const endsAt = Date.now() + durationMs;
   setExpeditionInProgress(endsAt, result.composition, durationMs);
-  refreshAfterPlanetAction({ crew: true });
+  refreshAfterPlanetAction();
 }
 
 /** Called from game loop: if expedition timer has elapsed, complete it and refresh UI. */
@@ -79,7 +71,7 @@ export function completeExpeditionIfDue(): void {
   } else {
     showMiniMilestoneToast(tParam('expeditionFailed', { n: outcome.totalSent }));
   }
-  refreshAfterPlanetAction({ crew: true, achievements: true });
+  refreshAfterPlanetAction({ achievements: true });
 }
 
 export function handleAddSlot(planetId: string): void {
@@ -97,7 +89,7 @@ export function handleBuildHousing(planetId: string): void {
   const planet = session.player.planets.find((p) => p.id === planetId);
   if (!planet || !planetService.canBuildHousing(session.player, planet, hasEffectiveFreeSlot)) return;
   planetService.buildHousing(session.player, planet, hasEffectiveFreeSlot);
-  refreshAfterPlanetAction({ crew: true });
+  refreshAfterPlanetAction();
 }
 
 export function handleHireAstronaut(role: CrewRole = 'astronaut'): void {
@@ -118,5 +110,5 @@ export function handleHireAstronaut(role: CrewRole = 'astronaut'): void {
       showMiniMilestoneToast(t('firstAstronautToast'));
     }
   }
-  refreshAfterPlanetAction({ crew: true, achievements: true });
+  refreshAfterPlanetAction({ achievements: true });
 }

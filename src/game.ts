@@ -38,6 +38,7 @@ import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations } from './application/upgradeInstallation.js';
 import { showOfflineToast } from './presentation/toasts.js';
+import { wireRefreshSubscribers } from './application/refreshSubscribers.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 150;
@@ -180,10 +181,23 @@ function gameLoop(now: number): void {
   requestAnimationFrame(gameLoop);
 }
 
+function createRefreshViews(): () => void {
+  return () => {
+    saveSession();
+    updateStats();
+    renderUpgradeList();
+    renderQuestSection();
+    renderCrewSection();
+    renderPrestigeSection();
+    renderPlanetList();
+  };
+}
+
 async function init(): Promise<void> {
   const session = await getOrCreateSession();
   setSession(session);
   loadStatsHistory();
+  wireRefreshSubscribers(createRefreshViews());
   const offlineCoins = saveLoad.getLastOfflineCoins();
   const offlineHours = saveLoad.getLastOfflineHours();
   const gameStartTime = Date.now();

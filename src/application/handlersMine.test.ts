@@ -3,7 +3,7 @@ import { setSession, getSession } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { handleMineClick } from './handlersMine.js';
-import { saveSession } from './handlersSave.js';
+import { notifyRefresh } from './refreshSignal.js';
 import { LAST_DAILY_BONUS_KEY } from './catalogs.js';
 
 vi.mock('../presentation/statsView.js', () => ({ updateStats: vi.fn() }));
@@ -18,7 +18,7 @@ vi.mock('../presentation/toasts.js', () => ({
 }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn(), incrementTotalClicksEver: vi.fn() }));
 vi.mock('./milestones.js', () => ({ checkAndShowMilestones: vi.fn() }));
-vi.mock('./handlersSave.js', () => ({ saveSession: vi.fn() }));
+vi.mock('./refreshSignal.js', () => ({ notifyRefresh: vi.fn() }));
 vi.mock('./research.js', () => ({ getResearchClickMultiplier: () => 1 }));
 vi.mock('./quests.js', () => ({ getQuestProgress: () => null }));
 
@@ -62,8 +62,8 @@ describe('handlersMine', () => {
     expect(player.coins.value.toNumber()).toBeGreaterThanOrEqual(before + 3);
   });
 
-  it('calls saveSession after click', () => {
+  it('calls notifyRefresh after click', () => {
     handleMineClick(fakeEvent);
-    expect(saveSession).toHaveBeenCalled();
+    expect(notifyRefresh).toHaveBeenCalled();
   });
 });

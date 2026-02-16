@@ -1,9 +1,9 @@
 [
   {
-    "version": "0.4.28",
+    "version": "0.4.29",
     "date": "2026-02-16",
     "changes": [
-      "Code quality: Observable store for reactive state, extracted getEstimatedClickRate to productionHelpers, throttled stats updates (100ms), bindSettingsForm helper for settings UI."
+      "Observable pattern: sessionStore, settingsStore, refreshSignal. Handlers emit notifyRefresh; UI subscribes reactively. Decoupled application from presentation."
     ]
   },
   {

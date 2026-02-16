@@ -35,12 +35,8 @@ function bindCheckbox(el: InputEl, key: keyof Settings, checked: boolean, onAfte
   });
 }
 
-export function bindSettingsForm(
-  applySettingsToUI: () => void,
-  applyLayout: () => void,
-  applyThemeAndMotion: () => void,
-  applyTranslations: () => void
-): void {
+/** Binds settings form inputs. Settings changes emit via settingsStore; wireSettingsSubscribers handles side effects. */
+export function bindSettingsForm(): void {
   const s = getSettings();
 
   bindSelect(
@@ -51,33 +47,27 @@ export function bindSettingsForm(
   );
   bindCheckbox(document.getElementById('setting-orbit-lines') as HTMLInputElement, 'showOrbitLines', s.showOrbitLines);
   bindCheckbox(document.getElementById('setting-click-particles') as HTMLInputElement, 'clickParticles', s.clickParticles);
-  bindCheckbox(document.getElementById('setting-compact-numbers') as HTMLInputElement, 'compactNumbers', s.compactNumbers, applySettingsToUI);
+  bindCheckbox(document.getElementById('setting-compact-numbers') as HTMLInputElement, 'compactNumbers', s.compactNumbers);
   bindCheckbox(document.getElementById('setting-space-key-repeat') as HTMLInputElement, 'spaceKeyRepeat', s.spaceKeyRepeat);
   bindSelect(
     document.getElementById('setting-layout') as HTMLSelectElement,
     'layout',
     s.layout,
-    (v) => v as Settings['layout'],
-    applyLayout
+    (v) => v as Settings['layout']
   );
   bindCheckbox(document.getElementById('setting-pause-background') as HTMLInputElement, 'pauseWhenBackground', s.pauseWhenBackground);
   bindSelect(
     document.getElementById('setting-theme') as HTMLSelectElement,
     'theme',
     s.theme,
-    (v) => v as Settings['theme'],
-    applyThemeAndMotion
+    (v) => v as Settings['theme']
   );
   bindSelect(
     document.getElementById('setting-language') as HTMLSelectElement,
     'language',
     s.language,
-    (v) => v as Settings['language'],
-    () => {
-      applyTranslations();
-      applySettingsToUI();
-    }
+    (v) => v as Settings['language']
   );
   bindCheckbox(document.getElementById('setting-sound') as HTMLInputElement, 'soundEnabled', s.soundEnabled);
-  bindCheckbox(document.getElementById('setting-reduced-motion') as HTMLInputElement, 'reducedMotion', s.reducedMotion, applyThemeAndMotion);
+  bindCheckbox(document.getElementById('setting-reduced-motion') as HTMLInputElement, 'reducedMotion', s.reducedMotion);
 }

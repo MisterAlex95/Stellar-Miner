@@ -15,6 +15,12 @@ import { PRESTIGES_TODAY_KEY } from './catalogs.js';
 import { CREW_ROLES, type ExpeditionComposition } from '../domain/constants.js';
 import { createObservableStore } from './observableStore.js';
 
+/** Observable session store. Subscribe to react to session changes (load, prestige, reset). */
+export const sessionStore = createObservableStore<GameSession | null>(null as GameSession | null);
+
+/** Observable settings store. Subscribe to react to settings changes (theme, layout, etc.). */
+export const settingsStore = createObservableStore<Settings>(loadSettings());
+
 export type ActiveEventInstance = { event: GameEvent; endsAt: number };
 
 export type SavedExpedition = { endsAt: number; composition: ExpeditionComposition; durationMs: number };
@@ -31,7 +37,7 @@ let session: GameSession;
 let activeEventInstances: ActiveEventInstance[] = [];
 let nextEventAt = 0;
 let gameStartTime = 0;
-let settings: Settings = loadSettings();
+let settings: Settings = settingsStore.get();
 let questState: QuestState = loadQuestState();
 let lastCoinsForBump: Decimal = new Decimal(0);
 let clickTimestamps: number[] = [];
@@ -70,9 +76,6 @@ export const upgradeService = new UpgradeService();
 export const planetService = new PlanetService();
 export let starfieldApi: ReturnType<typeof startStarfield> | null = null;
 export let mineZoneCanvasApi: ReturnType<typeof createMineZoneCanvas> | null = null;
-
-/** Observable session store. Subscribe to react to session changes (load, prestige, reset). */
-export const sessionStore = createObservableStore<GameSession | null>(null as GameSession | null);
 
 export function getSession(): GameSession {
   return session;
@@ -118,6 +121,7 @@ export function getSettings(): Settings {
 export function setSettings(s: Settings): void {
   settings = s;
   saveSettings(settings);
+  settingsStore.set(s);
 }
 
 export function getQuestState(): QuestState {

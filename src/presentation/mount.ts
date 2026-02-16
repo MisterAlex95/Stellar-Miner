@@ -52,6 +52,7 @@ import {
 } from './progressionView.js';
 import { initTooltips } from './tooltip.js';
 import { bindSettingsForm } from './bindSettingsForm.js';
+import { wireSettingsSubscribers } from '../application/refreshSubscribers.js';
 import { APP_VERSION, hasNewUpdate, markUpdateSeen } from '../application/version.js';
 import { getChangelog } from '../application/changelog.js';
 import { buildChangelogHtml } from './components/changelog.js';
@@ -615,7 +616,13 @@ export function mount(): void {
   subscribe('save_success', () => updateLastSavedIndicator());
 
   // --- Settings form: inputs, export/import, reset, achievements ---
-  bindSettingsForm(applySettingsToUI, applyLayout, applyThemeAndMotion, applyTranslations);
+  wireSettingsSubscribers(() => {
+    applyThemeAndMotion();
+    applyLayout();
+    applySettingsToUI();
+    applyTranslations();
+  });
+  bindSettingsForm();
 
   const exportBtn = document.getElementById('settings-export-btn');
   const importBtn = document.getElementById('settings-import-btn');

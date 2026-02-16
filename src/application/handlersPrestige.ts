@@ -15,31 +15,18 @@ import {
 import { generateQuest } from './quests.js';
 import { saveQuestState } from './questState.js';
 import { clearResearch } from './research.js';
-import { updateStats } from '../presentation/statsView.js';
-import { renderUpgradeList } from '../presentation/upgradeListView.js';
-import { renderPlanetList } from '../presentation/planetListView.js';
-import { renderPrestigeSection } from '../presentation/prestigeView.js';
-import { renderCrewSection } from '../presentation/crewView.js';
-import { renderResearchSection } from '../presentation/researchView.js';
-import { renderQuestSection } from '../presentation/questView.js';
 import { showPrestigeMilestoneToast, showMiniMilestoneToast } from '../presentation/toasts.js';
 import { openOverlay, closeOverlay } from '../presentation/components/overlay.js';
 import { checkAchievements } from './achievements.js';
 import { emit } from './eventBus.js';
 import { t, tParam } from './strings.js';
-import { saveSession } from './handlersSave.js';
+import { notifyRefresh } from './refreshSignal.js';
 
 const PRESTIGE_REWARDS_LIST_MAX_LEVEL = 15;
 const PRESTIGE_MILESTONE_LEVELS = [2, 5, 10, 20];
 
 function refreshAfterPrestige(): void {
-  updateStats();
-  renderUpgradeList();
-  renderPlanetList();
-  renderPrestigeSection();
-  renderCrewSection();
-  renderResearchSection();
-  renderQuestSection();
+  notifyRefresh();
   checkAchievements();
 }
 
@@ -105,7 +92,7 @@ export function confirmPrestige(): void {
   setQuestState(newQuestState);
   saveQuestState(newQuestState);
   clearResearch();
-  saveSession();
+  notifyRefresh();
   setSessionClickCount(0);
   setSessionCoinsFromClicks(0);
   if (newPlayer.prestigeLevel === 1 && typeof localStorage !== 'undefined') {

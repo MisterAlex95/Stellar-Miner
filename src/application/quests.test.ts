@@ -281,10 +281,7 @@ describe('quests', () => {
 
   it('claimQuest returns false when no quest or not done', () => {
     expect(claimQuest({
-      saveSession: vi.fn(),
-      updateStats: vi.fn(),
-      renderUpgradeList: vi.fn(),
-      renderQuestSection: vi.fn(),
+      notifyRefresh: vi.fn(),
       showFloatingReward: vi.fn(),
       showQuestStreakToast: vi.fn(),
       checkAchievements: vi.fn(),
@@ -301,17 +298,14 @@ describe('quests', () => {
       quest: { type: 'coins', target: 100, reward: 50, description: 'Reach 100 coins' },
     });
     const callbacks = {
-      saveSession: vi.fn(),
-      updateStats: vi.fn(),
-      renderUpgradeList: vi.fn(),
-      renderQuestSection: vi.fn(),
+      notifyRefresh: vi.fn(),
       showFloatingReward: vi.fn(),
       showQuestStreakToast: vi.fn(),
       checkAchievements: vi.fn(),
     };
     const result = claimQuest(callbacks);
     expect(result).toBe(true);
-    expect(callbacks.saveSession).toHaveBeenCalled();
+    expect(callbacks.notifyRefresh).toHaveBeenCalled();
     expect(getQuestState().quest).not.toBeNull();
     vi.stubGlobal('document', origDoc);
   });
@@ -327,10 +321,7 @@ describe('quests', () => {
     });
     const showFloatingReward = vi.fn();
     claimQuest({
-      saveSession: vi.fn(),
-      updateStats: vi.fn(),
-      renderUpgradeList: vi.fn(),
-      renderQuestSection: vi.fn(),
+      notifyRefresh: vi.fn(),
       showFloatingReward,
       showQuestStreakToast: vi.fn(),
       checkAchievements: vi.fn(),
@@ -350,10 +341,7 @@ describe('quests', () => {
     });
     const showQuestStreakToast = vi.fn();
     claimQuest({
-      saveSession: vi.fn(),
-      updateStats: vi.fn(),
-      renderUpgradeList: vi.fn(),
-      renderQuestSection: vi.fn(),
+      notifyRefresh: vi.fn(),
       showFloatingReward: vi.fn(),
       showQuestStreakToast,
       checkAchievements: vi.fn(),

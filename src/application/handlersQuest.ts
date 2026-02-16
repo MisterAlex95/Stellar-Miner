@@ -1,20 +1,14 @@
 import { getQuestStreak } from './quests.js';
 import { claimQuest } from './quests.js';
 import { emit } from './eventBus.js';
-import { saveSession } from './handlersSave.js';
-import { updateStats } from '../presentation/statsView.js';
-import { renderUpgradeList } from '../presentation/upgradeListView.js';
-import { renderQuestSection } from '../presentation/questView.js';
+import { notifyRefresh } from './refreshSignal.js';
 import { showFloatingReward, showQuestStreakToast } from '../presentation/toasts.js';
 import { checkAchievements } from './achievements.js';
 
 export function handleClaimQuest(): void {
   const streak = getQuestStreak();
   const claimed = claimQuest({
-    saveSession,
-    updateStats,
-    renderUpgradeList,
-    renderQuestSection,
+    notifyRefresh,
     showFloatingReward,
     showQuestStreakToast,
     checkAchievements,

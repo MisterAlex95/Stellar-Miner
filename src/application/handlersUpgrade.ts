@@ -9,25 +9,16 @@ import {
 } from './catalogs.js';
 import { upgradeService } from './gameState.js';
 import { emit } from './eventBus.js';
+import { notifyRefresh } from './refreshSignal.js';
 import { getEffectiveUpgradeUsesSlot, getEffectiveRequiredAstronauts } from './research.js';
 import { getPlanetType, getPlanetTypeMultiplier } from './planetAffinity.js';
-import { updateStats } from '../presentation/statsView.js';
-import { renderUpgradeList, flashUpgradeCard } from '../presentation/upgradeListView.js';
-import { renderPlanetList } from '../presentation/planetListView.js';
-import { renderCrewSection } from '../presentation/crewView.js';
-import { renderQuestSection } from '../presentation/questView.js';
+import { flashUpgradeCard } from '../presentation/upgradeListView.js';
 import { showMiniMilestoneToast } from '../presentation/toasts.js';
 import { checkAchievements } from './achievements.js';
 import { t, tParam } from './strings.js';
-import { saveSession } from './handlersSave.js';
 
 function refreshAfterUpgrade(opts: { flashId?: string } = {}): void {
-  saveSession();
-  updateStats();
-  renderUpgradeList();
-  renderCrewSection();
-  renderPlanetList();
-  renderQuestSection();
+  notifyRefresh();
   checkAchievements();
   if (opts.flashId) flashUpgradeCard(opts.flashId);
 }
@@ -72,17 +63,13 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): UpgradeB
   if (crewRequired > 0 && player.freeAstronautCount < crewRequired) return { bought: false, durations: [] };
   if (crewRequired > 0 && !player.assignCrewToEquipment(crewRequired)) return { bought: false, durations: [] };
   // Update crew UI immediately so the player sees the count drop on click
-  if (crewRequired > 0) {
-    updateStats();
-    renderCrewSection();
-  }
+  if (crewRequired > 0) notifyRefresh();
 
   const planet = resolveTargetPlanet(player, targetPlanet, needsSlot);
   if (!planet) {
     if (crewRequired > 0) {
       player.unassignCrewFromEquipment(crewRequired);
-      updateStats();
-      renderCrewSection();
+      notifyRefresh();
     }
     return { bought: false, durations: [] };
   }
@@ -102,8 +89,7 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): UpgradeB
   if (!event) {
     if (crewRequired > 0) {
       player.unassignCrewFromEquipment(crewRequired);
-      updateStats();
-      renderCrewSection();
+      notifyRefresh();
     }
     return { bought: false, durations: [] };
   }

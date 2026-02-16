@@ -3,7 +3,7 @@ import { setSession, getSession } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { confirmPrestige } from './handlersPrestige.js';
-import { saveSession } from './handlersSave.js';
+import { notifyRefresh } from './refreshSignal.js';
 import { PRESTIGE_COIN_THRESHOLD } from '../domain/constants.js';
 
 vi.mock('../presentation/statsView.js', () => ({ updateStats: vi.fn() }));
@@ -22,7 +22,7 @@ vi.mock('../presentation/components/overlay.js', () => ({
 }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));
-vi.mock('./handlersSave.js', () => ({ saveSession: vi.fn() }));
+vi.mock('./refreshSignal.js', () => ({ notifyRefresh: vi.fn() }));
 vi.mock('./quests.js', () => ({ generateQuest: () => ({ type: 'coins', target: 100, reward: 50, description: 'test' }) }));
 vi.mock('./questState.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./questState.js')>();
@@ -79,8 +79,8 @@ describe('handlersPrestige', () => {
     expect(sessionAfter.player.veteranCount).toBe(0);
   });
 
-  it('calls saveSession after prestige', () => {
+  it('calls notifyRefresh after prestige', () => {
     confirmPrestige();
-    expect(saveSession).toHaveBeenCalled();
+    expect(notifyRefresh).toHaveBeenCalled();
   });
 });
