@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.37",
+    "date": "2026-02-16",
+    "changes": [
+      "Split strings.ts into strings/en.ts, strings/fr.ts (914→62 lines). Split dashboardView: extracted dashboardHelpers.ts (upgrade goals, research, minutesUntil)."
+    ]
+  },
+  {
     "version": "0.4.36",
     "date": "2026-02-16",
     "changes": [
