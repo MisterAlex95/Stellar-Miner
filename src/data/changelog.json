@@ -1,37 +1,11 @@
 [
   {
-    "version": "0.4.38",
-    "date": "2026-02-16",
-    "changes": [
-      "Display optimizations: pause canvas when tab hidden; batch DOM reads in updateStats, use DocumentFragment for crew-by-job; will-change + contain on animated elements (stat-card--bump, float-coin, float-reward)."
-    ]
-  },
-  {
-    "version": "0.4.37",
-    "date": "2026-02-16",
-    "changes": [
-      "Split strings.ts into strings/en.ts, strings/fr.ts (914→62 lines). Split dashboardView: extracted dashboardHelpers.ts (upgrade goals, research, minutesUntil)."
-    ]
-  },
-  {
-    "version": "0.4.36",
-    "date": "2026-02-16",
-    "changes": [
-      "Split mount.ts: extracted mountTabs.ts (switchTab, badges, layout) and mountModals.ts (info, achievements, section rules). mount.ts reduced from ~1124 to ~803 lines."
-    ]
-  },
-  {
-    "version": "0.4.35",
-    "date": "2026-02-16",
-    "changes": [
-      "Code organization: consolidated domHelper into domUtils (getElement, escapeAttr, escapeHtml). Generic builders (createLabelValueCard, createBadge). Components barrel index. statisticsCard uses createLabelValueCard."
-    ]
-  },
-  {
     "version": "0.4.34",
     "date": "2026-02-16",
     "changes": [
-      "Batch DOM updates: notifyRefresh coalesces into requestAnimationFrame. Lazy load panels: upgrades, empire, research, dashboard, stats render only when first viewed."
+      "Batch DOM updates: notifyRefresh coalesces into requestAnimationFrame. Lazy load panels: upgrades, empire, research, dashboard, stats render only when first viewed.",
+      "Code organization: domHelper→domUtils, generic builders, components barrel. Split mount (mountTabs, mountModals), strings (en/fr), dashboard (dashboardHelpers).",
+      "Display: pause canvas when tab hidden; batch DOM reads in updateStats; will-change + contain on animated elements."
     ]
   },
   {
