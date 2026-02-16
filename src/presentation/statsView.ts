@@ -142,14 +142,31 @@ export function updateStats(): void {
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
   const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
-  const coinsCard = document.getElementById('coins-stat-card');
-  const crewLineEl = document.getElementById('crew-stat-line');
-  const crewDetailEl = document.getElementById('crew-stat-detail');
-  const assignedCrew = session ? getAssignedAstronauts(session) : 0;
+  const assignedCrew = getAssignedAstronauts(session);
   const totalCrew = player.astronautCount;
   const freeCrew = totalCrew - assignedCrew;
   const crewUnlocked = getUnlockedBlocks(session).has('crew');
   const showCrew = crewUnlocked && totalCrew > 0;
+
+  const coinsCard = document.getElementById('coins-stat-card');
+  const crewLineEl = document.getElementById('crew-stat-line');
+  const crewDetailEl = document.getElementById('crew-stat-detail');
+  const crewByJobEl = document.getElementById('crew-stat-by-job');
+  const crewCompactEl = document.getElementById('stats-compact-crew');
+  const crewCompactCard = document.getElementById('crew-compact-card');
+  const productionCard = document.getElementById('production-stat-card');
+  const productionLive = document.getElementById('production-live');
+  const breakdownEl = document.getElementById('production-breakdown');
+  const nextMilestoneEl = document.getElementById('next-milestone');
+  const activeEl = document.getElementById('active-events');
+  const nextEventRow = document.getElementById('next-event-row');
+  const nextEventLabel = document.getElementById('next-event-label');
+  const nextEventProgressWrap = document.getElementById('next-event-progress-wrap');
+  const nextEventProgressBar = document.getElementById('next-event-progress-bar');
+  const hintWrap = document.getElementById('events-hint-wrap');
+  const hintTrigger = document.getElementById('events-hint-trigger');
+  const hintModalBody = document.getElementById('events-hint-modal-body');
+
   if (crewLineEl) {
     crewLineEl.textContent = showCrew ? tParam('crewStatFormat', { n: freeCrew }) : '';
     crewLineEl.style.display = showCrew ? 'block' : 'none';
@@ -158,7 +175,6 @@ export function updateStats(): void {
     crewDetailEl.textContent = showCrew ? tParam('crewStatDetail', { assigned: String(assignedCrew), total: String(totalCrew) }) : '';
     crewDetailEl.style.display = showCrew ? 'block' : 'none';
   }
-  const crewByJobEl = document.getElementById('crew-stat-by-job');
   if (crewByJobEl) {
     if (showCrew) {
       const unlockedJobs = getUnlockedCrewRoles();
@@ -170,21 +186,25 @@ export function updateStats(): void {
         medic: 'crewStatRoleMedics',
         engineer: 'crewStatRoleEngineers',
       };
-      const parts: string[] = [];
+      const frag = document.createDocumentFragment();
+      let first = true;
       for (const role of CREW_ROLES) {
         const isUnlocked = role === 'astronaut' || unlockedJobs.includes(role as CrewJobRole);
         if (!isUnlocked) continue;
-        const n = player.crewByRole[role];
-        parts.push(`<span class="crew-stat-role crew-stat-role--${role}">${n} ${t(crewStatRoleKeys[role])}</span>`);
+        if (!first) frag.appendChild(document.createTextNode(', '));
+        first = false;
+        const span = document.createElement('span');
+        span.className = `crew-stat-role crew-stat-role--${role}`;
+        span.textContent = `${player.crewByRole[role]} ${t(crewStatRoleKeys[role])}`;
+        frag.appendChild(span);
       }
-      crewByJobEl.innerHTML = parts.join(', ');
+      crewByJobEl.textContent = '';
+      crewByJobEl.appendChild(frag);
     } else {
       crewByJobEl.textContent = '';
     }
     crewByJobEl.style.display = showCrew ? 'block' : 'none';
   }
-  const crewCompactEl = document.getElementById('stats-compact-crew');
-  const crewCompactCard = document.getElementById('crew-compact-card');
   if (crewCompactEl) crewCompactEl.textContent = String(showCrew ? freeCrew : totalCrew);
   if (crewCompactCard) crewCompactCard.style.display = crewUnlocked ? '' : 'none';
   const lastCoinsForBump = getLastCoinsForBump();
@@ -194,11 +214,8 @@ export function updateStats(): void {
   }
   setLastCoinsForBump(player.coins.value);
 
-  const productionCard = document.getElementById('production-stat-card');
-  const productionLive = document.getElementById('production-live');
   if (productionCard) productionCard.classList.toggle('stat-card--live', effectiveRate.gt(0));
   if (productionLive) productionLive.textContent = effectiveRate.gt(0) ? '●' : '';
-  const breakdownEl = document.getElementById('production-breakdown');
   if (breakdownEl) {
     const base = player.productionRate.value;
     const planetBonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
@@ -246,7 +263,6 @@ export function updateStats(): void {
   renderPrestigeSection();
   renderCrewSection();
 
-  const nextMilestoneEl = document.getElementById('next-milestone');
   if (nextMilestoneEl) {
     const milestone = getNextMilestone(session);
     if (milestone) {
@@ -284,11 +300,6 @@ export function updateStats(): void {
   const eventsUnlocked = getUnlockedBlocks(session).has('events');
   const activeEventInstances = getActiveEventInstances();
   const nextEventAt = getNextEventAt();
-  const activeEl = document.getElementById('active-events');
-  const nextEventRow = document.getElementById('next-event-row');
-  const nextEventLabel = document.getElementById('next-event-label');
-  const nextEventProgressWrap = document.getElementById('next-event-progress-wrap');
-  const nextEventProgressBar = document.getElementById('next-event-progress-bar');
   if (!eventsUnlocked) {
     if (activeEl) activeEl.style.display = 'none';
     if (nextEventRow) nextEventRow.style.display = 'none';
@@ -331,14 +342,11 @@ export function updateStats(): void {
       }
     }
   }
-  const hintWrap = document.getElementById('events-hint-wrap');
-  const hintTrigger = document.getElementById('events-hint-trigger');
   if (hintWrap) hintWrap.style.display = 'block';
   if (hintTrigger) {
     hintTrigger.setAttribute('title', t('eventsHintTitle'));
     hintTrigger.setAttribute('aria-label', t('eventsHintTitle'));
   }
-  const hintModalBody = document.getElementById('events-hint-modal-body');
   if (hintModalBody) {
     const discovered = getDiscoveredEventIds();
     const explanation = `<p class="events-hint-what">${t('eventsHintWhat')}</p>`;

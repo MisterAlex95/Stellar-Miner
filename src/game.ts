@@ -119,6 +119,7 @@ function runPanelUpdates(nowMs: number): void {
 }
 
 function runCanvasUpdates(session: ReturnType<typeof getSession>, canvasDt: number): void {
+  if (document.visibilityState === 'hidden') return;
   const planetViews = session.player.planets.map((p, index) => {
     const upgradeCounts: Record<string, number> = {};
     for (const u of p.upgrades) upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
@@ -133,10 +134,10 @@ function runCanvasUpdates(session: ReturnType<typeof getSession>, canvasDt: numb
     };
   });
   starfieldApi?.update(canvasDt);
-  if (document.visibilityState !== 'hidden') starfieldApi?.draw();
+  starfieldApi?.draw();
   mineZoneCanvasApi?.setPlanets(planetViews);
   mineZoneCanvasApi?.update(canvasDt);
-  if (document.visibilityState !== 'hidden') mineZoneCanvasApi?.draw();
+  mineZoneCanvasApi?.draw();
 }
 
 function gameLoop(now: number): void {

@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.38",
+    "date": "2026-02-16",
+    "changes": [
+      "Display optimizations: pause canvas when tab hidden; batch DOM reads in updateStats, use DocumentFragment for crew-by-job; will-change + contain on animated elements (stat-card--bump, float-coin, float-reward)."
+    ]
+  },
+  {
     "version": "0.4.37",
     "date": "2026-02-16",
     "changes": [
