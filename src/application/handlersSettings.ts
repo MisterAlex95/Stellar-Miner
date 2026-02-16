@@ -33,7 +33,6 @@ const RESET_LOCAL_STORAGE_KEYS: string[] = [
 ];
 import { openOverlay, closeOverlay } from '../presentation/components/overlay.js';
 import { notifyRefresh } from './refreshSignal.js';
-import { resetPanelHydration } from './lazyPanels.js';
 
 export function updateLastSavedIndicator(): void {
   const el = document.getElementById('last-saved-indicator');
@@ -89,6 +88,5 @@ export function handleResetProgress(): void {
   freshPlayer.addCoins(0);
   setSession(new GameSession(currentSession.id, freshPlayer, []));
   setActiveEventInstances([]);
-  resetPanelHydration();
   location.reload();
 }
