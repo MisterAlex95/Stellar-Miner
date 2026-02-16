@@ -41,7 +41,9 @@ import { renderCrewSection } from './crewView.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
 import { renderResearchSection } from './researchView.js';
+import { renderUpgradeList } from './upgradeListView.js';
 import { renderStatisticsSection } from './statisticsView.js';
+import { markPanelHydrated } from '../application/lazyPanels.js';
 import { renderDashboardSection, updateDashboard, getNextAffordableUpgrade } from './dashboardView.js';
 import {
   bindIntroModal,
@@ -219,8 +221,27 @@ export function switchTab(tabId: string): void {
   } catch {
     // ignore
   }
-  if (tabId === 'research') renderResearchSection();
-  if (tabId === 'dashboard') renderDashboardSection();
+  if (tabId === 'research') {
+    renderResearchSection();
+    markPanelHydrated('research');
+  }
+  if (tabId === 'dashboard') {
+    renderDashboardSection();
+    markPanelHydrated('dashboard');
+  }
+  if (tabId === 'upgrades') {
+    renderUpgradeList();
+    markPanelHydrated('upgrades');
+  }
+  if (tabId === 'empire') {
+    renderPlanetList();
+    markPanelHydrated('empire');
+  }
+  if (tabId === 'stats') {
+    const container = document.getElementById('statistics-container');
+    if (container) renderStatisticsSection(container);
+    markPanelHydrated('stats');
+  }
   document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
     item.classList.toggle('app-tabs-menu-item--active', item.getAttribute('data-tab') === tabId);
   });

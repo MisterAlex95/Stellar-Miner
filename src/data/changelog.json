@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.34",
+    "date": "2026-02-16",
+    "changes": [
+      "Batch DOM updates: notifyRefresh coalesces into requestAnimationFrame. Lazy load panels: upgrades, empire, research, dashboard, stats render only when first viewed."
+    ]
+  },
+  {
     "version": "0.4.33",
     "date": "2026-02-16",
     "changes": [

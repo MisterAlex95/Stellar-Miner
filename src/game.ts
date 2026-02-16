@@ -42,6 +42,7 @@ import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/ref
 import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';
 import { getElement } from './presentation/components/domHelper.js';
+import { isPanelHydrated } from './application/lazyPanels.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 150;
@@ -172,19 +173,21 @@ function createRefreshViews(): () => void {
     }
     saveSession();
     updateStats(); // includes renderPrestigeSection, renderCrewSection
-    renderUpgradeList();
+    if (isPanelHydrated('upgrades')) renderUpgradeList();
     renderQuestSection();
-    renderPlanetList();
-    renderResearchSection();
-    updateDashboard();
+    if (isPanelHydrated('empire')) renderPlanetList();
+    if (isPanelHydrated('research')) renderResearchSection();
+    if (isPanelHydrated('dashboard')) updateDashboard();
     updateProgressionVisibility();
     updateTabMenuVisibility();
     updateTabVisibility(switchTab);
     updateTabBadges();
-    if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(() => updateStatisticsSection(), { timeout: 50 });
-    } else {
-      updateStatisticsSection();
+    if (isPanelHydrated('stats')) {
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(() => updateStatisticsSection(), { timeout: 50 });
+      } else {
+        updateStatisticsSection();
+      }
     }
     if (typeof performance !== 'undefined' && performance.measure) {
       performance.mark('refresh-end');
@@ -211,8 +214,6 @@ async function init(): Promise<void> {
   syncCoinDisplay();
   syncProductionDisplay();
   updateStats();
-  renderUpgradeList();
-  renderPlanetList();
   maybeShowWelcomeModal();
   if (offlineCoins > 0) showOfflineToast(offlineCoins, saveLoad.getLastOfflineWasCapped(), offlineHours > 0 ? offlineHours : undefined);
   lastTime = performance.now();
