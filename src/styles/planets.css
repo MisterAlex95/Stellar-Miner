@@ -406,13 +406,11 @@
   margin-bottom: 1rem;
 }
 
-.planet-detail-canvas {
-  border-radius: 50%;
+.planet-detail-canvas-3d {
+  border-radius: 8px;
   background: transparent;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  box-shadow: 0 0 40px rgba(245, 158, 11, 0.08), 0 0 80px rgba(0, 0, 0, 0.3);
+  display: block;
+  margin: 0 auto;
 }
 
 .planet-detail-drag-hint {
@@ -539,11 +537,6 @@
   .planet-detail-modal {
     max-width: 100%;
     border-radius: 12px;
-  }
-
-  .planet-detail-canvas {
-    width: 200px !important;
-    height: 200px !important;
   }
 
   .planet-detail-stats {

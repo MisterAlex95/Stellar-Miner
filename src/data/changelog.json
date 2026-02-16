@@ -3,7 +3,9 @@
     "version": "0.4.35",
     "date": "2026-02",
     "changes": [
-      "Interactive planet detail: click a planet thumbnail in the Empire tab to open a full-screen modal with a large rotating planet, drag-to-rotate interaction, and detailed stats (type, production, slots, housing, crew, moons, rings/belt, installed upgrades)."
+      "Interactive 3D planet detail: click a planet thumbnail in the Empire tab to open a modal with a full three.js scene — drag to rotate in all directions, scroll to zoom, seamless procedural texture on sphere.",
+      "Beautiful 3D rings with shader (banding, transparency, noise), instanced asteroid belt, orbiting moons, fresnel atmosphere glow, starfield background.",
+      "Planet stats: type, system, production, slots, housing, crew, moons, features, installed upgrades list."
     ]
   },
   {
