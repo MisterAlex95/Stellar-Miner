@@ -39,7 +39,7 @@ function getOrderedUpgradeDefs(player: { upgrades: { id: string }[] }) {
 }
 
 /** First affordable upgrade (by tier order), or null. */
-function getNextAffordableUpgrade(): { def: { id: string }; cost: string; planetId?: string } | null {
+export function getNextAffordableUpgrade(): { def: { id: string }; cost: string; planetId?: string } | null {
   const session = getSession();
   if (!session) return null;
   const player = session.player;

@@ -108,6 +108,14 @@ export function renderCrewSection(): void {
   }
 
   crewSummaryEl.title = tParam('freeAstronautsTitle', { max: maxCrew, planets: player.planets.length });
+  const crewEmptyState = document.getElementById('crew-empty-state');
+  if (crewEmptyState) {
+    const showEmpty = totalCrew === 0;
+    crewEmptyState.hidden = !showEmpty;
+    crewEmptyState.setAttribute('aria-hidden', String(!showEmpty));
+  }
+  const crewSummaryLabel = document.getElementById('crew-section-summary');
+  if (crewSummaryLabel) crewSummaryLabel.textContent = totalCrew > 0 ? `${totalCrew} crew` : '';
   if (totalCrew === 0) {
     crewSummaryEl.textContent = tParam('noCrewYetMax', { max: maxCrew });
   } else if (assigned > 0) {

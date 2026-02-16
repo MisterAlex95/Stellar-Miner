@@ -83,6 +83,7 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.85rem 1rem;
+  min-height: 88px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -97,7 +98,8 @@
 
 @media (max-width: 360px) {
   .planet-card {
-    padding: 0.6rem 0.75rem;
+    padding: 0.75rem;
+    min-height: 80px;
   }
 }
 

@@ -68,6 +68,22 @@
   min-width: 0;
 }
 
+.gameplay-block-summary {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-left: 0.35rem;
+  flex-shrink: 0;
+}
+
+.gameplay-block-summary:empty {
+  display: none;
+}
+
+.gameplay-block--collapsed .gameplay-block-summary:not(:empty) {
+  font-weight: 600;
+  color: var(--text);
+}
+
 .gameplay-block-body {
   margin-top: 0.5rem;
 }
@@ -235,6 +251,25 @@
   flex-direction: row;
   min-width: 0;
   transition: width 0.25s ease-out;
+  position: relative;
+}
+
+.crew-capacity-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: progress-shimmer 2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .crew-capacity-segment {
@@ -540,6 +575,30 @@
   background: linear-gradient(90deg, var(--accent), #fbbf24);
   border-radius: 3px;
   transition: width 0.2s ease-out;
+  position: relative;
+}
+
+.quest-progress-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: progress-shimmer 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes progress-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .quest-section--complete .quest-progress-bar {

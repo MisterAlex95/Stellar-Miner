@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.21",
+    "date": "2026-02-16",
+    "changes": [
+      "UI: progress bar shimmer on quest, next event, and crew capacity; upgrade card flash on purchase; tab badges when quest claimable, prestige ready, or research available; empty states with icons for crew, planets, and upgrades; Settings grouped (Visual, Gameplay, Save & data); collapsible section summaries (e.g. \"5 crew\", \"3 planets\"); bottom nav (Mine | Empire) on small screens; larger tap targets on planet and upgrade cards."
+    ]
+  },
+  {
     "version": "0.4.20",
     "date": "2026-02-16",
     "changes": [

@@ -125,6 +125,12 @@ export function renderPlanetList(): void {
     group.planets.push({ planet: p, index });
   });
 
+  const planetsSummaryEl = document.getElementById('planets-section-summary');
+  if (planetsSummaryEl) planetsSummaryEl.textContent = player.planets.length > 0 ? `${player.planets.length} planet${player.planets.length !== 1 ? 's' : ''}` : '';
+
+  if (player.planets.length === 0) {
+    listEl.innerHTML = `<div class="empty-state" id="planets-empty-state"><span class="empty-state-icon" aria-hidden="true"></span><p class="empty-state-text">${t('emptyPlanetsText')}</p></div>`;
+  } else {
   const sectionsHtml = groups
     .map((g) => {
       const isCollapsed = collapsedSolarSystems.has(g.systemIndex);
@@ -170,6 +176,7 @@ export function renderPlanetList(): void {
     if (planetName) drawPlanetSphereToCanvas(canvas, planetName, Date.now(), visualSeed);
   });
   startPlanetThumbnailLoop();
+  }
   const expeditionArea = document.getElementById('expedition-area');
   const endsAt = getExpeditionEndsAt();
   const inProgress = endsAt != null;

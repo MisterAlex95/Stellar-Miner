@@ -246,6 +246,25 @@
   background: linear-gradient(90deg, var(--accent), #fbbf24);
   border-radius: 2px;
   transition: width 0.4s ease-out;
+  position: relative;
+}
+
+.next-event-progress-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: progress-shimmer 2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .events-hint-wrap {
@@ -322,7 +341,7 @@
   display: none;
 }
 
-/* Sticky stats: stick at top and shrink when scrolling */
+/* Sticky stats: stick at top and shrink when scrolling (disabled on Mine tab) */
 .stats {
   position: sticky;
   top: 0;
@@ -331,6 +350,10 @@
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
   transition: padding 0.35s ease;
+}
+
+#app[data-active-tab="mine"] .stats {
+  position: static;
 }
 
 .stats-spacer {

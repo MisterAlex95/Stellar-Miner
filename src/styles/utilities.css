@@ -1,3 +1,35 @@
+/* Empty states: icon + short text when a list is empty */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 2rem;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.empty-state-icon:empty {
+  display: none;
+}
+
+.empty-state-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+  max-width: 280px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .stat-card--bump,
   .upgrade-card--just-bought,

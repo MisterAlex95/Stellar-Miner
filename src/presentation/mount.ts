@@ -1,5 +1,5 @@
 import { createMineZoneCanvas } from './MineZoneCanvas.js';
-import { getSession, getSettings, getEventContext, setSettings, setMineZoneCanvasApi } from '../application/gameState.js';
+import { getSession, getSettings, getEventContext, setSettings, setMineZoneCanvasApi, getExpeditionEndsAt, planetService } from '../application/gameState.js';
 import { getUnlockedBlocks } from '../application/progression.js';
 import { t, applyTranslations, type StringKey } from '../application/strings.js';
 import {
@@ -41,7 +41,7 @@ import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
 import { renderResearchSection } from './researchView.js';
 import { renderStatisticsSection } from './statisticsView.js';
-import { renderDashboardSection, updateDashboard } from './dashboardView.js';
+import { renderDashboardSection, updateDashboard, getNextAffordableUpgrade } from './dashboardView.js';
 import {
   bindIntroModal,
   updateProgressionVisibility,
@@ -56,6 +56,10 @@ import { buildChangelogHtml } from './components/changelog.js';
 import { buildDebugPanelHtml } from './components/debugPanel.js';
 import { getOpenOverlayElement, openOverlay, closeOverlay } from './components/overlay.js';
 import { getAppHtml } from './appShell.js';
+import { getQuestProgress } from '../application/quests.js';
+import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
+import { hasEffectiveFreeSlot } from '../application/research.js';
+import { RESEARCH_CATALOG, canAttemptResearch } from '../application/research.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
@@ -184,6 +188,11 @@ export function switchTab(tabId: string): void {
     p.classList.toggle('app-tab-panel--active', isSelected);
     p.hidden = !isSelected;
   });
+  document.querySelectorAll<HTMLElement>('.app-tab-bottom[data-tab]').forEach((tab) => {
+    const isSelected = tab.getAttribute('data-tab') === tabId;
+    tab.classList.toggle('app-tab-bottom--active', isSelected);
+    tab.setAttribute('aria-selected', String(isSelected));
+  });
   try {
     localStorage.setItem(TAB_STORAGE_KEY, tabId);
   } catch {
@@ -194,6 +203,14 @@ export function switchTab(tabId: string): void {
   document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
     item.classList.toggle('app-tabs-menu-item--active', item.getAttribute('data-tab') === tabId);
   });
+  document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
+    item.classList.toggle('app-tabs-bottom-menu-item--active', item.getAttribute('data-tab') === tabId);
+  });
+  const tabBottomMore = document.getElementById('tab-bottom-more');
+  const isOverflowTab = ['dashboard', 'research', 'upgrades', 'stats'].includes(tabId);
+  if (tabBottomMore) tabBottomMore.classList.toggle('app-tab-bottom-more--active', isOverflowTab);
+  const app = document.getElementById('app');
+  if (app) app.setAttribute('data-active-tab', tabId);
   updateTabMoreActiveState();
 }
 
@@ -201,18 +218,24 @@ export function switchTab(tabId: string): void {
 export function updateTabMenuVisibility(): void {
   const session = getSession();
   const unlocked = getUnlockedBlocks(session);
+  const isUnlockedFor = (tabId: string) =>
+    tabId === 'dashboard' ||
+    (tabId === 'upgrades' && unlocked.has('upgrades')) ||
+    (tabId === 'empire' && (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
+    (tabId === 'research' && unlocked.has('research')) ||
+    (tabId === 'stats' && unlocked.has('upgrades'));
   document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
     const tabId = item.getAttribute('data-tab');
     if (!tabId) return;
-    const isUnlocked =
-      tabId === 'dashboard' ||
-      (tabId === 'upgrades' && unlocked.has('upgrades')) ||
-      (tabId === 'empire' && (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
-      (tabId === 'research' && unlocked.has('research')) ||
-      (tabId === 'stats' && unlocked.has('upgrades'));
-    item.style.display = isUnlocked ? '' : 'none';
+    item.style.display = isUnlockedFor(tabId) ? '' : 'none';
+  });
+  document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
+    const tabId = item.getAttribute('data-tab');
+    if (!tabId) return;
+    item.style.display = isUnlockedFor(tabId) ? '' : 'none';
   });
   updateTabMoreWrapVisibility();
+  updateTabBottomMoreWrapVisibility();
 }
 
 /** Hide ⋯ button when no menu item is visible (dropdown would be empty). */
@@ -223,6 +246,93 @@ function updateTabMoreWrapVisibility(): void {
     (el) => getComputedStyle(el).display !== 'none'
   );
   wrap.classList.toggle('app-tabs-more-wrap--empty', !hasVisibleItem);
+}
+
+/** Hide bottom ⋯ when no bottom menu item is visible. */
+function updateTabBottomMoreWrapVisibility(): void {
+  const wrap = document.querySelector<HTMLElement>('.app-tabs-bottom-more-wrap');
+  if (!wrap) return;
+  const hasVisibleItem = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item')).some(
+    (el) => getComputedStyle(el).display !== 'none'
+  );
+  wrap.classList.toggle('app-tabs-bottom-more-wrap--empty', !hasVisibleItem);
+}
+
+/** Update tab badges (dot) when there is something to do: quest claimable (Mine), prestige available (Empire), research attemptable (Research). */
+export function updateTabBadges(): void {
+  const session = getSession();
+  const unlocked = session ? getUnlockedBlocks(session) : new Set<string>();
+  const questProgress = getQuestProgress();
+  const questClaimable = questProgress?.done ?? false;
+  const canPrestige = session?.player.coins.gte(PRESTIGE_COIN_THRESHOLD) ?? false;
+  const prestigeUnlocked = unlocked.has('prestige');
+  const researchUnlocked = unlocked.has('research');
+  const hasAttemptableResearch =
+    researchUnlocked &&
+    session &&
+    RESEARCH_CATALOG.some((n) => canAttemptResearch(n.id) && session.player.coins.gte(n.cost));
+
+  const upgradesUnlocked = unlocked.has('upgrades');
+  const hasAffordableUpgrade = upgradesUnlocked && getNextAffordableUpgrade() !== null;
+
+  const empireUnlocked = unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige');
+  let hasEmpireAction = prestigeUnlocked && canPrestige;
+  if (session && !hasEmpireAction) {
+    const player = session.player;
+    if (unlocked.has('crew')) {
+      const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
+      const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
+      const atCap = player.astronautCount >= maxCrew;
+      if (!atCap && player.coins.gte(getAstronautCost(player.freeCrewCount))) hasEmpireAction = true;
+    }
+    if (!hasEmpireAction && unlocked.has('planets') && getExpeditionEndsAt() === null && planetService.canLaunchExpedition(player))
+      hasEmpireAction = true;
+    if (!hasEmpireAction && player.planets.some((p) => planetService.canAddSlot(player, p))) hasEmpireAction = true;
+    if (!hasEmpireAction && player.planets.some((p) => planetService.canBuildHousing(player, p, hasEffectiveFreeSlot)))
+      hasEmpireAction = true;
+  }
+
+  setTabBadge('mine', questClaimable);
+  setTabBadge('empire', empireUnlocked && hasEmpireAction);
+  setTabBadge('research', hasAttemptableResearch);
+  setTabBadge('dashboard', false);
+  setTabBadge('upgrades', hasAffordableUpgrade);
+  setTabBadge('stats', false);
+  updateTabMoreHasAction();
+}
+
+function updateTabMoreHasAction(): void {
+  const tabMore = document.getElementById('tab-more');
+  if (tabMore) {
+    const hasActionInOverflow = Array.from(document.querySelectorAll<HTMLElement>('.app-tab[data-tab]')).some(
+      (tab) => {
+        const isHidden = tab.offsetParent === null || getComputedStyle(tab).display === 'none';
+        return isHidden && tab.classList.contains('app-tab--has-action');
+      }
+    );
+    tabMore.classList.toggle('app-tab-more--has-action', hasActionInOverflow);
+  }
+  const tabBottomMore = document.getElementById('tab-bottom-more');
+  if (tabBottomMore) {
+    const hasActionInBottomMenu = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item')).some(
+      (item) => item.classList.contains('app-tabs-bottom-menu-item--has-action')
+    );
+    tabBottomMore.classList.toggle('app-tab-bottom-more--has-action', hasActionInBottomMenu);
+  }
+}
+
+function setTabBadge(tabId: string, visible: boolean): void {
+  const tabEl = document.getElementById(`tab-${tabId}`);
+  if (tabEl) tabEl.classList.toggle('app-tab--has-action', visible);
+  document.querySelectorAll(`.app-tabs-menu-item[data-tab="${tabId}"]`).forEach((el) => {
+    el.classList.toggle('app-tabs-menu-item--has-action', visible);
+  });
+  document.querySelectorAll(`.app-tabs-bottom-menu-item[data-tab="${tabId}"]`).forEach((el) => {
+    el.classList.toggle('app-tabs-bottom-menu-item--has-action', visible);
+  });
+  document.querySelectorAll(`.app-tab-bottom[data-tab="${tabId}"]`).forEach((el) => {
+    el.classList.toggle('app-tab-bottom--has-action', visible);
+  });
 }
 
 /** Update ⋯ button orange state: only active when current tab is hidden (in overflow menu). Call from switchTab and from game loop on resize. */
@@ -867,6 +977,12 @@ export function mount(): void {
       if (tabId) goToTab(tabId);
     });
   });
+  document.querySelectorAll<HTMLElement>('.app-tab-bottom[data-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const tabId = tab.getAttribute('data-tab');
+      if (tabId) goToTab(tabId);
+    });
+  });
   const tabMore = document.getElementById('tab-more');
   const appTabsMenu = document.getElementById('app-tabs-menu');
   function closeTabsMenu(): void {
@@ -903,6 +1019,43 @@ export function mount(): void {
       }
     });
   }
+  const tabBottomMore = document.getElementById('tab-bottom-more');
+  const appTabsBottomMenu = document.getElementById('app-tabs-bottom-menu');
+  function closeBottomTabsMenu(): void {
+    if (appTabsBottomMenu) appTabsBottomMenu.hidden = true;
+    if (tabBottomMore) tabBottomMore.setAttribute('aria-expanded', 'false');
+  }
+  function openBottomTabsMenu(): void {
+    if (appTabsBottomMenu) appTabsBottomMenu.hidden = false;
+    if (tabBottomMore) tabBottomMore.setAttribute('aria-expanded', 'true');
+  }
+  if (tabBottomMore && appTabsBottomMenu) {
+    tabBottomMore.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = appTabsBottomMenu.hidden === false;
+      if (isOpen) closeBottomTabsMenu();
+      else openBottomTabsMenu();
+    });
+    document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const tabId = item.getAttribute('data-tab');
+        if (tabId) goToTab(tabId);
+        closeBottomTabsMenu();
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (appTabsBottomMenu.hidden) return;
+      const target = e.target as Node;
+      const wrap = document.querySelector('.app-tabs-bottom-more-wrap');
+      if (!wrap?.contains(target) && !appTabsBottomMenu.contains(target)) closeBottomTabsMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape' && !appTabsBottomMenu.hidden) {
+        closeBottomTabsMenu();
+        tabBottomMore?.focus();
+      }
+    });
+  }
   document.addEventListener('keydown', (e) => {
     const key = e.key;
     if (key !== '1' && key !== '2' && key !== '3' && key !== '4' && key !== '5' && key !== '6') return;
@@ -936,6 +1089,19 @@ export function mount(): void {
   let statsCompactRaf: number | null = null;
   function updateStatsCompact(): void {
     if (!statsSection) return;
+    const app = document.getElementById('app');
+    const activeTab = app?.getAttribute('data-active-tab') ?? '';
+    const isMine = activeTab === 'mine';
+    if (isMine) {
+      statsSection.classList.remove('stats--compact');
+      if (statsSpacer) {
+        statsSpacer.style.display = 'none';
+        statsSpacer.style.height = '';
+      }
+      const crewCompactCard = document.getElementById('crew-compact-card');
+      if (crewCompactCard) crewCompactCard.setAttribute('aria-hidden', 'true');
+      return;
+    }
     const y = window.scrollY;
     const wasCompact = statsSection.classList.contains('stats--compact');
     const compact = wasCompact ? y > STATS_COMPACT_LEAVE : y > STATS_COMPACT_ENTER;

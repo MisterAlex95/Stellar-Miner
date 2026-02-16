@@ -55,4 +55,8 @@ export function renderQuestSection(): void {
     else streakHint.textContent = '';
     streakHint.style.display = streak > 0 ? 'block' : 'none';
   }
+  const questSummaryEl = document.getElementById('quest-section-summary');
+  if (questSummaryEl) {
+    questSummaryEl.textContent = p.done ? 'Claim!' : `${typeof p.current === 'number' ? p.current : p.current.toNumber()}/${p.target}`;
+  }
 }

@@ -47,4 +47,6 @@ export function renderPrestigeSection(): void {
     setTimeout(() => btnEl.classList.remove('prestige-btn--just-unlocked'), 1500);
   }
   lastCanPrestige = canPrestige;
+  const prestigeSummaryEl = document.getElementById('prestige-section-summary');
+  if (prestigeSummaryEl) prestigeSummaryEl.textContent = canPrestige ? 'Ready' : (player.prestigeLevel > 0 ? `Lv. ${player.prestigeLevel}` : '');
 }

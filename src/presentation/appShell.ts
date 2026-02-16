@@ -28,83 +28,91 @@ function getHeaderHtml(): string {
 }
 
 function getModalsHtml(): string {
-  const settingsBody = `
+      const settingsBody = `
         <div class="settings-header">
           <h2 id="settings-title" data-i18n="settings">Settings</h2>
           <button type="button" class="settings-close" id="settings-close" data-i18n-aria-label="close">×</button>
         </div>
         <div class="settings-body">
-          <div class="settings-option">
-            <label for="setting-language" data-i18n="language">Language</label>
-            <select id="setting-language" aria-label="Language">
-              <option value="en" data-i18n="languageEn">English</option>
-              <option value="fr" data-i18n="languageFr">Français</option>
-            </select>
+          <div class="settings-group">
+            <h3 class="settings-group-title" data-i18n="settingsGroupVisual">Visual</h3>
+            <div class="settings-option">
+              <label for="setting-language" data-i18n="language">Language</label>
+              <select id="setting-language" aria-label="Language">
+                <option value="en" data-i18n="languageEn">English</option>
+                <option value="fr" data-i18n="languageFr">Français</option>
+              </select>
+            </div>
+            <div class="settings-option">
+              <label for="setting-starfield-speed" data-i18n="starfieldSpeed">Starfield speed</label>
+              <select id="setting-starfield-speed">
+                <option value="0.5" data-i18n="starfieldSpeedSlow">Slow</option>
+                <option value="1" selected data-i18n="starfieldSpeedNormal">Normal</option>
+                <option value="1.5" data-i18n="starfieldSpeedFast">Fast</option>
+              </select>
+            </div>
+            <div class="settings-option">
+              <label class="settings-toggle">
+                <input type="checkbox" id="setting-orbit-lines" checked />
+                <span data-i18n="showOrbitLines">Show orbit lines</span>
+              </label>
+            </div>
+            <div class="settings-option">
+              <label class="settings-toggle">
+                <input type="checkbox" id="setting-click-particles" checked />
+                <span data-i18n="clickParticles">Click particles</span>
+              </label>
+            </div>
+            <div class="settings-option">
+              <label for="setting-theme" data-i18n="theme">Theme</label>
+              <select id="setting-theme" aria-label="Theme">
+                <option value="dark" data-i18n="themeDark">Dark</option>
+                <option value="light" data-i18n="themeLight">Light</option>
+              </select>
+            </div>
           </div>
-          <div class="settings-option">
-            <label for="setting-starfield-speed" data-i18n="starfieldSpeed">Starfield speed</label>
-            <select id="setting-starfield-speed">
-              <option value="0.5" data-i18n="starfieldSpeedSlow">Slow</option>
-              <option value="1" selected data-i18n="starfieldSpeedNormal">Normal</option>
-              <option value="1.5" data-i18n="starfieldSpeedFast">Fast</option>
-            </select>
+          <div class="settings-group">
+            <h3 class="settings-group-title" data-i18n="settingsGroupGameplay">Gameplay</h3>
+            <div class="settings-option">
+              <label class="settings-toggle">
+                <input type="checkbox" id="setting-compact-numbers" checked />
+                <span data-i18n="compactNumbers">Compact numbers (1.2K)</span>
+              </label>
+            </div>
+            <div class="settings-option">
+              <label class="settings-toggle">
+                <input type="checkbox" id="setting-space-key-repeat" />
+                <span data-i18n="spaceKeyRepeat">Allow Space key repeat (hold to mine)</span>
+              </label>
+            </div>
+            <div class="settings-option">
+              <label for="setting-layout" data-i18n="layout">Layout</label>
+              <select id="setting-layout" aria-label="Layout mode">
+                <option value="tabs" data-i18n="layoutTabs">Tabs</option>
+                <option value="one-page" data-i18n="layoutOnePage">One page</option>
+              </select>
+            </div>
+            <div class="settings-option">
+              <label class="settings-toggle">
+                <input type="checkbox" id="setting-pause-background" />
+                <span data-i18n="pauseWhenBackground">Pause production when tab in background</span>
+              </label>
+            </div>
+            <div class="settings-option">
+              <label class="settings-toggle">
+                <input type="checkbox" id="setting-sound" />
+                <span data-i18n="soundEnabled">Sound effects</span>
+              </label>
+            </div>
+            <div class="settings-option">
+              <label class="settings-toggle">
+                <input type="checkbox" id="setting-reduced-motion" />
+                <span data-i18n="reducedMotion">Reduce motion</span>
+              </label>
+            </div>
           </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-orbit-lines" checked />
-              <span data-i18n="showOrbitLines">Show orbit lines</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-click-particles" checked />
-              <span data-i18n="clickParticles">Click particles</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-compact-numbers" checked />
-              <span data-i18n="compactNumbers">Compact numbers (1.2K)</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-space-key-repeat" />
-              <span data-i18n="spaceKeyRepeat">Allow Space key repeat (hold to mine)</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label for="setting-layout" data-i18n="layout">Layout</label>
-            <select id="setting-layout" aria-label="Layout mode">
-              <option value="tabs" data-i18n="layoutTabs">Tabs</option>
-              <option value="one-page" data-i18n="layoutOnePage">One page</option>
-            </select>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-pause-background" />
-              <span data-i18n="pauseWhenBackground">Pause production when tab in background</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label for="setting-theme" data-i18n="theme">Theme</label>
-            <select id="setting-theme" aria-label="Theme">
-              <option value="dark" data-i18n="themeDark">Dark</option>
-              <option value="light" data-i18n="themeLight">Light</option>
-            </select>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-sound" />
-              <span data-i18n="soundEnabled">Sound effects</span>
-            </label>
-          </div>
-          <div class="settings-option">
-            <label class="settings-toggle">
-              <input type="checkbox" id="setting-reduced-motion" />
-              <span data-i18n="reducedMotion">Reduce motion</span>
-            </label>
-          </div>
+          <div class="settings-group">
+            <h3 class="settings-group-title" data-i18n="settingsGroupSaveData">Save & data</h3>
           <div class="settings-option settings-save-export">
             <div class="settings-save-buttons">
               <button type="button" class="settings-export-btn" id="settings-export-btn" title="Copy save to clipboard and download as file" data-i18n="exportSave">Export save</button>
@@ -119,6 +127,7 @@ function getModalsHtml(): string {
           </div>
           <div class="settings-option settings-reset">
             <button type="button" class="reset-btn" id="settings-reset-btn" data-i18n="resetProgress">Reset progress</button>
+          </div>
           </div>
         </div>
       `;
@@ -339,6 +348,10 @@ function getTabsAndPanelsHtml(): string {
             </div>
           </div>
           <div class="crew-summary" id="crew-summary" aria-live="polite">No crew yet</div>
+          <div class="empty-state" id="crew-empty-state" aria-hidden="true" hidden>
+            <span class="empty-state-icon" aria-hidden="true"></span>
+            <p class="empty-state-text" id="crew-empty-state-text" data-i18n="emptyCrewText">No crew yet. Hire astronauts below to boost production.</p>
+          </div>
           <div class="crew-role-cards" id="crew-role-cards">
             <div class="crew-role-card crew-role-card--astronaut" id="crew-role-card-astronaut">
               <div class="crew-role-card-header">
@@ -510,6 +523,19 @@ function getTabsAndPanelsHtml(): string {
     <div class="app-tab-panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" data-tab="stats" hidden>
       ${statisticsBlock}
     </div>
+    <nav class="app-tabs-bottom" id="app-tabs-bottom" aria-label="Quick navigation" data-i18n-aria-label="gameSections">
+      <button type="button" class="app-tab-bottom app-tab-bottom--active" role="tab" data-tab="mine" aria-selected="true"><span data-i18n="tabMine">Mine</span></button>
+      <button type="button" class="app-tab-bottom" role="tab" data-tab="empire" aria-selected="false"><span data-i18n="tabBase">Empire</span></button>
+      <div class="app-tabs-bottom-more-wrap">
+        <button type="button" class="app-tab-bottom app-tab-bottom-more" id="tab-bottom-more" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="tabsMoreLabel">⋯</button>
+        <div class="app-tabs-bottom-menu" id="app-tabs-bottom-menu" role="menu" aria-label="" hidden>
+          <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="dashboard" data-i18n="tabDashboard">Dashboard</button>
+          <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="research" data-i18n="tabResearch">Research</button>
+          <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
+          <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="stats" data-i18n="tabStats">Stats</button>
+        </div>
+      </div>
+    </nav>
   `;
 }
 

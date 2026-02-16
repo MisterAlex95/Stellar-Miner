@@ -869,6 +869,28 @@
   gap: 1rem;
 }
 
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-group-title {
+  margin: 0 0 0.15rem 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.settings-group:not(:first-child) .settings-group-title {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
 .settings-option {
   display: flex;
   flex-direction: column;

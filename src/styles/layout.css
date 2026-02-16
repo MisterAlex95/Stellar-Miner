@@ -131,6 +131,16 @@
   flex-shrink: 0;
 }
 
+/* Tab has something to do: highlight text (no extra element, so no layout shift) */
+.app-tab--has-action:not(.app-tab--active) {
+  color: var(--success);
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+}
+
+.app-tab--has-action:not(.app-tab--active):hover {
+  color: var(--success);
+}
+
 /* "More" menu: hidden by default (wide screens show all tabs) */
 .app-tabs-more-wrap {
   display: none;
@@ -159,6 +169,16 @@
 .app-tab-more--active:hover {
   background: var(--accent);
   color: var(--bg-dark);
+}
+
+/* ⋯ green when a tab in the overflow menu has a potential action */
+.app-tab-more--has-action:not(.app-tab-more--active) {
+  color: var(--success);
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+}
+
+.app-tab-more--has-action:not(.app-tab-more--active):hover {
+  color: var(--success);
 }
 
 .app-tabs-menu {
@@ -213,6 +233,11 @@
 .app-tabs-menu-item--active:hover {
   background: rgba(245, 158, 11, 0.3);
   color: var(--accent);
+}
+
+.app-tabs-menu-item--has-action:not(.app-tabs-menu-item--active) {
+  color: var(--success);
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
 }
 
 .app-tabs-menu-item:focus-visible {
@@ -291,6 +316,174 @@
   .app-tab[data-tab="mine"] {
     flex: 1 1 auto;
     min-width: 0;
+  }
+}
+
+/* Bottom nav: only on small screens for thumb-friendly Mine / Empire / More */
+.app-tabs-bottom {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  /* Hide top tabs and keyboard hint when bottom nav is shown */
+  .app-tabs,
+  #keyboard-hint,
+  .keyboard-hint.keyboard-hint--below-tabs {
+    display: none !important;
+  }
+
+  .app-tabs-bottom {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    padding: 0.5rem;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    gap: 0.5rem;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+    align-items: center;
+  }
+
+  .app-tab-bottom {
+    flex: 1;
+    min-height: 48px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 0.6rem 0.5rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--bg-panel);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .app-tab-bottom:hover {
+    background: var(--bg-dark);
+    color: var(--text);
+  }
+
+  .app-tab-bottom--active {
+    background: var(--accent);
+    color: var(--bg-dark);
+  }
+
+  .app-tab-bottom-more {
+    flex: 0 0 auto;
+    min-width: 3rem;
+  }
+
+  .app-tab-bottom-more--active {
+    background: var(--accent);
+    color: var(--bg-dark);
+  }
+
+  /* Bottom ⋯ green when an item in the menu has a potential action */
+  .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active) {
+    color: var(--success);
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+  }
+
+  .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active):hover {
+    color: var(--success);
+  }
+
+  .app-tab-bottom--has-action:not(.app-tab-bottom--active) {
+    color: var(--success);
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+  }
+
+  .app-tab-bottom--has-action:not(.app-tab-bottom--active):hover {
+    color: var(--success);
+  }
+
+  .app-tab-bottom:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .app-tabs-bottom-more-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .app-tabs-bottom-more-wrap--empty {
+    display: none !important;
+  }
+
+  .app-tabs-bottom-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 0.25rem;
+    min-width: 10rem;
+    padding: 0.35rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    z-index: 51;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .app-tabs-bottom-menu[hidden] {
+    display: none !important;
+  }
+
+  .app-tabs-bottom-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .app-tabs-bottom-menu-item:hover {
+    background: var(--bg-card);
+    color: var(--text);
+  }
+
+  .app-tabs-bottom-menu-item--active {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--accent);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+  }
+
+  .app-tabs-bottom-menu-item--has-action:not(.app-tabs-bottom-menu-item--active) {
+    color: var(--success);
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+  }
+
+  .app-tabs-bottom-menu-item--has-action:not(.app-tabs-bottom-menu-item--active):hover {
+    color: var(--success);
+    background: var(--bg-card);
+  }
+
+  .app-tabs-bottom-menu-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Spacer so content is not hidden behind fixed bottom nav */
+  #app {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
 }
 

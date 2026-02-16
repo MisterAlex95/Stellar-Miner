@@ -29,6 +29,7 @@ export function createGameplayBlock(options: GameplayBlockOptions): string {
 <section class="gameplay-block ${lockClass} ${sectionClass}" id="${id}"${dataBlockAttr}>
   <div class="gameplay-block-header">
     <h2 data-i18n="${titleKey}"></h2>
+    <span class="gameplay-block-summary" id="${id}-summary" aria-hidden="true"></span>
     <div class="gameplay-block-header-actions">
       ${rulesBtn}
       <button type="button" class="gameplay-block-toggle" aria-expanded="true" aria-label="Collapse" title="Collapse"><span class="gameplay-block-toggle-icon" aria-hidden="true">▼</span></button>

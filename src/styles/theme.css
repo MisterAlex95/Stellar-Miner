@@ -32,3 +32,10 @@ html[data-theme="light"] body {
     radial-gradient(circle at 20% 80%, rgba(5, 150, 105, 0.08), transparent),
     radial-gradient(circle at 80% 20%, rgba(217, 119, 6, 0.06), transparent);
 }
+
+/* Disable progress bar shimmer when reduced motion is on */
+html[data-reduced-motion="true"] .quest-progress-bar::after,
+html[data-reduced-motion="true"] .next-event-progress-bar::after,
+html[data-reduced-motion="true"] .crew-capacity-fill::after {
+  animation: none;
+}

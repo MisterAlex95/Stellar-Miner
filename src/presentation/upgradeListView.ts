@@ -131,6 +131,11 @@ export function renderUpgradeList(): void {
   const allUnlockedDefs = UPGRADE_CATALOG.filter((d) => unlockedTiers.has(d.tier)).sort((a, b) => a.tier - b.tier);
   const defsToShow = allUnlockedDefs.slice(0, UPGRADE_DISPLAY_COUNT);
 
+  if (defsToShow.length === 0) {
+    listEl.innerHTML = `<div class="empty-state" id="upgrades-empty-state"><span class="empty-state-icon" aria-hidden="true"></span><p class="empty-state-text">${t('emptyUpgradesText')}</p></div>`;
+    return;
+  }
+
   for (const def of defsToShow) {
     const maxCount = getMaxBuyCount(def.id);
     const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);

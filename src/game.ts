@@ -1,6 +1,6 @@
 import './styles/index.css';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
-import { mount, updateTabMenuVisibility, updateTabMoreActiveState, switchTab } from './presentation/mount.js';
+import { mount, updateTabMenuVisibility, updateTabMoreActiveState, updateTabBadges, switchTab } from './presentation/mount.js';
 import {
   getOrCreateSession,
   setSession,
@@ -160,6 +160,7 @@ function gameLoop(now: number): void {
   updateProgressionVisibility();
   updateTabVisibility(switchTab);
   updateTabMenuVisibility();
+  updateTabBadges();
   updateTabMoreActiveState();
   if (typeof requestIdleCallback !== 'undefined') {
     requestIdleCallback(() => updateStatisticsSection(), { timeout: 100 });
