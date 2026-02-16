@@ -34,10 +34,9 @@ export class UpgradeService {
     player.spendCoins(upgrade.cost);
     const rate = upgrade.effect.coinsPerSecond.mul(productionMultiplier);
     if (installDurationMs > 0 && nowMs >= 0) {
+      const sameType = planet.installingUpgrades.filter((i) => i.upgrade.id === upgrade.id);
       const lastEndsAt =
-        planet.installingUpgrades.length > 0
-          ? Math.max(...planet.installingUpgrades.map((i) => i.endsAt))
-          : 0;
+        sameType.length > 0 ? Math.max(...sameType.map((i) => i.endsAt)) : 0;
       const startAt = Math.max(nowMs, lastEndsAt);
       const endsAt = startAt + installDurationMs;
       planet.addInstallingUpgrade(upgrade, startAt, endsAt, rate);
