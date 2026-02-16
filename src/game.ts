@@ -38,17 +38,18 @@ import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations } from './application/upgradeInstallation.js';
 import { showOfflineToast } from './presentation/toasts.js';
-import { wireRefreshSubscribers } from './application/refreshSubscribers.js';
+import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
+import { createThrottledRun } from './application/runIfDue.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 150;
 const DASHBOARD_UPDATE_INTERVAL_MS = 500;
 const EMPIRE_UPDATE_INTERVAL_MS = 1500;
 const RESEARCH_UPDATE_INTERVAL_MS = 1500;
-let lastQuestRenderMs = 0;
-let lastDashboardRenderMs = 0;
-let lastEmpireRenderMs = 0;
-let lastResearchRenderMs = 0;
+const runQuestIfDue = createThrottledRun(QUEST_RENDER_INTERVAL_MS);
+const runDashboardIfDue = createThrottledRun(DASHBOARD_UPDATE_INTERVAL_MS);
+const runEmpireIfDue = createThrottledRun(EMPIRE_UPDATE_INTERVAL_MS);
+const runResearchIfDue = createThrottledRun(RESEARCH_UPDATE_INTERVAL_MS);
 let lastStatsUpdateMs = 0;
 const STATS_UPDATE_INTERVAL_MS = 100;
 let lastEventsUnlocked = false;
@@ -115,31 +116,16 @@ function gameLoop(now: number): void {
   );
   updateCoinDisplay(dt);
   updateProductionDisplay(dt);
-  if (nowMs - lastQuestRenderMs >= QUEST_RENDER_INTERVAL_MS) {
-    lastQuestRenderMs = nowMs;
-    renderQuestSection();
-  }
-  const dashboardPanel = document.getElementById('panel-dashboard');
-  if (dashboardPanel && !dashboardPanel.hidden && nowMs - lastDashboardRenderMs >= DASHBOARD_UPDATE_INTERVAL_MS) {
-    lastDashboardRenderMs = nowMs;
-    updateDashboard();
-  }
-  const empirePanel = document.getElementById('panel-empire');
-  if (empirePanel && !empirePanel.hidden && nowMs - lastEmpireRenderMs >= EMPIRE_UPDATE_INTERVAL_MS) {
-    lastEmpireRenderMs = nowMs;
+  runQuestIfDue(nowMs, () => true, renderQuestSection);
+  runDashboardIfDue(nowMs, () => !document.getElementById('panel-dashboard')?.hidden, updateDashboard);
+  runEmpireIfDue(nowMs, () => !document.getElementById('panel-empire')?.hidden, () => {
     renderCrewSection();
     renderPrestigeSection();
-  }
-  const researchPanel = document.getElementById('panel-research');
-  if (
-    researchPanel &&
-    !researchPanel.hidden &&
-    !isResearchInProgress() &&
-    nowMs - lastResearchRenderMs >= RESEARCH_UPDATE_INTERVAL_MS
-  ) {
-    lastResearchRenderMs = nowMs;
-    renderResearchSection();
-  }
+  });
+  runResearchIfDue(nowMs, () => {
+    const p = document.getElementById('panel-research');
+    return !!p && !p.hidden && !isResearchInProgress();
+  }, renderResearchSection);
   const planetViews = session.player.planets.map((p, index) => {
     const upgradeCounts: Record<string, number> = {};
     for (const u of p.upgrades) {
@@ -207,6 +193,7 @@ async function init(): Promise<void> {
   setSession(session);
   loadStatsHistory();
   wireRefreshSubscribers(createRefreshViews());
+  wireEventBusToRefresh();
   const offlineCoins = saveLoad.getLastOfflineCoins();
   const offlineHours = saveLoad.getLastOfflineHours();
   const gameStartTime = Date.now();

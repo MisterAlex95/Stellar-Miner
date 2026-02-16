@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.32",
+    "date": "2026-02-16",
+    "changes": [
+      "EventBus: wire domain events (upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired) to notifyRefresh. createThrottledRun for panel updates."
+    ]
+  },
+  {
     "version": "0.4.31",
     "date": "2026-02-16",
     "changes": [
