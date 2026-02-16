@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.36",
+    "date": "2026-02-16",
+    "changes": [
+      "Split mount.ts: extracted mountTabs.ts (switchTab, badges, layout) and mountModals.ts (info, achievements, section rules). mount.ts reduced from ~1124 to ~803 lines."
+    ]
+  },
+  {
     "version": "0.4.35",
     "date": "2026-02-16",
     "changes": [
