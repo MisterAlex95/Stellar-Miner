@@ -290,9 +290,10 @@ export function createPlanetScene(
     scene.add(beltGroup);
   }
 
-  /* ── moons ──────────────────────────────────── */
+  /* ── moons (with procedural textures) ────────── */
   const moonCount = getMoonCount(planetName);
   const moons: { mesh: THREE.Mesh; orbitR: number; speed: number; phase: number }[] = [];
+  const moonDisposables: THREE.Texture[] = [];
 
   for (let i = 0; i < moonCount; i++) {
     const moonR = 0.08 + (hashStr(planetName + 'mr' + i) % 40) / 1000;
@@ -300,11 +301,18 @@ export function createPlanetScene(
     const speed = 0.3 + (hashStr(planetName + 'ms' + i) % 30) / 100;
     const phase = (hashStr(planetName + 'mp' + i) % 100) / 100 * Math.PI * 2;
 
+    const moonSeed = hashStr(planetName + 'moonseed' + i);
+    const moonTexCanvas = generateMoonTexture(64, moonSeed);
+    const moonTex = new THREE.CanvasTexture(moonTexCanvas);
+    moonTex.wrapS = THREE.RepeatWrapping;
+    moonTex.wrapT = THREE.ClampToEdgeWrapping;
+    moonDisposables.push(moonTex);
+
     const moonGeo = new THREE.SphereGeometry(moonR, 16, 16);
     const moonMat = new THREE.MeshStandardMaterial({
-      color: 0x999999,
-      roughness: 0.9,
-      metalness: 0.05,
+      map: moonTex,
+      roughness: 0.95,
+      metalness: 0.02,
     });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
     scene.add(moonMesh);
@@ -439,10 +447,69 @@ export function createPlanetScene(
       m.mesh.geometry.dispose();
       (m.mesh.material as THREE.Material).dispose();
     }
+    for (const t of moonDisposables) t.dispose();
     scene.clear();
   }
 
   return { resize, dispose, domElement: canvas };
+}
+
+/* ── moon texture generator ────────────────────── */
+
+function generateMoonTexture(size: number, seed: number): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const img = ctx.createImageData(size, size);
+  const d = img.data;
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const n1 = moonNoise(seed, x, y, 0.06);
+      const n2 = moonNoise(seed + 7777, x, y, 0.12);
+      const n3 = moonNoise(seed + 3333, x, y, 0.25);
+      let v = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
+
+      /* craters: dark spots */
+      const cx = moonNoise(seed + 11111, x, y, 0.08);
+      const crater = 1.0 - Math.max(0, (cx - 0.65) * 6);
+      v *= crater;
+
+      const base = 80 + (seed % 40);
+      const range = 100 + (seed % 60);
+      const lum = Math.round(base + v * range);
+      const tint = (seed % 3 === 0) ? 8 : (seed % 3 === 1) ? -5 : 0;
+      const i = (y * size + x) * 4;
+      d[i]     = Math.max(0, Math.min(255, lum + tint));
+      d[i + 1] = Math.max(0, Math.min(255, lum));
+      d[i + 2] = Math.max(0, Math.min(255, lum - tint));
+      d[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return canvas;
+}
+
+function moonNoise(seed: number, x: number, y: number, scale: number): number {
+  const sx = x * scale;
+  const sy = y * scale;
+  const ix = Math.floor(sx);
+  const iy = Math.floor(sy);
+  const fx = sx - ix;
+  const fy = sy - iy;
+  const u = fx * fx * (3 - 2 * fx);
+  const v = fy * fy * (3 - 2 * fy);
+  const va = moonHash(seed, ix, iy);
+  const vb = moonHash(seed, ix + 1, iy);
+  const vc = moonHash(seed, ix, iy + 1);
+  const vd = moonHash(seed, ix + 1, iy + 1);
+  return (va * (1 - u) + vb * u) * (1 - v) + (vc * (1 - u) + vd * u) * v;
+}
+
+function moonHash(seed: number, x: number, y: number): number {
+  const n = (x * 73856093) ^ (y * 19349663) ^ seed;
+  return ((n >>> 0) % 65536) / 65535;
 }
 
 /* ── ring geometry helper (flat disc with UVs) ──── */

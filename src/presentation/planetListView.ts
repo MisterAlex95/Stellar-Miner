@@ -14,35 +14,14 @@ import { getPlanetType } from '../application/planetAffinity.js';
 import { getEffectiveUsedSlots, hasEffectiveFreeSlot } from '../application/research.js';
 import { getPlanetDisplayName, getSolarSystemName, PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
 import { t, tParam } from '../application/strings.js';
-import { drawPlanetSphereToCanvas } from './MineZoneCanvas.js';
 import { buttonWithTooltipHtml, updateTooltipForButton } from './components/buttonTooltip.js';
 import { escapeAttr } from './components/domUtils.js';
 import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
 import { openPlanetDetail } from './planetDetailView.js';
+import { renderPlanetThumbnails } from './planetThumbnail3D.js';
 
 /** Which solar system indices are collapsed (persisted for the session across re-renders). */
 const collapsedSolarSystems = new Set<number>();
-
-let planetThumbnailRafId: number | null = null;
-
-function planetThumbnailTick(): void {
-  const listEl = document.getElementById('planet-list');
-  if (listEl) {
-    const timeMs = Date.now();
-    listEl.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
-      const planetName = canvas.getAttribute('data-planet-name');
-      const seedAttr = canvas.getAttribute('data-planet-visual-seed');
-      const visualSeed = seedAttr !== null && seedAttr !== '' ? parseInt(seedAttr, 10) : undefined;
-      if (planetName) drawPlanetSphereToCanvas(canvas, planetName, timeMs, visualSeed);
-    });
-  }
-  planetThumbnailRafId = requestAnimationFrame(planetThumbnailTick);
-}
-
-function startPlanetThumbnailLoop(): void {
-  if (planetThumbnailRafId !== null) return;
-  planetThumbnailRafId = requestAnimationFrame(planetThumbnailTick);
-}
 
 function buildPlanetCardHtml(
   p: Planet,
@@ -169,13 +148,7 @@ export function renderPlanetList(): void {
     });
   });
 
-  listEl.querySelectorAll<HTMLCanvasElement>('.planet-card-visual').forEach((canvas) => {
-    const planetName = canvas.getAttribute('data-planet-name');
-    const seedAttr = canvas.getAttribute('data-planet-visual-seed');
-    const visualSeed = seedAttr !== null && seedAttr !== '' ? parseInt(seedAttr, 10) : undefined;
-    if (planetName) drawPlanetSphereToCanvas(canvas, planetName, Date.now(), visualSeed);
-  });
-  startPlanetThumbnailLoop();
+  renderPlanetThumbnails();
   }
   const expeditionArea = document.getElementById('expedition-area');
   const endsAt = getExpeditionEndsAt();

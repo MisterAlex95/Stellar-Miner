@@ -1,4 +1,4 @@
-import { createMineZoneCanvas } from './MineZoneCanvas.js';
+import { createMineZone3D } from './MineZone3D.js';
 import { getSettings, getEventContext, setMineZoneCanvasApi } from '../application/gameState.js';
 import { t, applyTranslations, type StringKey } from '../application/strings.js';
 import {
@@ -191,7 +191,7 @@ export function mount(): void {
   const settings = getSettings();
   const mineZoneVisual = document.getElementById('mine-zone-visual');
   if (mineZoneVisual) {
-    setMineZoneCanvasApi(createMineZoneCanvas(mineZoneVisual, getSettings, getEventContext));
+    setMineZoneCanvasApi(createMineZone3D(mineZoneVisual, getSettings, getEventContext));
   }
 
   // --- Modals: info, section rules, events hint ---
