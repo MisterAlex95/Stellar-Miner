@@ -16,3 +16,8 @@ export function isPanelHydrated(panelId: string): boolean {
 export function getHydratedPanels(): ReadonlySet<string> {
   return hydratedPanels;
 }
+
+/** Clear hydrated state. Call before DOM replace without reload (e.g. for future reset flows). */
+export function resetPanelHydration(): void {
+  hydratedPanels.clear();
+}

@@ -3,9 +3,7 @@
  */
 import { t, type StringKey } from '../../application/strings.js';
 import { openOverlay, closeOverlay, getOpenOverlayElement } from '../components/overlay.js';
-import { APP_VERSION, hasNewUpdate, markUpdateSeen } from '../../application/version.js';
-import { getChangelog } from '../../application/changelog.js';
-import { buildChangelogHtml } from '../components/changelog.js';
+import { markUpdateSeen } from '../../application/version.js';
 import { renderAchievementsModalContent } from '../../application/handlers.js';
 
 export const SECTION_RULES_OVERLAY_CLASS = 'section-rules-overlay--open';

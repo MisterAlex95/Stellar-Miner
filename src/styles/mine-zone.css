@@ -181,7 +181,6 @@
 .float-coin {
   position: absolute;
   transform: translate(-50%, -50%);
-  will-change: transform, opacity;
   contain: layout style paint;
   font-family: 'Orbitron', sans-serif;
   font-weight: 700;
@@ -195,6 +194,7 @@
 }
 
 .float-coin--active {
+  will-change: transform, opacity;
   opacity: 1;
   transform: translate(-50%, -50%) translateY(-28px);
 }
@@ -222,7 +222,6 @@
 .float-coin-combo {
   position: absolute;
   transform: translate(-50%, -50%);
-  will-change: transform, opacity;
   contain: layout style paint;
   font-family: 'Orbitron', sans-serif;
   font-weight: 700;
@@ -236,6 +235,7 @@
 }
 
 .float-coin-combo.float-coin--active {
+  will-change: transform, opacity;
   opacity: 1;
   transform: translate(-50%, -50%) translateY(-42px);
 }
@@ -287,7 +287,6 @@
 
 .float-reward {
   position: fixed;
-  will-change: transform, opacity;
   contain: layout style paint;
   font-family: 'Orbitron', sans-serif;
   font-weight: 700;
@@ -302,6 +301,7 @@
 }
 
 .float-reward--active {
+  will-change: transform, opacity;
   opacity: 1;
   transform: translate(-50%, -48px);
 }

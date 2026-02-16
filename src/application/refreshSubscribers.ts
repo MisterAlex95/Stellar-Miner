@@ -20,7 +20,7 @@ const STATE_CHANGE_EVENTS = [
 
 /** Subscribe to session changes and refresh signal. Call from game init. */
 export function wireRefreshSubscribers(refreshViews: RefreshViewsFn): void {
-  sessionStore.subscribe(() => refreshViews());
+  sessionStore.subscribe(() => notifyRefresh());
   subscribeRefresh(refreshViews);
 }
 

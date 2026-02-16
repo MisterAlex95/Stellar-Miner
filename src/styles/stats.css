@@ -33,8 +33,8 @@
 }
 
 .stat-card--bump {
-  will-change: transform;
   contain: layout style paint;
+  will-change: transform;
   animation: stat-bump 0.4s ease;
 }
 
