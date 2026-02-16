@@ -9,6 +9,9 @@ import {
 import { setSession, setQuestState, getQuestState, setRunStatsFromPayload } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
+import { Planet } from '../domain/entities/Planet.js';
+import { Coins } from '../domain/value-objects/Coins.js';
+import { ProductionRate } from '../domain/value-objects/ProductionRate.js';
 import { QUEST_STREAK_KEY, QUEST_LAST_CLAIM_KEY } from './catalogs.js';
 
 describe('quests', () => {
@@ -71,12 +74,25 @@ describe('quests', () => {
     expect(q.description).toContain('coins');
   });
 
-  it('generateQuest can return prestige_today quest when random in range', () => {
+  it('generateQuest can return prestige_today quest when random in range and player has prestiged once', () => {
+    setSession(new GameSession('s1', Player.createAfterPrestige(Player.create('p1'))));
     vi.spyOn(Math, 'random').mockReturnValue(0.85);
     const q = generateQuest();
     vi.restoreAllMocks();
     expect(q.type).toBe('prestige_today');
     expect(q.target).toBeGreaterThan(0);
+  });
+
+  it('generateQuest only offers prestige_today target = next step when player has prestiged at least once', () => {
+    const player = Player.createAfterPrestige(Player.create('p1'));
+    setSession(new GameSession('s1', player));
+    const today = new Date().toISOString().slice(0, 10);
+    storage['stellar-miner-prestiges-today'] = JSON.stringify({ date: today, count: 0 });
+    vi.spyOn(Math, 'random').mockReturnValue(0.85);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    expect(q.type).toBe('prestige_today');
+    expect(q.target).toBe(1);
   });
 
   it('generateQuest can return combo_tier quest when random in range', () => {
@@ -88,7 +104,20 @@ describe('quests', () => {
     expect(q.description).toContain('combo');
   });
 
-  it('generateQuest can return events_triggered quest when random in range', () => {
+  it('generateQuest can return events_triggered quest when random in range and events unlocked', () => {
+    const player = new Player(
+      'p1',
+      Coins.from(0),
+      ProductionRate.from(0),
+      [new Planet('planet-1', 'P1', 6)],
+      [],
+      0,
+      120_000,
+      0,
+      0,
+      0
+    );
+    setSession(new GameSession('s1', player));
     vi.spyOn(Math, 'random').mockReturnValue(0.95);
     const q = generateQuest();
     vi.restoreAllMocks();
@@ -96,7 +125,8 @@ describe('quests', () => {
     expect(q.target).toBeGreaterThan(0);
   });
 
-  it('generateQuest can return tier1_set quest when random in last bucket', () => {
+  it('generateQuest can return tier1_set quest when random in last bucket (player has not completed tier-1 set)', () => {
+    setSession(new GameSession('s1', Player.create('p1')));
     vi.spyOn(Math, 'random').mockReturnValue(0.99);
     const q = generateQuest();
     vi.restoreAllMocks();

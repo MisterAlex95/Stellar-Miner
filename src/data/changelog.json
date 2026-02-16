@@ -1,5 +1,26 @@
 [
   {
+    "version": "0.4.25",
+    "date": "2026-02-16",
+    "changes": [
+      "Quests: coin and production targets are now capped at 10× your current value (e.g. at 710/s you get \"Reach 3,000/s\" instead of \"Reach 100,000/s\")."
+    ]
+  },
+  {
+    "version": "0.4.24",
+    "date": "2026-02-16",
+    "changes": [
+      "Quests: smarter progression. Coin/production quests offer only the next 1–3 milestones (no more random huge jumps). Prestige-today quests appear only after you have prestiged at least once; astronaut quests only after crew is relevant (1.5k+ coins or some crew); event quests only after events are unlocked (120k). Upgrade quests limited to upgrades you can afford (scale with totalCoinsEver)."
+    ]
+  },
+  {
+    "version": "0.4.23",
+    "date": "2026-02-16",
+    "changes": [
+      "Quests: progression-aware generation. Quests now scale with your state: e.g. \"Prestige 3 times today\" only appears after you have already prestiged twice today; coin/production targets are within reach; astronaut and event targets are the next steps. Difficulty increases logically instead of random impossible goals."
+    ]
+  },
+  {
     "version": "0.4.22",
     "date": "2026-02-16",
     "changes": [

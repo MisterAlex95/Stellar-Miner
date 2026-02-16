@@ -31,10 +31,176 @@ type QuestGenerationConfig = {
 
 const TIER1_UPGRADE_IDS = UPGRADE_CATALOG.filter((d) => d.tier === 1).map((d) => d.id);
 
+/** How many "next step" targets to offer for coins/production (keeps difficulty curve smooth). */
+const NEXT_TARGETS_COUNT = 3;
+/** Max multiplier for coin/production targets (e.g. at 710/s we never offer 100k/s; max would be 7100). */
+const MAX_JUMP_MULT = 10;
+/** Max steps above current for astronauts. */
+const ASTRONAUT_STEPS_AHEAD = 2;
+/** Max steps above current for events_triggered. */
+const EVENTS_STEPS_AHEAD = 1;
+/** Upgrades whose base cost is above totalCoinsEver * this are considered out of reach. */
+const UPGRADE_AFFORDABILITY_MULT = 12;
+
+/**
+ * Picks the next 1..N targets from a sorted list that are strictly above current.
+ * Ensures quests are always the "next step" rather than a random jump.
+ */
+function nextTargetsInList(list: number[], current: number, maxCount: number): number[] {
+  const idx = list.findIndex((t) => t > current);
+  if (idx < 0) return [];
+  return list.slice(idx, idx + maxCount);
+}
+
+/**
+ * Returns only quest targets that are achievable and match game progression.
+ * Uses totalCoinsEver and prestigeLevel so early game gets easy quests, late game gets harder ones.
+ * Quest types are gated by unlocks (e.g. no prestige_today until player has prestiged at least once).
+ */
+function getAllowableTargets(): {
+  coins: number[];
+  production: number[];
+  upgrade: { target: number; targetId: string }[];
+  astronauts: number[];
+  prestige_today: number[];
+  combo_tier: number[];
+  events_triggered: number[];
+  tier1_set: boolean;
+} {
+  const session = getSession();
+  const run = getRunStats();
+  const prestigesToday = getPrestigesToday();
+  const totalCoinsEverNum = session?.player.totalCoinsEver.toNumber() ?? 0;
+  const prestigeLevel = session?.player.prestigeLevel ?? 0;
+  const currentCoins = session ? session.player.coins.toNumber() : 0;
+  const currentProduction = session
+    ? session.player.effectiveProductionRate.mul(getResearchProductionMultiplier()).toNumber()
+    : 0;
+  const currentAstronauts = session?.player.astronautCount ?? 0;
+  const currentTier1Owned =
+    session ? TIER1_UPGRADE_IDS.filter((id) => session.player.upgrades.some((u) => u.id === id)).length : 0;
+  const runComboMult = run.runMaxComboMult;
+  const runEvents = run.runEventsTriggered;
+
+  const hasCrewRelevant = totalCoinsEverNum >= 1500 || currentAstronauts > 0;
+  const hasEventsUnlocked = totalCoinsEverNum >= 120_000;
+  const hasPrestigedOnce = prestigeLevel >= 1;
+
+  const coinsNext = nextTargetsInList(Q.coins.targets, currentCoins, NEXT_TARGETS_COUNT);
+  const productionNext = nextTargetsInList(Q.production.targets, currentProduction, NEXT_TARGETS_COUNT);
+  const coinsCap = Math.max(currentCoins * MAX_JUMP_MULT, 1);
+  const productionCap = Math.max(currentProduction * MAX_JUMP_MULT, 1);
+  const coinsTargets = coinsNext.filter((t) => t <= coinsCap);
+  const productionTargets = productionNext.filter((t) => t <= productionCap);
+
+  const astronautTargets = hasCrewRelevant
+    ? Q.astronauts.targets.filter((t) => {
+        if (t <= currentAstronauts) return false;
+        const idx = Q.astronauts.targets.indexOf(t);
+        const currentIdx = Q.astronauts.targets.findIndex((a) => a >= currentAstronauts);
+        const stepsIdx = currentIdx >= 0 ? currentIdx : 0;
+        return idx <= stepsIdx + ASTRONAUT_STEPS_AHEAD;
+      })
+    : [];
+
+  const cfgPrestige = Q.prestige_today ?? { targets: [1, 2], rewardBase: 2000, rewardPerPrestige: 1500 };
+  const prestigeTargets = hasPrestigedOnce
+    ? cfgPrestige.targets.filter((t) => t === prestigesToday + 1)
+    : [];
+
+  const cfgCombo = Q.combo_tier ?? { multTargets: [1.15, 1.25, 1.35], rewardBase: 1000 };
+  const comboTargets = cfgCombo.multTargets
+    .map((m) => Math.round(m * 100))
+    .filter((t) => t / 100 > runComboMult);
+
+  const cfgEvents = Q.events_triggered ?? { targets: [3, 7, 15, 25], rewardBase: 600, rewardPerEvent: 350 };
+  const eventsTargets = hasEventsUnlocked
+    ? cfgEvents.targets.filter((t) => {
+        if (t <= runEvents) return false;
+        const idx = cfgEvents.targets.indexOf(t);
+        const currentIdx = cfgEvents.targets.findIndex((e) => e > runEvents);
+        return currentIdx === -1 || idx <= currentIdx + EVENTS_STEPS_AHEAD;
+      })
+    : [];
+
+  const upgradePool: { target: number; targetId: string }[] = [];
+  if (session) {
+    const maxIdx = Math.min(Q.upgrade.maxUpgradeIndex, UPGRADE_CATALOG.length);
+    const affordabilityCap = Math.max(totalCoinsEverNum * UPGRADE_AFFORDABILITY_MULT, currentCoins * 2);
+    for (let i = 0; i < maxIdx; i++) {
+      const def = UPGRADE_CATALOG[i];
+      if (def.cost > affordabilityCap) continue;
+      const owned = session.player.upgrades.filter((u) => u.id === def.id).length;
+      for (let n = Q.upgrade.countMin; n <= Q.upgrade.countMax; n++) {
+        if (n > owned) upgradePool.push({ target: n, targetId: def.id });
+      }
+    }
+  }
+
+  const tier1SetAllowed = currentTier1Owned < TIER1_UPGRADE_IDS.length;
+
+  return {
+    coins: coinsTargets.length > 0 ? coinsTargets : Q.coins.targets.filter((t) => t > currentCoins),
+    production:
+      productionTargets.length > 0
+        ? productionTargets
+        : Q.production.targets.filter((t) => t > currentProduction),
+    upgrade: upgradePool,
+    astronauts:
+      astronautTargets.length > 0 ? astronautTargets : Q.astronauts.targets.filter((t) => t > currentAstronauts),
+    prestige_today: prestigeTargets,
+    combo_tier: comboTargets,
+    events_triggered: eventsTargets,
+    tier1_set: tier1SetAllowed,
+  };
+}
+
 export function generateQuest(): Quest {
+  const allowed = getAllowableTargets();
+  const typeWeights = Q.typeWeights;
+  const types: Array<{ weightEnd: number; key: string }> = [
+    { weightEnd: typeWeights[0], key: 'coins' },
+    { weightEnd: typeWeights[1], key: 'production' },
+    { weightEnd: typeWeights[2], key: 'upgrade' },
+    { weightEnd: typeWeights[3], key: 'astronauts' },
+    { weightEnd: typeWeights[4], key: 'prestige_today' },
+    { weightEnd: typeWeights[5], key: 'combo_tier' },
+    { weightEnd: typeWeights[6], key: 'events_triggered' },
+    { weightEnd: 1, key: 'tier1_set' },
+  ];
   const roll = Math.random();
-  if (roll < Q.typeWeights[0]) {
-    const targets = Q.coins.targets;
+  let chosenKey: string | null = null;
+  for (const { weightEnd, key } of types) {
+    if (roll >= weightEnd) continue;
+    const hasTargets =
+      (key === 'coins' && allowed.coins.length > 0) ||
+      (key === 'production' && allowed.production.length > 0) ||
+      (key === 'upgrade' && allowed.upgrade.length > 0) ||
+      (key === 'astronauts' && allowed.astronauts.length > 0) ||
+      (key === 'prestige_today' && allowed.prestige_today.length > 0) ||
+      (key === 'combo_tier' && allowed.combo_tier.length > 0) ||
+      (key === 'events_triggered' && allowed.events_triggered.length > 0) ||
+      (key === 'tier1_set' && allowed.tier1_set);
+    if (hasTargets) {
+      chosenKey = key;
+      break;
+    }
+  }
+  if (chosenKey === null) {
+    chosenKey = 'coins';
+    if (allowed.coins.length === 0) {
+      const t = Q.coins.targets[0];
+      return {
+        type: 'coins',
+        target: t,
+        reward: Math.floor(t * Q.coins.rewardMult) + Q.coins.rewardBase,
+        description: `Reach ${t.toLocaleString()} coins`,
+      };
+    }
+  }
+
+  if (chosenKey === 'coins') {
+    const targets = allowed.coins.length > 0 ? allowed.coins : Q.coins.targets;
     const target = targets[Math.floor(Math.random() * targets.length)];
     return {
       type: 'coins',
@@ -43,8 +209,8 @@ export function generateQuest(): Quest {
       description: `Reach ${target.toLocaleString()} coins`,
     };
   }
-  if (roll < Q.typeWeights[1]) {
-    const targets = Q.production.targets;
+  if (chosenKey === 'production') {
+    const targets = allowed.production.length > 0 ? allowed.production : Q.production.targets;
     const target = targets[Math.floor(Math.random() * targets.length)];
     return {
       type: 'production',
@@ -53,19 +219,19 @@ export function generateQuest(): Quest {
       description: `Reach ${target}/s production`,
     };
   }
-  if (roll < Q.typeWeights[2]) {
-    const def = UPGRADE_CATALOG[Math.floor(Math.random() * Math.min(Q.upgrade.maxUpgradeIndex, UPGRADE_CATALOG.length))];
-    const n = Math.floor(Math.random() * (Q.upgrade.countMax - Q.upgrade.countMin + 1)) + Q.upgrade.countMin;
+  if (chosenKey === 'upgrade' && allowed.upgrade.length > 0) {
+    const pick = allowed.upgrade[Math.floor(Math.random() * allowed.upgrade.length)];
+    const def = UPGRADE_CATALOG.find((d) => d.id === pick.targetId)!;
     return {
       type: 'upgrade',
-      target: n,
+      target: pick.target,
       targetId: def.id,
       reward: Math.floor(def.cost * Q.upgrade.rewardCostMult) + Q.upgrade.rewardBase,
-      description: `Own ${n}× ${def.name}`,
+      description: `Own ${pick.target}× ${def.name}`,
     };
   }
-  if (roll < Q.typeWeights[3]) {
-    const targets = Q.astronauts.targets;
+  if (chosenKey === 'astronauts') {
+    const targets = allowed.astronauts.length > 0 ? allowed.astronauts : Q.astronauts.targets;
     const target = targets[Math.floor(Math.random() * targets.length)];
     return {
       type: 'astronauts',
@@ -74,10 +240,9 @@ export function generateQuest(): Quest {
       description: `Have ${target} astronaut${target > 1 ? 's' : ''}`,
     };
   }
-  if (roll < Q.typeWeights[4]) {
+  if (chosenKey === 'prestige_today' && allowed.prestige_today.length > 0) {
     const cfg = Q.prestige_today ?? { targets: [1, 2], rewardBase: 2000, rewardPerPrestige: 1500 };
-    const targets = cfg.targets;
-    const target = targets[Math.floor(Math.random() * targets.length)];
+    const target = allowed.prestige_today[Math.floor(Math.random() * allowed.prestige_today.length)];
     return {
       type: 'prestige_today',
       target,
@@ -85,10 +250,10 @@ export function generateQuest(): Quest {
       description: `Prestige ${target} time${target > 1 ? 's' : ''} today`,
     };
   }
-  if (roll < Q.typeWeights[5]) {
-    const cfg = Q.combo_tier ?? { multTargets: [1.2, 1.3, 1.4], rewardBase: 800 };
-    const mult = cfg.multTargets[Math.floor(Math.random() * cfg.multTargets.length)];
-    const target = Math.round(mult * 100);
+  if (chosenKey === 'combo_tier' && allowed.combo_tier.length > 0) {
+    const cfg = Q.combo_tier ?? { multTargets: [1.15, 1.25, 1.35], rewardBase: 1000 };
+    const target = allowed.combo_tier[Math.floor(Math.random() * allowed.combo_tier.length)];
+    const mult = target / 100;
     return {
       type: 'combo_tier',
       target,
@@ -96,10 +261,9 @@ export function generateQuest(): Quest {
       description: `Reach ×${mult} combo`,
     };
   }
-  if (roll < Q.typeWeights[6]) {
-    const cfg = Q.events_triggered ?? { targets: [2, 5, 10], rewardBase: 500, rewardPerEvent: 300 };
-    const targets = cfg.targets;
-    const target = targets[Math.floor(Math.random() * targets.length)];
+  if (chosenKey === 'events_triggered' && allowed.events_triggered.length > 0) {
+    const cfg = Q.events_triggered ?? { targets: [3, 7, 15, 25], rewardBase: 600, rewardPerEvent: 350 };
+    const target = allowed.events_triggered[Math.floor(Math.random() * allowed.events_triggered.length)];
     return {
       type: 'events_triggered',
       target,
