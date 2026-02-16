@@ -1,6 +1,6 @@
 /**
- * Planet detail modal: large interactive planet canvas with stats.
- * Opens when clicking a planet preview in the planet list or mine zone.
+ * Planet detail modal: large interactive 3D planet (three.js) with stats.
+ * Opens when clicking a planet preview in the planet list.
  */
 import type { Planet } from '../domain/entities/Planet.js';
 import { getSession, getSettings } from '../application/gameState.js';
@@ -10,42 +10,21 @@ import { getPlanetType } from '../application/planetAffinity.js';
 import { getEffectiveUsedSlots } from '../application/research.js';
 import { getPlanetDisplayName, getSolarSystemName, PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
 import { t, tParam } from '../application/strings.js';
-import { drawPlanetSphereToCanvas } from './MineZoneCanvas.js';
 import { openOverlay, closeOverlay } from './components/overlay.js';
 import { escapeAttr } from './components/domUtils.js';
 import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
+import { createPlanetScene, type PlanetScene } from './planetDetail3D.js';
 
 export const PLANET_DETAIL_OVERLAY_ID = 'planet-detail-overlay';
 export const PLANET_DETAIL_OPEN_CLASS = 'planet-detail-overlay--open';
 
-const CANVAS_SIZE = 280;
+let currentScene: PlanetScene | null = null;
+let resizeObserver: ResizeObserver | null = null;
 
-let detailRafId: number | null = null;
-let dragStartX = 0;
-let dragOffset = 0;
-let isDragging = false;
-let currentPlanetName: string | null = null;
-let currentVisualSeed: number | undefined = undefined;
-
-function stopDetailLoop(): void {
-  if (detailRafId !== null) {
-    cancelAnimationFrame(detailRafId);
-    detailRafId = null;
-  }
-}
-
-function startDetailLoop(): void {
-  stopDetailLoop();
-  const canvas = document.getElementById('planet-detail-canvas') as HTMLCanvasElement | null;
-  if (!canvas || !currentPlanetName) return;
-
-  function tick(): void {
-    if (!canvas || !currentPlanetName) return;
-    const timeMs = Date.now() + dragOffset * 80;
-    drawPlanetSphereToCanvas(canvas, currentPlanetName, timeMs, currentVisualSeed);
-    detailRafId = requestAnimationFrame(tick);
-  }
-  detailRafId = requestAnimationFrame(tick);
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
 }
 
 function buildUpgradeCountsHtml(planet: Planet): string {
@@ -54,12 +33,12 @@ function buildUpgradeCountsHtml(planet: Planet): string {
     counts.set(u.name, (counts.get(u.name) ?? 0) + 1);
   }
   for (const inst of planet.installingUpgrades) {
-    const label = inst.upgrade.name + ' ⏳';
+    const label = inst.upgrade.name + ' \u23F3';
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
   if (counts.size === 0) return `<p class="planet-detail-empty">${t('planetDetailNoUpgrades')}</p>`;
   const lines = Array.from(counts.entries())
-    .map(([name, count]) => `<li class="planet-detail-upgrade-item"><span class="planet-detail-upgrade-name">${escapeAttr(name)}</span><span class="planet-detail-upgrade-count">×${count}</span></li>`)
+    .map(([name, count]) => `<li class="planet-detail-upgrade-item"><span class="planet-detail-upgrade-name">${escapeAttr(name)}</span><span class="planet-detail-upgrade-count">\u00D7${count}</span></li>`)
     .join('');
   return `<ul class="planet-detail-upgrade-list">${lines}</ul>`;
 }
@@ -77,15 +56,8 @@ function getMoonCount(planetName: string): number {
   return hashString(planetName + 'moon') % 3;
 }
 
-function hashString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
 /**
  * Opens the planet detail modal for the given planet ID.
- * Finds the planet in the current session and renders the modal content.
  */
 export function openPlanetDetail(planetId: string): void {
   const session = getSession();
@@ -96,10 +68,6 @@ export function openPlanetDetail(planetId: string): void {
   const planet = playerPlanets[planetIndex];
   const settings = getSettings();
   const compact = settings.compactNumbers;
-
-  currentPlanetName = planet.name;
-  currentVisualSeed = planet.visualSeed;
-  dragOffset = 0;
 
   const displayName = getPlanetDisplayName(planet.name, planetIndex);
   const systemIndex = Math.floor(planetIndex / PLANETS_PER_SOLAR_SYSTEM);
@@ -123,9 +91,11 @@ export function openPlanetDetail(planetId: string): void {
   const body = document.getElementById('planet-detail-body');
   if (!body) return;
 
+  /* dispose previous scene if any */
+  disposeScene();
+
   body.innerHTML = `
-    <div class="planet-detail-visual">
-      <canvas id="planet-detail-canvas" class="planet-detail-canvas" width="${CANVAS_SIZE}" height="${CANVAS_SIZE}"></canvas>
+    <div class="planet-detail-visual" id="planet-detail-3d-container">
       <p class="planet-detail-drag-hint">${t('planetDetailDragHint')}</p>
     </div>
     <div class="planet-detail-info">
@@ -171,77 +141,48 @@ export function openPlanetDetail(planetId: string): void {
     </div>
   `;
 
-  const canvas = document.getElementById('planet-detail-canvas') as HTMLCanvasElement | null;
-  if (canvas) {
-    drawPlanetSphereToCanvas(canvas, planet.name, Date.now(), planet.visualSeed);
+  /* mount three.js scene */
+  const container = document.getElementById('planet-detail-3d-container');
+  if (container) {
+    const scene3d = createPlanetScene(planet.name, planetType, planet.visualSeed);
+    currentScene = scene3d;
 
-    canvas.addEventListener('mousedown', onDragStart);
-    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
-    canvas.style.cursor = 'grab';
+    scene3d.domElement.className = 'planet-detail-canvas-3d';
+    container.prepend(scene3d.domElement);
+
+    /* initial size from container */
+    const rect = container.getBoundingClientRect();
+    const size = Math.min(rect.width, 340);
+    scene3d.resize(size, size);
+
+    /* resize on container change */
+    resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width;
+        const s = Math.min(w, 340);
+        scene3d.resize(s, s);
+      }
+    });
+    resizeObserver.observe(container);
   }
 
   openOverlay(PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS, {
     focusId: 'planet-detail-close',
   });
-
-  startDetailLoop();
 }
 
-function onDragStart(e: MouseEvent): void {
-  isDragging = true;
-  dragStartX = e.clientX;
-  const canvas = document.getElementById('planet-detail-canvas') as HTMLCanvasElement | null;
-  if (canvas) canvas.style.cursor = 'grabbing';
-  document.addEventListener('mousemove', onDragMove);
-  document.addEventListener('mouseup', onDragEnd);
-}
-
-function onDragMove(e: MouseEvent): void {
-  if (!isDragging) return;
-  const dx = e.clientX - dragStartX;
-  dragOffset += dx;
-  dragStartX = e.clientX;
-}
-
-function onDragEnd(): void {
-  isDragging = false;
-  const canvas = document.getElementById('planet-detail-canvas') as HTMLCanvasElement | null;
-  if (canvas) canvas.style.cursor = 'grab';
-  document.removeEventListener('mousemove', onDragMove);
-  document.removeEventListener('mouseup', onDragEnd);
-}
-
-function onTouchStart(e: TouchEvent): void {
-  if (e.touches.length !== 1) return;
-  e.preventDefault();
-  isDragging = true;
-  dragStartX = e.touches[0].clientX;
-  document.addEventListener('touchmove', onTouchMove, { passive: false });
-  document.addEventListener('touchend', onTouchEnd);
-}
-
-function onTouchMove(e: TouchEvent): void {
-  if (!isDragging || e.touches.length !== 1) return;
-  e.preventDefault();
-  const dx = e.touches[0].clientX - dragStartX;
-  dragOffset += dx;
-  dragStartX = e.touches[0].clientX;
-}
-
-function onTouchEnd(): void {
-  isDragging = false;
-  document.removeEventListener('touchmove', onTouchMove);
-  document.removeEventListener('touchend', onTouchEnd);
+function disposeScene(): void {
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
+  if (currentScene) {
+    currentScene.dispose();
+    currentScene = null;
+  }
 }
 
 export function closePlanetDetail(): void {
-  stopDetailLoop();
-  currentPlanetName = null;
-  currentVisualSeed = undefined;
-  isDragging = false;
-  document.removeEventListener('mousemove', onDragMove);
-  document.removeEventListener('mouseup', onDragEnd);
-  document.removeEventListener('touchmove', onTouchMove);
-  document.removeEventListener('touchend', onTouchEnd);
+  disposeScene();
   closeOverlay(PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS);
 }
