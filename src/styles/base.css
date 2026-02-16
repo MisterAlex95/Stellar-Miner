@@ -62,6 +62,13 @@ body {
   z-index: -1;
   pointer-events: none;
   display: block;
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+canvas {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
 }
 
 #app {
