@@ -50,7 +50,21 @@ let expeditionEndsAt: number | null = null;
 let expeditionComposition: ExpeditionComposition | null = null;
 let expeditionDurationMs = 0;
 
-export const saveLoad = new SaveLoadService();
+let _saveLoadInstance: SaveLoadService | null = null;
+function getSaveLoadInstance(): SaveLoadService {
+  if (!_saveLoadInstance) _saveLoadInstance = new SaveLoadService();
+  return _saveLoadInstance;
+}
+/** Lazy-initialized to avoid circular dependency: SaveLoadService → research → strings → gameState → SaveLoadService */
+export const saveLoad = new Proxy({} as SaveLoadService, {
+  get(_, prop) {
+    const inst = getSaveLoadInstance();
+    const v = (inst as unknown as Record<string | symbol, unknown>)[prop];
+    if (typeof v === 'function') return (v as (...args: unknown[]) => unknown).bind(inst);
+    return v;
+  },
+});
+
 export const upgradeService = new UpgradeService();
 export const planetService = new PlanetService();
 export let starfieldApi: ReturnType<typeof startStarfield> | null = null;
