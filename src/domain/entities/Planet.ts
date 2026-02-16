@@ -7,12 +7,17 @@ export const UPGRADES_PER_PLANET = 6;
 
 export type InstallingUpgrade = { upgrade: Upgrade; startAt: number; endsAt: number; rateToAdd: Decimal };
 
+/** Pending uninstall: upgrade stays on planet until endsAt, then it is removed and application refunds. */
+export type UninstallingUpgrade = { upgradeId: string; startAt: number; endsAt: number };
+
 /** Entity: a planet with upgrade slots (expandable by paying coins) and optional housing (uses slots, +crew capacity). */
 export class Planet {
   /** Mutable array so we can push upgrades. */
   public readonly upgrades: Upgrade[];
   /** Upgrades currently installing; they reserve a slot but do not contribute production until endsAt. */
   public readonly installingUpgrades: InstallingUpgrade[];
+  /** Upgrades currently uninstalling; they reserve a slot until endsAt, then application refunds. */
+  public readonly uninstallingUpgrades: UninstallingUpgrade[];
   private _maxUpgrades: number;
   private _housingCount: number;
   /** Crew assigned to this planet (for production bonus). Cap = housingCount * HOUSING_ASTRONAUT_CAPACITY. */
@@ -28,11 +33,13 @@ export class Planet {
     housingCount: number = 0,
     assignedCrew: number = 0,
     visualSeed?: number,
-    installingUpgrades: InstallingUpgrade[] = []
+    installingUpgrades: InstallingUpgrade[] = [],
+    uninstallingUpgrades: UninstallingUpgrade[] = []
   ) {
     this._maxUpgrades = maxUpgrades;
     this.upgrades = upgrades ? [...upgrades] : [];
     this.installingUpgrades = installingUpgrades ? [...installingUpgrades] : [];
+    this.uninstallingUpgrades = uninstallingUpgrades ? [...uninstallingUpgrades] : [];
     this._housingCount = Math.max(0, housingCount);
     this._assignedCrew = Math.max(0, assignedCrew);
     this.visualSeed = visualSeed;
@@ -60,7 +67,7 @@ export class Planet {
     return this._housingCount;
   }
 
-  /** Used slots = installed upgrades that use a slot + installing upgrades that use a slot + housing. */
+  /** Used slots = installed + installing + housing (upgrade stays on planet until uninstall completes). */
   get usedSlots(): number {
     const fromUpgrades = this.upgrades.filter((u) => u.usesSlot).length;
     const fromInstalling = this.installingUpgrades.filter((i) => i.upgrade.usesSlot).length;
@@ -110,6 +117,50 @@ export class Planet {
       }
     }
     return toAdd;
+  }
+
+  /**
+   * Cancel the last `count` installing upgrades of this type (e.g. user cancelled the progress).
+   * Returns the removed entries so the application can refund and unassign crew.
+   */
+  cancelInstallingUpgrades(upgradeId: string, count: number): InstallingUpgrade[] {
+    const removed: InstallingUpgrade[] = [];
+    for (let i = this.installingUpgrades.length - 1; i >= 0 && removed.length < count; i--) {
+      if (this.installingUpgrades[i].upgrade.id === upgradeId) {
+        removed.push(this.installingUpgrades[i]);
+        this.installingUpgrades.splice(i, 1);
+      }
+    }
+    return removed;
+  }
+
+  /** Schedule one upgrade for uninstall at endsAt; the upgrade stays on planet (and produces) until then. */
+  addUninstallingUpgrade(upgradeId: string, startAt: number, endsAt: number): void {
+    this.uninstallingUpgrades.push({ upgradeId, startAt, endsAt });
+  }
+
+  /**
+   * For each pending uninstall with endsAt <= now: remove that upgrade from planet and return it for refund.
+   */
+  tickUninstallations(now: number): Upgrade[] {
+    const removed: Upgrade[] = [];
+    for (let i = this.uninstallingUpgrades.length - 1; i >= 0; i--) {
+      const entry = this.uninstallingUpgrades[i];
+      if (entry.endsAt <= now) {
+        const upgrade = this.removeUpgrade(entry.upgradeId);
+        if (upgrade) removed.push(upgrade);
+        this.uninstallingUpgrades.splice(i, 1);
+      }
+    }
+    return removed;
+  }
+
+  /** Cancel one pending uninstall (upgrade stays on planet). */
+  cancelUninstallingUpgrade(upgradeId: string): boolean {
+    const idx = this.uninstallingUpgrades.findIndex((u) => u.upgradeId === upgradeId);
+    if (idx < 0) return false;
+    this.uninstallingUpgrades.splice(idx, 1);
+    return true;
   }
 
   /**

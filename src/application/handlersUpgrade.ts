@@ -107,22 +107,51 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): UpgradeB
   return { bought: true, durations: [durationMs] };
 }
 
-/** Show installation progress overlay. durations: ms per step (1/X, 2/X, …). */
-export function showUpgradeInstallProgress(cardEl: HTMLElement, durations: number[]): void {
+export type UpgradeInstallProgressOptions = {
+  upgradeId: string;
+  planetId: string;
+  onCancel: () => void;
+};
+
+/** Show installation progress overlay. durations: ms per step (1/X, 2/X, …). Optional onCancel shows a Cancel button. */
+export function showUpgradeInstallProgress(
+  cardEl: HTMLElement,
+  durations: number[],
+  options?: UpgradeInstallProgressOptions
+): void {
   const total = Math.max(1, durations.length);
   const overlay = document.createElement('div');
   overlay.className = 'upgrade-install-progress-overlay';
   overlay.setAttribute('aria-live', 'polite');
   overlay.setAttribute('aria-busy', 'true');
+  const cancelHtml = options?.onCancel
+    ? `<button type="button" class="upgrade-progress-cancel" data-i18n="cancel">Cancel</button>`
+    : '';
   overlay.innerHTML =
-    '<div class="upgrade-install-progress-track"><div class="upgrade-install-progress-fill"></div></div><span class="upgrade-install-progress-label"></span>';
+    '<div class="upgrade-install-progress-track"><div class="upgrade-install-progress-fill"></div></div><span class="upgrade-install-progress-label"></span>' +
+    cancelHtml;
   cardEl.appendChild(overlay);
   cardEl.classList.add('upgrade-card--installing');
   const fillEl = overlay.querySelector('.upgrade-install-progress-fill') as HTMLElement;
   const labelEl = overlay.querySelector('.upgrade-install-progress-label') as HTMLElement;
+  const cancelBtn = overlay.querySelector('.upgrade-progress-cancel') as HTMLButtonElement | null;
   if (!fillEl || !labelEl) return;
 
+  let cancelled = false;
+  const timeouts: ReturnType<typeof setTimeout>[] = [];
+  if (cancelBtn && options?.onCancel) {
+    cancelBtn.textContent = t('cancel');
+    cancelBtn.addEventListener('click', () => {
+      cancelled = true;
+      timeouts.forEach(clearTimeout);
+      options.onCancel();
+      overlay.remove();
+      cardEl.classList.remove('upgrade-card--installing');
+    });
+  }
+
   function runStep(current: number): void {
+    if (cancelled) return;
     if (current > total) {
       overlay.remove();
       cardEl.classList.remove('upgrade-card--installing');
@@ -134,13 +163,95 @@ export function showUpgradeInstallProgress(cardEl: HTMLElement, durations: numbe
     fillEl.style.width = '0%';
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        if (cancelled) return;
         fillEl.style.transition = `width ${durationMs}ms linear`;
         fillEl.style.width = '100%';
       });
     });
-    setTimeout(() => runStep(current + 1), durationMs);
+    const tid = setTimeout(() => runStep(current + 1), durationMs);
+    timeouts.push(tid);
   }
   runStep(1);
+}
+
+export type UpgradeUninstallProgressOptions = {
+  upgradeId: string;
+  planetId: string;
+  onCancel: () => void;
+};
+
+/** Show uninstall progress overlay (same look as install). Optional onCancel shows a Cancel button. */
+export function showUpgradeUninstallProgress(
+  cardEl: HTMLElement,
+  durationMs: number,
+  options?: UpgradeUninstallProgressOptions
+): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'upgrade-install-progress-overlay';
+  overlay.setAttribute('aria-live', 'polite');
+  overlay.setAttribute('aria-busy', 'true');
+  const cancelHtml = options?.onCancel
+    ? `<button type="button" class="upgrade-progress-cancel" data-i18n="cancel">Cancel</button>`
+    : '';
+  overlay.innerHTML =
+    '<div class="upgrade-install-progress-track"><div class="upgrade-install-progress-fill"></div></div><span class="upgrade-install-progress-label"></span>' +
+    cancelHtml;
+  cardEl.appendChild(overlay);
+  cardEl.classList.add('upgrade-card--installing');
+  const fillEl = overlay.querySelector('.upgrade-install-progress-fill') as HTMLElement;
+  const labelEl = overlay.querySelector('.upgrade-install-progress-label') as HTMLElement;
+  const cancelBtn = overlay.querySelector('.upgrade-progress-cancel') as HTMLButtonElement | null;
+  if (!fillEl || !labelEl) return;
+  labelEl.textContent = tParam('uninstallingCount', { current: '1', total: '1' });
+  fillEl.style.transition = 'none';
+  fillEl.style.width = '0%';
+  const tid = setTimeout(() => {
+    overlay.remove();
+    cardEl.classList.remove('upgrade-card--installing');
+  }, durationMs);
+  if (cancelBtn && options?.onCancel) {
+    cancelBtn.textContent = t('cancel');
+    cancelBtn.addEventListener('click', () => {
+      clearTimeout(tid);
+      options.onCancel();
+      overlay.remove();
+      cardEl.classList.remove('upgrade-card--installing');
+    });
+  }
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      fillEl.style.transition = `width ${durationMs}ms linear`;
+      fillEl.style.width = '100%';
+    });
+  });
+}
+
+/** Cancel installing upgrades (refund coins, unassign crew). Returns true if any were cancelled. */
+export function cancelUpgradeInstall(upgradeId: string, planetId: string, count: number): boolean {
+  const session = getSession();
+  if (!session) return false;
+  const planet = session.player.planets.find((p) => p.id === planetId);
+  if (!planet) return false;
+  const removed = planet.cancelInstallingUpgrades(upgradeId, count);
+  if (removed.length === 0) return false;
+  for (const entry of removed) {
+    session.player.addCoins(entry.upgrade.cost);
+    const crewRequired = getEffectiveRequiredAstronauts(entry.upgrade.id);
+    if (crewRequired > 0) session.player.unassignCrewFromEquipment(crewRequired);
+  }
+  notifyRefresh();
+  return true;
+}
+
+/** Cancel pending uninstall (upgrade stays on planet). Returns true if cancelled. */
+export function cancelUpgradeUninstall(upgradeId: string, planetId: string): boolean {
+  const session = getSession();
+  if (!session) return false;
+  const planet = session.player.planets.find((p) => p.id === planetId);
+  if (!planet) return false;
+  const cancelled = planet.cancelUninstallingUpgrade(upgradeId);
+  if (cancelled) notifyRefresh();
+  return cancelled;
 }
 
 export type UpgradeBuyMaxResult = { bought: number; durations: number[] };
@@ -210,9 +321,9 @@ function resolveTargetPlanet(
   return needsSlot ? player.getPlanetWithFreeSlot() : player.planets[0] ?? null;
 }
 
-export type UpgradeUninstallResult = { uninstalled: boolean };
+export type UpgradeUninstallResult = { uninstalled: boolean; durationMs?: number };
 
-/** Uninstall one copy of an upgrade from the given planet; refund cost and subtract production. */
+/** Start uninstalling one copy of an upgrade from the given planet. Duration = install time / 2; refund when complete (game loop). */
 export function handleUpgradeUninstall(upgradeId: string, planetId: string): UpgradeUninstallResult {
   const session = getSession();
   if (!session) return { uninstalled: false };
@@ -220,16 +331,15 @@ export function handleUpgradeUninstall(upgradeId: string, planetId: string): Upg
   if (!def) return { uninstalled: false };
   const player = session.player;
   const planet = player.planets.find((p) => p.id === planetId);
-  if (!planet || !planet.upgrades.some((u) => u.id === upgradeId)) return { uninstalled: false };
+  const upgrade = planet?.upgrades.find((u) => u.id === upgradeId);
+  if (!planet || !upgrade) return { uninstalled: false };
 
+  const installDurationMs = getUpgradeInstallDurationMs(def.tier, upgrade.cost.toNumber());
+  const durationMs = Math.max(1, Math.floor(installDurationMs / 2));
   const mult = getPlanetTypeMultiplier(def.id, getPlanetType(planet.name));
-  const removed = upgradeService.uninstallUpgrade(player, planet, upgradeId, mult);
-  if (!removed) return { uninstalled: false };
+  const started = upgradeService.startUninstallUpgrade(player, planet, upgradeId, mult, Date.now(), durationMs);
+  if (!started) return { uninstalled: false };
 
-  player.addCoins(removed.cost);
-  const crewRequired = getEffectiveRequiredAstronauts(def.id);
-  if (crewRequired > 0) player.unassignCrewFromEquipment(crewRequired);
   notifyRefresh();
-  emit('upgrade_uninstalled', { upgradeId, planetId });
-  return { uninstalled: true };
+  return { uninstalled: true, durationMs };
 }

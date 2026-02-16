@@ -24,6 +24,7 @@ const DECAY_24H_PLUS_MULT = 0.5;
 
 export type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
 export type SavedInstallingUpgrade = { upgrade: SavedUpgrade; startAt?: number; endsAt: number; rateToAdd: number | string };
+export type SavedUninstallingUpgrade = { upgradeId: string; startAt?: number; endsAt: number };
 export type SavedPlanet = {
   id: string;
   name: string;
@@ -33,6 +34,7 @@ export type SavedPlanet = {
   assignedCrew?: number;
   visualSeed?: number;
   installingUpgrades?: SavedInstallingUpgrade[];
+  uninstallingUpgrades?: SavedUninstallingUpgrade[];
 };
 type SavedCrewByRole = {
   astronaut?: number;
@@ -326,6 +328,14 @@ export class SaveLoadService implements ISaveLoadService {
                   startAt: i.startAt,
                   endsAt: i.endsAt,
                   rateToAdd: i.rateToAdd.toString(),
+                }))
+              : undefined,
+          uninstallingUpgrades:
+            p.uninstallingUpgrades?.length > 0
+              ? p.uninstallingUpgrades.map((u) => ({
+                  upgradeId: u.upgradeId,
+                  startAt: u.startAt,
+                  endsAt: u.endsAt,
                 }))
               : undefined,
         })),

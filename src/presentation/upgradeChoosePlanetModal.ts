@@ -17,6 +17,9 @@ import {
   handleUpgradeBuyMax,
   handleUpgradeUninstall,
   showUpgradeInstallProgress,
+  showUpgradeUninstallProgress,
+  cancelUpgradeInstall,
+  cancelUpgradeUninstall,
 } from '../application/handlers.js';
 import { openOverlay, closeOverlay } from './components/overlay.js';
 import { escapeAttr } from './components/domUtils.js';
@@ -93,6 +96,12 @@ export function openUpgradeChoosePlanetModal(opts: {
     nameSpan.className = 'upgrade-choose-planet-item-name';
     nameSpan.textContent = p.name;
 
+    const installedCount = fullPlanet ? fullPlanet.upgrades.filter((u) => u.id === upgradeId).length : 0;
+    const chip = document.createElement('span');
+    chip.className = 'upgrade-choose-planet-count-chip';
+    chip.textContent = `×${installedCount}`;
+    chip.setAttribute('aria-label', `${installedCount} ${t('upgradeChoosePlanetInstalledOnPlanet')}`);
+
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
     toggleBtn.className = 'upgrade-choose-planet-toggle';
@@ -106,7 +115,7 @@ export function openUpgradeChoosePlanetModal(opts: {
     selectBtn.setAttribute('data-planet-id', p.id);
     selectBtn.textContent = t('upgradeChoosePlanetSelect');
 
-    header.append(nameSpan, toggleBtn, selectBtn);
+    header.append(nameSpan, chip, toggleBtn, selectBtn);
     item.appendChild(header);
 
     const body = document.createElement('div');
@@ -129,22 +138,44 @@ export function openUpgradeChoosePlanetModal(opts: {
 }
 
 function onPlanetChosen(upgradeId: string, planetId: string, action: UpgradeChoosePlanetAction, maxCount?: number): void {
+  closeUpgradeChoosePlanetModal();
   if (action === 'uninstall') {
-    handleUpgradeUninstall(upgradeId, planetId);
+    const result = handleUpgradeUninstall(upgradeId, planetId);
+    if (result.uninstalled && result.durationMs != null) {
+      const durationMs = result.durationMs;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const cardEl = document.querySelector<HTMLElement>(`.upgrade-card[data-upgrade-id="${upgradeId}"]`);
+          if (cardEl)
+            showUpgradeUninstallProgress(cardEl, durationMs, {
+              upgradeId,
+              planetId,
+              onCancel: () => cancelUpgradeUninstall(upgradeId, planetId),
+            });
+        });
+      });
+    }
   } else if (action === 'max') {
     const result = handleUpgradeBuyMax(upgradeId, planetId, maxCount);
     const card = document.querySelector<HTMLElement>(`.upgrade-card[data-upgrade-id="${upgradeId}"]`);
     if (result.bought > 0 && result.durations.length > 0 && card) {
-      showUpgradeInstallProgress(card, result.durations);
+      showUpgradeInstallProgress(card, result.durations, {
+        upgradeId,
+        planetId,
+        onCancel: () => cancelUpgradeInstall(upgradeId, planetId, result.durations.length),
+      });
     }
   } else {
     const result = handleUpgradeBuy(upgradeId, planetId);
     const card = document.querySelector<HTMLElement>(`.upgrade-card[data-upgrade-id="${upgradeId}"]`);
     if (result.bought && result.durations.length > 0 && card) {
-      showUpgradeInstallProgress(card, result.durations);
+      showUpgradeInstallProgress(card, result.durations, {
+        upgradeId,
+        planetId,
+        onCancel: () => cancelUpgradeInstall(upgradeId, planetId, result.durations.length),
+      });
     }
   }
-  closeUpgradeChoosePlanetModal();
 }
 
 function toggleItemExpanded(item: HTMLElement): void {

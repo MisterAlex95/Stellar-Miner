@@ -39,7 +39,7 @@ import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
-import { completeUpgradeInstallations } from './application/upgradeInstallation.js';
+import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
 import { showOfflineToast } from './presentation/toasts.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
 import { createThrottledRun } from './application/runIfDue.js';
@@ -65,6 +65,7 @@ let pageWasHidden = document.visibilityState === 'hidden';
 function runProductionTick(session: ReturnType<typeof getSession>, dt: number, nowMs: number): void {
   completeExpeditionIfDue();
   completeUpgradeInstallations(session, nowMs);
+  completeUpgradeUninstallations(session, nowMs);
   updateExpeditionProgress();
   const eventsUnlocked = getUnlockedBlocks(session).has('events');
   if (eventsUnlocked) {

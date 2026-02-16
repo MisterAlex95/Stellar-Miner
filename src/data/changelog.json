@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.4.36",
+    "date": "2026-02-17",
+    "changes": [
+      "Uninstall loading: duration = install time / 2, progress bar and Cancel button (same look as install). Upgrade stays on planet and keeps producing until loading completes; cancel only removes the timer.",
+      "Install and research progress: Cancel button on overlays; cancel install refunds coins and frees crew; cancel research refunds cost.",
+      "Upgrade choose-planet modal: chip on each planet row showing count of this upgrade type installed (e.g. ×2)."
+    ]
+  },
+  {
     "version": "0.4.35",
     "date": "2026-02",
     "changes": [

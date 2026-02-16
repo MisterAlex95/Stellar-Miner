@@ -501,6 +501,17 @@
   white-space: nowrap;
 }
 
+.upgrade-choose-planet-count-chip {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--bg-dark);
+  background: var(--accent);
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 .upgrade-choose-planet-toggle {
   flex-shrink: 0;
   width: 2rem;

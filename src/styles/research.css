@@ -354,6 +354,23 @@
   letter-spacing: 0.05em;
 }
 
+.research-progress-cancel {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--text-dim);
+  background: var(--bg-panel);
+  color: var(--text);
+  cursor: pointer;
+  margin-top: 0.25rem;
+}
+
+.research-progress-cancel:hover {
+  background: var(--border);
+}
+
 @media (max-width: 768px) {
   .research-tree-row:not(:first-child) {
     margin-top: 1rem;

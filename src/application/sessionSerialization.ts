@@ -19,7 +19,7 @@ import { toDecimal } from '../domain/bigNumber.js';
 import { getUpgradeUsesSlot } from './catalogs.js';
 import { getBaseProductionRateFromPlanets } from './planetAffinity.js';
 import { getEffectiveRequiredAstronauts } from './research.js';
-import type { SavedSession, SavedUpgrade } from '../infrastructure/SaveLoadService.js';
+import type { SavedSession, SavedUpgrade, SavedUninstallingUpgrade } from '../infrastructure/SaveLoadService.js';
 import { SAVE_VERSION } from '../infrastructure/SaveLoadService.js';
 
 export function deserializeSession(data: SavedSession): GameSession {
@@ -49,6 +49,15 @@ export function deserializeSession(data: SavedSession): GameSession {
         endsAt: i.endsAt,
         rateToAdd: toDecimal(i.rateToAdd),
       }));
+      const savedUninstalling = (p as { uninstallingUpgrades?: (SavedUninstallingUpgrade | { upgrade: SavedUpgrade; startAt?: number; endsAt: number })[] }).uninstallingUpgrades ?? [];
+      const uninstallingUpgrades = savedUninstalling.map((u) => {
+        const upgradeId = 'upgradeId' in u ? u.upgradeId : (u as { upgrade: SavedUpgrade }).upgrade.id;
+        return {
+          upgradeId,
+          startAt: u.startAt ?? u.endsAt - 60_000,
+          endsAt: u.endsAt,
+        };
+      });
       const planetName =
         typeof p.name === 'string' && !/undefined/i.test(p.name)
           ? p.name
@@ -61,7 +70,8 @@ export function deserializeSession(data: SavedSession): GameSession {
         p.housing ?? 0,
         p.assignedCrew ?? 0,
         visualSeed,
-        installingUpgrades
+        installingUpgrades,
+        uninstallingUpgrades
       );
     });
   } else {

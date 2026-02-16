@@ -20,7 +20,16 @@ const RESEARCH_PROGRESS_DURATION_MS = 2500;
 /** End timestamp (Date.now()) per research id, for restoring progress bars after re-render. */
 const researchProgressEndTimeMs = new Map<string, number>();
 
-function addProgressOverlayToCard(cardEl: HTMLElement, id: string, endTimeMs: number): void {
+type ResearchProgressCancelOption = {
+  getCancelHandler: (overlayEl: HTMLElement) => () => void;
+};
+
+function addProgressOverlayToCard(
+  cardEl: HTMLElement,
+  id: string,
+  endTimeMs: number,
+  cancelOption?: ResearchProgressCancelOption
+): void {
   const now = Date.now();
   const remainingMs = Math.max(0, endTimeMs - now);
   const elapsedMs = RESEARCH_PROGRESS_DURATION_MS - remainingMs;
@@ -30,10 +39,15 @@ function addProgressOverlayToCard(cardEl: HTMLElement, id: string, endTimeMs: nu
   overlay.className = 'research-progress-overlay';
   overlay.setAttribute('aria-live', 'polite');
   overlay.setAttribute('aria-busy', 'true');
+  const cancelHtml =
+    cancelOption?.getCancelHandler != null
+      ? `<button type="button" class="research-progress-cancel" data-i18n="cancel">Cancel</button>`
+      : '';
   overlay.innerHTML =
     '<div class="research-progress-track"><div class="research-progress-fill"></div></div><span class="research-progress-label">' +
     t('researching') +
-    '</span>';
+    '</span>' +
+    cancelHtml;
   cardEl.appendChild(overlay);
   cardEl.classList.add('research-card--in-progress');
   const fillEl = overlay.querySelector('.research-progress-fill') as HTMLElement;
@@ -45,6 +59,11 @@ function addProgressOverlayToCard(cardEl: HTMLElement, id: string, endTimeMs: nu
         fillEl.style.transition = `width ${remainingMs}ms linear`;
       });
     }
+  }
+  const cancelBtn = overlay.querySelector('.research-progress-cancel') as HTMLButtonElement | null;
+  if (cancelBtn && cancelOption?.getCancelHandler) {
+    cancelBtn.textContent = t('cancel');
+    cancelBtn.addEventListener('click', cancelOption.getCancelHandler(overlay));
   }
 }
 
@@ -109,14 +128,23 @@ export function startResearchWithProgress(cardEl: HTMLElement, id: string): void
   if (!node || !canAttemptResearch(id) || !session.player.coins.gte(node.cost)) return;
 
   session.player.spendCoins(node.cost);
-  // Do not call notifyRefresh() here: it would trigger renderResearchSection() and replace the DOM,
-  // removing the progress overlay we add below. Coins display updates via the game loop.
   const durationMs = RESEARCH_PROGRESS_DURATION_MS;
   const endTimeMs = Date.now() + durationMs;
   researchProgressEndTimeMs.set(id, endTimeMs);
   addResearchInProgress(id);
-  addProgressOverlayToCard(cardEl, id, endTimeMs);
-  setTimeout(() => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  addProgressOverlayToCard(cardEl, id, endTimeMs, {
+    getCancelHandler: (overlayEl) => () => {
+      clearTimeout(timeoutId);
+      session.player.addCoins(node.cost);
+      removeResearchInProgress(id);
+      researchProgressEndTimeMs.delete(id);
+      overlayEl.remove();
+      cardEl.classList.remove('research-card--in-progress');
+      notifyRefresh();
+    },
+  });
+  timeoutId = setTimeout(() => {
     handleResearchAttempt(id, { coinsAlreadySpent: true });
   }, durationMs);
 }

@@ -207,10 +207,11 @@ export function getEffectiveRequiredAstronauts(upgradeId: string): number {
   return Math.max(0, def.requiredAstronauts - getCrewReductionFromResearch(upgradeId));
 }
 
-/** Used slots on a planet (effective slot cost per upgrade + housing). */
+/** Used slots on a planet (effective slot cost per upgrade + installing + housing). */
 export function getEffectiveUsedSlots(planet: Planet): number {
-  const slotCost = planet.upgrades.reduce((sum, u) => sum + getEffectiveSlotCost(u.id), 0);
-  return slotCost + planet.housingCount;
+  const fromUpgrades = planet.upgrades.reduce((sum, u) => sum + getEffectiveSlotCost(u.id), 0);
+  const fromInstalling = planet.installingUpgrades.reduce((sum, i) => sum + getEffectiveSlotCost(i.upgrade.id), 0);
+  return fromUpgrades + fromInstalling + planet.housingCount;
 }
 
 /** Whether the planet has at least one free slot (effective count). */

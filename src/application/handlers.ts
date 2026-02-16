@@ -5,6 +5,9 @@ export {
   handleUpgradeBuyMax,
   handleUpgradeUninstall,
   showUpgradeInstallProgress,
+  showUpgradeUninstallProgress,
+  cancelUpgradeInstall,
+  cancelUpgradeUninstall,
 } from './handlersUpgrade.js';
 export {
   handleBuyNewPlanet,

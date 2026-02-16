@@ -65,4 +65,22 @@ export class UpgradeService {
     player.setProductionRate(player.productionRate.subtract(rate));
     return removed;
   }
+
+  /**
+   * Start uninstalling one upgrade: add to pending list; upgrade stays on planet (and produces) until timer ends.
+   * Caller must run planet.tickUninstallations in the game loop; when it returns removed upgrades, refund and unassign crew.
+   */
+  startUninstallUpgrade(
+    player: Player,
+    planet: Planet,
+    upgradeId: string,
+    _productionMultiplier: number = 1,
+    nowMs: number,
+    durationMs: number
+  ): boolean {
+    if (!player.planets.includes(planet)) return false;
+    if (!planet.upgrades.some((u) => u.id === upgradeId)) return false;
+    planet.addUninstallingUpgrade(upgradeId, nowMs, nowMs + durationMs);
+    return true;
+  }
 }
