@@ -7,7 +7,7 @@ import { UpgradeService } from '../domain/services/UpgradeService.js';
 import { PlanetService } from '../domain/services/PlanetService.js';
 import { loadSettings, saveSettings, type Settings } from '../settings.js';
 import { startStarfield } from '../presentation/StarfieldCanvas.js';
-import { createMineZoneCanvas } from '../presentation/MineZoneCanvas.js';
+import { createMineZone3D } from '../presentation/MineZone3D.js';
 import { loadQuestState } from './questState.js';
 import type { QuestState } from './questState.js';
 import { emit } from './eventBus.js';
@@ -83,7 +83,7 @@ export const saveLoad = new Proxy({} as SaveLoadService, {
 export const upgradeService = new UpgradeService();
 export const planetService = new PlanetService();
 export let starfieldApi: ReturnType<typeof startStarfield> | null = null;
-export let mineZoneCanvasApi: ReturnType<typeof createMineZoneCanvas> | null = null;
+export let mineZoneCanvasApi: ReturnType<typeof createMineZone3D> | null = null;
 
 export function getSession(): GameSession {
   return session;
@@ -266,7 +266,7 @@ export function setStarfieldApi(api: ReturnType<typeof startStarfield> | null): 
   starfieldApi = api;
 }
 
-export function setMineZoneCanvasApi(api: ReturnType<typeof createMineZoneCanvas> | null): void {
+export function setMineZoneCanvasApi(api: ReturnType<typeof createMineZone3D> | null): void {
   mineZoneCanvasApi = api;
 }
 
