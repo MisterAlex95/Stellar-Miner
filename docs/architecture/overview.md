@@ -181,7 +181,7 @@ State changes trigger UI refresh through a batched pipeline:
 6. **Settings** — **Theme** (light/dark), **Sound effects**, **Reduce motion** in `settings.ts` and settings UI; all persisted.
 7. **Save format** — **`version: 1`** in serialized payload; **`isSavedSession()`** validation; legacy (no version) still loads; **`SAVE_VERSION`** and **`validateSavePayload()`** in SaveLoadService.
 8. **DevEx** — **ESLint** (`.eslintrc.cjs`) and **Prettier** (`.prettierrc`) at repo root; **Playwright** (`playwright.config.ts`, `e2e/`); scripts **`npm run lint`**, **`npm run format`**, **`npm run test:e2e`**.
-9. **Documentation** — This file and README kept in sync; **docs/PROGRESSION_CURVE.md** (economy, upgrades, install duration, unlocks, milestones); **docs/RESEARCH.md** (research formulas, success chance, full node catalog); **docs/PLANETS.md** (planet cost, expedition, slots, housing); IDEAS.md for future gameplay.
+9. **Documentation** — This file and README kept in sync. See **docs/README.md** for the full index. **docs/reference/progression-curve.md** (economy, upgrades, install duration, unlocks, milestones); **docs/reference/research-formulas.md** (research formulas, success chance, full node catalog); **docs/reference/planets-formulas.md** (planet cost, expedition, slots, housing); **docs/features/** (exhaustive feature list); **docs/data/** (schemas); **docs/ideas/backlog.md** for future gameplay.
 10. **Observability** — **`src/application/eventBus.ts`**: subscribe/emit for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed; **performance.mark** in game loop and in SaveLoadService save.
 11. **Handlers** — Split by domain into **handlersSave**, **handlersMine**, **handlersUpgrade**, **handlersPlanet**, **handlersQuest**, **handlersPrestige**, **handlersResearch**, **handlersSettings**, **handlersDebug**; **handlers.ts** re-exports for a single entry point.
 12. **Planet affinity** — Planet type (rocky/desert/ice/volcanic/gas), visuals (colors, texture, rings/belt, size) and affinity stats derived deterministically from planet name; **planetAffinity.ts** + **data/planetAffinity.json**.
@@ -191,7 +191,7 @@ State changes trigger UI refresh through a batched pipeline:
 
 ## 13. Game rules (how to play)
 
-Summary of the game’s rules and numbers. Exact values come from **balance.json**, **gameConfig.json**, **progression.json**, and the data catalogs.
+Summary of the game's rules and numbers. Exact values come from **balance.json**, **gameConfig.json**, **progression.json**, and the data catalogs. For the full feature list and formulas, see **docs/features/** and **docs/reference/**.
 
 ### Goal
 
@@ -237,7 +237,7 @@ Mine coins (click or idle), buy upgrades and hire crew, expand to new planets, c
 
 - **Unlock**: **250,000** coins (progression).
 - **Types**: Random (coins, production, upgrade, astronauts, prestige_today, combo_tier, events_triggered, tier1_set). Reach the target, then **Claim**.
-- **Streak**: Claim within **5 minutes** of completing a quest to build a streak. **+12%** reward per streak level (max streak **3**). If you don’t claim in time, streak resets.
+- **Streak**: Claim within **5 minutes** of completing a quest to build a streak. **+12%** reward per streak level (max streak **3**). If you don't claim in time, streak resets.
 
 ### Prestige
 

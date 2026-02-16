@@ -5,7 +5,7 @@ Backlog of gameplay ideas for future features. The first section is in French (o
 Mécaniques de Gameplay Innovantes
 
 Système de "Corruption"
-Plus tu mines, plus l’univers se corrompt (effets visuels + malus), avec des choix pour la nettoyer ou l’exploiter.
+Plus tu mines, plus l'univers se corrompt (effets visuels + malus), avec des choix pour la nettoyer ou l'exploiter.
 
 Mini-Jeux Aléatoires
 Tous les 5 min, un mini-jeu (QTE, puzzle, dialogue) apparaît pour gagner des bonus.
@@ -25,22 +25,22 @@ Pendant 1 min, cliquer fait perdre des coins, et ne pas cliquer en rapporte.
 Astéroïdes "Portails"
 Cliquer sur un portail change les règles du jeu (ex. : production x2 mais corruption x3).
 
-Système de "Fusion" d’Upgrades
-Combine 2 upgrades pour en créer un plus puissant (risque d’échec).
+Système de "Fusion" d'Upgrades
+Combine 2 upgrades pour en créer un plus puissant (risque d'échec).
 
 Mode "Survie"
-La production diminue avec le temps, avec des vagues d’ennemis à repousser en cliquant.
+La production diminue avec le temps, avec des vagues d'ennemis à repousser en cliquant.
 
 💰 Économie et Progression
 
 Marché Noir
-Achat d’upgrades piratés (moins chers mais risqués) ou vente de ressources volées.
+Achat d'upgrades piratés (moins chers mais risqués) ou vente de ressources volées.
 
 Système de Prêt Bancaire
 Emprunte des coins avec intérêts, ou parie sur des événements aléatoires.
 
 Bourse des Ressources
-Les prix des upgrades fluctuent en fonction de l’offre/demande (ex. : robots mineurs plus chers si tout le monde en achète).
+Les prix des upgrades fluctuent en fonction de l'offre/demande (ex. : robots mineurs plus chers si tout le monde en achète).
 
 Système de "Dettes Karmiques"
 Exploiter trop donne une "dette karma" → événement catastrophique si elle dépasse 100%.
@@ -72,18 +72,18 @@ Système de Parrainage
 Parraine un ami pour gagner 10% de sa production pendant 1h (lui gagne un bonus de départ).
 
 Marché aux Artefacts
-Vends/achète des artefacts rares aux autres joueurs via un système d’enchères.
+Vends/achète des artefacts rares aux autres joueurs via un système d'enchères.
 
 Mode Coopératif
 2 joueurs fusionnent leurs productions pendant 5 min pour un bonus commun (+200% de coins).
 
 Prêt entre Joueurs
-Prête des coins à d’autres joueurs (avec intérêts) ou emprunte pour accélérer ta progression.
+Prête des coins à d'autres joueurs (avec intérêts) ou emprunte pour accélérer ta progression.
 
 🎨 Narratif et Immersion
 
 Fins Alternatives
-Différentes fins selon tes choix (ex. : "Magnat de l’Espace" vs. "Esclave des Aliens").
+Différentes fins selon tes choix (ex. : "Magnat de l'Espace" vs. "Esclave des Aliens").
 
 Arbre de Compétences Morales
 Choisis entre des upgrades "éthiques" (+1% de production) ou "immoraux" (+5% mais risque de révolte).
@@ -92,7 +92,7 @@ Choisis entre des upgrades "éthiques" (+1% de production) ou "immoraux" (+5% ma
 Un astéroïde géant apparaît toutes les heures. Tous les joueurs doivent cliquer dessus pour le détruire.
 
 Saisons Dynamiques
-Le jeu change selon des périodes (ex. : "Saison des Météorites" = +50% de coins mais plus d’événements aléatoires).
+Le jeu change selon des périodes (ex. : "Saison des Météorites" = +50% de coins mais plus d'événements aléatoires).
 
 Customisation Visuelle
 Débloque des skins pour ton vaisseau ou tes robots (styles "or", "cyberpunk", "alien").
@@ -263,7 +263,7 @@ Small UX wins that make the game nicer to play without new mechanics. Implementa
 
 **6. Remember Stats chart range**
 
-- Persist the selected chart range ("Recent" vs "Long term") in localStorage (e.g. `stellar-miner-stats-range`). On load, restore selection so returning players don’t have to click every time.
+- Persist the selected chart range ("Recent" vs "Long term") in localStorage (e.g. `stellar-miner-stats-range`). On load, restore selection so returning players don't have to click every time.
 
 **7. Prestige modal: show new bonus**
 
@@ -294,7 +294,7 @@ Already implemented: professions at hire (miner, scientist, medic, pilot), veter
 
 **1. Assign crew to planets (UI)**
 
-- Use existing `Planet.assignedCrew` and cap: add UI to assign/unassign crew from the free pool to each planet (e.g. +/- on planet card). Optionally add production bonus for assigned crew on that planet’s contribution.
+- Use existing `Planet.assignedCrew` and cap: add UI to assign/unassign crew from the free pool to each planet (e.g. +/- on planet card). Optionally add production bonus for assigned crew on that planet's contribution.
 
 **2. Expedition composition (UI)**
 

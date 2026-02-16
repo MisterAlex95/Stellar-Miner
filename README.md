@@ -72,9 +72,13 @@ To use GitHub Pages: in the repo **Settings → Pages**, set **Source** to “Gi
 
 ## Documentation
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — DDD overview, layered architecture, code references, **§12 Game rules** (objectives, mine click, combo, upgrades, crew, planets, events, quests, prestige, offline, milestones, achievements).
-- [docs/PROGRESSION_CURVE.md](docs/PROGRESSION_CURVE.md) — Economy reference: upgrade costs, progression unlocks, astronaut/planet/slot/housing formulas, milestones, prestige (aligned with balance.json).
-- [docs/IDEAS.md](docs/IDEAS.md) — Backlog of gameplay ideas for future features.
+Full index: **[docs/README.md](docs/README.md)**.
+
+- **Architecture** — [docs/architecture/overview.md](docs/architecture/overview.md): DDD, layers, code references, game rules summary.
+- **Features** — [docs/features/](docs/features/): Exhaustive gameplay and UI (mining, upgrades, crew & planets, research, events, quests, prestige & progression, UI & settings).
+- **Data** — [docs/data/](docs/data/): Schemas for save format, upgrades, events, research, achievements, progression, balance & config, planet affinity.
+- **Reference** — [docs/reference/](docs/reference/): Formulas and tables (progression curve, research, planets).
+- **Ideas** — [docs/ideas/backlog.md](docs/ideas/backlog.md): Backlog and future features.
 - **AI / Cursor** — Project rules for assistants live in `.cursor/rules/` (stellar-miner-project.mdc, typescript-conventions.mdc).
 
 ## Implemented improvements
@@ -87,7 +91,7 @@ To use GitHub Pages: in the repo **Settings → Pages**, set **Source** to “Gi
 6. **Settings** — **Theme** (light/dark), **Sound effects** toggle, **Reduce motion**; all persisted in `settings.ts`.
 7. **Save format** — **`version: 1`** in payload, **`isSavedSession()`** type guard, migration for legacy (no version); **`SAVE_VERSION`** and **`validateSavePayload()`** in SaveLoadService.
 8. **DevEx** — **ESLint** (`.eslintrc.cjs`) + **Prettier** (`.prettierrc`), scripts **`lint`** and **`format`**.
-9. **Docs** — README and ARCHITECTURE kept in sync (this section and §11–12 in ARCHITECTURE).
+9. **Docs** — README and docs kept in sync; see [docs/README.md](docs/README.md) for the full index.
 10. **Observability** — **`src/application/eventBus.ts`** (subscribe/emit for upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired, session_loaded, save_success, save_failed); **performance.mark** in game loop and save.
 
 ## License

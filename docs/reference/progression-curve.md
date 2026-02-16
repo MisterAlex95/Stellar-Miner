@@ -1,6 +1,6 @@
 # Stellar Miner — Progression curve and time estimates
 
-Reference for the game’s economy: upgrade costs, unlock thresholds, other costs, and rough time-to-reach estimates.
+Reference for the game's economy: upgrade costs, unlock thresholds, other costs, and rough time-to-reach estimates.
 
 ---
 
@@ -9,7 +9,7 @@ Reference for the game’s economy: upgrade costs, unlock thresholds, other cost
 - **Click**: 1 coin per click (before prestige and research bonuses).
 - **Idle**: time = coins needed ÷ current production (coins/s). No offline cap in the formula.
 - **First run**: no prestige bonus, no research, no events. Planet bonus and crew bonus apply when unlocked.
-- **“Typical prod”**: approximate production when that milestone is in reach (from upgrades + crew + planets).
+- **"Typical prod"**: approximate production when that milestone is in reach (from upgrades + crew + planets).
 - Estimates are **order-of-magnitude** (minutes vs hours vs days), not exact.
 
 ### Slot limit (robots / upgrades per planet)
@@ -143,9 +143,9 @@ Toast milestones use **total coins ever** (lifetime), not current wallet.
 
 | Phase              | Coins (order) | Time (rough) | Main action                    |
 |--------------------|---------------|--------------|---------------------------------|
-| First upgrade      | 45            | &lt;1 min    | Click to 45 (Mining Robot)      |
+| First upgrade      | 45            | <1 min       | Click to 45 (Mining Robot)      |
 | First automation   | 45 → 1.8K     | 30–45 min    | Idle 0.8/s, then buy Drill Mk.I |
-| Crew + research    | 1.8K → 22K    | 2–4 h        | Hire 1–2, research, more drills |
+| Crew + research   | 1.8K → 22K    | 2–4 h        | Hire 1–2, research, more drills |
 | Planets            | 22K → 250K    | 2–4 h        | First expedition, more upgrades |
 | Quest + grind      | 250K → 5M     | 4–10 h       | Quests, events, full slots      |
 | First prestige     | 5M            | —            | Prestige, restart with +4%      |
