@@ -34,6 +34,7 @@ import {
 import { subscribe } from '../application/eventBus.js';
 import { renderPrestigeSection } from './prestigeView.js';
 import { renderCrewSection } from './crewView.js';
+import { questProgressStore } from '../application/questProgressStore.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
 import { openPlanetDetail, closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from './planetDetailView.js';
@@ -496,6 +497,7 @@ export function mount(): void {
   renderPrestigeSection();
   renderCrewSection();
   renderQuestSection();
+  questProgressStore.subscribe(() => renderQuestSection());
 
   const claimBtn = document.getElementById('quest-claim');
   if (claimBtn) claimBtn.addEventListener('click', handleClaimQuest);
@@ -601,7 +603,6 @@ export function mount(): void {
     const goto = target.getAttribute('data-goto');
     if (id === 'dashboard-do-claim') {
       handleClaimQuest();
-      renderQuestSection();
       updateDashboard();
       return;
     }

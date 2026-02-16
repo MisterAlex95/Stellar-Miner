@@ -29,6 +29,7 @@ import { renderPlanetList, updateExpeditionProgress } from './presentation/plane
 import { renderResearchSection } from './presentation/researchView.js';
 import { renderCrewSection } from './presentation/crewView.js';
 import { renderPrestigeSection } from './presentation/prestigeView.js';
+import { updateQuestProgressStore } from './application/questProgressStore.js';
 import { renderQuestSection } from './presentation/questView.js';
 import { updateDashboard } from './presentation/dashboardView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
@@ -45,7 +46,7 @@ import { getElement } from './presentation/components/domUtils.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
 
 let lastTime = performance.now();
-const QUEST_RENDER_INTERVAL_MS = 150;
+const QUEST_RENDER_INTERVAL_MS = 80;
 const DASHBOARD_UPDATE_INTERVAL_MS = 500;
 const EMPIRE_UPDATE_INTERVAL_MS = 1500;
 const RESEARCH_UPDATE_INTERVAL_MS = 1500;
@@ -93,7 +94,7 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
 }
 
 function runPanelUpdates(nowMs: number): void {
-  runQuestIfDue(nowMs, () => true, renderQuestSection);
+  runQuestIfDue(nowMs, () => true, updateQuestProgressStore);
   runDashboardIfDue(nowMs, () => !getElement('panel-dashboard')?.hidden, updateDashboard);
   runEmpireIfDue(nowMs, () => !getElement('panel-empire')?.hidden, () => {
     renderCrewSection();
@@ -175,7 +176,7 @@ function createRefreshViews(): () => void {
     saveSession();
     updateStats(); // includes renderPrestigeSection, renderCrewSection
     if (isPanelHydrated('upgrades')) renderUpgradeList();
-    renderQuestSection();
+    updateQuestProgressStore();
     if (isPanelHydrated('empire')) renderPlanetList();
     if (isPanelHydrated('research')) renderResearchSection();
     if (isPanelHydrated('dashboard')) updateDashboard();
