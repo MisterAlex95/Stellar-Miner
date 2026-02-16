@@ -111,16 +111,17 @@
 
 .planet-card-visual {
   flex-shrink: 0;
-  width: 72px;
-  height: 48px;
-  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
   display: block;
   cursor: pointer;
+  background: transparent;
   transition: transform 0.15s ease, filter 0.15s ease;
 }
 
 .planet-card-visual:hover {
-  transform: scale(1.08);
+  transform: scale(1.12);
   filter: brightness(1.15);
 }
 
