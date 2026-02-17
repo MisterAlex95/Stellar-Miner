@@ -89,7 +89,10 @@ function refreshAfterResearch(researchId: string): void {
     const endMs = researchProgressEndTimeMs.get(id);
     const remainingCard = document.querySelector<HTMLElement>(`[data-research-id="${id}"]`);
     const totalMs = getResearchDurationMs(id, scientistCount);
-    if (remainingCard && endMs) addProgressOverlayToCard(remainingCard, id, endMs, totalMs);
+    if (remainingCard && endMs) {
+      removeProgressOverlayFromCard(remainingCard);
+      addProgressOverlayToCard(remainingCard, id, endMs, totalMs);
+    }
   }
 }
 

@@ -41,7 +41,6 @@ import {
 } from './upgradeChoosePlanetModal.js';
 import { openExpeditionModal, closeExpeditionModal, bindExpeditionModal } from './expeditionModal.js';
 import { getSession } from '../application/gameState.js';
-import { renderStatisticsSection } from './statisticsView.js';
 import {
   bindIntroModal,
   updateProgressionVisibility,
@@ -534,8 +533,7 @@ export function mount(container?: HTMLElement): void {
 
   renderPlanetList();
 
-  const statisticsContainer = document.getElementById('statistics-container');
-  if (statisticsContainer) renderStatisticsSection(statisticsContainer);
+  // Statistics: rendered by Vue StatisticsPanel when stats tab is opened (no init render here).
 
   // --- Tabs, layout, offline, stats compact ---
   window.addEventListener('popstate', (e: PopStateEvent) => {
