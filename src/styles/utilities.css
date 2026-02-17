@@ -12,6 +12,11 @@
   text-align: center;
 }
 
+/* .empty-state has display:flex above; [hidden] must still hide the element */
+.empty-state[hidden] {
+  display: none !important;
+}
+
 .empty-state-icon {
   font-size: 2rem;
   line-height: 1;

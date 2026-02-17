@@ -319,6 +319,29 @@ function getModalsHtml(): string {
         </div>
       `,
     }),
+    createModalOverlay({
+      overlayId: 'expedition-modal-overlay',
+      overlayClass: 'expedition-modal-overlay',
+      dialogClass: 'expedition-modal',
+      role: 'dialog',
+      ariaLabelledBy: 'expedition-modal-title',
+      bodyHtml: `
+        <div class="expedition-modal-header">
+          <h2 id="expedition-modal-title" class="expedition-modal-title"></h2>
+          <button type="button" class="expedition-modal-close" id="expedition-modal-close" data-i18n-aria-label="close">×</button>
+        </div>
+        <div class="expedition-modal-body">
+          <p class="expedition-modal-cost" id="expedition-modal-cost"></p>
+          <h3 class="expedition-modal-dest-title" id="expedition-modal-dest-title" data-i18n="expeditionSelectTier">Choose destination</h3>
+          <div class="expedition-modal-tiers" id="expedition-modal-tiers" role="group" aria-label="Destination"></div>
+          <div class="expedition-modal-crew-wrap" id="expedition-modal-crew"></div>
+        </div>
+        <div class="expedition-modal-actions">
+          <button type="button" class="expedition-modal-cancel" id="expedition-modal-cancel" data-i18n="cancel">Cancel</button>
+          <button type="button" class="expedition-modal-launch" id="expedition-modal-launch" disabled>Launch</button>
+        </div>
+      `,
+    }),
   ].join('\n');
 }
 

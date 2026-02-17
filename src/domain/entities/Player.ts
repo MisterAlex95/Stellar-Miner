@@ -7,8 +7,9 @@ import { Planet } from './Planet.js';
 import {
   PLANET_PRODUCTION_BONUS,
   PRESTIGE_BONUS_PER_LEVEL,
-  MINER_PRODUCTION_BONUS,
-  OTHER_CREW_PRODUCTION_BONUS,
+MINER_PRODUCTION_BONUS,
+    OTHER_CREW_PRODUCTION_BONUS,
+    ENGINEER_PRODUCTION_BONUS,
   VETERAN_PRODUCTION_BONUS,
   MORALE_BONUS_WHEN_COMFORTABLE,
   MORALE_MALUS_WHEN_OVERCROWDED,
@@ -127,11 +128,8 @@ export class Player {
     const minerBonus = 1 + this.crewByRole.miner * MINER_PRODUCTION_BONUS;
     const otherCrewBonus =
       1 +
-      (this.crewByRole.scientist +
-        this.crewByRole.pilot +
-        this.crewByRole.medic +
-        this.crewByRole.engineer) *
-        OTHER_CREW_PRODUCTION_BONUS;
+      (this.crewByRole.scientist + this.crewByRole.pilot + this.crewByRole.medic) * OTHER_CREW_PRODUCTION_BONUS +
+      this.crewByRole.engineer * ENGINEER_PRODUCTION_BONUS;
     const veteranBonus = 1 + this.veteranCount * VETERAN_PRODUCTION_BONUS;
     const totalCrewAndVeterans = this.astronautCount + this.veteranCount;
     const totalHousing = this.planets.reduce((s, p) => s + p.housingCount, 0);
@@ -218,6 +216,16 @@ export class Player {
       (this as { crewByRole: CrewByRole }).crewByRole[r] = this.crewByRole[r] - (comp[r] ?? 0);
     }
     return true;
+  }
+
+  /** Return crew to pool by composition (e.g. when cancelling an expedition). */
+  refundCrewByComposition(comp: ExpeditionComposition): void {
+    for (const r of CREW_ROLES) {
+      const n = comp[r] ?? 0;
+      if (n > 0) {
+        (this as { crewByRole: CrewByRole }).crewByRole[r] = this.crewByRole[r] + n;
+      }
+    }
   }
 
   /** Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, 0 veterans, prestige level +1. */

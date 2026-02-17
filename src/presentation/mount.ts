@@ -21,7 +21,7 @@ import {
   showUpgradeUninstallProgress,
   cancelUpgradeInstall,
   cancelUpgradeUninstall,
-  handleBuyNewPlanet,
+  handleCancelExpedition,
   handleAddSlot,
   handleBuildHousing,
   handlePrestige,
@@ -51,6 +51,7 @@ import {
   bindUpgradeChoosePlanetModal,
   getPlanetsForInstallModal,
 } from './upgradeChoosePlanetModal.js';
+import { openExpeditionModal, closeExpeditionModal, bindExpeditionModal } from './expeditionModal.js';
 import { getSession } from '../application/gameState.js';
 import { renderStatisticsSection } from './statisticsView.js';
 import { renderDashboardSection, updateDashboard } from './dashboardView.js';
@@ -325,6 +326,7 @@ export function mount(): void {
       else if (document.getElementById(CHART_HELP_OVERLAY_ID)?.classList.contains(CHART_HELP_OPEN_CLASS)) closeChartHelpModal();
       else if (document.getElementById(PLANET_DETAIL_OVERLAY_ID)?.classList.contains(PLANET_DETAIL_OPEN_CLASS)) closePlanetDetail();
       else if (document.getElementById('upgrade-choose-planet-overlay')?.classList.contains('upgrade-choose-planet-overlay--open')) closeUpgradeChoosePlanetModal();
+      else if (document.getElementById('expedition-modal-overlay')?.classList.contains('expedition-modal-overlay--open')) closeExpeditionModal();
       else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
@@ -399,6 +401,7 @@ export function mount(): void {
   }
 
   bindUpgradeChoosePlanetModal();
+  bindExpeditionModal();
 
   updateVersionAndChangelogUI();
 
@@ -467,7 +470,8 @@ export function mount(): void {
   const expeditionArea = document.getElementById('expedition-area');
   if (expeditionArea) {
     expeditionArea.addEventListener('click', (e: Event) => {
-      if ((e.target as HTMLElement).closest('.buy-planet-btn')) handleBuyNewPlanet();
+      if ((e.target as HTMLElement).closest('.buy-planet-btn')) openExpeditionModal();
+      if ((e.target as HTMLElement).closest('.expedition-cancel-btn')) handleCancelExpedition();
     });
   }
 

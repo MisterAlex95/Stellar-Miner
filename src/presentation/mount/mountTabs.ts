@@ -11,6 +11,8 @@ import { renderResearchSection } from '../researchView.js';
 import { renderDashboardSection } from '../dashboardView.js';
 import { renderUpgradeList } from '../upgradeListView.js';
 import { renderPlanetList } from '../planetListView.js';
+import { renderCrewSection } from '../crewView.js';
+import { renderPrestigeSection } from '../prestigeView.js';
 import { renderStatisticsSection } from '../statisticsView.js';
 import { markPanelHydrated } from '../../application/lazyPanels.js';
 import { getNextAffordableUpgrade } from '../dashboardView.js';
@@ -85,7 +87,9 @@ export function switchTab(tabId: string): void {
     markPanelHydrated('upgrades');
   }
   if (tabId === 'empire') {
+    renderCrewSection();
     renderPlanetList();
+    renderPrestigeSection();
     markPanelHydrated('empire');
   }
   if (tabId === 'stats') {

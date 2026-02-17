@@ -22,6 +22,7 @@ export const OVERLAYS: OverlaySpec[] = [
   { id: 'chart-help-overlay', openClass: 'chart-help-overlay--open' },
   { id: 'planet-detail-overlay', openClass: 'planet-detail-overlay--open' },
   { id: 'upgrade-choose-planet-overlay', openClass: 'upgrade-choose-planet-overlay--open' },
+  { id: 'expedition-modal-overlay', openClass: 'expedition-modal-overlay--open' },
 ];
 
 export interface OpenOverlayOptions {

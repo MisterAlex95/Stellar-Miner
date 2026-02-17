@@ -3,10 +3,13 @@ import {
   planetService,
   getExpeditionEndsAt,
   getExpeditionComposition,
+  getExpeditionDifficulty,
   clearExpedition,
   setExpeditionInProgress,
 } from './gameState.js';
-import { getMaxAstronauts, getAstronautCost, getExpeditionDurationMs, type CrewRole } from '../domain/constants.js';
+import { getMaxAstronauts, getAstronautCost, type CrewRole } from '../domain/constants.js';
+import type { ExpeditionComposition } from '../domain/constants.js';
+import type { ExpeditionTierId } from '../domain/constants.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { hasEffectiveFreeSlot } from './research.js';
 import { emit } from './eventBus.js';
@@ -20,17 +23,33 @@ function refreshAfterPlanetAction(opts: { achievements?: boolean } = {}): void {
   if (opts.achievements) checkAchievements();
 }
 
+/** Launch expedition with default composition and medium tier (e.g. for tests or programmatic launch). */
 export function handleBuyNewPlanet(): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
-  if (getExpeditionEndsAt() !== null) return; // expedition already in progress
+  if (getExpeditionEndsAt() !== null) return;
   if (!planetService.canLaunchExpedition(player)) return;
-  const result = planetService.startExpedition(player);
+  const result = planetService.startExpedition(player, null, 'medium');
   if (!result.started) return;
-  const durationMs = getExpeditionDurationMs(player.planets.length);
+  const durationMs = planetService.getExpeditionDurationMs(player, 'medium', result.composition.pilot ?? 0);
   const endsAt = Date.now() + durationMs;
-  setExpeditionInProgress(endsAt, result.composition, durationMs);
+  setExpeditionInProgress(endsAt, result.composition, durationMs, 'medium');
+  refreshAfterPlanetAction();
+}
+
+/** Launch expedition from modal: tier + crew composition. */
+export function handleLaunchExpeditionFromModal(tierId: ExpeditionTierId, composition: ExpeditionComposition): void {
+  const session = getSession();
+  if (!session) return;
+  const player = session.player;
+  if (getExpeditionEndsAt() !== null) return;
+  if (!planetService.canLaunchExpedition(player, composition)) return;
+  const result = planetService.startExpedition(player, composition, tierId);
+  if (!result.started) return;
+  const durationMs = planetService.getExpeditionDurationMs(player, tierId, result.composition.pilot ?? 0);
+  const endsAt = Date.now() + durationMs;
+  setExpeditionInProgress(endsAt, result.composition, durationMs, tierId);
   refreshAfterPlanetAction();
 }
 
@@ -43,9 +62,11 @@ export function completeExpeditionIfDue(): void {
   if (!session) return;
   const composition = getExpeditionComposition();
   if (!composition) return;
+  const difficulty = getExpeditionDifficulty();
+  const tierId = (difficulty === 'easy' || difficulty === 'medium' || difficulty === 'hard' ? difficulty : 'medium') as ExpeditionTierId;
   const player = session.player;
   const wasFirstPlanet = player.planets.length === 1;
-  const outcome = planetService.completeExpedition(player, composition, Math.random);
+  const outcome = planetService.completeExpedition(player, composition, tierId, Math.random);
   clearExpedition();
   const ui = getPresentationPort();
   if (outcome.success && outcome.planetName) {
@@ -73,6 +94,30 @@ export function completeExpeditionIfDue(): void {
     ui.showMiniMilestoneToast(tParam('expeditionFailed', { n: outcome.totalSent }));
   }
   refreshAfterPlanetAction({ achievements: true });
+}
+
+/** Cancel the current expedition: refund coins and crew, no planet discovered. */
+export function handleCancelExpedition(): void {
+  const endsAt = getExpeditionEndsAt();
+  if (endsAt == null) return;
+  const composition = getExpeditionComposition();
+  if (!composition) {
+    clearExpedition();
+    refreshAfterPlanetAction();
+    return;
+  }
+  const session = getSession();
+  if (!session) {
+    clearExpedition();
+    refreshAfterPlanetAction();
+    return;
+  }
+  const player = session.player;
+  const cost = planetService.getNewPlanetCost(player);
+  player.addCoins(cost);
+  player.refundCrewByComposition(composition);
+  clearExpedition();
+  refreshAfterPlanetAction();
 }
 
 export function handleAddSlot(planetId: string): void {

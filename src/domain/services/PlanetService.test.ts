@@ -119,23 +119,22 @@ describe('PlanetService', () => {
     const composition = startResult.started
       ? startResult.composition
       : { astronaut: required, miner: 0, scientist: 0, pilot: 0, medic: 0, engineer: 0 };
-    const outcome = service.completeExpedition(player, composition, () => 1);
+    const outcome = service.completeExpedition(player, composition, 'medium', () => 1);
     expect(outcome.success).toBe(true);
     expect(outcome.survivors).toBe(required);
     expect(player.planets).toHaveLength(2);
     expect(player.veteranCount).toBe(required);
   });
 
-  it('completeExpedition with pilot saves one survivor when all would die', () => {
+  it('getExpeditionDurationMs is shorter with more pilots', () => {
     const player = Player.create('p1');
     const service = new PlanetService();
-    const composition = { astronaut: 0, miner: 1, scientist: 0, pilot: 1, medic: 0, engineer: 0 };
-    const outcome = service.completeExpedition(player, composition, () => 0);
-    expect(outcome.success).toBe(true);
-    expect(outcome.survivors).toBe(1);
-    expect(outcome.deaths).toBe(1);
-    expect(player.planets).toHaveLength(2);
-    expect(player.veteranCount).toBe(1);
+    const base = service.getExpeditionDurationMs(player, 'medium', 0);
+    const withOnePilot = service.getExpeditionDurationMs(player, 'medium', 1);
+    const withSixPilots = service.getExpeditionDurationMs(player, 'medium', 6);
+    expect(withOnePilot).toBeLessThan(base);
+    expect(withSixPilots).toBeLessThanOrEqual(withOnePilot);
+    expect(withSixPilots).toBeGreaterThanOrEqual(1000);
   });
 
   it('launchExpedition with composition object uses given composition', () => {
@@ -180,34 +179,6 @@ describe('PlanetService', () => {
     const outcome = service.launchExpedition(player);
     expect(outcome.success).toBe(false);
     expect(outcome.survivors).toBe(0);
-  });
-
-  it('launchExpedition with pilot saves one survivor when roll would kill all', () => {
-    const player = Player.create('p1');
-    const service = new PlanetService();
-    const cost = service.getNewPlanetCost(player);
-    const required = service.getExpeditionAstronautsRequired(player);
-    player.addCoins(cost);
-    const playerWithPilot = new Player(
-      player.id,
-      player.coins,
-      player.productionRate,
-      player.planets,
-      player.artifacts,
-      player.prestigeLevel,
-      player.totalCoinsEver,
-      { astronaut: Math.max(0, required - 1), miner: 0, scientist: 0, pilot: 1, medic: 0, engineer: 0 },
-      0,
-      0
-    );
-    const composition = { astronaut: Math.max(0, required - 1), miner: 0, scientist: 0, pilot: 1, medic: 0, engineer: 0 };
-    const allDeathRoll = () => 0;
-    const outcome = service.launchExpedition(playerWithPilot, composition, allDeathRoll);
-    expect(outcome.success).toBe(true);
-    expect(outcome.survivors).toBe(1);
-    expect(outcome.deaths).toBe(required - 1);
-    expect(playerWithPilot.planets).toHaveLength(2);
-    expect(playerWithPilot.veteranCount).toBe(1);
   });
 
   it('launchExpedition when all die: no planet, no astronauts back', () => {

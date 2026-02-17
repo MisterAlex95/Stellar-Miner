@@ -7,9 +7,12 @@ import {
   generatePlanetName,
   getExpeditionAstronautsRequired,
   getExpeditionDeathChanceWithMedics,
+  getExpeditionDurationMs,
+  getExpeditionTier,
   getHousingCost,
   CREW_ROLES,
   type ExpeditionComposition,
+  type ExpeditionTierId,
 } from '../constants.js';
 
 export type ExpeditionOutcome = {
@@ -72,54 +75,65 @@ export class PlanetService {
     return true;
   }
 
-  /** Start expedition: spend coins + crew only. Returns composition so you can complete it later. */
-  startExpedition(player: Player): { started: true; composition: ExpeditionComposition } | { started: false } {
+  /** Expedition duration in ms for current planet count, optional tier, and optional pilot count (pilots reduce duration). */
+  getExpeditionDurationMs(player: Player, tierId?: ExpeditionTierId, pilotCount: number = 0): number {
+    return getExpeditionDurationMs(player.planets.length, tierId, pilotCount);
+  }
+
+  /** Start expedition: spend coins + crew. Returns composition and tier for completion. */
+  startExpedition(
+    player: Player,
+    compositionOrDefault?: ExpeditionComposition | null,
+    tierId: ExpeditionTierId = 'medium'
+  ): { started: true; composition: ExpeditionComposition; tierId: ExpeditionTierId } | { started: false } {
     const cost = this.getNewPlanetCost(player);
     const required = this.getExpeditionAstronautsRequired(player);
-    const composition = defaultComposition(player, required);
+    const composition =
+      compositionOrDefault && CREW_ROLES.reduce((s, r) => s + (compositionOrDefault[r] ?? 0), 0) === required
+        ? { ...compositionOrDefault }
+        : defaultComposition(player, required);
     if (!player.coins.gte(cost) || !player.spendCrewByComposition(composition)) {
       return { started: false };
     }
     player.spendCoins(cost);
-    return { started: true, composition: { ...composition } };
+    return { started: true, composition: { ...composition }, tierId };
   }
 
   /** Complete expedition: roll deaths, add planet and veterans on success. Call when expedition duration has elapsed. */
   completeExpedition(
     player: Player,
     composition: ExpeditionComposition,
+    tierId: ExpeditionTierId = 'medium',
     roll: () => number = Math.random
   ): ExpeditionOutcome {
     const totalSent = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
-    const pilotCount = composition.pilot ?? 0;
     const medicCount = composition.medic ?? 0;
-    const deathChance = getExpeditionDeathChanceWithMedics(medicCount);
+    const deathChance = getExpeditionDeathChanceWithMedics(medicCount, tierId);
     let deaths = 0;
     for (let i = 0; i < totalSent; i++) {
       if (roll() < deathChance) deaths++;
     }
-    let survivors = totalSent - deaths;
-    const hasPilot = pilotCount >= 1;
-    if (hasPilot && survivors === 0 && totalSent >= 1) {
-      survivors = 1;
-      deaths = totalSent - 1;
-    }
+    const survivors = totalSent - deaths;
     const success = survivors >= 1;
     if (success) {
       const id = `planet-${player.planets.length + 1}`;
       const name = generatePlanetName(id);
-      player.addPlanet(PlanetEntity.create(id, name));
+      const planet = PlanetEntity.create(id, name);
+      const tier = getExpeditionTier(tierId);
+      if (tier?.extraSlot) planet.addSlot();
+      player.addPlanet(planet);
       player.addVeterans(survivors);
       return { success: true, totalSent, survivors, deaths, planetName: name };
     }
     return { success: false, totalSent, survivors: 0, deaths: totalSent, planetName: undefined };
   }
 
-  /** Launch expedition: spend coins + crew (by composition or default). Pilot guarantees one survivor. Survivors become veterans. */
+  /** Launch expedition: spend coins + crew (by composition or default). Survivors become veterans. */
   launchExpedition(
     player: Player,
     rollOrComposition: (() => number) | ExpeditionComposition = Math.random,
-    roll: () => number = Math.random
+    roll: () => number = Math.random,
+    tierId: ExpeditionTierId = 'medium'
   ): ExpeditionOutcome {
     const cost = this.getNewPlanetCost(player);
     const required = this.getExpeditionAstronautsRequired(player);
@@ -137,24 +151,21 @@ export class PlanetService {
     }
     player.spendCoins(cost);
     const totalSent = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
-    const pilotCount = composition.pilot ?? 0;
     const medicCount = composition.medic ?? 0;
-    const deathChance = getExpeditionDeathChanceWithMedics(medicCount);
+    const deathChance = getExpeditionDeathChanceWithMedics(medicCount, tierId);
     let deaths = 0;
     for (let i = 0; i < totalSent; i++) {
       if (rollFn() < deathChance) deaths++;
     }
-    let survivors = totalSent - deaths;
-    const hasPilot = pilotCount >= 1;
-    if (hasPilot && survivors === 0 && totalSent >= 1) {
-      survivors = 1;
-      deaths = totalSent - 1;
-    }
+    const survivors = totalSent - deaths;
     const success = survivors >= 1;
     if (success) {
       const id = `planet-${player.planets.length + 1}`;
       const name = generatePlanetName(id);
-      player.addPlanet(PlanetEntity.create(id, name));
+      const planet = PlanetEntity.create(id, name);
+      const tier = getExpeditionTier(tierId);
+      if (tier?.extraSlot) planet.addSlot();
+      player.addPlanet(planet);
       player.addVeterans(survivors);
       return { success: true, totalSent, survivors, deaths, planetName: name };
     }

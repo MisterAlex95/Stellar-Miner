@@ -9,6 +9,8 @@ import {
   CREW_JOB_ROLES,
   MINER_PRODUCTION_BONUS,
   OTHER_CREW_PRODUCTION_BONUS,
+  ENGINEER_PRODUCTION_BONUS,
+  PILOT_EXPEDITION_DURATION_REDUCTION_PCT,
   VETERAN_PRODUCTION_BONUS,
   SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST,
   SCIENTIST_RESEARCH_SUCCESS_CAP,
@@ -73,7 +75,8 @@ export function renderCrewSection(): void {
   const { astronaut, miner, scientist, pilot, medic, engineer } = player.crewByRole;
   const crewBonusPct = Math.round(
     (miner * MINER_PRODUCTION_BONUS +
-      (scientist + pilot + medic + engineer) * OTHER_CREW_PRODUCTION_BONUS) * 100 +
+      (scientist + pilot + medic) * OTHER_CREW_PRODUCTION_BONUS +
+      engineer * ENGINEER_PRODUCTION_BONUS) * 100 +
       player.veteranCount * VETERAN_PRODUCTION_BONUS * 100
   );
   const unlockedCrewRoles = getUnlockedCrewRoles();
@@ -175,12 +178,12 @@ export function renderCrewSection(): void {
         );
         effectEl.textContent = n > 0 ? tParam(ROLE_EFFECT_KEYS.scientist, { pct: String(Math.round(scientistPct)) }) : '';
       } else if (role === 'pilot' && ROLE_EFFECT_KEYS.pilot) {
-        effectEl.textContent = n > 0 ? t(ROLE_EFFECT_KEYS.pilot) : '';
+        effectEl.textContent = n > 0 ? tParam(ROLE_EFFECT_KEYS.pilot, { pct: String(PILOT_EXPEDITION_DURATION_REDUCTION_PCT) }) : '';
       } else if (role === 'medic' && ROLE_EFFECT_KEYS.medic) {
         effectEl.textContent = n > 0 ? tParam(ROLE_EFFECT_KEYS.medic, { pct: String(Math.round(n * 2)) }) : '';
       } else if (role === 'engineer' && ROLE_EFFECT_KEYS.engineer) {
         effectEl.textContent =
-          n > 0 ? tParam(ROLE_EFFECT_KEYS.engineer, { pct: String(Math.round(n * OTHER_CREW_PRODUCTION_BONUS * 100)) }) : '';
+          n > 0 ? tParam(ROLE_EFFECT_KEYS.engineer, { pct: String(Math.round(n * ENGINEER_PRODUCTION_BONUS * 100)) }) : '';
       } else {
         effectEl.textContent = '';
       }

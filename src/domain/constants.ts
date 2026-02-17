@@ -23,6 +23,8 @@ const B = balance as {
   expeditionDeathChance: number;
   expeditionMinDeathChance?: number;
   expeditionMedicDeathChanceReductionPerMedic?: number;
+  pilotExpeditionDurationReductionPerPilot?: number;
+  engineerProductionBonus?: number;
   expeditionDurationBaseMs?: number;
   expeditionDurationPerPlanetMs?: number;
   planetProductionBonus: number;
@@ -48,7 +50,29 @@ const B = balance as {
   housingCostGrowth: number;
   astronautBaseCost: number;
   astronautCostGrowth: number;
+  expeditionTiers?: Array<{
+    id: string;
+    deathChanceMultiplier: number;
+    durationMultiplier: number;
+    extraSlot?: boolean;
+  }>;
 };
+
+export type ExpeditionTierId = 'easy' | 'medium' | 'hard';
+
+const EXPEDITION_TIERS = (B.expeditionTiers ?? [
+  { id: 'easy', deathChanceMultiplier: 0.7, durationMultiplier: 0.8 },
+  { id: 'medium', deathChanceMultiplier: 1, durationMultiplier: 1 },
+  { id: 'hard', deathChanceMultiplier: 1.25, durationMultiplier: 1.2, extraSlot: true },
+]) as Array<{ id: string; deathChanceMultiplier: number; durationMultiplier: number; extraSlot?: boolean }>;
+
+export function getExpeditionTiers(): Array<{ id: string; deathChanceMultiplier: number; durationMultiplier: number; extraSlot?: boolean }> {
+  return EXPEDITION_TIERS;
+}
+
+export function getExpeditionTier(tierId: ExpeditionTierId | string): { id: string; deathChanceMultiplier: number; durationMultiplier: number; extraSlot?: boolean } | undefined {
+  return EXPEDITION_TIERS.find((t) => t.id === tierId);
+}
 
 /** Cost in coins to launch an expedition to discover a new planet. Scales with count. Supports unbounded values. */
 export const NEW_PLANET_BASE_COST = B.newPlanetBaseCost;
@@ -65,12 +89,27 @@ export function getExpeditionAstronautsRequired(planetCount: number): number {
   return Math.min(B.expeditionMinAstronauts + Math.floor(planetCount / 2), B.expeditionMaxAstronauts);
 }
 
-/** Expedition duration in ms (takes longer as you have more planets). */
-export function getExpeditionDurationMs(planetCount: number): number {
+/** Expedition duration reduction per pilot (0–1). E.g. 0.08 = 8% shorter per pilot. Capped so duration is at least 50% of base. */
+const PILOT_DURATION_REDUCTION = B.pilotExpeditionDurationReductionPerPilot ?? 0.08;
+const PILOT_DURATION_MAX_REDUCTION = 0.5;
+
+/** Expedition duration in ms (takes longer as you have more planets). Optional tierId applies duration multiplier. Pilots reduce duration (e.g. 8% per pilot, max 50%). */
+export function getExpeditionDurationMs(
+  planetCount: number,
+  tierId?: ExpeditionTierId | string,
+  pilotCount: number = 0
+): number {
   const base = B.expeditionDurationBaseMs ?? 20000;
   const perPlanet = B.expeditionDurationPerPlanetMs ?? 8000;
-  return base + planetCount * perPlanet;
+  const raw = base + planetCount * perPlanet;
+  const tier = tierId ? getExpeditionTier(tierId) : undefined;
+  const mult = tier?.durationMultiplier ?? 1;
+  const pilotReduction = Math.min(pilotCount * PILOT_DURATION_REDUCTION, PILOT_DURATION_MAX_REDUCTION);
+  const durationMult = 1 - pilotReduction;
+  return Math.max(1000, Math.round(raw * mult * durationMult));
 }
+
+export const PILOT_EXPEDITION_DURATION_REDUCTION_PCT = Math.round(PILOT_DURATION_REDUCTION * 100);
 
 /** Per-astronaut death chance during expedition (0–1). Each rolls independently. */
 export const EXPEDITION_DEATH_CHANCE = B.expeditionDeathChance;
@@ -81,12 +120,15 @@ export const EXPEDITION_MIN_DEATH_CHANCE = B.expeditionMinDeathChance ?? 0.05;
 /** Death chance reduction per medic in expedition (0–1). E.g. 0.02 = 2% less per medic. */
 const MEDIC_DEATH_REDUCTION = B.expeditionMedicDeathChanceReductionPerMedic ?? 0.02;
 
-/** Effective expedition death chance given number of medics in the composition. */
-export function getExpeditionDeathChanceWithMedics(medicCount: number): number {
-  return Math.max(
+/** Effective expedition death chance given number of medics in the composition. Optional tierId applies death chance multiplier. */
+export function getExpeditionDeathChanceWithMedics(medicCount: number, tierId?: ExpeditionTierId | string): number {
+  const base = Math.max(
     EXPEDITION_MIN_DEATH_CHANCE,
     EXPEDITION_DEATH_CHANCE - medicCount * MEDIC_DEATH_REDUCTION
   );
+  const tier = tierId ? getExpeditionTier(tierId) : undefined;
+  const mult = tier?.deathChanceMultiplier ?? 1;
+  return Math.min(1, Math.max(EXPEDITION_MIN_DEATH_CHANCE, base * mult));
 }
 
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */
@@ -151,8 +193,11 @@ export const ASTRONAUT_PRODUCTION_BONUS = B.astronautProductionBonus;
 /** Production bonus per miner (e.g. 0.02 = +2% each). */
 export const MINER_PRODUCTION_BONUS = B.minerProductionBonus ?? 0.02;
 
-/** Production bonus per non-miner crew (scientist, pilot). */
+/** Production bonus per non-miner, non-engineer crew (scientist, pilot, medic). */
 export const OTHER_CREW_PRODUCTION_BONUS = B.otherCrewProductionBonus ?? 0.01;
+
+/** Production bonus per engineer (e.g. 0.012 = +1.2% each). */
+export const ENGINEER_PRODUCTION_BONUS = B.engineerProductionBonus ?? 0.012;
 
 /** Production bonus per veteran (expedition survivor). */
 export const VETERAN_PRODUCTION_BONUS = B.veteranProductionBonus ?? 0.005;

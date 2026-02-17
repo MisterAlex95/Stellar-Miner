@@ -53,7 +53,12 @@ export type SavedRunStats = {
   runMaxComboMult: number;
 };
 
-export type SavedExpedition = { endsAt: number; composition: Record<string, number>; durationMs: number };
+export type SavedExpedition = {
+  endsAt: number;
+  composition: Record<string, number>;
+  durationMs: number;
+  difficulty?: string;
+};
 
 export type SavedSession = {
   version?: number;

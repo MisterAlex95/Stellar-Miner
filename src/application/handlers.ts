@@ -12,6 +12,7 @@ export {
 export {
   handleBuyNewPlanet,
   completeExpeditionIfDue,
+  handleCancelExpedition,
   handleAddSlot,
   handleBuildHousing,
   handleHireAstronaut,

@@ -32,7 +32,12 @@ const initialQuestState = loadQuestState();
 /** Observable quest state. Emits when quest changes (claim, new quest). */
 export const questStateStore = createObservableStore<QuestState>(initialQuestState);
 
-export type SavedExpedition = { endsAt: number; composition: ExpeditionComposition; durationMs: number };
+export type SavedExpedition = {
+  endsAt: number;
+  composition: ExpeditionComposition;
+  durationMs: number;
+  difficulty?: string;
+};
 
 export type RunStats = {
   runStartTime: number;
@@ -66,6 +71,7 @@ let discoveredEventIds: string[] = [];
 let expeditionEndsAt: number | null = null;
 let expeditionComposition: ExpeditionComposition | null = null;
 let expeditionDurationMs = 0;
+let expeditionDifficulty: string | null = null;
 
 let _saveLoadInstance: SaveLoadService | null = null;
 function getSaveLoadInstance(): SaveLoadService {
@@ -298,25 +304,41 @@ export function getExpeditionDurationMs(): number {
   return expeditionDurationMs;
 }
 
-export function setExpeditionInProgress(endsAt: number, composition: ExpeditionComposition, durationMs: number): void {
+export function getExpeditionDifficulty(): string | null {
+  return expeditionDifficulty;
+}
+
+export function setExpeditionInProgress(
+  endsAt: number,
+  composition: ExpeditionComposition,
+  durationMs: number,
+  difficulty?: string
+): void {
   expeditionEndsAt = endsAt;
   expeditionComposition = { ...composition };
   expeditionDurationMs = durationMs;
+  expeditionDifficulty = difficulty ?? null;
 }
 
 export function clearExpedition(): void {
   expeditionEndsAt = null;
   expeditionComposition = null;
   expeditionDurationMs = 0;
+  expeditionDifficulty = null;
 }
 
 export function getExpeditionForSave(): SavedExpedition | null {
   if (expeditionEndsAt == null || !expeditionComposition) return null;
-  return { endsAt: expeditionEndsAt, composition: { ...expeditionComposition }, durationMs: expeditionDurationMs };
+  return {
+    endsAt: expeditionEndsAt,
+    composition: { ...expeditionComposition },
+    durationMs: expeditionDurationMs,
+    ...(expeditionDifficulty ? { difficulty: expeditionDifficulty } : {}),
+  };
 }
 
 export function setExpeditionFromPayload(
-  payload: { endsAt: number; composition: Record<string, number>; durationMs: number } | null | undefined
+  payload: { endsAt: number; composition: Record<string, number>; durationMs: number; difficulty?: string } | null | undefined
 ): void {
   if (!payload) {
     clearExpedition();
@@ -328,6 +350,7 @@ export function setExpeditionFromPayload(
     CREW_ROLES.map((r) => [r, typeof raw[r] === 'number' ? raw[r] : 0])
   ) as ExpeditionComposition;
   expeditionDurationMs = payload.durationMs;
+  expeditionDifficulty = typeof payload.difficulty === 'string' ? payload.difficulty : null;
 }
 
 export function getEventContext(): { activeEventIds: string[] } {

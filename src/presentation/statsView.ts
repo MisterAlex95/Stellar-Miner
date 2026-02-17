@@ -227,14 +227,11 @@ export function updateStats(): void {
     const base = player.productionRate.value;
     const planetBonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
     const prestigeBonus = player.prestigeLevel > 0 ? player.prestigeLevel * 5 : 0;
-    const minerBonus = 1 + player.crewByRole.miner * 0.02;
+    const minerBonus = 1 + player.crewByRole.miner * 0.018;
     const otherCrewBonus =
       1 +
-      (player.crewByRole.scientist +
-        player.crewByRole.pilot +
-        player.crewByRole.medic +
-        player.crewByRole.engineer) *
-        0.01;
+      (player.crewByRole.scientist + player.crewByRole.pilot + player.crewByRole.medic) * 0.008 +
+      player.crewByRole.engineer * 0.012;
     const veteranBonus = 1 + player.veteranCount * 0.005;
     const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
     const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);

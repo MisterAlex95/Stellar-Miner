@@ -166,7 +166,10 @@ export function renderPlanetList(): void {
       expeditionArea.innerHTML = `
         <div class="expedition-progress-wrap" id="expedition-progress-wrap">
           <div class="expedition-progress-bar-wrap"><div class="expedition-progress-fill" id="expedition-progress-fill" style="width: ${Math.min(100, progress * 100).toFixed(1)}%"></div></div>
-          <p class="expedition-progress-text" id="expedition-progress-text">${tParam('expeditionInProgress', { seconds: String(Math.ceil(remaining / 1000)) })}</p>
+          <div class="expedition-progress-row">
+            <p class="expedition-progress-text" id="expedition-progress-text">${tParam('expeditionInProgress', { seconds: String(Math.ceil(remaining / 1000)) })}</p>
+            <button type="button" class="expedition-cancel-btn" id="expedition-cancel-btn">${t('expeditionCancel')}</button>
+          </div>
         </div>`;
     } else {
       const tooltipText = canLaunch
