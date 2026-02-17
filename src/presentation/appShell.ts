@@ -334,6 +334,7 @@ function getModalsHtml(): string {
           <p class="expedition-modal-cost" id="expedition-modal-cost"></p>
           <h3 class="expedition-modal-dest-title" id="expedition-modal-dest-title" data-i18n="expeditionSelectTier">Choose destination</h3>
           <div class="expedition-modal-tiers" id="expedition-modal-tiers" role="group" aria-label="Destination"></div>
+          <h3 class="expedition-crew-section-title" id="expedition-modal-crew-title" data-i18n="crew">Crew</h3>
           <div class="expedition-modal-crew-wrap" id="expedition-modal-crew"></div>
         </div>
         <div class="expedition-modal-actions">

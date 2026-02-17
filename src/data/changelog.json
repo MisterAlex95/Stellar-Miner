@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.4.37",
+    "date": "2026-02-17",
+    "changes": [
+      "Expedition modal: choose destination (easy/medium/hard) with 3D planet preview, planet name and type; pick crew composition by role; launch from modal.",
+      "Expedition difficulty tiers: easy (lower risk, shorter), medium (standard), hard (higher risk, +1 slot on new planet); difficulty saved with in-progress expedition.",
+      "Expedition modal UI: grid of destination cards, planet type badge, crew picker section, polished layout and responsive stacking on small screens."
+    ]
+  },
+  {
     "version": "0.4.36",
     "date": "2026-02-17",
     "changes": [

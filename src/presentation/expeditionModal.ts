@@ -11,6 +11,7 @@ import { formatNumber } from '../application/format.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { openOverlay, closeOverlay } from './components/overlay.js';
 import { escapeAttr } from './components/domUtils.js';
+import { getPlanetType } from '../application/planetAffinity.js';
 import { startPlanetThumbnail3DLoop } from './planetThumbnail3D.js';
 import { handleLaunchExpeditionFromModal } from '../application/handlersPlanet.js';
 
@@ -74,6 +75,8 @@ function renderTiers(selectedTier: ExpeditionTierId | null, composition: Expedit
       const descKey: StringKey = TIER_DESC_KEYS[tier.id] ?? 'expeditionTierMediumDesc';
       const destinationName = generatePlanetName(`expedition-dest-${id}`);
       const visualSeed = destinationSeed(id);
+      const planetType = getPlanetType(destinationName);
+      const typeLabel = planetType.charAt(0).toUpperCase() + planetType.slice(1);
       return `
         <button type="button" class="expedition-tier-card ${selected ? 'expedition-tier-card--selected' : ''}" data-tier="${id}" aria-pressed="${selected}">
           <div class="expedition-tier-visual-wrap">
@@ -81,6 +84,7 @@ function renderTiers(selectedTier: ExpeditionTierId | null, composition: Expedit
           </div>
           <div class="expedition-tier-content">
             <span class="expedition-tier-destination">${escapeAttr(destinationName)}</span>
+            <span class="expedition-tier-type expedition-tier-type--${escapeAttr(planetType)}" title="${escapeAttr(typeLabel)}">${escapeAttr(typeLabel)}</span>
             <span class="expedition-tier-badge expedition-tier-badge--${id}">${t(titleKey)}</span>
             <p class="expedition-tier-desc">${t(descKey)}</p>
             <div class="expedition-tier-stats">
@@ -168,9 +172,11 @@ export function openExpeditionModal(): void {
     if (!tiersEl || !crewEl || !launchBtn) return;
     const total = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
     const valid = selectedTier !== null && total === required;
-    tiersEl.innerHTML = renderTiers(selectedTier, composition);
+    const tiersHtml = renderTiers(selectedTier, composition);
     const availableByRole = { ...player.crewByRole } as Record<CrewRole, number>;
-    crewEl.innerHTML = renderCrewPicker(composition, required, availableByRole);
+    const crewHtml = renderCrewPicker(composition, required, availableByRole);
+    tiersEl.innerHTML = tiersHtml;
+    crewEl.innerHTML = crewHtml;
     if (valid) launchBtn.removeAttribute('disabled');
     else launchBtn.setAttribute('disabled', 'disabled');
     launchBtn.textContent = t('expeditionLaunch');
@@ -202,10 +208,12 @@ export function openExpeditionModal(): void {
     });
   }
 
-  updateUI();
-  startPlanetThumbnail3DLoop();
   document.body.style.overflow = 'hidden';
   openOverlay(OVERLAY_ID, OPEN_CLASS, { focusId: 'expedition-modal-title' });
+  requestAnimationFrame(() => {
+    updateUI();
+    startPlanetThumbnail3DLoop();
+  });
 }
 
 function getCompositionFromDom(): ExpeditionComposition | null {
