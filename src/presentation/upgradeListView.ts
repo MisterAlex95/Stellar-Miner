@@ -347,16 +347,23 @@ export function updateUpgradeListInPlace(): void {
     const maxCount = getMaxBuyCount(id);
     const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
 
-    const titleRow = card.querySelector('.upgrade-title-row');
-    if (titleRow) {
+    const nameStatsRow = card.querySelector('.upgrade-card-row--name-stats');
+    if (nameStatsRow) {
       const rateStr = tParam('eachPerSecond', { n: formatNumber(def.coinsPerSecond, settings.compactNumbers) });
       const totalSec = state.owned > 0 ? ' · ' + tParam('totalPerSecond', { n: formatNumber(state.owned * def.coinsPerSecond, settings.compactNumbers) }) : '';
       const slotCostSuffix = state.needsSlot ? ` · ${t('upgradeUsesSlot')}` : '';
-      titleRow.innerHTML =
-        `<span class="upgrade-name">${getCatalogUpgradeName(id)}</span>` +
-        (state.owned > 0 ? `<span class="upgrade-count-badge">×${state.owned}</span>` : '') +
-        (state.isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : '') +
-        `<span class="upgrade-title-row-right"><span class="upgrade-title-row-output" aria-live="polite"><span class="upgrade-effect-chip">${rateStr}</span>${totalSec}</span><span class="upgrade-title-row-cost">${state.costCoins}${state.costCrewLine ? ` ${state.costCrewLine}` : ''}${slotCostSuffix}</span></span>`;
+      const leftPart = nameStatsRow.querySelector('.upgrade-card-row-left');
+      const rightPart = nameStatsRow.querySelector('.upgrade-card-row-right');
+      if (leftPart) {
+        leftPart.innerHTML =
+          `<span class="upgrade-name">${getCatalogUpgradeName(id)}</span>` +
+          (state.owned > 0 ? `<span class="upgrade-count-badge">×${state.owned}</span>` : '') +
+          (state.isRecommended ? '<span class="upgrade-recommended">' + t('recommended') + '</span>' : '');
+      }
+      if (rightPart) {
+        rightPart.innerHTML =
+          `<span class="upgrade-title-row-output" aria-live="polite"><span class="upgrade-effect-chip">${rateStr}</span>${totalSec}</span><span class="upgrade-title-row-cost">${state.costCoins}${state.costCrewLine ? ` ${state.costCrewLine}` : ''}${slotCostSuffix}</span>`;
+      }
     }
     const select = card.querySelector('.upgrade-planet-select') as HTMLSelectElement | null;
     if (select) {

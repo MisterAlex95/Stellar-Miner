@@ -16,7 +16,7 @@ import { getPlanetDisplayName, getSolarSystemName, PLANETS_PER_SOLAR_SYSTEM } fr
 import { t, tParam } from '../application/strings.js';
 import { buttonWithTooltipHtml, updateTooltipForButton } from './components/buttonTooltip.js';
 import { escapeAttr } from './components/domUtils.js';
-import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
+import { HOUSING_ASTRONAUT_CAPACITY, isNextExpeditionNewSystem } from '../domain/constants.js';
 import { openPlanetDetail } from './planetDetailView.js';
 import { renderPlanetThumbnails } from './planetThumbnail3D.js';
 
@@ -172,11 +172,17 @@ export function renderPlanetList(): void {
           </div>
         </div>`;
     } else {
-      const tooltipText = canLaunch
+      let tooltipText = canLaunch
         ? tParam('sendExpeditionTooltip', { n: astronautsRequired, cost: formatNumber(cost, settings.compactNumbers) })
         : tParam('needForExpedition', { cost: formatNumber(cost, settings.compactNumbers), n: astronautsRequired });
+      if (isNextExpeditionNewSystem(player.planets.length)) {
+        tooltipText += '\n\n' + t('expeditionNewSolarSystemTooltipLine');
+      }
       const btnHtml = `<button type="button" class="buy-planet-btn" id="buy-planet-btn" ${canLaunch ? '' : 'disabled'}>${tParam('sendExpeditionBtn', { cost: formatNumber(cost, settings.compactNumbers), n: astronautsRequired })}</button>`;
-      expeditionArea.innerHTML = buttonWithTooltipHtml(tooltipText, btnHtml);
+      const newSystemLine = isNextExpeditionNewSystem(player.planets.length)
+        ? `<p class="expedition-new-system-hint" aria-live="polite">${t('expeditionNextNewSystemLabel')}</p>`
+        : '';
+      expeditionArea.innerHTML = buttonWithTooltipHtml(tooltipText, btnHtml) + newSystemLine;
       const buyPlanetBtn = expeditionArea.querySelector('#buy-planet-btn');
       if (buyPlanetBtn) updateTooltipForButton(buyPlanetBtn as HTMLElement, tooltipText);
     }

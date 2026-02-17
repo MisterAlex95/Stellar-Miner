@@ -4,6 +4,7 @@ import {
   getPlanetTypeMultiplier,
   getBaseProductionRateFromPlanets,
   getPlanetAffinityDescription,
+  getBestPlanetTypes,
   PLANET_TYPE_NAMES,
 } from './planetAffinity.js';
 import { Planet } from '../domain/entities/Planet.js';
@@ -44,5 +45,13 @@ describe('planetAffinity', () => {
     expect(desc).toContain('Rocky');
     expect(desc).toContain('%');
     expect(desc.length).toBeGreaterThan(0);
+  });
+
+  it('getBestPlanetTypes returns types with mult > 1.05 sorted by multiplier desc', () => {
+    const best = getBestPlanetTypes('mining-robot');
+    expect(best).toContain('Rocky');
+    expect(best[0]).toBe('Rocky');
+    expect(getBestPlanetTypes('solar-collector')).toContain('Desert');
+    expect(getBestPlanetTypes('unknown')).toEqual([]);
   });
 });

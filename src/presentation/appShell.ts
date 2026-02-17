@@ -331,7 +331,10 @@ function getModalsHtml(): string {
           <button type="button" class="expedition-modal-close" id="expedition-modal-close" data-i18n-aria-label="close">×</button>
         </div>
         <div class="expedition-modal-body">
-          <p class="expedition-modal-cost" id="expedition-modal-cost"></p>
+          <div class="expedition-modal-cost-wrap">
+            <p class="expedition-modal-cost" id="expedition-modal-cost"></p>
+            <span class="expedition-new-system" id="expedition-modal-new-system" aria-hidden="true" title=""></span>
+          </div>
           <h3 class="expedition-modal-dest-title" id="expedition-modal-dest-title" data-i18n="expeditionSelectTier">Choose destination</h3>
           <div class="expedition-modal-tiers" id="expedition-modal-tiers" role="group" aria-label="Destination"></div>
           <h3 class="expedition-crew-section-title" id="expedition-modal-crew-title" data-i18n="crew">Crew</h3>

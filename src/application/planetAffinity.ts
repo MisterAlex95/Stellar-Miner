@@ -54,3 +54,12 @@ export function getPlanetAffinityDescription(upgradeId: string): string {
   }).filter(Boolean) as string[];
   return parts.length > 0 ? parts.join(', ') : '';
 }
+
+/** Best planet types for this module (mult > 1.05), sorted by multiplier descending. For "Best on: Rocky, Volcanic" UI. */
+export function getBestPlanetTypes(upgradeId: string): string[] {
+  const byUpgrade = AFFINITY[upgradeId];
+  if (!byUpgrade) return [];
+  return PLANET_TYPES.filter((type) => (byUpgrade[type] ?? 1) > 1.05)
+    .sort((a, b) => (byUpgrade[b] ?? 1) - (byUpgrade[a] ?? 1))
+    .map((type) => type.charAt(0).toUpperCase() + type.slice(1));
+}

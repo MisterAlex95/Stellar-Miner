@@ -18,6 +18,7 @@ export type ExpeditionComposition = Record<CrewRole, number>;
 const B = balance as {
   newPlanetBaseCost: number;
   newPlanetCostGrowth: number;
+  newSystemExpeditionCostMultiplier?: number;
   expeditionMinAstronauts: number;
   expeditionMaxAstronauts: number;
   expeditionDeathChance: number;
@@ -74,14 +75,26 @@ export function getExpeditionTier(tierId: ExpeditionTierId | string): { id: stri
   return EXPEDITION_TIERS.find((t) => t.id === tierId);
 }
 
-/** Cost in coins to launch an expedition to discover a new planet. Scales with count. Supports unbounded values. */
+/** Cost in coins to launch an expedition to discover a new planet. Scales with count. When current solar system is full (4 planets per system), next expedition costs more (new system). */
 export const NEW_PLANET_BASE_COST = B.newPlanetBaseCost;
 
+/** Planets per solar system; when planetCount is a multiple of this (and > 0), next expedition is to a new system and costs more. */
+export const PLANETS_PER_SOLAR_SYSTEM = 4;
+
+/** True when the next expedition will discover the first planet of a new solar system (current system is full). */
+export function isNextExpeditionNewSystem(planetCount: number): boolean {
+  return planetCount > 0 && planetCount % PLANETS_PER_SOLAR_SYSTEM === 0;
+}
+
 export function getNewPlanetCost(planetCount: number): Decimal {
-  return new Decimal(B.newPlanetBaseCost)
+  const base = new Decimal(B.newPlanetBaseCost)
     .mul(planetCount + 1)
     .mul(Decimal.pow(B.newPlanetCostGrowth, planetCount))
     .floor();
+  const mult = isNextExpeditionNewSystem(planetCount) && (B.newSystemExpeditionCostMultiplier ?? 1) > 0
+    ? (B.newSystemExpeditionCostMultiplier ?? 1.5)
+    : 1;
+  return base.mul(mult).floor();
 }
 
 /** Astronauts required to send on expedition (risk: some may die; if all die, planet not discovered). */

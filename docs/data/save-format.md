@@ -58,7 +58,7 @@ The game persists the current session to localStorage and supports export/import
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| id | string | Yes | Upgrade id (from upgrades.json) |
+| id | string | Yes | Module id (from modules.json) |
 | name | string | Yes | Display name |
 | cost | number \| string | Yes | Last cost (for display) |
 | effect | object | Yes | { coinsPerSecond: number \| string } |

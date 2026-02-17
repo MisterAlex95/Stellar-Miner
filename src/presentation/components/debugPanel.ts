@@ -15,6 +15,7 @@ export function buildDebugPanelHtml(): string {
         <button type="button" class="debug-btn" data-debug="coins-50k">+50K coins</button>
         <button type="button" class="debug-btn" data-debug="trigger-event" data-i18n="debugTriggerEvent">Trigger event</button>
         <button type="button" class="debug-btn" data-debug="clear-events" data-i18n="debugClearEvents">Clear events</button>
+        <button type="button" class="debug-btn" data-debug="add-planet" data-i18n="debugAddPlanet">+1 planet</button>
       </div>
     </div>
   </div>

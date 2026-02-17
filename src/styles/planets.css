@@ -567,6 +567,13 @@
   gap: 0.5rem;
 }
 
+.expedition-new-system-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
 .expedition-progress-wrap {
   display: flex;
   flex-direction: column;

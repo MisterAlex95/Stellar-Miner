@@ -13,7 +13,7 @@
 
 ## affinity
 
-- **Key**: upgrade id (must match an id in upgrades.json).
+- **Key**: module id (must match an id in modules.json).
 - **Value**: object whose keys are planet type strings (from planetTypes) and values are numbers (production multiplier, e.g. 1.2 = +20%, 0.8 = -20%).
 - Missing upgrade or missing type defaults to multiplier 1.
 

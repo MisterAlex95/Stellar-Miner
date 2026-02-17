@@ -3,7 +3,7 @@
 Exhaustive list of implemented gameplay and UI features. Formulas and exact numbers are in [reference/](../reference/) and data schemas in [data/](../data/).
 
 - [Mining and clicks](mining-and-clicks.md) — Mine click, combo, lucky/critical, shooting star
-- [Upgrades](upgrades.md) — Catalog, slots, install duration, planet choice
+- [Modules](modules.md) — Catalog, planet affinity, slots, install duration, planet choice
 - [Crew and planets](crew-and-planets.md) — Astronauts, capacity, expeditions, housing, affinity, solar systems
 - [Research](research.md) — Skill tree, success chance, modifiers
 - [Events](events.md) — Random events, trigger rules, catalog

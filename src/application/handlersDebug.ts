@@ -9,6 +9,8 @@ import { getCatalogAchievementName, getCatalogAchievementDesc } from './i18nCata
 import { t } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
+import { Planet } from '../domain/entities/Planet.js';
+import { generatePlanetName } from '../domain/constants.js';
 
 const DEBUG_PANEL_ID = 'debug-panel';
 
@@ -70,11 +72,13 @@ export function updateDebugPanel(): void {
   const activeCount = getActiveEventInstances().filter((a) => a.endsAt > now).length;
 
   const rateNum = effectiveRate.toNumber();
+  const coinsNum = player.coins.value.toNumber();
+  const baseNum = player.productionRate.value.toNumber();
   statsEl.innerHTML = `
-    <div class="debug-row"><span>${t('debugCoinsRaw')}</span><span>${player.coins.value.toString()}</span></div>
-    <div class="debug-row"><span>${t('debugProductionBase')}</span><span>${player.productionRate.value.toString()}/s</span></div>
+    <div class="debug-row"><span>${t('debugCoinsRaw')}</span><span>${Number.isFinite(coinsNum) ? coinsNum.toFixed(1) : player.coins.value.toString()}</span></div>
+    <div class="debug-row"><span>${t('debugProductionBase')}</span><span>${Number.isFinite(baseNum) ? baseNum.toFixed(1) : player.productionRate.value.toString()}/s</span></div>
     <div class="debug-row"><span>${t('debugProductionEffective')}</span><span>${Number.isFinite(rateNum) ? rateNum.toFixed(1) : effectiveRate.toString()}/s</span></div>
-    <div class="debug-row"><span>${t('debugEventMult')}</span><span>×${eventMult.toFixed(2)}</span></div>
+    <div class="debug-row"><span>${t('debugEventMult')}</span><span>×${eventMult.toFixed(1)}</span></div>
     <div class="debug-row"><span>${t('debugPrestigeLevel')}</span><span>${player.prestigeLevel}</span></div>
     <div class="debug-row"><span>${t('debugPlanets')}</span><span>${player.planets.length}</span></div>
     <div class="debug-row"><span>${t('debugUpgradesTotal')}</span><span>${player.upgrades.length}</span></div>
@@ -90,6 +94,12 @@ export function handleDebugAction(action: string): void {
   else if (action === 'coins-50k') session.player.addCoins(50_000);
   else if (action === 'trigger-event') triggerRandomEvent();
   else if (action === 'clear-events') setActiveEventInstances([]);
+  else if (action === 'add-planet') {
+    const n = session.player.planets.length + 1;
+    const id = `planet-${n}`;
+    const name = generatePlanetName(id);
+    session.player.addPlanet(Planet.create(id, name));
+  }
   refreshAfterDebugAction();
 }
 

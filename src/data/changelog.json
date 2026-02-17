@@ -5,7 +5,8 @@
     "changes": [
       "Expedition modal: choose destination (easy/medium/hard) with 3D planet preview, planet name and type; pick crew composition by role; launch from modal.",
       "Expedition difficulty tiers: easy (lower risk, shorter), medium (standard), hard (higher risk, +1 slot on new planet); difficulty saved with in-progress expedition.",
-      "Expedition modal UI: grid of destination cards, planet type badge, crew picker section, polished layout and responsive stacking on small screens."
+      "Expedition modal UI: grid of destination cards, planet type badge, crew picker section, polished layout and responsive stacking on small screens.",
+      "Renamed upgrades to Modules in UI (tab, hints, rules). Catalog moved to modules.json with 5 new modules: Solar Collector (desert), Cryo Extractor (ice), Magma Pump (volcanic), Gas Siphon (gas), Geo Drill (rocky). Module cards show Best on: planet type and (i) tooltip with production by planet type."
     ]
   },
   {

@@ -3,7 +3,7 @@
  */
 import { getSession, getSettings, getExpeditionEndsAt } from '../application/gameState.js';
 import { planetService } from '../application/gameState.js';
-import { getExpeditionTiers, getExpeditionTier, CREW_ROLES, generatePlanetName, type ExpeditionComposition, type ExpeditionTierId, type CrewRole } from '../domain/constants.js';
+import { getExpeditionTiers, getExpeditionTier, CREW_ROLES, generatePlanetName, isNextExpeditionNewSystem, type ExpeditionComposition, type ExpeditionTierId, type CrewRole } from '../domain/constants.js';
 import { getExpeditionDeathChanceWithMedics } from '../domain/constants.js';
 import { getUnlockedCrewRoles } from '../application/research.js';
 import type { CrewJobRole } from '../domain/constants.js';
@@ -161,10 +161,18 @@ export function openExpeditionModal(): void {
   const crewEl = document.getElementById('expedition-modal-crew');
   const launchBtn = document.getElementById('expedition-modal-launch');
   const costEl = document.getElementById('expedition-modal-cost');
+  const newSystemEl = document.getElementById('expedition-modal-new-system');
   if (!overlay || !titleEl || !tiersEl || !crewEl || !launchBtn || !costEl) return;
 
   titleEl.textContent = t('expeditionModalTitle');
   costEl.textContent = `${formatNumber(cost.toNumber(), settings.compactNumbers)} ⬡`;
+  const isNewSystem = isNextExpeditionNewSystem(player.planets.length);
+  if (newSystemEl) {
+    newSystemEl.textContent = t('expeditionNewSolarSystem');
+    newSystemEl.title = t('expeditionNewSolarSystemHint');
+    newSystemEl.classList.toggle('expedition-new-system--visible', isNewSystem);
+    newSystemEl.setAttribute('aria-hidden', isNewSystem ? 'false' : 'true');
+  }
   let selectedTier: ExpeditionTierId | null = 'medium';
   let composition: ExpeditionComposition = { ...defaultComp };
 

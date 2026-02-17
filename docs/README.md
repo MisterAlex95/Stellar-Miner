@@ -10,7 +10,7 @@ This folder is the single source for Stellar Miner documentation: architecture, 
 
 - **[features/README.md](features/README.md)** — Exhaustive list of gameplay and UI features, split by topic:
   - [Mining and clicks](features/mining-and-clicks.md)
-  - [Upgrades](features/upgrades.md)
+  - [Modules](features/modules.md)
   - [Crew and planets](features/crew-and-planets.md)
   - [Research](features/research.md)
   - [Events](features/events.md)
@@ -22,7 +22,7 @@ This folder is the single source for Stellar Miner documentation: architecture, 
 
 - **[data/README.md](data/README.md)** — Data files and save format with schemas:
   - [Save format](data/save-format.md)
-  - [Upgrades schema](data/upgrades-schema.md)
+  - [Modules schema](data/modules-schema.md)
   - [Events schema](data/events-schema.md)
   - [Research schema](data/research-schema.md)
   - [Achievements schema](data/achievements-schema.md)

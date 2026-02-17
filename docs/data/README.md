@@ -5,7 +5,7 @@ This folder documents all game data files and the save format: schemas (field na
 | File | Path | Doc | Description |
 |------|------|-----|--------------|
 | Save format | `src/infrastructure/SaveLoadService.ts` | [save-format.md](save-format.md) | Serialized session payload (SavedSession and related types) |
-| Upgrades | `src/data/upgrades.json` | [upgrades-schema.md](upgrades-schema.md) | Upgrade catalog (tiers 1–10, cost, production, crew) |
+| Modules | `src/data/modules.json` | [modules-schema.md](modules-schema.md) | Module catalog (tiers 1–10, cost, production, crew, planet affinity) |
 | Events | `src/data/events.json` | [events-schema.md](events-schema.md) | Random events (multiplier, duration) |
 | Research | `src/data/research.json` | [research-schema.md](research-schema.md) | Research skill tree nodes |
 | Achievements | `src/data/achievements.json` | [achievements-schema.md](achievements-schema.md) | Achievement definitions and unlock types |

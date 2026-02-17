@@ -4,7 +4,7 @@ import { GameEvent } from '../domain/entities/GameEvent.js';
 import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import gameConfig from '../data/gameConfig.json';
-import upgradesData from '../data/upgrades.json';
+import modulesData from '../data/modules.json';
 import eventsData from '../data/events.json';
 
 const T = gameConfig.timing;
@@ -37,7 +37,7 @@ export type UpgradeDef = {
   usesSlot?: boolean;
 };
 
-export const UPGRADE_CATALOG: UpgradeDef[] = upgradesData as UpgradeDef[];
+export const UPGRADE_CATALOG: UpgradeDef[] = modulesData as UpgradeDef[];
 
 const UPGRADES_CONFIG = (gameConfig as {
   upgrades?: {

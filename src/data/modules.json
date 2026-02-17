@@ -1,12 +1,17 @@
 [
-  {"id":"mining-robot","name":"Mining Robot","description":"Basic autonomous miner. Your first step into the belt.","cost":45,"coinsPerSecond":1,"tier":1,"requiredAstronauts":0,"usesSlot":false},
+  {"id":"mining-robot","name":"Mining Robot","description":"Basic autonomous miner. Your first step into the belt. Best on rocky terrain.","cost":45,"coinsPerSecond":1,"tier":1,"requiredAstronauts":0,"usesSlot":false},
   {"id":"drill-mk1","name":"Drill Mk.I","description":"Improved extraction head. Cuts through surface rock in seconds.","cost":1800,"coinsPerSecond":8,"tier":2,"requiredAstronauts":0},
+  {"id":"solar-collector","name":"Solar Collector","description":"Converts sunlight into mining power. Most effective on sun-baked desert worlds.","cost":2400,"coinsPerSecond":9,"tier":2,"requiredAstronauts":0},
   {"id":"drill-mk2","name":"Drill Mk.II","description":"Heavy-duty surface drill. Built for long shifts in the void. Requires trained crew.","cost":22000,"coinsPerSecond":42,"tier":3,"requiredAstronauts":1},
+  {"id":"cryo-extractor","name":"Cryo Extractor","description":"Harvests ices and frozen volatiles. Thrives on ice planets.","cost":28000,"coinsPerSecond":48,"tier":3,"requiredAstronauts":1},
   {"id":"asteroid-rig","name":"Asteroid Rig","description":"Full mining platform. Drills, crushes, and sorts in one unit. Needs a team.","cost":220000,"coinsPerSecond":200,"tier":4,"requiredAstronauts":1},
+  {"id":"magma-pump","name":"Magma Pump","description":"Taps molten ore from lava flows. Built for volcanic worlds.","cost":260000,"coinsPerSecond":220,"tier":4,"requiredAstronauts":1},
   {"id":"orbital-station","name":"Orbital Station","description":"Refinery and logistics hub. The heart of your operation. Crew-intensive.","cost":2500000,"coinsPerSecond":1000,"tier":5,"requiredAstronauts":2},
+  {"id":"gas-siphon","name":"Gas Siphon","description":"Extracts valuable gases from atmospheres. Best on gas giants.","cost":3000000,"coinsPerSecond":1100,"tier":5,"requiredAstronauts":2},
   {"id":"deep-core-drill","name":"Deep Core Drill","description":"Penetrates dense ore layers. Reaches what others can't. Requires specialist crew.","cost":28000000,"coinsPerSecond":5000,"tier":6,"requiredAstronauts":2},
+  {"id":"geo-drill","name":"Geo Drill","description":"Optimized for solid rock and metal-rich crust. Most effective on rocky planets.","cost":32000000,"coinsPerSecond":5200,"tier":6,"requiredAstronauts":2},
   {"id":"stellar-harvester","name":"Stellar Harvester","description":"Harvests rare minerals at scale. Feeds the entire sector.","cost":320000000,"coinsPerSecond":25000,"tier":7,"requiredAstronauts":3},
   {"id":"quantum-extractor","name":"Quantum Extractor","description":"Maximum efficiency extraction. Near-instant ore processing. Needs expert crew.","cost":3500000000,"coinsPerSecond":125000,"tier":8,"requiredAstronauts":3},
   {"id":"void-crusher","name":"Void Crusher","description":"Pulverizes asteroid cores. Built for the endgame.","cost":42000000000,"coinsPerSecond":625000,"tier":9,"requiredAstronauts":4},
-  {"id":"nexus-collector","name":"Nexus Collector","description":"Harvests from multiple dimensions. The ultimate upgrade. Full crew required.","cost":550000000000,"coinsPerSecond":3125000,"tier":10,"requiredAstronauts":4}
+  {"id":"nexus-collector","name":"Nexus Collector","description":"Harvests from multiple dimensions. The ultimate module. Full crew required.","cost":550000000000,"coinsPerSecond":3125000,"tier":10,"requiredAstronauts":4}
 ]

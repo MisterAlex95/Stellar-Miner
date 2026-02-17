@@ -12,10 +12,15 @@ type Lang = 'en' | 'fr';
 const upgradeNamesEn: Record<string, string> = {
   'mining-robot': 'Mining Robot',
   'drill-mk1': 'Drill Mk.I',
+  'solar-collector': 'Solar Collector',
   'drill-mk2': 'Drill Mk.II',
+  'cryo-extractor': 'Cryo Extractor',
   'asteroid-rig': 'Asteroid Rig',
+  'magma-pump': 'Magma Pump',
   'orbital-station': 'Orbital Station',
+  'gas-siphon': 'Gas Siphon',
   'deep-core-drill': 'Deep Core Drill',
+  'geo-drill': 'Geo Drill',
   'stellar-harvester': 'Stellar Harvester',
   'quantum-extractor': 'Quantum Extractor',
   'void-crusher': 'Void Crusher',
@@ -23,25 +28,35 @@ const upgradeNamesEn: Record<string, string> = {
 };
 
 const upgradeDescsEn: Record<string, string> = {
-  'mining-robot': 'Basic autonomous miner. Your first step into the belt.',
-  'drill-mk1': 'Improved extraction head. Needs an operator. Cuts through surface rock in seconds.',
+  'mining-robot': 'Basic autonomous miner. Your first step into the belt. Best on rocky terrain.',
+  'drill-mk1': 'Improved extraction head. Cuts through surface rock in seconds.',
+  'solar-collector': 'Converts sunlight into mining power. Most effective on sun-baked desert worlds.',
   'drill-mk2': 'Heavy-duty surface drill. Built for long shifts in the void. Requires trained crew.',
+  'cryo-extractor': 'Harvests ices and frozen volatiles. Thrives on ice planets.',
   'asteroid-rig': 'Full mining platform. Drills, crushes, and sorts in one unit. Needs a team.',
+  'magma-pump': 'Taps molten ore from lava flows. Built for volcanic worlds.',
   'orbital-station': 'Refinery and logistics hub. The heart of your operation. Crew-intensive.',
+  'gas-siphon': 'Extracts valuable gases from atmospheres. Best on gas giants.',
   'deep-core-drill': "Penetrates dense ore layers. Reaches what others can't. Requires specialist crew.",
+  'geo-drill': 'Optimized for solid rock and metal-rich crust. Most effective on rocky planets.',
   'stellar-harvester': 'Harvests rare minerals at scale. Feeds the entire sector.',
   'quantum-extractor': 'Maximum efficiency extraction. Near-instant ore processing. Needs expert crew.',
   'void-crusher': 'Pulverizes asteroid cores. Built for the endgame.',
-  'nexus-collector': 'Harvests from multiple dimensions. The ultimate upgrade. Full crew required.',
+  'nexus-collector': 'Harvests from multiple dimensions. The ultimate module. Full crew required.',
 };
 
 const upgradeNamesFr: Record<string, string> = {
   'mining-robot': 'Robot minier',
   'drill-mk1': 'Foreuse Mk.I',
+  'solar-collector': 'Collecteur solaire',
   'drill-mk2': 'Foreuse Mk.II',
+  'cryo-extractor': 'Extracteur cryo',
   'asteroid-rig': 'Plateforme astéroïde',
+  'magma-pump': 'Pompe à magma',
   'orbital-station': 'Station orbitale',
+  'gas-siphon': 'Siphon à gaz',
   'deep-core-drill': 'Foreuse noyau profond',
+  'geo-drill': 'Foreuse géo',
   'stellar-harvester': 'Moissonneur stellaire',
   'quantum-extractor': 'Extracteur quantique',
   'void-crusher': 'Broyeur du vide',
@@ -49,16 +64,21 @@ const upgradeNamesFr: Record<string, string> = {
 };
 
 const upgradeDescsFr: Record<string, string> = {
-  'mining-robot': 'Mineur autonome de base. Votre premier pas dans la ceinture.',
+  'mining-robot': 'Mineur autonome de base. Votre premier pas dans la ceinture. Efficace sur terrain rocheux.',
   'drill-mk1': 'Tête d’extraction améliorée. Nécessite un opérateur.',
+  'solar-collector': 'Convertit la lumière en énergie minière. Plus efficace sur les mondes désertiques.',
   'drill-mk2': 'Foreuse de surface renforcée. Pour les longues missions. Nécessite un équipage formé.',
+  'cryo-extractor': 'Récolte glaces et volatils. Idéal sur les planètes de glace.',
   'asteroid-rig': 'Plateforme minière complète. Fore, broie et trie. Nécessite une équipe.',
+  'magma-pump': 'Pompe le minerai en fusion. Conçu pour les mondes volcaniques.',
   'orbital-station': 'Raffinerie et logistique. Cœur de l’opération. Nécessite beaucoup d’équipage.',
+  'gas-siphon': 'Extrait les gaz précieux des atmosphères. Meilleur sur les géantes gazeuses.',
   'deep-core-drill': 'Pénètre les couches denses. Nécessite un équipage spécialisé.',
+  'geo-drill': 'Optimisée pour la croûte rocheuse. Plus efficace sur les planètes rocheuses.',
   'stellar-harvester': 'Récolte de minéraux rares à grande échelle.',
   'quantum-extractor': 'Extraction à efficacité maximale. Nécessite un équipage expert.',
   'void-crusher': 'Pulvérise les noyaux d’astéroïdes. Pour la fin de partie.',
-  'nexus-collector': 'Récolte multidimensionnelle. Amélioration ultime.',
+  'nexus-collector': 'Récolte multidimensionnelle. Module ultime.',
 };
 
 const researchNamesEn: Record<string, string> = {
