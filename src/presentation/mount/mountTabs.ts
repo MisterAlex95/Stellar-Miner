@@ -7,14 +7,12 @@ import { getUnlockedBlocks } from '../../application/progression.js';
 import { getQuestProgress } from '../../application/quests.js';
 import { RESEARCH_CATALOG, canAttemptResearch, hasEffectiveFreeSlot, getResearchHousingCapacityBonus } from '../../application/research.js';
 import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../../domain/constants.js';
-import { renderPlanetList } from '../planetListView.js';
-import { renderCrewSection } from '../crewView.js';
-import { renderPrestigeSection } from '../prestigeView.js';
 import { markPanelHydrated } from '../../application/lazyPanels.js';
 import StatisticsPanel from '../vue/panels/StatisticsPanel.vue';
 import DashboardPanel from '../vue/panels/DashboardPanel.vue';
 import ResearchPanel from '../vue/panels/ResearchPanel.vue';
 import UpgradesPanel from '../vue/panels/UpgradesPanel.vue';
+import EmpirePanel from '../vue/panels/EmpirePanel.vue';
 import { hasNewInstallableUpgrade } from '../dashboardView.js';
 
 function mountVuePanel(containerId: string, component: unknown, datasetKey: string): void {
@@ -94,9 +92,7 @@ export function switchTab(tabId: string): void {
     markPanelHydrated('upgrades');
   }
   if (tabId === 'empire') {
-    renderCrewSection();
-    renderPlanetList();
-    renderPrestigeSection();
+    mountVuePanel('empire-content', EmpirePanel, 'vueEmpireMounted');
     markPanelHydrated('empire');
   }
   if (tabId === 'stats') {

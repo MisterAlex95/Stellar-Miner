@@ -4,114 +4,7 @@ import { createProgressBarWithWrap } from './components/progressBar.js';
 import { TOAST_CONTAINER_ID } from './components/toasts.js';
 
 function getModalsHtml(): string {
-      const settingsBody = `
-        <div class="settings-header">
-          <h2 id="settings-title" data-i18n="settings">Settings</h2>
-          <button type="button" class="settings-close" id="settings-close" data-i18n-aria-label="close">×</button>
-        </div>
-        <div class="settings-body">
-          <div class="settings-group">
-            <h3 class="settings-group-title" data-i18n="settingsGroupVisual">Visual</h3>
-            <div class="settings-option">
-              <label for="setting-language" data-i18n="language">Language</label>
-              <select id="setting-language" data-i18n-aria-label="language">
-                <option value="en" data-i18n="languageEn">English</option>
-                <option value="fr" data-i18n="languageFr">Français</option>
-              </select>
-            </div>
-            <div class="settings-option">
-              <label for="setting-starfield-speed" data-i18n="starfieldSpeed">Starfield speed</label>
-              <select id="setting-starfield-speed">
-                <option value="0.5" data-i18n="starfieldSpeedSlow">Slow</option>
-                <option value="1" selected data-i18n="starfieldSpeedNormal">Normal</option>
-                <option value="1.5" data-i18n="starfieldSpeedFast">Fast</option>
-              </select>
-            </div>
-            <div class="settings-option">
-              <label class="settings-toggle">
-                <input type="checkbox" id="setting-orbit-lines" checked />
-                <span data-i18n="showOrbitLines">Show orbit lines</span>
-              </label>
-            </div>
-            <div class="settings-option">
-              <label class="settings-toggle">
-                <input type="checkbox" id="setting-click-particles" checked />
-                <span data-i18n="clickParticles">Click particles</span>
-              </label>
-            </div>
-            <div class="settings-option">
-              <label for="setting-theme" data-i18n="theme">Theme</label>
-              <select id="setting-theme" data-i18n-aria-label="theme">
-                <option value="dark" data-i18n="themeDark">Dark</option>
-                <option value="light" data-i18n="themeLight">Light</option>
-              </select>
-            </div>
-          </div>
-          <div class="settings-group">
-            <h3 class="settings-group-title" data-i18n="settingsGroupGameplay">Gameplay</h3>
-            <div class="settings-option">
-              <label class="settings-toggle">
-                <input type="checkbox" id="setting-compact-numbers" checked />
-                <span data-i18n="compactNumbers">Compact numbers (1.2K)</span>
-              </label>
-            </div>
-            <div class="settings-option">
-              <label class="settings-toggle">
-                <input type="checkbox" id="setting-space-key-repeat" />
-                <span data-i18n="spaceKeyRepeat">Allow Space key repeat (hold to mine)</span>
-              </label>
-            </div>
-            <div class="settings-option">
-              <label for="setting-layout" data-i18n="layout">Layout</label>
-              <select id="setting-layout" data-i18n-aria-label="layout">
-                <option value="tabs" data-i18n="layoutTabs">Tabs</option>
-                <option value="one-page" data-i18n="layoutOnePage">One page</option>
-              </select>
-            </div>
-            <div class="settings-option">
-              <label class="settings-toggle">
-                <input type="checkbox" id="setting-pause-background" />
-                <span data-i18n="pauseWhenBackground">Pause production when tab in background</span>
-              </label>
-            </div>
-            <div class="settings-option">
-              <label class="settings-toggle">
-                <input type="checkbox" id="setting-sound" />
-                <span data-i18n="soundEnabled">Sound effects</span>
-              </label>
-            </div>
-            <div class="settings-option">
-              <label class="settings-toggle">
-                <input type="checkbox" id="setting-reduced-motion" />
-                <span data-i18n="reducedMotion">Reduce motion</span>
-              </label>
-            </div>
-          </div>
-          <div class="settings-group">
-            <h3 class="settings-group-title" data-i18n="settingsGroupSaveData">Save & data</h3>
-          <div class="settings-option settings-save-export">
-            <div class="settings-save-buttons">
-              <button type="button" class="settings-export-btn" id="settings-export-btn" data-i18n="exportSave">Export save</button>
-              <button type="button" class="settings-import-btn" id="settings-import-btn" data-i18n="importSave">Import save</button>
-            </div>
-            <input type="file" id="settings-import-file" accept=".json,application/json" class="settings-import-file" aria-hidden="true" />
-            <p class="settings-last-saved" id="last-saved-indicator" aria-live="polite"></p>
-          </div>
-          <div class="settings-option settings-reset">
-            <button type="button" class="reset-btn" id="settings-reset-btn" data-i18n="resetProgress">Reset progress</button>
-          </div>
-          </div>
-        </div>
-      `;
   return [
-    createModalOverlay({
-      overlayId: 'settings-overlay',
-      overlayClass: 'settings-overlay',
-      dialogClass: 'settings-modal',
-      role: 'dialog',
-      ariaLabelledBy: 'settings-title',
-      bodyHtml: settingsBody,
-    }),
     createModalOverlay({
       overlayId: 'info-overlay',
       overlayClass: 'info-overlay',
@@ -373,112 +266,6 @@ function getTabsAndPanelsHtml(): string {
           <span class="btn-tooltip-wrap" id="quest-claim-wrap"><button type="button" class="quest-claim-btn" id="quest-claim" disabled data-i18n="claim">Claim</button></span>
         `,
   });
-  const crewBlock = createGameplayBlock({
-    id: 'crew-section',
-    sectionClass: 'crew-section',
-    titleKey: 'crew',
-    dataBlock: 'crew',
-    rulesKey: 'crewRules',
-    bodyHtml: `
-          <p class="crew-hint" data-i18n="crewHint">Hire astronauts (no job at first). Unlock Miner, Scientist and Pilot via Research for bonuses. Resets on Prestige.</p>
-          <div class="crew-capacity-wrap" id="crew-capacity-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-i18n-aria-label="crewCapacityAria">
-            <div class="crew-capacity-fill" id="crew-capacity-fill">
-              <div class="crew-capacity-segment crew-capacity-segment--astronaut" id="crew-capacity-segment-astronaut"></div>
-              <div class="crew-capacity-segment crew-capacity-segment--miner" id="crew-capacity-segment-miner"></div>
-              <div class="crew-capacity-segment crew-capacity-segment--scientist" id="crew-capacity-segment-scientist"></div>
-              <div class="crew-capacity-segment crew-capacity-segment--pilot" id="crew-capacity-segment-pilot"></div>
-              <div class="crew-capacity-segment crew-capacity-segment--medic" id="crew-capacity-segment-medic"></div>
-              <div class="crew-capacity-segment crew-capacity-segment--engineer" id="crew-capacity-segment-engineer"></div>
-              <div class="crew-capacity-segment crew-capacity-segment--equipment" id="crew-capacity-segment-equipment"></div>
-              <div class="crew-capacity-segment crew-capacity-segment--free" id="crew-capacity-segment-free"></div>
-            </div>
-          </div>
-          <div class="crew-summary" id="crew-summary" aria-live="polite">No crew yet</div>
-          <div class="empty-state" id="crew-empty-state" aria-hidden="true" hidden>
-            <span class="empty-state-icon" aria-hidden="true"></span>
-            <p class="empty-state-text" id="crew-empty-state-text" data-i18n="emptyCrewText">No crew yet. Hire astronauts below to boost production.</p>
-          </div>
-          <div class="crew-role-cards" id="crew-role-cards">
-            <div class="crew-role-card crew-role-card--astronaut" id="crew-role-card-astronaut">
-              <div class="crew-role-card-header">
-                <span class="crew-role-card-name" data-i18n="crewRoleAstronaut">Astronaut</span>
-                <span class="crew-role-card-count" id="crew-role-count-astronaut">0</span>
-              </div>
-              <div class="crew-role-card-effect" id="crew-role-effect-astronaut"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="astronaut"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--astronaut" id="hire-astronaut-astronaut" data-role="astronaut"><span class="crew-btn-role">Astronaut</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
-            </div>
-            <div class="crew-role-card crew-role-card--miner" id="crew-role-card-miner">
-              <div class="crew-role-card-header">
-                <span class="crew-role-card-name" data-i18n="crewRoleMiner">Miner</span>
-                <span class="crew-role-card-count" id="crew-role-count-miner">0</span>
-              </div>
-              <div class="crew-role-card-effect" id="crew-role-effect-miner"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="miner"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--miner" id="hire-astronaut-miner" data-role="miner"><span class="crew-btn-role">Miner</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
-            </div>
-            <div class="crew-role-card crew-role-card--scientist" id="crew-role-card-scientist">
-              <div class="crew-role-card-header">
-                <span class="crew-role-card-name" data-i18n="crewRoleScientist">Scientist</span>
-                <span class="crew-role-card-count" id="crew-role-count-scientist">0</span>
-              </div>
-              <div class="crew-role-card-effect" id="crew-role-effect-scientist"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="scientist"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--scientist" id="hire-astronaut-scientist" data-role="scientist"><span class="crew-btn-role">Scientist</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
-            </div>
-            <div class="crew-role-card crew-role-card--pilot" id="crew-role-card-pilot">
-              <div class="crew-role-card-header">
-                <span class="crew-role-card-name" data-i18n="crewRolePilot">Pilot</span>
-                <span class="crew-role-card-count" id="crew-role-count-pilot">0</span>
-              </div>
-              <div class="crew-role-card-effect" id="crew-role-effect-pilot"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="pilot"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--pilot" id="hire-astronaut-pilot" data-role="pilot"><span class="crew-btn-role">Pilot</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
-            </div>
-            <div class="crew-role-card crew-role-card--medic" id="crew-role-card-medic">
-              <div class="crew-role-card-header">
-                <span class="crew-role-card-name" data-i18n="crewRoleMedic">Medic</span>
-                <span class="crew-role-card-count" id="crew-role-count-medic">0</span>
-              </div>
-              <div class="crew-role-card-effect" id="crew-role-effect-medic"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="medic"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--medic" id="hire-astronaut-medic" data-role="medic"><span class="crew-btn-role">Medic</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
-            </div>
-            <div class="crew-role-card crew-role-card--engineer" id="crew-role-card-engineer">
-              <div class="crew-role-card-header">
-                <span class="crew-role-card-name" data-i18n="crewRoleEngineer">Engineer</span>
-                <span class="crew-role-card-count" id="crew-role-count-engineer">0</span>
-              </div>
-              <div class="crew-role-card-effect" id="crew-role-effect-engineer"></div>
-              <span class="btn-tooltip-wrap crew-role-wrap" data-role="engineer"><button type="button" class="hire-astronaut-btn hire-astronaut-btn--engineer" id="hire-astronaut-engineer" data-role="engineer"><span class="crew-btn-role">Engineer</span><span class="crew-btn-sep" aria-hidden="true">·</span><span class="crew-btn-cost">0 ⬡</span></button></span>
-            </div>
-          </div>
-          <div class="crew-in-modules" id="crew-in-modules" aria-live="polite"></div>
-          <div class="crew-veterans" id="crew-veterans" aria-live="polite"></div>
-        `,
-  });
-  const planetsBlock = createGameplayBlock({
-    id: 'planets-section',
-    sectionClass: 'planets-section',
-    titleKey: 'planets',
-    dataBlock: 'planets',
-    rulesKey: 'planetsRules',
-    bodyHtml: `
-          <p class="planets-hint" data-i18n="planetsHint">Each planet has upgrade slots (expandable). More planets = +4% production each. Send astronauts on an expedition to discover a new planet (some may die); if all survive or at least one returns, you discover it. Add slots or build housing on a planet (+2 crew capacity per module, uses 1 slot).</p>
-          <div class="planet-list" id="planet-list"></div>
-          <div class="expedition-area" id="expedition-area"></div>
-        `,
-  });
-  const prestigeBlock = createGameplayBlock({
-    id: 'prestige-section',
-    sectionClass: 'prestige-section',
-    titleKey: 'prestige',
-    dataBlock: 'prestige',
-    rulesKey: 'prestigeRules',
-    bodyHtml: `
-          <p class="prestige-hint" data-i18n="prestigeHint">Reset coins and planets to gain +4% production per prestige level forever.</p>
-          <div class="prestige-status" id="prestige-status"></div>
-          <div class="prestige-actions">
-            <span class="btn-tooltip-wrap" id="prestige-btn-wrap"><button type="button" class="prestige-btn" id="prestige-btn" disabled>Prestige</button></span>
-            <button type="button" class="prestige-rewards-btn" id="prestige-rewards-btn" data-i18n="prestigeRewardsWhatFor">What do I get?</button>
-          </div>
-        `,
-  });
   const researchBlock = createGameplayBlock({
     id: 'research-section',
     sectionClass: 'research-section',
@@ -538,9 +325,7 @@ function getTabsAndPanelsHtml(): string {
       </section>
     </div>
     <div class="app-tab-panel" id="panel-empire" role="tabpanel" aria-labelledby="tab-empire" data-tab="empire" hidden>
-      ${crewBlock}
-      ${planetsBlock}
-      ${prestigeBlock}
+      <div id="empire-content"></div>
     </div>
     <div class="app-tab-panel" id="panel-research" role="tabpanel" aria-labelledby="tab-research" data-tab="research" hidden>
       ${researchBlock}
@@ -552,6 +337,16 @@ function getTabsAndPanelsHtml(): string {
       ${statisticsBlock}
     </div>
   `;
+}
+
+/** Stats block (modals + stats section + spacer + milestone + toasts). For Vue shell: injected into #legacy-root. */
+export function getStatsBlockHtml(): string {
+  return [getModalsHtml(), getStatsHtml()].join('\n');
+}
+
+/** Tab panels only. For Vue shell: injected into #legacy-panels (tabs nav is above this in Vue). */
+export function getPanelsOnlyHtml(): string {
+  return getTabsAndPanelsHtml();
 }
 
 export function getAppHtml(): string {

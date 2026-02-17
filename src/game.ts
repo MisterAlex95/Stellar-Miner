@@ -28,9 +28,7 @@ import { recordStatsIfDue, loadStatsHistory, getStatsHistory } from './applicati
 import { getResearchProductionMultiplier } from './application/research.js';
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
 import { updateUpgradeListInPlace } from './presentation/upgradeListView.js';
-import { renderPlanetList, updateExpeditionProgress } from './presentation/planetListView.js';
-import { renderCrewSection } from './presentation/crewView.js';
-import { renderPrestigeSection } from './presentation/prestigeView.js';
+import { updateExpeditionProgress } from './presentation/planetListView.js';
 import { updateQuestProgressStore } from './application/questProgressStore.js';
 import { renderQuestSection } from './presentation/questView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
@@ -51,11 +49,9 @@ import { updateGameStateBridge } from './presentation/vue/gameStateBridge.js';
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 80;
 const DASHBOARD_UPDATE_INTERVAL_MS = 500;
-const EMPIRE_UPDATE_INTERVAL_MS = 1500;
 const RESEARCH_UPDATE_INTERVAL_MS = 1500;
 const runQuestIfDue = createThrottledRun(QUEST_RENDER_INTERVAL_MS);
 const runDashboardIfDue = createThrottledRun(DASHBOARD_UPDATE_INTERVAL_MS);
-const runEmpireIfDue = createThrottledRun(EMPIRE_UPDATE_INTERVAL_MS);
 const runResearchIfDue = createThrottledRun(RESEARCH_UPDATE_INTERVAL_MS);
 let lastStatsUpdateMs = 0;
 const STATS_UPDATE_INTERVAL_MS = 100;
@@ -100,10 +96,7 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
 function runPanelUpdates(nowMs: number): void {
   runQuestIfDue(nowMs, () => true, updateQuestProgressStore);
   // Dashboard, Research, Upgrades: Vue panels watch the bridge and update themselves
-  runEmpireIfDue(nowMs, () => !getElement(getPanelElementId('empire'))?.hidden, () => {
-    renderCrewSection();
-    renderPrestigeSection();
-  });
+  // Empire panel is Vue; it watches the bridge and re-renders crew/planets/prestige itself
   updateComboIndicator();
   updateProgressionVisibility();
   updateTabVisibility(switchTab);
@@ -165,10 +158,8 @@ function gameLoop(now: number): void {
   requestAnimationFrame(gameLoop);
 }
 
-const PANEL_REFRESH_ACTIONS: Partial<Record<PanelId, () => void>> = {
-  empire: renderPlanetList,
-  // dashboard, research, upgrades, stats: Vue panels watch the bridge and update themselves
-};
+// All tab panels (dashboard, empire, research, upgrades, stats) are Vue; they watch the bridge.
+const PANEL_REFRESH_ACTIONS: Partial<Record<PanelId, () => void>> = {};
 
 function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
   const session = getSession();
@@ -250,7 +241,7 @@ async function init(): Promise<void> {
   setGameStartTime(gameStartTime);
   setNextEventAt(gameStartTime + MIN_EVENT_DELAY_MS);
   setStarfieldApi(startStarfield(getSettings, getEventContext));
-  mount(legacyRoot);
+  mount();
   updateTabVisibility(switchTab);
   updateTabMenuVisibility();
   syncCoinDisplay();

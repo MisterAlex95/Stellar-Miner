@@ -1,8 +1,10 @@
 <template>
   <div class="app-wrapper vue-shell">
     <AppHeader />
-    <AppTabs />
     <div id="legacy-root"></div>
+    <AppTabs />
+    <div id="legacy-panels"></div>
+    <SettingsModal />
     <ToastContainer />
   </div>
 </template>
@@ -11,9 +13,10 @@
 import AppHeader from './AppHeader.vue';
 import AppTabs from './AppTabs.vue';
 import ToastContainer from './ToastContainer.vue';
+import SettingsModal from './components/SettingsModal.vue';
 
-// Vue shell: header, tabs, legacy content in #legacy-root, toasts.
-// Game init and mount(legacyRoot) are triggered from game.ts after this app is mounted.
+// Vue shell: header, stats block in #legacy-root, tabs, tab panels in #legacy-panels, toasts.
+// Game init and mount() are triggered from game.ts after this app is mounted.
 </script>
 
 <style scoped>

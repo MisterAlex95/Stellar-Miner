@@ -29,11 +29,8 @@ import {
   updateLastSavedIndicator,
 } from '../application/handlers.js';
 import { subscribe } from '../application/eventBus.js';
-import { renderPrestigeSection } from './prestigeView.js';
-import { renderCrewSection } from './crewView.js';
 import { questProgressStore } from '../application/questProgressStore.js';
 import { renderQuestSection } from './questView.js';
-import { renderPlanetList } from './planetListView.js';
 import { openPlanetDetail, closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from './planetDetailView.js';
 import {
   closeUpgradeChoosePlanetModal,
@@ -56,7 +53,7 @@ import { getChangelog } from '../application/changelog.js';
 import { buildChangelogHtml } from './components/changelog.js';
 import { buildDebugPanelHtml } from './components/debugPanel.js';
 import { getOpenOverlayElement, openOverlay, closeOverlay } from './components/overlay.js';
-import { getAppHtml } from './appShell.js';
+import { getAppHtml, getStatsBlockHtml, getPanelsOnlyHtml } from './appShell.js';
 import {
   switchTab,
   updateTabMenuVisibility,
@@ -126,10 +123,19 @@ function applyThemeAndMotion(): void {
 }
 
 export function mount(container?: HTMLElement): void {
-  const root = container ?? document.getElementById('app');
+  const app = document.getElementById('app');
+  const legacyRoot = document.getElementById('legacy-root');
+  const legacyPanels = document.getElementById('legacy-panels');
+  const useVueShell = Boolean(legacyRoot && legacyPanels);
+  const root = useVueShell ? (app ?? null) : (container ?? app);
   if (!root) return;
   applyThemeAndMotion();
-  root.innerHTML = getAppHtml();
+  if (useVueShell) {
+    legacyRoot!.innerHTML = getStatsBlockHtml();
+    legacyPanels!.innerHTML = getPanelsOnlyHtml();
+  } else {
+    (root as HTMLElement).innerHTML = getAppHtml();
+  }
   applyTranslations();
 
   function goToTab(tabId: string): void {
@@ -273,8 +279,7 @@ export function mount(container?: HTMLElement): void {
     });
   }
 
-  if (settingsBtn && settingsOverlay) {
-    settingsBtn.addEventListener('click', openSettings);
+  if (settingsOverlay) {
     settingsOverlay.addEventListener('click', (e) => {
       if (e.target === settingsOverlay) closeSettings();
     });
@@ -316,38 +321,41 @@ export function mount(container?: HTMLElement): void {
       else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
     });
   }
-  if (settingsClose) settingsClose.addEventListener('click', closeSettings);
+  if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
+
   subscribe('save_success', () => updateLastSavedIndicator());
 
-  // --- Settings form: inputs, export/import, reset, achievements ---
   wireSettingsSubscribers(() => {
     applyThemeAndMotion();
     applyLayout();
     applySettingsToUI();
     applyTranslations();
   });
-  bindSettingsForm();
 
-  const exportBtn = document.getElementById('settings-export-btn');
-  const importBtn = document.getElementById('settings-import-btn');
-  const importFileEl = document.getElementById('settings-import-file') as HTMLInputElement | null;
-  if (exportBtn) exportBtn.addEventListener('click', handleExportSave);
-  if (importBtn) importBtn.addEventListener('click', () => importFileEl?.click());
-  if (importFileEl) {
-    importFileEl.addEventListener('change', async (e: Event) => {
-      const input = e.target as HTMLInputElement;
-      const file = input.files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      const ok = await handleImportSave(text);
-      input.value = '';
-      if (ok) location.reload();
-      else alert(t('invalidSaveFile'));
-    });
+  const settingsInLegacy = settingsOverlay?.closest('#legacy-root');
+  if (settingsInLegacy) {
+    if (settingsClose) settingsClose.addEventListener('click', closeSettings);
+    bindSettingsForm();
+    const exportBtn = document.getElementById('settings-export-btn');
+    const importBtn = document.getElementById('settings-import-btn');
+    const importFileEl = document.getElementById('settings-import-file') as HTMLInputElement | null;
+    if (exportBtn) exportBtn.addEventListener('click', handleExportSave);
+    if (importBtn) importBtn.addEventListener('click', () => importFileEl?.click());
+    if (importFileEl) {
+      importFileEl.addEventListener('change', async (e: Event) => {
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
+        if (!file) return;
+        const text = await file.text();
+        const ok = await handleImportSave(text);
+        input.value = '';
+        if (ok) location.reload();
+        else alert(t('invalidSaveFile'));
+      });
+    }
+    const resetBtn = document.getElementById('settings-reset-btn');
+    if (resetBtn) resetBtn.addEventListener('click', openResetConfirmModal);
   }
-
-  const resetBtn = document.getElementById('settings-reset-btn');
-  if (resetBtn) resetBtn.addEventListener('click', openResetConfirmModal);
 
   // --- Reset & prestige confirm modals ---
   const resetConfirmCancel = document.getElementById('reset-confirm-cancel');
@@ -452,55 +460,11 @@ export function mount(container?: HTMLElement): void {
     document.getElementById('mine-zone')?.classList.remove('mine-zone--active');
   });
 
-  // --- Empire: expedition, planets, prestige, crew ---
-  const expeditionArea = document.getElementById('expedition-area');
-  if (expeditionArea) {
-    expeditionArea.addEventListener('click', (e: Event) => {
-      if ((e.target as HTMLElement).closest('.buy-planet-btn')) openExpeditionModal();
-      if ((e.target as HTMLElement).closest('.expedition-cancel-btn')) handleCancelExpedition();
-    });
-  }
-
-  const planetList = document.getElementById('planet-list');
-  if (planetList) {
-    planetList.addEventListener('click', (e: Event) => {
-      const clicked = e.target instanceof Element ? e.target : null;
-      if (!clicked) return;
-      const planetCanvas = clicked.closest('.planet-card-visual');
-      if (planetCanvas) {
-        const planetId = (planetCanvas as HTMLElement).getAttribute('data-planet-id');
-        if (planetId) openPlanetDetail(planetId);
-        return;
-      }
-      const addSlotBtn = clicked.closest('.add-slot-btn');
-      if (addSlotBtn) {
-        const id = (addSlotBtn as HTMLElement).getAttribute('data-planet-id');
-        if (id) handleAddSlot(id);
-        return;
-      }
-      const housingBtn = clicked.closest('.build-housing-btn');
-      if (housingBtn && !(housingBtn as HTMLButtonElement).disabled) {
-        const planetId = (housingBtn as HTMLElement).getAttribute('data-planet-id');
-        if (planetId) handleBuildHousing(planetId);
-      }
-    });
-  }
-
-  const prestigeBtn = document.getElementById('prestige-btn');
-  if (prestigeBtn) prestigeBtn.addEventListener('click', handlePrestige);
-
-  document.querySelectorAll('.hire-astronaut-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const role = (btn as HTMLElement).getAttribute('data-role') as 'miner' | 'scientist' | 'pilot' | null;
-      handleHireAstronaut(role ?? 'miner');
-    });
-  });
+  // Empire: Vue EmpirePanel handles expedition, planets, prestige, crew clicks when tab is opened.
 
   // --- Intro, progression, initial section renders ---
   bindIntroModal();
   updateProgressionVisibility();
-  renderPrestigeSection();
-  renderCrewSection();
   renderQuestSection();
   questProgressStore.subscribe(() => renderQuestSection());
 
@@ -531,7 +495,7 @@ export function mount(container?: HTMLElement): void {
     });
   }
 
-  renderPlanetList();
+  // Planet list: rendered by Vue EmpirePanel when empire tab is opened.
 
   // Statistics: rendered by Vue StatisticsPanel when stats tab is opened (no init render here).
 

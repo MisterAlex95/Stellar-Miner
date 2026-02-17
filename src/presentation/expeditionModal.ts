@@ -246,26 +246,28 @@ function getSelectedTierFromDom(): ExpeditionTierId | null {
   return (id === 'easy' || id === 'medium' || id === 'hard' ? id : null) as ExpeditionTierId | null;
 }
 
+function onLaunchClick(): void {
+  const session = getSession();
+  if (!session) return;
+  const required = planetService.getExpeditionAstronautsRequired(session.player);
+  const tier = getSelectedTierFromDom();
+  const composition = getCompositionFromDom();
+  if (!tier || !composition) return;
+  const total = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
+  if (total !== required) return;
+  handleLaunchExpeditionFromModal(tier, composition);
+  closeExpeditionModal();
+}
+
 export function bindExpeditionModal(): void {
   const closeBtn = document.getElementById('expedition-modal-close');
   const cancelBtn = document.getElementById('expedition-modal-cancel');
-  const launchBtn = document.getElementById('expedition-modal-launch');
   const overlay = document.getElementById(OVERLAY_ID);
   closeBtn?.addEventListener('click', closeExpeditionModal);
   cancelBtn?.addEventListener('click', closeExpeditionModal);
-  launchBtn?.addEventListener('click', () => {
-    const session = getSession();
-    if (!session) return;
-    const required = planetService.getExpeditionAstronautsRequired(session.player);
-    const tier = getSelectedTierFromDom();
-    const composition = getCompositionFromDom();
-    if (!tier || !composition) return;
-    const total = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
-    if (total !== required) return;
-    handleLaunchExpeditionFromModal(tier, composition);
-    closeExpeditionModal();
-  });
   overlay?.addEventListener('click', (e) => {
-    if (e.target === overlay) closeExpeditionModal();
+    const target = e.target as HTMLElement;
+    if (target === overlay) closeExpeditionModal();
+    else if (target.id === 'expedition-modal-launch' || target.closest('#expedition-modal-launch')) onLaunchClick();
   });
 }

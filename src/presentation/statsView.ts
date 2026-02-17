@@ -16,8 +16,6 @@ import {
 import { formatNumber } from '../application/format.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
 import { getMaxAstronauts, CREW_ROLES, type CrewRole, type CrewJobRole } from '../domain/constants.js';
-import { renderPrestigeSection } from './prestigeView.js';
-import { renderCrewSection } from './crewView.js';
 import { EVENT_INTERVAL_MS, EVENT_CATALOG } from '../application/catalogs.js';
 import { getDiscoveredEventIds } from '../application/gameState.js';
 import { getNextMilestone, getUnlockedBlocks } from '../application/progression.js';
@@ -265,8 +263,6 @@ export function updateStats(): void {
     breakdownEl.textContent = parts.length > 0 ? parts.join(' · ') : '';
     breakdownEl.style.display = parts.length > 0 ? '' : 'none';
   }
-  renderPrestigeSection();
-  renderCrewSection();
 
   if (nextMilestoneEl) {
     const milestone = getNextMilestone(session);

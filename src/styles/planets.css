@@ -424,6 +424,7 @@
 
 .planet-detail-canvas-3d {
   border-radius: 8px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
   background: transparent;
   display: block;
   margin: 0 auto;
