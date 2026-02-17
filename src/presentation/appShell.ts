@@ -3,33 +3,6 @@ import { createGameplayBlock } from './components/gameplayBlock.js';
 import { createProgressBarWithWrap } from './components/progressBar.js';
 import { TOAST_CONTAINER_ID } from './components/toasts.js';
 
-function getHeaderHtml(): string {
-  return `
-    <div class="offline-banner" id="offline-banner" aria-live="polite" aria-hidden="true" role="status" hidden data-i18n="offlineIndicator">You are offline. Progress may not be saved.</div>
-    <header>
-      <div class="header-row">
-        <div>
-          <h1 data-i18n="appTitle">STELLAR MINER</h1>
-          <p class="subtitle" data-i18n="appSubtitle">Mine coins. Buy upgrades. Conquer the belt.</p>
-        </div>
-        <span class="header-actions">
-          <span class="info-btn-wrap">
-            <button type="button" class="info-btn" id="info-btn" data-i18n-aria-label="whatsNew">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-            </button>
-            <span class="info-update-badge" id="info-update-badge" aria-hidden="true"></span>
-          </span>
-          <button type="button" class="achievements-btn" id="achievements-btn" data-i18n-aria-label="openAchievements">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-          </button>
-          <button type="button" class="settings-btn" id="settings-btn" data-i18n-aria-label="openSettings">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-1.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v1.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-1.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-        </span>
-      </div>
-    </header>`;
-}
-
 function getModalsHtml(): string {
       const settingsBody = `
         <div class="settings-header">
@@ -541,33 +514,6 @@ function getTabsAndPanelsHtml(): string {
   });
 
   return `
-    <nav class="app-tabs" role="tablist" data-i18n-aria-label="gameSections">
-      <div class="app-tabs-scroll">
-        <button type="button" class="app-tab app-tab--active" role="tab" id="tab-mine" aria-selected="true" aria-controls="panel-mine" data-tab="mine"><span data-i18n="tabMine">Mine</span></button>
-        <button type="button" class="app-tab" role="tab" id="tab-dashboard" aria-selected="false" aria-controls="panel-dashboard" data-tab="dashboard"><span data-i18n="tabDashboard">Dashboard</span></button>
-        <button type="button" class="app-tab" role="tab" id="tab-empire" aria-selected="false" aria-controls="panel-empire" data-tab="empire"><span data-i18n="tabBase">Empire</span></button>
-        <button type="button" class="app-tab" role="tab" id="tab-research" aria-selected="false" aria-controls="panel-research" data-tab="research"><span data-i18n="tabResearch">Research</span></button>
-        <button type="button" class="app-tab" role="tab" id="tab-upgrades" aria-selected="false" aria-controls="panel-upgrades" data-tab="upgrades"><span data-i18n="tabUpgrades">Upgrades</span></button>
-        <button type="button" class="app-tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" data-tab="stats"><span data-i18n="tabStats">Stats</span></button>
-      </div>
-      <div class="app-tabs-more-wrap">
-        <button type="button" class="app-tab app-tab-more" id="tab-more" aria-haspopup="true" aria-expanded="false" aria-label="" data-i18n-aria-label="tabsMoreLabel"><span class="app-tab-more-dots">⋯</span></button>
-        <div class="app-tabs-menu" id="app-tabs-menu" role="menu" aria-label="" hidden>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="dashboard" data-i18n="tabDashboard">Dashboard</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="empire" data-i18n="tabBase">Empire</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="research" data-i18n="tabResearch">Research</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
-          <button type="button" class="app-tabs-menu-item" role="menuitem" data-tab="stats" data-i18n="tabStats">Stats</button>
-        </div>
-      </div>
-    </nav>
-    <p class="keyboard-hint keyboard-hint--below-tabs" id="keyboard-hint" data-i18n-aria-label="keyboardShortcutsHint">
-      <span class="key key--space" data-i18n="keyboardShortcutsSpaceKey">Space</span>
-      <span class="keyboard-hint-text" data-i18n="keyboardShortcutsMine">to mine</span>
-      <span class="keyboard-hint-sep" aria-hidden="true">·</span>
-      <span class="key" aria-hidden="true">1</span><span class="key" aria-hidden="true">2</span><span class="key" aria-hidden="true">3</span><span class="key" aria-hidden="true">4</span><span class="key" aria-hidden="true">5</span><span class="key" aria-hidden="true">6</span>
-      <span class="keyboard-hint-text" data-i18n="keyboardShortcutsTabs">switch tabs</span>
-    </p>
     <div class="app-tab-panel app-tab-panel--active" id="panel-mine" role="tabpanel" aria-labelledby="tab-mine" data-tab="mine">
       <section class="mine-zone" id="mine-zone" data-i18n-title="mineZoneTitle">
         <div class="mine-zone-floats" id="mine-zone-floats" aria-hidden="true"></div>
@@ -605,27 +551,9 @@ function getTabsAndPanelsHtml(): string {
     <div class="app-tab-panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" data-tab="stats" hidden>
       ${statisticsBlock}
     </div>
-    <nav class="app-tabs-bottom" id="app-tabs-bottom" aria-label="Quick navigation" data-i18n-aria-label="gameSections">
-      <button type="button" class="app-tab-bottom app-tab-bottom--active" role="tab" data-tab="mine" aria-selected="true"><span data-i18n="tabMine">Mine</span></button>
-      <button type="button" class="app-tab-bottom" role="tab" data-tab="empire" aria-selected="false"><span data-i18n="tabBase">Empire</span></button>
-      <div class="app-tabs-bottom-more-wrap">
-        <button type="button" class="app-tab-bottom app-tab-bottom-more" id="tab-bottom-more" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="tabsMoreLabel"><span class="app-tab-more-dots">⋯</span></button>
-        <div class="app-tabs-bottom-menu" id="app-tabs-bottom-menu" role="menu" aria-label="" hidden>
-          <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="dashboard" data-i18n="tabDashboard">Dashboard</button>
-          <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="research" data-i18n="tabResearch">Research</button>
-          <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="upgrades" data-i18n="tabUpgrades">Upgrades</button>
-          <button type="button" class="app-tabs-bottom-menu-item" role="menuitem" data-tab="stats" data-i18n="tabStats">Stats</button>
-        </div>
-      </div>
-    </nav>
   `;
 }
 
 export function getAppHtml(): string {
-  return [
-    getHeaderHtml(),
-    getModalsHtml(),
-    getStatsHtml(),
-    getTabsAndPanelsHtml(),
-  ].join('\n');
+  return [getModalsHtml(), getStatsHtml(), getTabsAndPanelsHtml()].join('\n');
 }

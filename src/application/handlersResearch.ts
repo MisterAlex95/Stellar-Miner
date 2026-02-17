@@ -69,9 +69,17 @@ function addProgressOverlayToCard(
   }
 }
 
+function removeProgressOverlayFromCard(cardEl: HTMLElement): void {
+  const overlay = cardEl.querySelector('.research-progress-overlay');
+  if (overlay) overlay.remove();
+  cardEl.classList.remove('research-card--in-progress');
+}
+
 function refreshAfterResearch(researchId: string): void {
   removeResearchInProgress(researchId);
   researchProgressEndTimeMs.delete(researchId);
+  const card = document.querySelector<HTMLElement>(`[data-research-id="${researchId}"]`);
+  if (card) removeProgressOverlayFromCard(card);
   notifyRefresh();
   getPresentationPort().renderResearchSection();
   const remainingIds = getResearchInProgressIds();
@@ -79,9 +87,9 @@ function refreshAfterResearch(researchId: string): void {
   const scientistCount = session?.player.crewByRole?.scientist ?? 0;
   for (const id of remainingIds) {
     const endMs = researchProgressEndTimeMs.get(id);
-    const card = document.querySelector<HTMLElement>(`[data-research-id="${id}"]`);
+    const remainingCard = document.querySelector<HTMLElement>(`[data-research-id="${id}"]`);
     const totalMs = getResearchDurationMs(id, scientistCount);
-    if (card && endMs) addProgressOverlayToCard(card, id, endMs, totalMs);
+    if (remainingCard && endMs) addProgressOverlayToCard(remainingCard, id, endMs, totalMs);
   }
 }
 

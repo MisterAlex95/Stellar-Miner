@@ -5,6 +5,7 @@ This folder is the single source for Stellar Miner documentation: architecture, 
 ## Architecture
 
 - **[architecture/overview.md](architecture/overview.md)** — Domain-Driven Design (DDD): domains, entities, value objects, aggregates, services, layered architecture, code references, reactive UI flow, game rules summary.
+- **[architecture/vue-migration-plan.md](architecture/vue-migration-plan.md)** — Incremental plan to migrate the presentation layer to Vue 3 (phases 0–7). Includes a presentation inventory mapping panels and areas to vanilla files for migration order.
 
 ## Features
 

@@ -236,12 +236,13 @@ export function getMaxBuyCount(upgradeId: string): number {
   return count;
 }
 
-export function renderUpgradeList(): void {
+/** @param container - When provided (e.g. from Vue panel), render into this element; otherwise use #upgrade-list. */
+export function renderUpgradeList(container?: HTMLElement): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
   const settings = getSettings();
-  const listEl = document.getElementById(UPGRADE_LIST_ID);
+  const listEl = container ?? document.getElementById(UPGRADE_LIST_ID);
   if (!listEl) return;
   listEl.innerHTML = '';
 
@@ -299,13 +300,16 @@ function getCurrentUpgradeIdsToShow(): string[] {
   return allUnlockedDefs.slice(0, UPGRADE_DISPLAY_COUNT).map((d) => d.id);
 }
 
+/** Uses #upgrade-list to find cards (works when Vue panel provides inner container for cards). */
 export function updateUpgradeListInPlace(): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
   const settings = getSettings();
-  const listEl = document.getElementById(UPGRADE_LIST_ID);
-  if (!listEl) return;
+  const hostEl = document.getElementById(UPGRADE_LIST_ID);
+  if (!hostEl) return;
+  // When Vue panel is mounted, cards live in .upgrade-list-cards; use it so full re-render does not wipe the Vue root.
+  const listEl = hostEl.querySelector<HTMLElement>('.upgrade-list-cards') ?? hostEl;
 
   const idsToShow = getCurrentUpgradeIdsToShow();
   const currentCardIds = [...listEl.querySelectorAll('.upgrade-card')].map(
@@ -315,7 +319,7 @@ export function updateUpgradeListInPlace(): void {
     idsToShow.length === currentCardIds.length &&
     idsToShow.every((id, i) => id === currentCardIds[i]);
   if (!sameSet) {
-    renderUpgradeList();
+    renderUpgradeList(listEl);
     return;
   }
 
@@ -335,7 +339,7 @@ export function updateUpgradeListInPlace(): void {
     }
   }
   if (needsFullRender) {
-    renderUpgradeList();
+    renderUpgradeList(listEl);
     return;
   }
   for (const card of cards) {

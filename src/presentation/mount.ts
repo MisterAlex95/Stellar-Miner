@@ -14,20 +14,12 @@ import {
   closePrestigeRewardsModal,
   confirmPrestige,
   handleMineClick,
-  handleUpgradeBuy,
-  handleUpgradeBuyMax,
-  handleUpgradeUninstall,
-  showUpgradeInstallProgress,
-  showUpgradeUninstallProgress,
-  cancelUpgradeInstall,
-  cancelUpgradeUninstall,
   handleCancelExpedition,
   handleAddSlot,
   handleBuildHousing,
   handlePrestige,
   handleHireAstronaut,
   handleClaimQuest,
-  startResearchWithProgress,
   handleExportSave,
   handleImportSave,
   handleDebugAction,
@@ -43,18 +35,13 @@ import { questProgressStore } from '../application/questProgressStore.js';
 import { renderQuestSection } from './questView.js';
 import { renderPlanetList } from './planetListView.js';
 import { openPlanetDetail, closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from './planetDetailView.js';
-import { renderResearchSection, toggleResearchTierCollapsed } from './researchView.js';
-import { renderUpgradeList } from './upgradeListView.js';
 import {
-  openUpgradeChoosePlanetModal,
   closeUpgradeChoosePlanetModal,
   bindUpgradeChoosePlanetModal,
-  getPlanetsForInstallModal,
 } from './upgradeChoosePlanetModal.js';
 import { openExpeditionModal, closeExpeditionModal, bindExpeditionModal } from './expeditionModal.js';
 import { getSession } from '../application/gameState.js';
 import { renderStatisticsSection } from './statisticsView.js';
-import { renderDashboardSection, updateDashboard } from './dashboardView.js';
 import {
   bindIntroModal,
   updateProgressionVisibility,
@@ -117,7 +104,7 @@ const COLLAPSIBLE_SECTION_IDS = [
 const STATS_COMPACT_ENTER = 70;
 const STATS_COMPACT_LEAVE = 35;
 
-function renderChangelogList(container: HTMLElement): void {
+export function renderChangelogList(container: HTMLElement): void {
   container.innerHTML = buildChangelogHtml(getChangelog());
 }
 
@@ -139,11 +126,11 @@ function applyThemeAndMotion(): void {
   root.setAttribute('data-reduced-motion', s.reducedMotion ? 'true' : 'false');
 }
 
-export function mount(): void {
-  const app = document.getElementById('app');
-  if (!app) return;
+export function mount(container?: HTMLElement): void {
+  const root = container ?? document.getElementById('app');
+  if (!root) return;
   applyThemeAndMotion();
-  app.innerHTML = getAppHtml();
+  root.innerHTML = getAppHtml();
   applyTranslations();
 
   function goToTab(tabId: string): void {
@@ -199,7 +186,7 @@ export function mount(): void {
   }
 
   initCollapsedState();
-  app.addEventListener('click', onCollapseToggle);
+  root.addEventListener('click', onCollapseToggle);
 
   // --- Mine zone canvas ---
   const settings = getSettings();
@@ -545,189 +532,10 @@ export function mount(): void {
     });
   }
 
-  const upgradeList = document.getElementById('upgrade-list');
-  if (upgradeList) {
-    upgradeList.addEventListener('click', (e: Event) => {
-      const clicked = e.target as HTMLElement;
-      const card = clicked.closest('.upgrade-card');
-      if (!card) return;
-      let target = clicked.closest('button.upgrade-btn') as HTMLButtonElement | null;
-      if (!target) {
-        const wrap = clicked.closest('.btn-tooltip-wrap');
-        target = wrap?.querySelector<HTMLButtonElement>('button.upgrade-btn') ?? null;
-      }
-      if (!target || target.hasAttribute('disabled')) return;
-      e.preventDefault();
-      const upgradeId = target.getAttribute('data-upgrade-id') ?? card.getAttribute('data-upgrade-id');
-      if (!upgradeId) return;
-      const session = getSession();
-      const player = session?.player;
-      const action = target.getAttribute('data-action');
-
-      if (action === 'uninstall') {
-        const uninstallPlanetsJson = target.getAttribute('data-uninstall-planets');
-        const uninstallPlanetId = target.getAttribute('data-uninstall-planet-id');
-        if (uninstallPlanetsJson) {
-          try {
-            const planets = JSON.parse(uninstallPlanetsJson) as { id: string; name: string }[];
-            if (planets.length > 0) {
-              openUpgradeChoosePlanetModal({ upgradeId, action: 'uninstall', planets });
-            }
-          } catch {
-            // ignore
-          }
-        } else if (uninstallPlanetId) {
-          const result = handleUpgradeUninstall(upgradeId, uninstallPlanetId);
-          if (result.uninstalled && result.durationMs != null) {
-            const durationMs = result.durationMs;
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                const cardEl = document.querySelector<HTMLElement>(`.upgrade-card[data-upgrade-id="${upgradeId}"]`);
-                if (cardEl)
-                  showUpgradeUninstallProgress(cardEl, durationMs, {
-                    upgradeId,
-                    planetId: uninstallPlanetId,
-                    onCancel: () => cancelUpgradeUninstall(upgradeId, uninstallPlanetId),
-                  });
-              });
-            });
-          }
-        }
-        return;
-      }
-
-      const multiPlanet = player && player.planets.length > 1;
-      const maxCountAttr = target.getAttribute('data-max-count');
-      const maxCount = maxCountAttr != null ? parseInt(maxCountAttr, 10) : undefined;
-
-      if (action === 'max') {
-        if (multiPlanet) {
-          const planets = getPlanetsForInstallModal(upgradeId);
-          if (planets.length > 0) {
-            openUpgradeChoosePlanetModal({ upgradeId, action: 'max', planets, maxCount: Number.isFinite(maxCount) ? maxCount : undefined });
-          }
-        } else {
-          const planetId = player?.planets[0]?.id;
-          const result = handleUpgradeBuyMax(upgradeId, planetId, Number.isFinite(maxCount) ? maxCount : undefined);
-          if (result.bought > 0 && result.durations.length > 0 && card instanceof HTMLElement && planetId) {
-            showUpgradeInstallProgress(card, result.durations, {
-              upgradeId,
-              planetId,
-              onCancel: () => cancelUpgradeInstall(upgradeId, planetId, result.durations.length),
-            });
-          }
-        }
-        return;
-      }
-
-      if (action === 'buy') {
-        if (multiPlanet) {
-          const planets = getPlanetsForInstallModal(upgradeId);
-          if (planets.length > 0) {
-            openUpgradeChoosePlanetModal({ upgradeId, action: 'buy', planets });
-          }
-        } else {
-          const planetId = player?.planets[0]?.id;
-          const result = handleUpgradeBuy(upgradeId, planetId);
-          if (result.bought && result.durations.length > 0 && card instanceof HTMLElement && planetId) {
-            showUpgradeInstallProgress(card, result.durations, {
-              upgradeId,
-              planetId,
-              onCancel: () => cancelUpgradeInstall(upgradeId, planetId, result.durations.length),
-            });
-          }
-        }
-      }
-    });
-  }
-
   renderPlanetList();
-  renderResearchSection();
-
-  // --- Upgrades list, research list ---
-  const researchList = document.getElementById('research-list');
-  if (researchList) {
-    researchList.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      const tierToggle = target.closest('.research-tier-toggle');
-      if (tierToggle) {
-        const tierAttr = (tierToggle as HTMLElement).getAttribute('data-tier');
-        if (tierAttr) {
-          toggleResearchTierCollapsed(Number(tierAttr));
-        }
-        return;
-      }
-      const btn = target.closest('.research-attempt-btn');
-      if (!btn || (btn as HTMLButtonElement).disabled) return;
-      const id = (btn as HTMLElement).getAttribute('data-research-id');
-      if (!id) return;
-      const card = btn.closest('.research-card');
-      if (card) startResearchWithProgress(card as HTMLElement, id);
-    });
-    researchList.addEventListener('mouseenter', (e) => {
-      const card = (e.target as HTMLElement).closest('.research-card');
-      if (!card) return;
-      researchList.querySelectorAll('.research-card--path-highlight').forEach((el) => {
-        el.classList.remove('research-card--path-highlight');
-      });
-      const path = card.getAttribute('data-unlock-path');
-      if (!path) return;
-      const ids = path.split(',').map((s) => s.trim()).filter(Boolean);
-      ids.forEach((id) => {
-        const el = researchList.querySelector(`[data-research-id="${id}"]`);
-        if (el) el.classList.add('research-card--path-highlight');
-      });
-    }, true);
-    researchList.addEventListener('mouseleave', () => {
-      researchList.querySelectorAll('.research-card--path-highlight').forEach((el) => {
-        el.classList.remove('research-card--path-highlight');
-      });
-    }, true);
-  }
 
   const statisticsContainer = document.getElementById('statistics-container');
   if (statisticsContainer) renderStatisticsSection(statisticsContainer);
-
-  // --- Dashboard: delegated click so buttons work after dynamic render ---
-  app.addEventListener('click', (e: Event) => {
-    const target = (e.target as HTMLElement).closest('#dashboard-content button');
-    if (!target) return;
-    const id = target.id;
-    const goto = target.getAttribute('data-goto');
-    if (id === 'dashboard-do-claim') {
-      handleClaimQuest();
-      updateDashboard();
-      return;
-    }
-    if (id === 'dashboard-do-prestige') {
-      openPrestigeConfirmModal();
-      return;
-    }
-    if (id === 'dashboard-do-upgrade') {
-      const upgradeId = target.getAttribute('data-upgrade-id');
-      const planetId = target.getAttribute('data-planet-id') || undefined;
-      if (upgradeId) {
-        handleUpgradeBuy(upgradeId, planetId);
-        updateDashboard();
-      }
-      return;
-    }
-    if (id === 'dashboard-goto-mine') {
-      goToTab('mine');
-      return;
-    }
-    if (id === 'dashboard-goto-empire') {
-      goToTab('empire');
-      return;
-    }
-    if (id === 'dashboard-goto-research') {
-      goToTab('research');
-      return;
-    }
-    if (goto) {
-      goToTab(goto);
-    }
-  });
 
   // --- Tabs, layout, offline, stats compact ---
   window.addEventListener('popstate', (e: PopStateEvent) => {
@@ -839,8 +647,7 @@ export function mount(): void {
     const idx = parseInt(key, 10) - 1;
     const tabId = VALID_TAB_IDS[idx];
     if (!tabId) return;
-    const tabEl = document.querySelector(`.app-tab[data-tab="${tabId}"]`);
-    if (tabEl) goToTab(tabId);
+    goToTab(tabId);
   });
   const initialTab = getInitialTab();
   replaceTabState(initialTab);

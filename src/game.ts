@@ -2,6 +2,7 @@ import './styles/index.css';
 import { setPresentationPort } from './application/uiBridge.js';
 import { createPresentationPort } from './presentation/presentationPortImpl.js';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
+import { mountVueApp } from './presentation/vue/main.js';
 import { mount, updateTabMenuVisibility, updateTabMoreActiveState, updateTabBadges, switchTab } from './presentation/mount.js';
 import {
   getOrCreateSession,
@@ -20,20 +21,18 @@ import {
   addRunCoins,
   getSessionClickCount,
   getSessionCoinsFromClicks,
+  getRunStats,
 } from './application/gameState.js';
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DELAY_MS } from './application/catalogs.js';
-import { recordStatsIfDue, loadStatsHistory } from './application/statsHistory.js';
-import { getResearchProductionMultiplier, isResearchInProgress } from './application/research.js';
+import { recordStatsIfDue, loadStatsHistory, getStatsHistory } from './application/statsHistory.js';
+import { getResearchProductionMultiplier } from './application/research.js';
 import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
-import { updateStatisticsSection } from './presentation/statisticsView.js';
-import { renderUpgradeList, updateUpgradeListInPlace } from './presentation/upgradeListView.js';
+import { updateUpgradeListInPlace } from './presentation/upgradeListView.js';
 import { renderPlanetList, updateExpeditionProgress } from './presentation/planetListView.js';
-import { renderResearchSection } from './presentation/researchView.js';
 import { renderCrewSection } from './presentation/crewView.js';
 import { renderPrestigeSection } from './presentation/prestigeView.js';
 import { updateQuestProgressStore } from './application/questProgressStore.js';
 import { renderQuestSection } from './presentation/questView.js';
-import { updateDashboard } from './presentation/dashboardView.js';
 import { updateComboIndicator } from './presentation/comboView.js';
 import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
@@ -47,6 +46,7 @@ import { withErrorBoundary } from './application/errorBoundary.js';
 import { getElement } from './presentation/components/domUtils.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
 import { PANEL_IDS, getPanelElementId, type PanelId } from './application/panelConfig.js';
+import { updateGameStateBridge } from './presentation/vue/gameStateBridge.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 80;
@@ -99,26 +99,18 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
 
 function runPanelUpdates(nowMs: number): void {
   runQuestIfDue(nowMs, () => true, updateQuestProgressStore);
-  runDashboardIfDue(nowMs, () => !getElement(getPanelElementId('dashboard'))?.hidden, updateDashboard);
+  // Dashboard, Research, Upgrades: Vue panels watch the bridge and update themselves
   runEmpireIfDue(nowMs, () => !getElement(getPanelElementId('empire'))?.hidden, () => {
     renderCrewSection();
     renderPrestigeSection();
   });
-  runResearchIfDue(nowMs, () => {
-    const p = getElement(getPanelElementId('research'));
-    return !!p && !p.hidden && !isResearchInProgress();
-  }, renderResearchSection);
   updateComboIndicator();
   updateProgressionVisibility();
   updateTabVisibility(switchTab);
   updateTabMenuVisibility();
   updateTabBadges();
   updateTabMoreActiveState();
-  if (typeof requestIdleCallback !== 'undefined') {
-    requestIdleCallback(() => updateStatisticsSection(), { timeout: 100 });
-  } else {
-    updateStatisticsSection();
-  }
+  // Stats panel is Vue-driven; it watches the bridge and updates itself
   const debugPanel = getElement('debug-panel');
   if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) updateDebugPanel();
 }
@@ -168,25 +160,55 @@ function gameLoop(now: number): void {
   runProductionTick(session, dt, nowMs);
   runPanelUpdates(nowMs);
   runCanvasUpdates(session, canvasDt);
+  updateGameStateBridge(getBridgeSnapshot());
 
   requestAnimationFrame(gameLoop);
 }
 
 const PANEL_REFRESH_ACTIONS: Partial<Record<PanelId, () => void>> = {
-  upgrades: renderUpgradeList,
   empire: renderPlanetList,
-  research: () => {
-    if (!isResearchInProgress()) renderResearchSection();
-  },
-  dashboard: updateDashboard,
-  stats: () => {
-    if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(() => updateStatisticsSection(), { timeout: 50 });
-    } else {
-      updateStatisticsSection();
-    }
-  },
+  // dashboard, research, upgrades, stats: Vue panels watch the bridge and update themselves
 };
+
+function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
+  const session = getSession();
+  const appEl = document.getElementById('app');
+  if (!session) {
+    return {
+      activeTab: appEl?.getAttribute('data-active-tab') ?? 'mine',
+      layout: getSettings().layout,
+      coins: 0,
+      production: 0,
+      planets: [],
+      statsHistoryRecent: getStatsHistory('recent'),
+      statsHistoryLongTerm: getStatsHistory('longTerm'),
+      runStats: getRunStats(),
+    };
+  }
+  const planetViews = session.player.planets.map((p, index) => {
+    const upgradeCounts: Record<string, number> = {};
+    for (const u of p.upgrades) upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
+    return {
+      id: p.id,
+      name: p.name,
+      displayName: getPlanetDisplayName(p.name, index),
+      usedSlots: p.usedSlots,
+      maxUpgrades: p.maxUpgrades,
+      upgradeCounts,
+      visualSeed: p.visualSeed ?? 0,
+    };
+  });
+  return {
+    activeTab: appEl?.getAttribute('data-active-tab') ?? 'mine',
+    layout: getSettings().layout,
+    coins: session.player.coins.toNumber(),
+    production: session.player.effectiveProductionRate.toNumber(),
+    planets: planetViews,
+    statsHistoryRecent: getStatsHistory('recent'),
+    statsHistoryLongTerm: getStatsHistory('longTerm'),
+    runStats: getRunStats(),
+  };
+}
 
 function createRefreshViews(): () => void {
   return () => {
@@ -204,6 +226,7 @@ function createRefreshViews(): () => void {
     updateTabMenuVisibility();
     updateTabVisibility(switchTab);
     updateTabBadges();
+    updateGameStateBridge(getBridgeSnapshot());
     if (typeof performance !== 'undefined' && performance.measure) {
       performance.mark('refresh-end');
       performance.measure('refresh', 'refresh-start', 'refresh-end');
@@ -213,6 +236,9 @@ function createRefreshViews(): () => void {
 
 async function init(): Promise<void> {
   setPresentationPort(createPresentationPort());
+  mountVueApp();
+  const legacyRoot = document.getElementById('legacy-root');
+  if (!legacyRoot) throw new Error('legacy-root not found after Vue mount');
   const session = await getOrCreateSession();
   setSession(session);
   loadStatsHistory();
@@ -224,7 +250,7 @@ async function init(): Promise<void> {
   setGameStartTime(gameStartTime);
   setNextEventAt(gameStartTime + MIN_EVENT_DELAY_MS);
   setStarfieldApi(startStarfield(getSettings, getEventContext));
-  mount();
+  mount(legacyRoot);
   updateTabVisibility(switchTab);
   updateTabMenuVisibility();
   syncCoinDisplay();

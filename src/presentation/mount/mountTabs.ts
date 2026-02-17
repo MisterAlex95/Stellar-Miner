@@ -1,20 +1,28 @@
 /**
  * Tab switching, badges, layout. Extracted from mount.ts.
  */
+import { createApp } from 'vue';
 import { getSession, getSettings, getExpeditionEndsAt, planetService } from '../../application/gameState.js';
 import { getUnlockedBlocks } from '../../application/progression.js';
 import { getQuestProgress } from '../../application/quests.js';
 import { RESEARCH_CATALOG, canAttemptResearch, hasEffectiveFreeSlot, getResearchHousingCapacityBonus } from '../../application/research.js';
 import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../../domain/constants.js';
-import { renderResearchSection } from '../researchView.js';
-import { renderDashboardSection } from '../dashboardView.js';
-import { renderUpgradeList } from '../upgradeListView.js';
 import { renderPlanetList } from '../planetListView.js';
 import { renderCrewSection } from '../crewView.js';
 import { renderPrestigeSection } from '../prestigeView.js';
-import { renderStatisticsSection } from '../statisticsView.js';
 import { markPanelHydrated } from '../../application/lazyPanels.js';
+import StatisticsPanel from '../vue/panels/StatisticsPanel.vue';
+import DashboardPanel from '../vue/panels/DashboardPanel.vue';
+import ResearchPanel from '../vue/panels/ResearchPanel.vue';
+import UpgradesPanel from '../vue/panels/UpgradesPanel.vue';
 import { hasNewInstallableUpgrade } from '../dashboardView.js';
+
+function mountVuePanel(containerId: string, component: unknown, datasetKey: string): void {
+  const container = document.getElementById(containerId);
+  if (!container || (container as HTMLElement & { dataset: Record<string, string> }).dataset[datasetKey]) return;
+  createApp(component as Parameters<typeof createApp>[0]).mount(container);
+  (container as HTMLElement & { dataset: Record<string, string> }).dataset[datasetKey] = 'true';
+}
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
@@ -74,15 +82,15 @@ export function switchTab(tabId: string): void {
     // ignore
   }
   if (tabId === 'research') {
-    renderResearchSection();
+    mountVuePanel('research-list', ResearchPanel, 'vueResearchMounted');
     markPanelHydrated('research');
   }
   if (tabId === 'dashboard') {
-    renderDashboardSection();
+    mountVuePanel('dashboard-content', DashboardPanel, 'vueDashboardMounted');
     markPanelHydrated('dashboard');
   }
   if (tabId === 'upgrades') {
-    renderUpgradeList();
+    mountVuePanel('upgrade-list', UpgradesPanel, 'vueUpgradesMounted');
     markPanelHydrated('upgrades');
   }
   if (tabId === 'empire') {
@@ -92,8 +100,7 @@ export function switchTab(tabId: string): void {
     markPanelHydrated('empire');
   }
   if (tabId === 'stats') {
-    const container = document.getElementById('statistics-container');
-    if (container) renderStatisticsSection(container);
+    mountVuePanel('statistics-container', StatisticsPanel, 'vueStatsMounted');
     markPanelHydrated('stats');
   }
   document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
