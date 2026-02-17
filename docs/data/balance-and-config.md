@@ -64,7 +64,7 @@ Economy and game balance constants.
 
 ### storageKeys
 
-Keys for localStorage: totalClicksKey, lastDailyBonusKey, achievementsKey, questStorageKey, milestonesStorageKey, questStreakKey, questLastClaimKey, comboMasterKey, prestigesTodayKey, statsStorageKey, statsHistoryStorageKey, shootingStarClickedKey.
+Keys for localStorage: totalClicksKey, lastDailyBonusKey, achievementsKey, questStorageKey, milestonesStorageKey, questStreakKey, questLastClaimKey, comboMasterKey, prestigesTodayKey, statsStorageKey, statsHistoryStorageKey.
 
 ### combo
 

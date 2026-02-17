@@ -26,5 +26,5 @@ When one triggers, the click reward is multiplied; toasts show the result.
 ## Shooting star
 
 - Rare visual in the mine zone (2D canvas or 3D): a shooting star crosses the screen.
-- **Clicking it** unlocks the achievement **"Wish upon a star"** (tracked in localStorage via `shootingStarClickedKey`).
+- **Clicking it** unlocks the achievement **"Wish upon a star"** (handler calls `unlockAchievement('shooting-star')`).
 - Implemented in MineZoneCanvas and MineZone3D; one star at a time, short duration.

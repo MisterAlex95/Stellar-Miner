@@ -1,5 +1,5 @@
 import Decimal from 'break_infinity.js';
-import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY, SHOOTING_STAR_CLICKED_KEY } from './catalogs.js';
+import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs.js';
 import { getSession } from './gameState.js';
 import { getQuestStreak, getQuestLastClaimAt } from './quests.js';
 import { getUnlockedResearch } from './research.js';
@@ -37,7 +37,8 @@ function buildCheck(def: AchievementDef): () => boolean {
     case 'researchNodesUnlocked':
       return () => getUnlockedResearch().length >= value;
     case 'shootingStarClicked':
-      return () => typeof localStorage !== 'undefined' && localStorage.getItem(SHOOTING_STAR_CLICKED_KEY) === '1';
+      /* Unlocked only by explicit unlockAchievement in handler when user clicks the star */
+      return () => false;
     default:
       return () => false;
   }

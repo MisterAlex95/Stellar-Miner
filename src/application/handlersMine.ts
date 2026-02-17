@@ -26,12 +26,10 @@ import {
   SUPER_LUCKY_MAX,
   CRITICAL_CLICK_CHANCE,
   COMBO_MASTER_KEY,
-  SHOOTING_STAR_CLICKED_KEY,
 } from './catalogs.js';
 import { PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL } from '../domain/constants.js';
 import { getQuestProgress } from './quests.js';
-import { incrementTotalClicksEver } from './achievements.js';
-import { checkAchievements } from './achievements.js';
+import { incrementTotalClicksEver, checkAchievements, unlockAchievement } from './achievements.js';
 import { checkAndShowMilestones } from './milestones.js';
 import { getPresentationPort } from './uiBridge.js';
 import { getResearchClickMultiplier } from './research.js';
@@ -134,8 +132,8 @@ export function handleMineClick(e?: MouseEvent): void {
   if (isCritical) ui.showCriticalToast(coins);
   const clickResult = mineZoneCanvasApi?.onMineClick(clientX, clientY) as
     { hitShootingStar?: boolean } | undefined;
-  if (clickResult?.hitShootingStar && typeof localStorage !== 'undefined') {
-    localStorage.setItem(SHOOTING_STAR_CLICKED_KEY, '1');
+  if (clickResult?.hitShootingStar) {
+    unlockAchievement('shooting-star');
   }
   if (superLucky || isCritical) triggerShake();
   ui.updateComboIndicator();

@@ -29,7 +29,7 @@
 | comboMaster | Reached combo tier | 1 = achieved |
 | totalSlotsGreaterThan | Total upgrade slots (all planets) > value | e.g. 6 = more than base slots |
 | researchNodesUnlocked | Research nodes unlocked (current run) | Minimum count |
-| shootingStarClicked | Clicked a shooting star in mine zone | 1 = achieved |
+| shootingStarClicked | Clicked a shooting star in mine zone; unlocked by handler (unlockAchievement), not by check | value ignored |
 
 ## Notes
 

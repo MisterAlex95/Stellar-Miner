@@ -201,7 +201,6 @@ export const DAILY_BONUS_COINS = gameConfig.dailyBonusCoins;
 export const TOTAL_CLICKS_KEY = S.totalClicksKey;
 export const LAST_DAILY_BONUS_KEY = S.lastDailyBonusKey;
 export const ACHIEVEMENTS_KEY = S.achievementsKey;
-export const SHOOTING_STAR_CLICKED_KEY = (S as { shootingStarClickedKey?: string }).shootingStarClickedKey ?? 'stellar-miner-shooting-star-clicked';
 export const QUEST_STORAGE_KEY = S.questStorageKey;
 export const MILESTONES_STORAGE_KEY = S.milestonesStorageKey;
 export const QUEST_STREAK_KEY = S.questStreakKey;
