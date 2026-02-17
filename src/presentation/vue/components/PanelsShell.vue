@@ -27,13 +27,29 @@
       <span
         id="combo-indicator"
         class="combo-indicator"
+        :class="{
+          'combo-indicator--active': store.combo.active,
+          'combo-indicator--fading': store.combo.fading,
+        }"
+        :data-combo-tier="store.combo.dataTier"
         aria-live="polite"
-      ></span>
+      >
+        <template v-if="store.combo.active">
+          <span class="combo-indicator__mult">{{ store.combo.multLabel }}</span>
+          <span class="combo-indicator__time">{{ store.combo.timeSec }}</span>
+        </template>
+      </span>
     </section>
     <section
       id="quest-section"
-      class="gameplay-block gameplay-block--unlocked quest-section"
+      class="gameplay-block quest-section"
+      :class="{
+        'gameplay-block--locked': !isSectionUnlocked('quest-section'),
+        'gameplay-block--unlocked': isSectionUnlocked('quest-section'),
+        'quest-section--complete': store.quest.sectionComplete,
+      }"
       data-block="quest"
+      :aria-hidden="!isSectionUnlocked('quest-section')"
       aria-labelledby="quest-title"
     >
       <div class="gameplay-block-header">
@@ -42,7 +58,7 @@
           id="quest-section-summary"
           class="gameplay-block-summary"
           aria-hidden="true"
-        ></span>
+        >{{ store.quest.summary }}</span>
         <div class="gameplay-block-header-actions">
           <button
             type="button"
@@ -77,18 +93,24 @@
             role="progressbar"
             aria-valuemin="0"
             aria-valuemax="100"
-            aria-valuenow="0"
-          ></div>
+            :aria-valuenow="Math.round(store.quest.progressPct)"
+            :style="{ width: store.quest.progressPct + '%' }"
+          />
         </div>
         <p
           id="quest-progress"
           class="quest-progress"
-        ></p>
+        >
+          {{ store.quest.progressText }}
+        </p>
         <p
           id="quest-streak-hint"
           class="quest-streak-hint"
           aria-live="polite"
-        ></p>
+          :style="store.quest.streakHintVisible ? '' : { display: 'none' }"
+        >
+          {{ store.quest.streakHint }}
+        </p>
         <span
           id="quest-claim-wrap"
           class="btn-tooltip-wrap"
@@ -97,9 +119,11 @@
             id="quest-claim"
             type="button"
             class="quest-claim-btn"
-            disabled
+            :disabled="store.quest.claimDisabled"
+            :title="store.quest.claimTitle"
+            @click="handleClaimQuest()"
           >
-            {{ t('claim') }}
+            {{ store.quest.claimLabel }}
           </button>
         </span>
       </div>
@@ -116,6 +140,7 @@
     <section
       id="dashboard-section"
       class="gameplay-block gameplay-block--unlocked dashboard-section"
+      aria-hidden="false"
       aria-labelledby="dashboard-title"
     >
       <div class="gameplay-block-header">
@@ -172,8 +197,13 @@
   >
     <section
       id="research-section"
-      class="gameplay-block gameplay-block--unlocked research-section"
+      class="gameplay-block research-section"
+      :class="{
+        'gameplay-block--locked': !isSectionUnlocked('research-section'),
+        'gameplay-block--unlocked': isSectionUnlocked('research-section'),
+      }"
       data-block="research"
+      :aria-hidden="!isSectionUnlocked('research-section')"
       aria-labelledby="research-title"
     >
       <div class="gameplay-block-header">
@@ -230,8 +260,13 @@
   >
     <section
       id="upgrades-section"
-      class="gameplay-block gameplay-block--unlocked upgrades-section"
+      class="gameplay-block upgrades-section"
+      :class="{
+        'gameplay-block--locked': !isSectionUnlocked('upgrades-section'),
+        'gameplay-block--unlocked': isSectionUnlocked('upgrades-section'),
+      }"
       data-block="upgrades"
+      :aria-hidden="!isSectionUnlocked('upgrades-section')"
       aria-labelledby="upgrades-title"
     >
       <div class="gameplay-block-header">
@@ -284,6 +319,7 @@
     <section
       id="statistics-section"
       class="gameplay-block gameplay-block--unlocked statistics-section"
+      aria-hidden="false"
       aria-labelledby="statistics-title"
     >
       <div class="gameplay-block-header">
@@ -325,4 +361,12 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
+import { useGameStateStore } from '../stores/gameState.js';
+import { handleClaimQuest } from '../../../application/handlers.js';
+
+const store = useGameStateStore();
+
+function isSectionUnlocked(sectionId: string): boolean {
+  return store.progression.sectionUnlocked[sectionId] !== false;
+}
 </script>

@@ -14,6 +14,7 @@ import ResearchPanel from '../vue/panels/ResearchPanel.vue';
 import UpgradesPanel from '../vue/panels/UpgradesPanel.vue';
 import EmpirePanel from '../vue/panels/EmpirePanel.vue';
 import { hasNewInstallableUpgrade } from '../dashboardView.js';
+import type { TabsSnapshot } from '../vue/stores/gameState.js';
 
 function mountVuePanel(containerId: string, component: unknown, datasetKey: string): void {
   const container = document.getElementById(containerId);
@@ -110,59 +111,20 @@ export function switchTab(tabId: string): void {
   if (tabBottomMore) tabBottomMore.classList.toggle('app-tab-bottom-more--active', isOverflowTab);
   const app = document.getElementById('app');
   if (app) app.setAttribute('data-active-tab', tabId);
-  updateTabMoreActiveState();
 }
 
-export function updateTabMenuVisibility(): void {
-  const session = getSession();
-  const unlocked = getUnlockedBlocks(session);
-  const isUnlockedFor = (tabId: string) =>
-    tabId === 'mine' ||
-    tabId === 'dashboard' ||
-    (tabId === 'upgrades' && unlocked.has('upgrades')) ||
-    (tabId === 'empire' && (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
-    (tabId === 'research' && unlocked.has('research')) ||
-    (tabId === 'stats' && unlocked.has('upgrades'));
-  document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
-    const tabId = item.getAttribute('data-tab');
-    if (!tabId) return;
-    item.style.display = isUnlockedFor(tabId) ? '' : 'none';
-  });
-  document.querySelectorAll<HTMLElement>('.app-tab-bottom[data-tab]').forEach((tab) => {
-    const tabId = tab.getAttribute('data-tab');
-    if (!tabId) return;
-    tab.style.display = isUnlockedFor(tabId) ? '' : 'none';
-  });
-  document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
-    const tabId = item.getAttribute('data-tab');
-    if (!tabId) return;
-    item.style.display = isUnlockedFor(tabId) ? '' : 'none';
-  });
-  updateTabMoreWrapVisibility();
-  updateTabBottomMoreWrapVisibility();
-}
-
-function updateTabMoreWrapVisibility(): void {
-  const wrap = document.querySelector<HTMLElement>('.app-tabs-more-wrap');
-  if (!wrap) return;
-  const hasVisibleItem = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-menu-item')).some(
-    (el) => getComputedStyle(el).display !== 'none'
-  );
-  wrap.classList.toggle('app-tabs-more-wrap--empty', !hasVisibleItem);
-}
-
-function updateTabBottomMoreWrapVisibility(): void {
-  const wrap = document.querySelector<HTMLElement>('.app-tabs-bottom-more-wrap');
-  if (!wrap) return;
-  const hasVisibleItem = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item')).some(
-    (el) => getComputedStyle(el).display !== 'none'
-  );
-  wrap.classList.toggle('app-tabs-bottom-more-wrap--empty', !hasVisibleItem);
-}
-
-export function updateTabBadges(): void {
+/** Build tabs visibility + badges snapshot for Vue (no DOM). */
+export function getTabsSnapshot(): TabsSnapshot {
   const session = getSession();
   const unlocked = session ? getUnlockedBlocks(session) : new Set<string>();
+  const visible: Record<string, boolean> = {
+    mine: true,
+    dashboard: true,
+    upgrades: unlocked.has('upgrades'),
+    empire: unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'),
+    research: unlocked.has('research'),
+    stats: unlocked.has('upgrades'),
+  };
   const questProgress = getQuestProgress();
   const questClaimable = questProgress?.done ?? false;
   const canPrestige = session?.player.coins.gte(PRESTIGE_COIN_THRESHOLD) ?? false;
@@ -172,10 +134,8 @@ export function updateTabBadges(): void {
     researchUnlocked &&
     session &&
     RESEARCH_CATALOG.some((n) => canAttemptResearch(n.id) && session.player.coins.gte(n.cost));
-
   const upgradesUnlocked = unlocked.has('upgrades');
   const hasNewModuleToInstall = upgradesUnlocked && hasNewInstallableUpgrade();
-
   const empireUnlocked = unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige');
   let hasEmpireAction = prestigeUnlocked && canPrestige;
   if (session && !hasEmpireAction) {
@@ -192,60 +152,16 @@ export function updateTabBadges(): void {
     if (!hasEmpireAction && player.planets.some((p) => planetService.canBuildHousing(player, p, hasEffectiveFreeSlot)))
       hasEmpireAction = true;
   }
-
   const questUnlocked = unlocked.has('quest');
-  setTabBadge('mine', questUnlocked && questClaimable);
-  setTabBadge('empire', empireUnlocked && hasEmpireAction);
-  setTabBadge('research', hasAttemptableResearch);
-  setTabBadge('dashboard', false);
-  setTabBadge('upgrades', hasNewModuleToInstall);
-  setTabBadge('stats', false);
-  updateTabMoreHasAction();
-}
-
-function updateTabMoreHasAction(): void {
-  const tabMore = document.getElementById('tab-more');
-  if (tabMore) {
-    const hasActionInOverflow = Array.from(document.querySelectorAll<HTMLElement>('.app-tab[data-tab]')).some(
-      (tab) => {
-        const isHidden = tab.offsetParent === null || getComputedStyle(tab).display === 'none';
-        return isHidden && tab.classList.contains('app-tab--has-action');
-      }
-    );
-    tabMore.classList.toggle('app-tab-more--has-action', hasActionInOverflow);
-  }
-  const tabBottomMore = document.getElementById('tab-bottom-more');
-  if (tabBottomMore) {
-    const hasActionInBottomMenu = Array.from(document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item')).some(
-      (item) => item.classList.contains('app-tabs-bottom-menu-item--has-action')
-    );
-    tabBottomMore.classList.toggle('app-tab-bottom-more--has-action', hasActionInBottomMenu);
-  }
-}
-
-function setTabBadge(tabId: string, visible: boolean): void {
-  const tabEl = document.getElementById(`tab-${tabId}`);
-  if (tabEl) tabEl.classList.toggle('app-tab--has-action', visible);
-  document.querySelectorAll(`.app-tabs-menu-item[data-tab="${tabId}"]`).forEach((el) => {
-    el.classList.toggle('app-tabs-menu-item--has-action', visible);
-  });
-  document.querySelectorAll(`.app-tabs-bottom-menu-item[data-tab="${tabId}"]`).forEach((el) => {
-    el.classList.toggle('app-tabs-bottom-menu-item--has-action', visible);
-  });
-  document.querySelectorAll(`.app-tab-bottom[data-tab="${tabId}"]`).forEach((el) => {
-    el.classList.toggle('app-tab-bottom--has-action', visible);
-  });
-}
-
-export function updateTabMoreActiveState(): void {
-  const tabMore = document.getElementById('tab-more');
-  if (!tabMore) return;
-  const activeTab = document.querySelector<HTMLElement>('.app-tab[data-tab].app-tab--active');
-  const tabId = activeTab?.getAttribute('data-tab');
-  if (!tabId) return;
-  const activeTabEl = document.querySelector<HTMLElement>(`.app-tab[data-tab="${tabId}"]`);
-  const isActiveTabHidden = activeTabEl ? activeTabEl.offsetParent === null || getComputedStyle(activeTabEl).display === 'none' : false;
-  tabMore.classList.toggle('app-tab-more--active', isActiveTabHidden);
+  const badges: Record<string, boolean> = {
+    mine: questUnlocked && questClaimable,
+    empire: empireUnlocked && hasEmpireAction,
+    research: hasAttemptableResearch,
+    dashboard: false,
+    upgrades: hasNewModuleToInstall,
+    stats: false,
+  };
+  return { visible, badges };
 }
 
 export function applyLayout(): void {

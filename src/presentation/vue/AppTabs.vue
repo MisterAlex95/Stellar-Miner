@@ -4,9 +4,10 @@
       <button
         v-for="tabId in tabIds"
         :key="tabId"
+        v-show="store.tabs.visible[tabId]"
         type="button"
         class="app-tab"
-        :class="{ 'app-tab--active': activeTab === tabId }"
+        :class="{ 'app-tab--active': activeTab === tabId, 'app-tab--has-action': store.tabs.badges[tabId] }"
         role="tab"
         :id="`tab-${tabId}`"
         :aria-selected="activeTab === tabId"
@@ -17,11 +18,15 @@
         <span>{{ tabLabel(tabId) }}</span>
       </button>
     </div>
-    <div class="app-tabs-more-wrap">
+    <div
+      class="app-tabs-more-wrap"
+      :class="{ 'app-tabs-more-wrap--empty': !visibleOverflowCount }"
+    >
       <button
         ref="tabMoreRef"
         type="button"
         class="app-tab app-tab-more"
+        :class="{ 'app-tab-more--active': isActiveTabInOverflow, 'app-tab-more--has-action': hasActionInOverflow }"
         id="tab-more"
         aria-haspopup="true"
         :aria-expanded="menuOpen"
@@ -40,11 +45,12 @@
         <button
           v-for="tabId in overflowTabIds"
           :key="tabId"
+          v-show="store.tabs.visible[tabId]"
           type="button"
           class="app-tabs-menu-item"
           role="menuitem"
           :data-tab="tabId"
-          :class="{ 'app-tabs-menu-item--active': activeTab === tabId }"
+          :class="{ 'app-tabs-menu-item--active': activeTab === tabId, 'app-tabs-menu-item--has-action': store.tabs.badges[tabId] }"
           @click="goToTab(tabId); menuOpen = false"
         >
           {{ tabLabel(tabId) }}
@@ -63,9 +69,10 @@
     <button
       v-for="tabId in bottomTabIds"
       :key="tabId"
+      v-show="store.tabs.visible[tabId]"
       type="button"
       class="app-tab-bottom"
-      :class="{ 'app-tab-bottom--active': activeTab === tabId }"
+      :class="{ 'app-tab-bottom--active': activeTab === tabId, 'app-tab-bottom--has-action': store.tabs.badges[tabId] }"
       role="tab"
       :data-tab="tabId"
       :aria-selected="activeTab === tabId"
@@ -73,11 +80,15 @@
     >
       <span>{{ tabLabel(tabId) }}</span>
     </button>
-    <div class="app-tabs-bottom-more-wrap">
+    <div
+      class="app-tabs-bottom-more-wrap"
+      :class="{ 'app-tabs-bottom-more-wrap--empty': !visibleBottomOverflowCount }"
+    >
       <button
         ref="tabBottomMoreRef"
         type="button"
         class="app-tab-bottom app-tab-bottom-more"
+        :class="{ 'app-tab-bottom-more--active': isActiveTabInBottomOverflow, 'app-tab-bottom-more--has-action': hasActionInBottomOverflow }"
         id="tab-bottom-more"
         aria-haspopup="true"
         :aria-expanded="bottomMenuOpen"
@@ -96,11 +107,12 @@
         <button
           v-for="tabId in bottomOverflowTabIds"
           :key="tabId"
+          v-show="store.tabs.visible[tabId]"
           type="button"
           class="app-tabs-bottom-menu-item"
           role="menuitem"
           :data-tab="tabId"
-          :class="{ 'app-tabs-bottom-menu-item--active': activeTab === tabId }"
+          :class="{ 'app-tabs-bottom-menu-item--active': activeTab === tabId, 'app-tabs-bottom-menu-item--has-action': store.tabs.badges[tabId] }"
           @click="goToTab(tabId); bottomMenuOpen = false"
         >
           {{ tabLabel(tabId) }}
@@ -125,17 +137,36 @@ const TAB_LABELS: Record<TabId, string> = {
   stats: 'tabStats',
 };
 
-const gameState = useGameStateStore();
+const store = useGameStateStore();
 const menuOpen = ref(false);
 const bottomMenuOpen = ref(false);
 const tabMoreRef = ref<HTMLElement | null>(null);
 const tabBottomMoreRef = ref<HTMLElement | null>(null);
 
-const activeTab = computed(() => gameState.activeTab);
+const activeTab = computed(() => store.activeTab);
 const tabIds = VALID_TAB_IDS as unknown as TabId[];
 const overflowTabIds = ['dashboard', 'empire', 'research', 'upgrades', 'stats'] as const;
 const bottomTabIds = ['mine', 'empire'] as const;
 const bottomOverflowTabIds = ['dashboard', 'research', 'upgrades', 'stats'] as const;
+
+const visibleOverflowCount = computed(() =>
+  overflowTabIds.filter((id) => store.tabs.visible[id]).length,
+);
+const visibleBottomOverflowCount = computed(() =>
+  bottomOverflowTabIds.filter((id) => store.tabs.visible[id]).length,
+);
+const hasActionInOverflow = computed(() =>
+  overflowTabIds.some((id) => store.tabs.visible[id] && store.tabs.badges[id]),
+);
+const hasActionInBottomOverflow = computed(() =>
+  bottomOverflowTabIds.some((id) => store.tabs.visible[id] && store.tabs.badges[id]),
+);
+const isActiveTabInOverflow = computed(() =>
+  (overflowTabIds as readonly string[]).includes(store.activeTab),
+);
+const isActiveTabInBottomOverflow = computed(() =>
+  (bottomOverflowTabIds as readonly string[]).includes(store.activeTab),
+);
 
 function tabLabel(tabId: string): string {
   return t(TAB_LABELS[tabId as TabId] ?? 'tabMine');
@@ -144,7 +175,7 @@ function tabLabel(tabId: string): string {
 function goToTab(tabId: string): void {
   pushTabState(tabId);
   switchTab(tabId);
-  gameState.setActiveTab(tabId);
+  store.setActiveTab(tabId);
 }
 
 function onDocumentClick(e: MouseEvent): void {

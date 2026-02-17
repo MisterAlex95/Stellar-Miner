@@ -26,7 +26,8 @@
         id="events-hint-modal-body"
         class="events-hint-modal-body"
         aria-describedby="events-hint-modal-body"
-      ></div>
+        v-html="store.stats.eventsHintBodyHtml"
+      />
     </div>
   </div>
 </template>
@@ -34,9 +35,11 @@
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
 import { closeOverlay } from '../../components/overlay.js';
+import { useGameStateStore } from '../stores/gameState.js';
 
 const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
+const store = useGameStateStore();
 
 function closeEventsHintModal(): void {
   closeOverlay(EVENTS_HINT_OVERLAY_ID, EVENTS_HINT_OPEN_CLASS);

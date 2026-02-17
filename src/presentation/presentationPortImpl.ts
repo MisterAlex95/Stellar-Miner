@@ -6,7 +6,6 @@ import type { PresentationPort } from '../application/uiBridge.js';
 import * as toasts from './toasts.js';
 import { openOverlay, closeOverlay } from './components/overlay.js';
 import { showToast } from './components/toasts.js';
-import { updateComboIndicator } from './comboView.js';
 import { renderResearchSection } from './researchView.js';
 import { flashUpgradeCard } from './upgradeListView.js';
 
@@ -33,7 +32,7 @@ export function createPresentationPort(): PresentationPort {
     showDailyBonusToast: toasts.showDailyBonusToast,
     showToast,
     flashUpgradeCard,
-    updateComboIndicator,
+    updateComboIndicator: () => {},
     renderResearchSection,
     openOverlay,
     closeOverlay,

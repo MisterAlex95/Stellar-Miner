@@ -9,6 +9,7 @@ import {
 } from '../application/progression.js';
 import { t, type StringKey } from '../application/strings.js';
 import { openOverlay, closeOverlay, isOverlayOpen } from './components/overlay.js';
+import type { ProgressionSnapshot } from './vue/stores/gameState.js';
 
 const INTRO_READY_DELAY_MS = 5000;
 
@@ -134,6 +135,18 @@ export function bindIntroModal(): void {
   }
 }
 
+/** Build section unlocked map for Vue (no DOM). */
+export function getProgressionSnapshot(): ProgressionSnapshot {
+  const session = getSession();
+  const unlocked = session ? getUnlockedBlocks(session) : new Set<string>();
+  const sectionUnlocked: Record<string, boolean> = {};
+  for (const block of PROGRESSION_BLOCKS) {
+    if (block.sectionId) sectionUnlocked[block.sectionId] = unlocked.has(block.id);
+  }
+  return { sectionUnlocked };
+}
+
+/** Update previousUnlocked and show intro modal when a block is just unlocked. Section classes are driven by Vue via bridge. */
 export function updateProgressionVisibility(): void {
   const session = getSession();
   const unlocked = getUnlockedBlocks(session);
@@ -141,13 +154,7 @@ export function updateProgressionVisibility(): void {
 
   for (const block of PROGRESSION_BLOCKS) {
     if (!block.sectionId) continue;
-    const section = document.getElementById(block.sectionId);
-    if (!section) continue;
     const isUnlocked = unlocked.has(block.id);
-    section.classList.toggle('gameplay-block--locked', !isUnlocked);
-    section.classList.toggle('gameplay-block--unlocked', isUnlocked);
-    section.setAttribute('aria-hidden', isUnlocked ? 'false' : 'true');
-
     const justUnlocked = isUnlocked && !previousUnlocked.has(block.id);
     const shouldShowModal = justUnlocked && !seen.has(block.id) && progressionInitialized;
     if (shouldShowModal) {
@@ -158,32 +165,6 @@ export function updateProgressionVisibility(): void {
 
   previousUnlocked = new Set(unlocked);
   progressionInitialized = true;
-}
-
-/** Show/hide tab buttons based on unlocked blocks. If current tab becomes hidden, call setActiveTab('mine'). */
-export function updateTabVisibility(setActiveTab: (tabId: string) => void): void {
-  const session = getSession();
-  const unlocked = getUnlockedBlocks(session);
-  const tabsNav = document.querySelector('.app-tabs');
-  if (!tabsNav) return;
-  const tabButtons = tabsNav.querySelectorAll<HTMLElement>('.app-tab[data-tab]');
-  const visibleTabs = new Set<string>();
-  tabButtons.forEach((tab) => {
-    const tabId = tab.getAttribute('data-tab');
-    if (!tabId) return;
-    const show =
-      tabId === 'mine' ||
-      tabId === 'dashboard' ||
-      (tabId === 'upgrades' && unlocked.has('upgrades')) ||
-      (tabId === 'empire' &&
-        (unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'))) ||
-      (tabId === 'research' && unlocked.has('research')) ||
-      (tabId === 'stats' && unlocked.has('upgrades'));
-    tab.style.display = show ? 'block' : 'none';
-    if (show) visibleTabs.add(tabId);
-  });
-  const activeTab = tabsNav.querySelector('.app-tab--active')?.getAttribute('data-tab');
-  if (activeTab && !visibleTabs.has(activeTab)) setActiveTab('mine');
 }
 
 /** Call once after mount: show welcome modal if first run. */

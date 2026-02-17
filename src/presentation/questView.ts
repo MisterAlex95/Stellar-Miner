@@ -4,60 +4,59 @@ import { generateQuest, getQuestProgress, getQuestStreak, getQuestLastClaimAt } 
 import { saveQuestState } from '../application/questState.js';
 import { QUEST_STREAK_WINDOW_MS, QUEST_STREAK_MAX, QUEST_STREAK_BONUS_PER_LEVEL } from '../application/catalogs.js';
 import { t, tParam } from '../application/strings.js';
-import { updateTooltipForButton } from './components/buttonTooltip.js';
+import type { QuestSnapshot } from './vue/stores/gameState.js';
 
-export function renderQuestSection(): void {
-  const container = document.getElementById('quest-section');
-  const progressEl = document.getElementById('quest-progress');
-  const claimBtn = document.getElementById('quest-claim');
-  if (!container) return;
-
+function ensureQuest(): void {
   let questState = getQuestState();
   if (!questState.quest) {
     questState = { quest: generateQuest() };
     setQuestState(questState);
     saveQuestState(questState);
   }
-
-  const q = questState.quest;
-  const p = getQuestProgress();
-  if (!q || !p) return;
-
-  const settings = getSettings();
-  container.classList.toggle('quest-section--complete', p.done);
-  const progressBar = document.getElementById('quest-progress-bar');
-  if (progressBar) {
-    const currentNum = typeof p.current === 'number' ? p.current : p.current.toNumber();
-    const pct = p.target > 0 ? Math.min(100, (currentNum / p.target) * 100) : 0;
-    progressBar.style.width = `${pct}%`;
-    progressBar.setAttribute('aria-valuenow', String(Math.round(pct)));
-  }
-  if (progressEl) {
-    progressEl.textContent = p.done
-      ? `${q.description} ✓`
-      : `${q.description}: ${formatNumber(p.current, false)} / ${formatNumber(p.target, false)}`;
-  }
-  if (claimBtn) {
-    const streak = getQuestStreak();
-    const nextBonus = streak < QUEST_STREAK_MAX ? ` (streak +${Math.round(QUEST_STREAK_BONUS_PER_LEVEL * 100)}%)` : '';
-    claimBtn.textContent = p.done ? tParam('claimRewardFormat', { reward: formatNumber(Math.floor(q.reward), settings.compactNumbers) }) + nextBonus : t('claim');
-    const tooltipText = p.done ? tParam('claimRewardFormat', { reward: formatNumber(Math.floor(q.reward), settings.compactNumbers) }) + ' reward' : t('completeQuestToClaim');
-    updateTooltipForButton(claimBtn, tooltipText);
-    claimBtn.toggleAttribute('disabled', !p.done);
-  }
-  const streakHint = document.getElementById('quest-streak-hint');
-  if (streakHint) {
-    const streak = getQuestStreak();
-    const lastClaim = getQuestLastClaimAt();
-    const withinWindow = Date.now() - lastClaim <= QUEST_STREAK_WINDOW_MS;
-    if (streak > 0 && withinWindow) streakHint.textContent = tParam('questStreakKeep', { n: streak });
-    else if (streak > 0) streakHint.textContent = t('streakExpired');
-    else streakHint.textContent = '';
-    streakHint.style.display = streak > 0 ? 'block' : 'none';
-  }
-  const questSummaryEl = document.getElementById('quest-section-summary');
-  if (questSummaryEl) {
-    const compact = settings?.compactNumbers ?? true;
-    questSummaryEl.textContent = p.done ? 'Claim!' : `${formatNumber(p.current, compact)} / ${formatNumber(p.target, compact)}`;
-  }
 }
+
+/** Build quest section snapshot for Vue (no DOM). */
+export function getQuestSnapshot(): QuestSnapshot {
+  ensureQuest();
+  const q = getQuestState().quest;
+  const p = getQuestProgress();
+  const defaultSnapshot: QuestSnapshot = {
+    progressPct: 0,
+    progressText: '',
+    claimLabel: t('claim'),
+    claimDisabled: true,
+    claimTitle: t('completeQuestToClaim'),
+    summary: '',
+    streakHint: '',
+    streakHintVisible: false,
+    sectionComplete: false,
+  };
+  if (!q || !p) return defaultSnapshot;
+  const settings = getSettings();
+  const currentNum = typeof p.current === 'number' ? p.current : (p.current as { toNumber: () => number }).toNumber();
+  const progressPct = p.target > 0 ? Math.min(100, (currentNum / p.target) * 100) : 0;
+  const progressText = p.done
+    ? `${q.description} ✓`
+    : `${q.description}: ${formatNumber(p.current, false)} / ${formatNumber(p.target, false)}`;
+  const streak = getQuestStreak();
+  const nextBonus = streak < QUEST_STREAK_MAX ? ` (streak +${Math.round(QUEST_STREAK_BONUS_PER_LEVEL * 100)}%)` : '';
+  const claimLabel = p.done ? tParam('claimRewardFormat', { reward: formatNumber(Math.floor(q.reward), settings.compactNumbers) }) + nextBonus : t('claim');
+  const claimTitle = p.done ? tParam('claimRewardFormat', { reward: formatNumber(Math.floor(q.reward), settings.compactNumbers) }) + ' reward' : t('completeQuestToClaim');
+  const compact = settings?.compactNumbers ?? true;
+  const summary = p.done ? 'Claim!' : `${formatNumber(p.current, compact)} / ${formatNumber(p.target, compact)}`;
+  const lastClaim = getQuestLastClaimAt();
+  const withinWindow = Date.now() - lastClaim <= QUEST_STREAK_WINDOW_MS;
+  const streakHint = streak > 0 && withinWindow ? tParam('questStreakKeep', { n: streak }) : streak > 0 ? t('streakExpired') : '';
+  return {
+    progressPct,
+    progressText,
+    claimLabel,
+    claimDisabled: !p.done,
+    claimTitle,
+    summary,
+    streakHint,
+    streakHintVisible: streak > 0,
+    sectionComplete: p.done,
+  };
+}
+

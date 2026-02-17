@@ -3,7 +3,7 @@ import { setPresentationPort } from './application/uiBridge.js';
 import { createPresentationPort } from './presentation/presentationPortImpl.js';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
 import { mountVueApp } from './presentation/vue/main.js';
-import { mount, updateTabMenuVisibility, updateTabMoreActiveState, updateTabBadges, switchTab } from './presentation/mount.js';
+import { mount, switchTab, getTabsSnapshot } from './presentation/mount.js';
 import {
   getOrCreateSession,
   setSession,
@@ -26,15 +26,15 @@ import {
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory, getStatsHistory } from './application/statsHistory.js';
 import { getResearchProductionMultiplier } from './application/research.js';
-import { updateStats, updateCoinDisplay, updateProductionDisplay, syncCoinDisplay, syncProductionDisplay } from './presentation/statsView.js';
+import { getStatsSnapshot } from './presentation/statsView.js';
 import { updateUpgradeListInPlace } from './presentation/upgradeListView.js';
 import { updateExpeditionProgress } from './presentation/planetListView.js';
 import { updateQuestProgressStore } from './application/questProgressStore.js';
-import { renderQuestSection } from './presentation/questView.js';
-import { updateComboIndicator } from './presentation/comboView.js';
+import { getQuestSnapshot } from './presentation/questView.js';
+import { getComboSnapshot } from './presentation/comboView.js';
 import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
-import { maybeShowWelcomeModal, updateProgressionVisibility, updateTabVisibility } from './presentation/progressionView.js';
+import { maybeShowWelcomeModal, updateProgressionVisibility, getProgressionSnapshot } from './presentation/progressionView.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
 import { showOfflineToast } from './presentation/toasts.js';
@@ -44,7 +44,7 @@ import { withErrorBoundary } from './application/errorBoundary.js';
 import { getElement } from './presentation/components/domUtils.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
 import { PANEL_IDS, getPanelElementId, type PanelId } from './application/panelConfig.js';
-import { updateGameStateBridge } from './presentation/vue/gameStateBridge.js';
+import { updateGameStateBridge, getGameStateBridge } from './presentation/vue/gameStateBridge.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 80;
@@ -53,8 +53,6 @@ const RESEARCH_UPDATE_INTERVAL_MS = 1500;
 const runQuestIfDue = createThrottledRun(QUEST_RENDER_INTERVAL_MS);
 const runDashboardIfDue = createThrottledRun(DASHBOARD_UPDATE_INTERVAL_MS);
 const runResearchIfDue = createThrottledRun(RESEARCH_UPDATE_INTERVAL_MS);
-let lastStatsUpdateMs = 0;
-const STATS_UPDATE_INTERVAL_MS = 100;
 let lastEventsUnlocked = false;
 let pageWasHidden = document.visibilityState === 'hidden';
 
@@ -84,25 +82,15 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
     if (Number.isFinite(earned)) addRunCoins(earned);
   }
   updateUpgradeListInPlace();
-  if (nowMs - lastStatsUpdateMs >= STATS_UPDATE_INTERVAL_MS) {
-    lastStatsUpdateMs = nowMs;
-    updateStats();
-  }
   recordStatsIfDue(nowMs, session.player.coins.value, rateDec, session.player.totalCoinsEver, getSessionClickCount(), getSessionCoinsFromClicks());
-  updateCoinDisplay(dt);
-  updateProductionDisplay(dt);
 }
 
 function runPanelUpdates(nowMs: number): void {
   runQuestIfDue(nowMs, () => true, updateQuestProgressStore);
   // Dashboard, Research, Upgrades: Vue panels watch the bridge and update themselves
-  // Empire panel is Vue; it watches the bridge and re-renders crew/planets/prestige itself
-  updateComboIndicator();
+  // Empire panel is Vue; combo indicator is driven by bridge
   updateProgressionVisibility();
-  updateTabVisibility(switchTab);
-  updateTabMenuVisibility();
-  updateTabBadges();
-  updateTabMoreActiveState();
+  // Tabs visibility/badges driven by Vue (bridge.tabs)
   // Stats panel is Vue-driven; it watches the bridge and updates itself
   const debugPanel = getElement('debug-panel');
   if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) updateDebugPanel();
@@ -174,6 +162,11 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
       statsHistoryRecent: getStatsHistory('recent'),
       statsHistoryLongTerm: getStatsHistory('longTerm'),
       runStats: getRunStats(),
+      stats: getStatsSnapshot(),
+      quest: getQuestSnapshot(),
+      combo: getComboSnapshot(),
+      tabs: getTabsSnapshot(),
+      progression: getProgressionSnapshot(),
     };
   }
   const planetViews = session.player.planets.map((p, index) => {
@@ -198,6 +191,11 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
     statsHistoryRecent: getStatsHistory('recent'),
     statsHistoryLongTerm: getStatsHistory('longTerm'),
     runStats: getRunStats(),
+    stats: getStatsSnapshot(),
+    quest: getQuestSnapshot(),
+    combo: getComboSnapshot(),
+    tabs: getTabsSnapshot(),
+    progression: getProgressionSnapshot(),
   };
 }
 
@@ -207,17 +205,18 @@ function createRefreshViews(): () => void {
       performance.mark('refresh-start');
     }
     saveSession();
-    updateStats();
     updateQuestProgressStore();
     for (const panelId of PANEL_IDS) {
       const action = PANEL_REFRESH_ACTIONS[panelId];
       if (action && isPanelHydrated(panelId)) action();
     }
     updateProgressionVisibility();
-    updateTabMenuVisibility();
-    updateTabVisibility(switchTab);
-    updateTabBadges();
     updateGameStateBridge(getBridgeSnapshot());
+    const bridge = getGameStateBridge();
+    if (!bridge.tabs.visible[bridge.activeTab]) {
+      switchTab('mine');
+      bridge.setActiveTab('mine');
+    }
     if (typeof performance !== 'undefined' && performance.measure) {
       performance.mark('refresh-end');
       performance.measure('refresh', 'refresh-start', 'refresh-end');
@@ -242,11 +241,12 @@ async function init(): Promise<void> {
   setNextEventAt(gameStartTime + MIN_EVENT_DELAY_MS);
   setStarfieldApi(startStarfield(getSettings, getEventContext));
   mount();
-  updateTabVisibility(switchTab);
-  updateTabMenuVisibility();
-  syncCoinDisplay();
-  syncProductionDisplay();
-  updateStats();
+  updateGameStateBridge(getBridgeSnapshot());
+  const bridge = getGameStateBridge();
+  if (!bridge.tabs.visible[bridge.activeTab]) {
+    switchTab('mine');
+    bridge.setActiveTab('mine');
+  }
   maybeShowWelcomeModal();
   if (offlineCoins > 0) showOfflineToast(offlineCoins, saveLoad.getLastOfflineWasCapped(), offlineHours > 0 ? offlineHours : undefined);
   lastTime = performance.now();

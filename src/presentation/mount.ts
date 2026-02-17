@@ -19,7 +19,6 @@ import {
   handleBuildHousing,
   handlePrestige,
   handleHireAstronaut,
-  handleClaimQuest,
   handleDebugAction,
   closeDebugMenu,
   toggleDebugMenu,
@@ -27,8 +26,6 @@ import {
   updateLastSavedIndicator,
 } from '../application/handlers.js';
 import { subscribe } from '../application/eventBus.js';
-import { questProgressStore } from '../application/questProgressStore.js';
-import { renderQuestSection } from './questView.js';
 import { openPlanetDetail, closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from './planetDetailView.js';
 import {
   closeUpgradeChoosePlanetModal,
@@ -52,9 +49,6 @@ import { buildDebugPanelHtml } from './components/debugPanel.js';
 import { getOpenOverlayElement, openOverlay, closeOverlay } from './components/overlay.js';
 import {
   switchTab,
-  updateTabMenuVisibility,
-  updateTabBadges,
-  updateTabMoreActiveState,
   applyLayout,
   getInitialTab,
   replaceTabState,
@@ -76,7 +70,7 @@ import {
   ACHIEVEMENTS_OVERLAY_OPEN_CLASS,
 } from './mount/mountModals.js';
 
-export { switchTab, updateTabMenuVisibility, updateTabBadges, updateTabMoreActiveState, applyLayout } from './mount/mountTabs.js';
+export { switchTab, applyLayout, getTabsSnapshot } from './mount/mountTabs.js';
 
 const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
@@ -392,11 +386,6 @@ export function mount(container?: HTMLElement): void {
   // --- Intro, progression, initial section renders ---
   bindIntroModal();
   updateProgressionVisibility();
-  renderQuestSection();
-  questProgressStore.subscribe(() => renderQuestSection());
-
-  const claimBtn = document.getElementById('quest-claim');
-  if (claimBtn) claimBtn.addEventListener('click', handleClaimQuest);
 
   // --- Debug panel ---
   if (!document.getElementById('debug-panel')) {

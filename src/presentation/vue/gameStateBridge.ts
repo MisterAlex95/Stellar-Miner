@@ -9,7 +9,9 @@ import type { RunStats } from '../../application/gameState.js';
 
 export type { PlanetViewItem, GameStateSnapshot };
 
-export interface GameStateBridge extends GameStateSnapshot {}
+export interface GameStateBridge extends GameStateSnapshot {
+  setActiveTab(tabId: string): void;
+}
 
 export type UpdateBridgePayload = GameStateSnapshot;
 
