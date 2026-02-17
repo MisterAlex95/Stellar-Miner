@@ -1,6 +1,8 @@
 <template>
   <section
+    ref="statsSectionRef"
     class="stats"
+    :class="{ 'stats--compact': compact }"
     aria-label="Stats"
   >
     <div
@@ -51,7 +53,7 @@
       id="crew-compact-card"
       class="stat-card stat-card--crew stats-compact-only"
       :style="store.stats.crewUnlocked ? '' : { display: 'none' }"
-      aria-hidden="true"
+      :aria-hidden="!compact"
     >
       <div class="stat-label">{{ t('astronautsLabel') }}</div>
       <div
@@ -152,6 +154,7 @@
     id="stats-spacer"
     class="stats-spacer"
     aria-hidden="true"
+    :style="spacerStyle"
   />
   <p
     id="next-milestone"
@@ -173,9 +176,12 @@ import { ref, watch, onUnmounted } from 'vue';
 import { t } from '../../../application/strings.js';
 import { TOAST_CONTAINER_ID } from '../../components/toasts.js';
 import { useGameStateStore } from '../stores/gameState.js';
+import { useStatsCompact } from '../composables/useStatsCompact.js';
 
 const toastContainerId = TOAST_CONTAINER_ID;
 const store = useGameStateStore();
+const statsSectionRef = ref<HTMLElement | null>(null);
+const { compact, spacerStyle } = useStatsCompact(statsSectionRef);
 const showBump = ref(false);
 let bumpTimeoutId: ReturnType<typeof setTimeout> | null = null;
 watch(

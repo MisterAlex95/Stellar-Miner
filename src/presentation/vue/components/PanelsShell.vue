@@ -46,6 +46,7 @@
       :class="{
         'gameplay-block--locked': !isSectionUnlocked('quest-section'),
         'gameplay-block--unlocked': isSectionUnlocked('quest-section'),
+        'gameplay-block--collapsed': sectionCollapse.isCollapsed('quest-section'),
         'quest-section--complete': store.quest.sectionComplete,
       }"
       data-block="quest"
@@ -66,19 +67,22 @@
             data-rules-key="questRules"
             data-title-key="quest"
             :aria-label="t('sectionRulesAria')"
+            @click.stop="onRulesClick('questRules', 'quest')"
           >
             ?
           </button>
           <button
             type="button"
             class="gameplay-block-toggle"
-            aria-expanded="true"
-            :aria-label="t('collapseSection')"
+            :aria-expanded="!sectionCollapse.isCollapsed('quest-section')"
+            :aria-label="sectionCollapse.isCollapsed('quest-section') ? t('expandSection') : t('collapseSection')"
+            :title="sectionCollapse.isCollapsed('quest-section') ? t('expandSection') : t('collapseSection')"
+            @click="sectionCollapse.toggle('quest-section')"
           >
             <span
               class="gameplay-block-toggle-icon"
               aria-hidden="true"
-            >▼</span>
+            >{{ sectionCollapse.isCollapsed('quest-section') ? '▶' : '▼' }}</span>
           </button>
         </div>
       </div>
@@ -140,6 +144,7 @@
     <section
       id="dashboard-section"
       class="gameplay-block gameplay-block--unlocked dashboard-section"
+      :class="{ 'gameplay-block--collapsed': sectionCollapse.isCollapsed('dashboard-section') }"
       aria-hidden="false"
       aria-labelledby="dashboard-title"
     >
@@ -159,13 +164,15 @@
           <button
             type="button"
             class="gameplay-block-toggle"
-            aria-expanded="true"
-            :aria-label="t('collapseSection')"
+            :aria-expanded="!sectionCollapse.isCollapsed('dashboard-section')"
+            :aria-label="sectionCollapse.isCollapsed('dashboard-section') ? t('expandSection') : t('collapseSection')"
+            :title="sectionCollapse.isCollapsed('dashboard-section') ? t('expandSection') : t('collapseSection')"
+            @click="sectionCollapse.toggle('dashboard-section')"
           >
             <span
               class="gameplay-block-toggle-icon"
               aria-hidden="true"
-            >▼</span>
+            >{{ sectionCollapse.isCollapsed('dashboard-section') ? '▶' : '▼' }}</span>
           </button>
         </div>
       </div>
@@ -201,6 +208,7 @@
       :class="{
         'gameplay-block--locked': !isSectionUnlocked('research-section'),
         'gameplay-block--unlocked': isSectionUnlocked('research-section'),
+        'gameplay-block--collapsed': sectionCollapse.isCollapsed('research-section'),
       }"
       data-block="research"
       :aria-hidden="!isSectionUnlocked('research-section')"
@@ -220,19 +228,22 @@
             data-rules-key="researchRules"
             data-title-key="research"
             :aria-label="t('sectionRulesAria')"
+            @click.stop="onRulesClick('researchRules', 'research')"
           >
             ?
           </button>
           <button
             type="button"
             class="gameplay-block-toggle"
-            aria-expanded="true"
-            :aria-label="t('collapseSection')"
+            :aria-expanded="!sectionCollapse.isCollapsed('research-section')"
+            :aria-label="sectionCollapse.isCollapsed('research-section') ? t('expandSection') : t('collapseSection')"
+            :title="sectionCollapse.isCollapsed('research-section') ? t('expandSection') : t('collapseSection')"
+            @click="sectionCollapse.toggle('research-section')"
           >
             <span
               class="gameplay-block-toggle-icon"
               aria-hidden="true"
-            >▼</span>
+            >{{ sectionCollapse.isCollapsed('research-section') ? '▶' : '▼' }}</span>
           </button>
         </div>
       </div>
@@ -264,6 +275,7 @@
       :class="{
         'gameplay-block--locked': !isSectionUnlocked('upgrades-section'),
         'gameplay-block--unlocked': isSectionUnlocked('upgrades-section'),
+        'gameplay-block--collapsed': sectionCollapse.isCollapsed('upgrades-section'),
       }"
       data-block="upgrades"
       :aria-hidden="!isSectionUnlocked('upgrades-section')"
@@ -283,19 +295,22 @@
             data-rules-key="upgradesRules"
             data-title-key="upgrades"
             :aria-label="t('sectionRulesAria')"
+            @click.stop="onRulesClick('upgradesRules', 'upgrades')"
           >
             ?
           </button>
           <button
             type="button"
             class="gameplay-block-toggle"
-            aria-expanded="true"
-            :aria-label="t('collapseSection')"
+            :aria-expanded="!sectionCollapse.isCollapsed('upgrades-section')"
+            :aria-label="sectionCollapse.isCollapsed('upgrades-section') ? t('expandSection') : t('collapseSection')"
+            :title="sectionCollapse.isCollapsed('upgrades-section') ? t('expandSection') : t('collapseSection')"
+            @click="sectionCollapse.toggle('upgrades-section')"
           >
             <span
               class="gameplay-block-toggle-icon"
               aria-hidden="true"
-            >▼</span>
+            >{{ sectionCollapse.isCollapsed('upgrades-section') ? '▶' : '▼' }}</span>
           </button>
         </div>
       </div>
@@ -319,6 +334,7 @@
     <section
       id="statistics-section"
       class="gameplay-block gameplay-block--unlocked statistics-section"
+      :class="{ 'gameplay-block--collapsed': sectionCollapse.isCollapsed('statistics-section') }"
       aria-hidden="false"
       aria-labelledby="statistics-title"
     >
@@ -336,19 +352,22 @@
             data-rules-key="statisticsRules"
             data-title-key="statisticsTitle"
             :aria-label="t('sectionRulesAria')"
+            @click.stop="onRulesClick('statisticsRules', 'statisticsTitle')"
           >
             ?
           </button>
           <button
             type="button"
             class="gameplay-block-toggle"
-            aria-expanded="true"
-            :aria-label="t('collapseSection')"
+            :aria-expanded="!sectionCollapse.isCollapsed('statistics-section')"
+            :aria-label="sectionCollapse.isCollapsed('statistics-section') ? t('expandSection') : t('collapseSection')"
+            :title="sectionCollapse.isCollapsed('statistics-section') ? t('expandSection') : t('collapseSection')"
+            @click="sectionCollapse.toggle('statistics-section')"
           >
             <span
               class="gameplay-block-toggle-icon"
               aria-hidden="true"
-            >▼</span>
+            >{{ sectionCollapse.isCollapsed('statistics-section') ? '▶' : '▼' }}</span>
           </button>
         </div>
       </div>
@@ -363,10 +382,17 @@
 import { t } from '../../../application/strings.js';
 import { useGameStateStore } from '../stores/gameState.js';
 import { handleClaimQuest } from '../../../application/handlers.js';
+import { openSectionRulesModal } from '../../mount/mountModals.js';
+import { useSectionCollapse } from '../composables/useSectionCollapse.js';
 
 const store = useGameStateStore();
+const sectionCollapse = useSectionCollapse();
 
 function isSectionUnlocked(sectionId: string): boolean {
   return store.progression.sectionUnlocked[sectionId] !== false;
+}
+
+function onRulesClick(rulesKey: string, titleKey: string): void {
+  openSectionRulesModal(rulesKey, titleKey);
 }
 </script>

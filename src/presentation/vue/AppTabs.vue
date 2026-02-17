@@ -126,7 +126,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { t } from '../../application/strings.js';
 import { useGameStateStore } from './stores/gameState.js';
-import { switchTab, pushTabState, VALID_TAB_IDS, type TabId } from '../mount/mountTabs.js';
+import { switchTab, pushTabState, VALID_TAB_IDS, HISTORY_STATE_KEY, type TabId } from '../mount/mountTabs.js';
 
 const TAB_LABELS: Record<TabId, string> = {
   mine: 'tabMine',
@@ -192,23 +192,39 @@ function onDocumentClick(e: MouseEvent): void {
 }
 
 function onDocumentKeydown(e: KeyboardEvent): void {
-  if (e.code !== 'Escape') return;
-  if (menuOpen.value) {
-    menuOpen.value = false;
-    tabMoreRef.value?.focus();
+  if (e.code === 'Escape') {
+    if (menuOpen.value) {
+      menuOpen.value = false;
+      tabMoreRef.value?.focus();
+    }
+    if (bottomMenuOpen.value) {
+      bottomMenuOpen.value = false;
+      tabBottomMoreRef.value?.focus();
+    }
+    return;
   }
-  if (bottomMenuOpen.value) {
-    bottomMenuOpen.value = false;
-    tabBottomMoreRef.value?.focus();
-  }
+  const key = e.key;
+  if (key !== '1' && key !== '2' && key !== '3' && key !== '4' && key !== '5' && key !== '6') return;
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.closest('[role="dialog"]'))) return;
+  const idx = parseInt(key, 10) - 1;
+  const tabId = VALID_TAB_IDS[idx];
+  if (tabId) goToTab(tabId);
+}
+
+function onPopState(e: PopStateEvent): void {
+  const tabId = e.state?.[HISTORY_STATE_KEY];
+  if (tabId && VALID_TAB_IDS.includes(tabId as TabId)) goToTab(tabId);
 }
 
 onMounted(() => {
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('keydown', onDocumentKeydown);
+  window.addEventListener('popstate', onPopState);
 });
 onUnmounted(() => {
   document.removeEventListener('click', onDocumentClick);
   document.removeEventListener('keydown', onDocumentKeydown);
+  window.removeEventListener('popstate', onPopState);
 });
 </script>

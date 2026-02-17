@@ -52,10 +52,6 @@ import {
   applyLayout,
   getInitialTab,
   replaceTabState,
-  pushTabState,
-  VALID_TAB_IDS,
-  HISTORY_STATE_KEY,
-  type TabId,
 } from './mount/mountTabs.js';
 import {
   openInfoModal,
@@ -76,19 +72,6 @@ const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
 const CHART_HELP_OVERLAY_ID = 'chart-help-overlay';
 const CHART_HELP_OPEN_CLASS = 'chart-help-overlay--open';
-const COLLAPSED_STORAGE_PREFIX = 'stellar-miner-collapsed-';
-const COLLAPSIBLE_SECTION_IDS = [
-  'quest-section',
-  'crew-section',
-  'planets-section',
-  'prestige-section',
-  'research-section',
-  'upgrades-section',
-  'statistics-section',
-  'dashboard-section',
-];
-const STATS_COMPACT_ENTER = 70;
-const STATS_COMPACT_LEAVE = 35;
 
 export function renderChangelogList(container: HTMLElement): void {
   container.innerHTML = buildChangelogHtml(getChangelog());
@@ -119,62 +102,8 @@ export function mount(container?: HTMLElement): void {
   if (!app || !legacyRoot || !legacyPanels) return;
   applyThemeAndMotion();
   applyTranslations();
-  const root = app;
 
-  function goToTab(tabId: string): void {
-    pushTabState(tabId);
-    switchTab(tabId);
-  }
-
-  // --- Collapsible sections ---
-  function initCollapsedState(): void {
-    COLLAPSIBLE_SECTION_IDS.forEach((id) => {
-      const section = document.getElementById(id);
-      const btn = section?.querySelector('.gameplay-block-toggle') as HTMLElement | null;
-      if (!section || !btn) return;
-      const isCollapsed = typeof localStorage !== 'undefined' && localStorage.getItem(COLLAPSED_STORAGE_PREFIX + id) === '1';
-      if (isCollapsed) {
-        section.classList.add('gameplay-block--collapsed');
-        btn.setAttribute('aria-expanded', 'false');
-        btn.setAttribute('title', t('expandSection'));
-        btn.setAttribute('aria-label', t('expandSection'));
-      } else {
-        btn.setAttribute('title', t('collapseSection'));
-        btn.setAttribute('aria-label', t('collapseSection'));
-      }
-    });
-  }
-
-  function onCollapseToggle(e: Event): void {
-    const target = e.target as HTMLElement;
-    const rulesBtn = target.closest('.gameplay-block-rules-btn');
-    if (rulesBtn) {
-      e.preventDefault();
-      e.stopPropagation();
-      const rulesKey = rulesBtn.getAttribute('data-rules-key');
-      const titleKey = rulesBtn.getAttribute('data-title-key');
-      if (rulesKey && titleKey) openSectionRulesModal(rulesKey, titleKey);
-      return;
-    }
-    const header = target.closest('.gameplay-block-header');
-    if (!header) return;
-    const section = header.closest('.gameplay-block');
-    if (!section || !section.id) return;
-    const btn = section.querySelector('.gameplay-block-toggle');
-    if (!btn) return;
-    const isCollapsed = section.classList.toggle('gameplay-block--collapsed');
-    (btn as HTMLElement).setAttribute('aria-expanded', String(!isCollapsed));
-    (btn as HTMLElement).setAttribute('title', isCollapsed ? t('expandSection') : t('collapseSection'));
-    (btn as HTMLElement).setAttribute('aria-label', isCollapsed ? t('expandSection') : t('collapseSection'));
-    try {
-      localStorage.setItem(COLLAPSED_STORAGE_PREFIX + section.id, isCollapsed ? '1' : '0');
-    } catch {
-      // ignore
-    }
-  }
-
-  initCollapsedState();
-  root.addEventListener('click', onCollapseToggle);
+  // Collapse and section rules are handled by Vue (PanelsShell, EmpireSection).
 
   // --- Mine zone canvas ---
   const settings = getSettings();
@@ -415,185 +344,13 @@ export function mount(container?: HTMLElement): void {
 
   // Statistics: rendered by Vue StatisticsPanel when stats tab is opened (no init render here).
 
-  // --- Tabs, layout, offline, stats compact ---
-  window.addEventListener('popstate', (e: PopStateEvent) => {
-    const tabId = e.state?.[HISTORY_STATE_KEY];
-    if (tabId && VALID_TAB_IDS.includes(tabId as TabId)) switchTab(tabId);
-  });
-  document.querySelectorAll<HTMLElement>('.app-tab[data-tab]').forEach((tab) => {
-    tab.addEventListener('click', () => {
-      const tabId = tab.getAttribute('data-tab');
-      if (tabId) goToTab(tabId);
-    });
-  });
-  document.querySelectorAll<HTMLElement>('.app-tab-bottom[data-tab]').forEach((tab) => {
-    tab.addEventListener('click', () => {
-      const tabId = tab.getAttribute('data-tab');
-      if (tabId) goToTab(tabId);
-    });
-  });
-  const tabMore = document.getElementById('tab-more');
-  const appTabsMenu = document.getElementById('app-tabs-menu');
-  function closeTabsMenu(): void {
-    if (appTabsMenu) appTabsMenu.hidden = true;
-    if (tabMore) {
-      tabMore.setAttribute('aria-expanded', 'false');
-      tabMore.classList.remove('app-tab-more--expanded');
-    }
-  }
-  function openTabsMenu(): void {
-    if (appTabsMenu) appTabsMenu.hidden = false;
-    if (tabMore) {
-      tabMore.setAttribute('aria-expanded', 'true');
-      tabMore.classList.add('app-tab-more--expanded');
-    }
-  }
-  if (tabMore && appTabsMenu) {
-    tabMore.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = appTabsMenu.hidden === false;
-      if (isOpen) closeTabsMenu();
-      else openTabsMenu();
-    });
-    document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
-      item.addEventListener('click', () => {
-        const tabId = item.getAttribute('data-tab');
-        if (tabId) goToTab(tabId);
-        closeTabsMenu();
-      });
-    });
-    document.addEventListener('click', (e) => {
-      if (appTabsMenu.hidden) return;
-      const target = e.target as Node;
-      if (!appTabsMenu.contains(target) && !tabMore.contains(target)) closeTabsMenu();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Escape' && !appTabsMenu.hidden) {
-        closeTabsMenu();
-        tabMore?.focus();
-      }
-    });
-  }
-  const tabBottomMore = document.getElementById('tab-bottom-more');
-  const appTabsBottomMenu = document.getElementById('app-tabs-bottom-menu');
-  function closeBottomTabsMenu(): void {
-    if (appTabsBottomMenu) appTabsBottomMenu.hidden = true;
-    if (tabBottomMore) {
-      tabBottomMore.setAttribute('aria-expanded', 'false');
-      tabBottomMore.classList.remove('app-tab-bottom-more--expanded');
-    }
-  }
-  function openBottomTabsMenu(): void {
-    if (appTabsBottomMenu) appTabsBottomMenu.hidden = false;
-    if (tabBottomMore) {
-      tabBottomMore.setAttribute('aria-expanded', 'true');
-      tabBottomMore.classList.add('app-tab-bottom-more--expanded');
-    }
-  }
-  if (tabBottomMore && appTabsBottomMenu) {
-    tabBottomMore.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = appTabsBottomMenu.hidden === false;
-      if (isOpen) closeBottomTabsMenu();
-      else openBottomTabsMenu();
-    });
-    document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
-      item.addEventListener('click', () => {
-        const tabId = item.getAttribute('data-tab');
-        if (tabId) goToTab(tabId);
-        closeBottomTabsMenu();
-      });
-    });
-    document.addEventListener('click', (e) => {
-      if (appTabsBottomMenu.hidden) return;
-      const target = e.target as Node;
-      const wrap = document.querySelector('.app-tabs-bottom-more-wrap');
-      if (!wrap?.contains(target) && !appTabsBottomMenu.contains(target)) closeBottomTabsMenu();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Escape' && !appTabsBottomMenu.hidden) {
-        closeBottomTabsMenu();
-        tabBottomMore?.focus();
-      }
-    });
-  }
-  document.addEventListener('keydown', (e) => {
-    const key = e.key;
-    if (key !== '1' && key !== '2' && key !== '3' && key !== '4' && key !== '5' && key !== '6') return;
-    const active = document.activeElement;
-    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.closest('[role="dialog"]'))) return;
-    const idx = parseInt(key, 10) - 1;
-    const tabId = VALID_TAB_IDS[idx];
-    if (!tabId) return;
-    goToTab(tabId);
-  });
+  // --- Tabs: initial state only; clicks, more menu, popstate, keyboard 1-6 are in AppTabs.vue ---
   const initialTab = getInitialTab();
   replaceTabState(initialTab);
   switchTab(initialTab);
   applyLayout();
 
-  const offlineBanner = document.getElementById('offline-banner');
-  function updateOfflineBanner(): void {
-    if (!offlineBanner) return;
-    const offline = typeof navigator !== 'undefined' && !navigator.onLine;
-    offlineBanner.hidden = !offline;
-    offlineBanner.setAttribute('aria-hidden', String(!offline));
-    if (offline) offlineBanner.textContent = t('offlineIndicator');
-  }
-  updateOfflineBanner();
-  window.addEventListener('online', updateOfflineBanner);
-  window.addEventListener('offline', updateOfflineBanner);
-
-  const statsSection = document.querySelector('.stats') as HTMLElement | null;
-  const statsSpacer = document.getElementById('stats-spacer');
-  let statsCompactRaf: number | null = null;
-  function updateStatsCompact(): void {
-    if (!statsSection) return;
-    const app = document.getElementById('app');
-    const activeTab = app?.getAttribute('data-active-tab') ?? '';
-    const isMine = activeTab === 'mine';
-    if (isMine) {
-      statsSection.classList.remove('stats--compact');
-      if (statsSpacer) {
-        statsSpacer.style.display = 'none';
-        statsSpacer.style.height = '';
-      }
-      const crewCompactCard = document.getElementById('crew-compact-card');
-      if (crewCompactCard) crewCompactCard.setAttribute('aria-hidden', 'true');
-      return;
-    }
-    const y = window.scrollY;
-    const wasCompact = statsSection.classList.contains('stats--compact');
-    const compact = wasCompact ? y > STATS_COMPACT_LEAVE : y > STATS_COMPACT_ENTER;
-    const crewCompactCard = document.getElementById('crew-compact-card');
-    if (crewCompactCard) crewCompactCard.setAttribute('aria-hidden', String(!compact));
-    if (compact && !wasCompact && statsSpacer) {
-      const spacerHeight = statsSection.offsetHeight;
-      statsSpacer.style.height = `${spacerHeight}px`;
-      statsSpacer.style.display = 'block';
-      statsSection.classList.add('stats--compact');
-    } else if (!compact) {
-      statsSection.classList.remove('stats--compact');
-      if (statsSpacer) {
-        statsSpacer.style.display = 'none';
-        statsSpacer.style.height = '';
-      }
-    }
-  }
-  function onScrollForStatsCompact(): void {
-    if (statsCompactRaf != null) return;
-    statsCompactRaf = requestAnimationFrame(() => {
-      statsCompactRaf = null;
-      updateStatsCompact();
-    });
-  }
-  updateStatsCompact();
-  window.addEventListener('scroll', onScrollForStatsCompact, { passive: true });
-  window.addEventListener('resize', () => {
-    if (statsSection?.classList.contains('stats--compact') && statsSpacer) {
-      statsSpacer.style.height = `${statsSection.offsetHeight}px`;
-    }
-  });
+  // Offline banner and stats compact are handled by Vue (AppHeader, StatsBlock).
 
   initTooltips();
 }
