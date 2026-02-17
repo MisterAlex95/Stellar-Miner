@@ -25,6 +25,7 @@ import {
   getResearchProductionMultiplier,
   getResearchProductionPercent,
   getUnlockedCrewRoles,
+  getResearchHousingCapacityBonus,
 } from '../application/research.js';
 import { getEstimatedClickRate } from '../application/productionHelpers.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
@@ -234,7 +235,7 @@ export function updateStats(): void {
       player.crewByRole.engineer * 0.012;
     const veteranBonus = 1 + player.veteranCount * 0.005;
     const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
-    const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
+    const maxCrew = getMaxAstronauts(player.planets.length, totalHousing, getResearchHousingCapacityBonus());
     const morale =
       player.astronautCount + player.veteranCount === 0
         ? 1

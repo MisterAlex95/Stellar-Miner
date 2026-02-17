@@ -5,7 +5,7 @@ import { getSession, getSettings, getExpeditionEndsAt } from '../application/gam
 import { planetService } from '../application/gameState.js';
 import { getExpeditionTiers, getExpeditionTier, CREW_ROLES, generatePlanetName, isNextExpeditionNewSystem, type ExpeditionComposition, type ExpeditionTierId, type CrewRole } from '../domain/constants.js';
 import { getExpeditionDeathChanceWithMedics } from '../domain/constants.js';
-import { getUnlockedCrewRoles } from '../application/research.js';
+import { getUnlockedCrewRoles, getResearchExpeditionDurationPercent, getResearchExpeditionDeathChancePercent } from '../application/research.js';
 import type { CrewJobRole } from '../domain/constants.js';
 import { formatNumber } from '../application/format.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
@@ -48,7 +48,7 @@ export function closeExpeditionModal(): void {
 }
 
 function getDeathChancePct(medicCount: number, tierId: string): number {
-  const chance = getExpeditionDeathChanceWithMedics(medicCount, tierId);
+  const chance = getExpeditionDeathChanceWithMedics(medicCount, tierId, getResearchExpeditionDeathChancePercent());
   return Math.round(chance * 100);
 }
 
@@ -69,7 +69,7 @@ function renderTiers(selectedTier: ExpeditionTierId | null, composition: Expedit
       const selected = selectedTier === id;
       const deathPct = getDeathChancePct(medicCount, id);
       const session = getSession();
-      const durationMs = session ? planetService.getExpeditionDurationMs(session.player, id, composition.pilot ?? 0) : 0;
+      const durationMs = session ? planetService.getExpeditionDurationMs(session.player, id, composition.pilot ?? 0, getResearchExpeditionDurationPercent()) : 0;
       const sec = Math.round(durationMs / 1000);
       const titleKey: StringKey = TIER_KEYS[tier.id] ?? 'expeditionTierMedium';
       const descKey: StringKey = TIER_DESC_KEYS[tier.id] ?? 'expeditionTierMediumDesc';

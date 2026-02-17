@@ -9,11 +9,20 @@ import {
   getModifierSlotEntries,
   getModifierCrewEntries,
   getResearchSuccessChanceMultiplier,
+  getEffectiveCost,
+  getEffectiveSuccessChance,
+  getResearchDurationMs,
+  getExpectedCoinsToUnlock,
+  getResearchFailureCount,
+  getResearchData,
+  getPrestigeResearchPoints,
+  getRecommendedResearchNodeIds,
   type ResearchNode,
 } from '../application/research.js';
 import { t, tParam, type StringKey } from '../application/strings.js';
 import { getCatalogResearchName, getCatalogResearchDesc, getCatalogUpgradeName } from '../application/i18nCatalogs.js';
 import type { CrewJobRole } from '../domain/constants.js';
+import { RESEARCH_PITY_FAILURES } from '../domain/constants.js';
 import { escapeAttr, escapeHtml } from './components/domUtils.js';
 import { buttonWithTooltipHtml } from './components/buttonTooltip.js';
 
@@ -98,13 +107,26 @@ function buildCardInfoHtmlWithoutMeta(
 function buildAttemptMetaHtml(
   costStr: string,
   effectivePct: number,
-  scientistBonusPct: number
+  scientistBonusPct: number,
+  expectedCostStr: string | null,
+  durationSec: number,
+  dataCost: number,
+  hasPity: boolean,
+  prestigePoints: number
 ): string {
   const chanceHtml =
     scientistBonusPct > 0
       ? `${tParam('percentSuccess', { pct: effectivePct })} ${tParam('researchScientistBonus', { pct: scientistBonusPct })}`
       : tParam('percentSuccess', { pct: effectivePct });
-  return `<p class="research-card-meta"><span class="research-card-cost">${escapeHtml(costStr)} ⬡</span><span class="research-card-chance">${escapeHtml(chanceHtml)}</span></p>`;
+  const parts = [`<p class="research-card-meta"><span class="research-card-cost">${escapeHtml(costStr)} ⬡</span><span class="research-card-chance">${escapeHtml(chanceHtml)}</span></p>`];
+  if (expectedCostStr) parts.push(`<p class="research-card-expected">${escapeHtml(expectedCostStr)}</p>`);
+  parts.push(`<p class="research-card-duration">${escapeHtml(tParam('researchDurationSec', { sec: durationSec }))}</p>`);
+  if (dataCost > 0) parts.push(`<p class="research-card-data-req">${escapeHtml(tParam('researchDataRequirement', { n: String(dataCost) }))}</p>`);
+  if (hasPity) parts.push(`<p class="research-card-pity">${escapeHtml(t('researchPityNext'))}</p>`);
+  if (prestigePoints >= 1) {
+    parts.push(`<label class="research-card-prestige-point"><input type="checkbox" class="research-use-prestige-point" /> ${escapeHtml(t('researchUsePrestigePoint'))}</label>`);
+  }
+  return parts.join('');
 }
 
 const RESEARCH_TIER_COLLAPSED_KEY = 'stellar-miner-research-tier-collapsed';
@@ -146,6 +168,9 @@ export function renderResearchSection(): void {
   const scientistCount = session?.player.crewByRole?.scientist ?? 0;
   const scientistMultiplier = getResearchSuccessChanceMultiplier(scientistCount);
   const scientistBonusPct = scientistCount > 0 ? Math.round((scientistMultiplier - 1) * 100) : 0;
+  const recommendedIds = getRecommendedResearchNodeIds(scientistCount);
+  const prestigePoints = getPrestigeResearchPoints();
+  const researchData = getResearchData();
 
   const tierSections = tiers.map(({ tier, rows }) => {
     const isCollapsed = collapsedTiers.has(tier);
@@ -154,9 +179,12 @@ export function renderResearchSection(): void {
         const nodeCards = rowNodes
           .map((node) => {
             const done = unlocked.includes(node.id);
-            const canAttempt = session && canAttemptResearch(node.id) && session.player.coins.gte(node.cost);
-            const effectiveChance = Math.min(1, node.successChance * scientistMultiplier);
-            const effectivePct = Math.round(effectiveChance * 100);
+            const effectiveCost = getEffectiveCost(node.id);
+            const canAttempt =
+              session &&
+              canAttemptResearch(node.id, { coinsAvailable: session.player.coins.value.toNumber(), researchDataAvailable: researchData }) &&
+              session.player.coins.gte(effectiveCost);
+            const effectivePct = Math.round(getEffectiveSuccessChance(node.id, scientistCount) * 100);
             const prereqText =
               node.prerequisites.length > 0
                 ? node.prerequisites
@@ -166,6 +194,14 @@ export function renderResearchSection(): void {
             const modText = modifierText(node);
             const unlockPathIds = getUnlockPathIds(node.id).concat(node.id);
             const pathNames = unlockPathIds.map((id) => getCatalogResearchName(id));
+            const expectedCost = getExpectedCoinsToUnlock(node.id, scientistCount);
+            const expectedCostStr = expectedCost < Number.MAX_SAFE_INTEGER ? tParam('researchExpectedCost', { cost: formatNumber(Math.round(expectedCost), settings.compactNumbers) }) : null;
+            const durationSec = Math.round(getResearchDurationMs(node.id, scientistCount) / 1000);
+            const dataCost = node.researchDataCost ?? 0;
+            const failureCount = getResearchFailureCount(node.id);
+            const hasPity = failureCount >= RESEARCH_PITY_FAILURES;
+            const isRecommended = recommendedIds.includes(node.id);
+            const isSecret = !!node.secret;
             return renderResearchCard(
               node,
               tier - 1,
@@ -177,7 +213,15 @@ export function renderResearchSection(): void {
               modText,
               pathNames,
               unlockPathIds,
-              settings.compactNumbers
+              settings.compactNumbers,
+              formatNumber(effectiveCost, settings.compactNumbers),
+              expectedCostStr,
+              durationSec,
+              dataCost,
+              hasPity,
+              prestigePoints,
+              isRecommended,
+              isSecret
             );
           })
           .join('');
@@ -199,6 +243,11 @@ export function renderResearchSection(): void {
     </div>`;
   });
 
+  const researchDataEl = document.getElementById('research-data-display');
+  if (researchDataEl) {
+    researchDataEl.textContent = `${t('researchDataLabel')}: ${researchData}`;
+  }
+
   listEl.innerHTML = `
     <div class="research-tree" role="tree" aria-label="${t('research')} tree">
       ${tierSections.join('')}
@@ -216,23 +265,34 @@ function renderResearchCard(
   modText: string,
   pathNames: string[],
   unlockPathIds: string[],
-  compactNumbers: boolean
+  compactNumbers: boolean,
+  costStr: string,
+  expectedCostStr: string | null,
+  durationSec: number,
+  dataCost: number,
+  hasPity: boolean,
+  prestigePoints: number,
+  isRecommended: boolean,
+  isSecret: boolean
 ): string {
-  const costStr = formatNumber(node.cost, compactNumbers);
   const levelLabel = rowIndex + 1;
   const pathTitle =
     pathNames.length > 0
       ? tParam('researchUnlockPath', { path: pathNames.join(' → ') + ' → ' + getCatalogResearchName(node.id) })
       : tParam('researchUnlockPathSingle', { name: getCatalogResearchName(node.id) });
-  const pathAttr = escapeAttr(pathTitle);
   const pathIdsAttr = escapeAttr(unlockPathIds.join(','));
   const name = getCatalogResearchName(node.id);
   const desc = getCatalogResearchDesc(node.id);
   const cardInfoHtml = buildCardInfoHtml(desc, modText, prereqText, costStr, effectivePct, scientistBonusPct, done);
   const attemptTitle = canAttempt ? tParam('researchAttemptTooltip', { pct: effectivePct }) : t('researchAttemptDisabled');
+  const extraClasses = [
+    done ? 'research-card--done' : '',
+    isRecommended ? 'research-card--recommended' : '',
+    isSecret ? 'research-card--secret' : '',
+  ].filter(Boolean).join(' ');
   if (done) {
     return `
-      <div class="research-card research-card--done" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem" aria-selected="true">
+      <div class="research-card ${extraClasses}" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem" aria-selected="true">
         <div class="research-card-header">
           <span class="research-card-name">${name}</span>
         </div>
@@ -248,9 +308,9 @@ function renderResearchCard(
     scientistBonusPct,
     done
   );
-  const metaHtml = buildAttemptMetaHtml(costStr, effectivePct, scientistBonusPct);
+  const metaHtml = buildAttemptMetaHtml(costStr, effectivePct, scientistBonusPct, expectedCostStr, durationSec, dataCost, hasPity, prestigePoints);
   return `
-    <div class="research-card" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem">
+    <div class="research-card ${extraClasses}" data-research-id="${node.id}" data-unlock-path="${pathIdsAttr}" data-level="${levelLabel}" role="treeitem">
       <div class="research-card-header">
         <span class="research-card-name">${name}</span>
       </div>

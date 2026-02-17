@@ -514,6 +514,7 @@ function getTabsAndPanelsHtml(): string {
     rulesKey: 'researchRules',
     bodyHtml: `
           <p class="research-hint" data-i18n="researchHint">Skill tree: attempt to unlock nodes for +% production and +% click. Each attempt has a success chance; on failure coins are lost. Resets on Prestige.</p>
+          <p class="research-data-line" id="research-data-display" aria-live="polite"></p>
           <div class="research-list" id="research-list"></div>
         `,
   });

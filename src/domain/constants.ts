@@ -57,6 +57,19 @@ const B = balance as {
     durationMultiplier: number;
     extraSlot?: boolean;
   }>;
+  researchPartialProgressPerFailure?: number;
+  researchPartialProgressMaxChanceBonus?: number;
+  researchPityFailures?: number;
+  researchCostReductionPerFailure?: number;
+  researchCostMinMultiplier?: number;
+  researchDurationBaseMs?: number;
+  researchDurationPerRowMs?: number;
+  researchScientistDurationReductionPerScientist?: number;
+  researchScientistDurationCap?: number;
+  prestigeResearchPointsPerPrestige?: number;
+  researchDataPerExpeditionSuccess?: number;
+  researchBranchBonusProductionPercent?: number;
+  researchBranchBonusClickPercent?: number;
 };
 
 export type ExpeditionTierId = 'easy' | 'medium' | 'hard';
@@ -106,11 +119,12 @@ export function getExpeditionAstronautsRequired(planetCount: number): number {
 const PILOT_DURATION_REDUCTION = B.pilotExpeditionDurationReductionPerPilot ?? 0.08;
 const PILOT_DURATION_MAX_REDUCTION = 0.5;
 
-/** Expedition duration in ms (takes longer as you have more planets). Optional tierId applies duration multiplier. Pilots reduce duration (e.g. 8% per pilot, max 50%). */
+/** Expedition duration in ms (takes longer as you have more planets). Optional tierId applies duration multiplier. Pilots reduce duration (e.g. 8% per pilot, max 50%). researchDurationPercent: from research (negative = faster). */
 export function getExpeditionDurationMs(
   planetCount: number,
   tierId?: ExpeditionTierId | string,
-  pilotCount: number = 0
+  pilotCount: number = 0,
+  researchDurationPercent: number = 0
 ): number {
   const base = B.expeditionDurationBaseMs ?? 20000;
   const perPlanet = B.expeditionDurationPerPlanetMs ?? 8000;
@@ -119,7 +133,8 @@ export function getExpeditionDurationMs(
   const mult = tier?.durationMultiplier ?? 1;
   const pilotReduction = Math.min(pilotCount * PILOT_DURATION_REDUCTION, PILOT_DURATION_MAX_REDUCTION);
   const durationMult = 1 - pilotReduction;
-  return Math.max(1000, Math.round(raw * mult * durationMult));
+  const researchMult = 1 + researchDurationPercent / 100;
+  return Math.max(1000, Math.round(raw * mult * durationMult * researchMult));
 }
 
 export const PILOT_EXPEDITION_DURATION_REDUCTION_PCT = Math.round(PILOT_DURATION_REDUCTION * 100);
@@ -133,15 +148,20 @@ export const EXPEDITION_MIN_DEATH_CHANCE = B.expeditionMinDeathChance ?? 0.05;
 /** Death chance reduction per medic in expedition (0–1). E.g. 0.02 = 2% less per medic. */
 const MEDIC_DEATH_REDUCTION = B.expeditionMedicDeathChanceReductionPerMedic ?? 0.02;
 
-/** Effective expedition death chance given number of medics in the composition. Optional tierId applies death chance multiplier. */
-export function getExpeditionDeathChanceWithMedics(medicCount: number, tierId?: ExpeditionTierId | string): number {
+/** Effective expedition death chance given number of medics. Optional tierId applies death chance multiplier. researchDeathChancePercent: from research (negative = safer). */
+export function getExpeditionDeathChanceWithMedics(
+  medicCount: number,
+  tierId?: ExpeditionTierId | string,
+  researchDeathChancePercent: number = 0
+): number {
   const base = Math.max(
     EXPEDITION_MIN_DEATH_CHANCE,
     EXPEDITION_DEATH_CHANCE - medicCount * MEDIC_DEATH_REDUCTION
   );
   const tier = tierId ? getExpeditionTier(tierId) : undefined;
   const mult = tier?.deathChanceMultiplier ?? 1;
-  return Math.min(1, Math.max(EXPEDITION_MIN_DEATH_CHANCE, base * mult));
+  const researchMult = 1 + researchDeathChancePercent / 100;
+  return Math.min(1, Math.max(EXPEDITION_MIN_DEATH_CHANCE, base * mult * researchMult));
 }
 
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */
@@ -227,13 +247,33 @@ export const SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST = B.scientistResearchSucce
 /** Cap for scientist research success bonus (e.g. 0.2 = max +20%). */
 export const SCIENTIST_RESEARCH_SUCCESS_CAP = B.scientistResearchSuccessCap ?? 0.2;
 
+/** Partial progress: +this much to success chance per failed attempt (capped by researchPartialProgressMaxChanceBonus). */
+export const RESEARCH_PARTIAL_PROGRESS_PER_FAILURE = B.researchPartialProgressPerFailure ?? 0.12;
+export const RESEARCH_PARTIAL_PROGRESS_MAX_CHANCE_BONUS = B.researchPartialProgressMaxChanceBonus ?? 0.15;
+/** After this many failures on same node, next attempt is guaranteed success. */
+export const RESEARCH_PITY_FAILURES = B.researchPityFailures ?? 4;
+/** Cost multiplier reduction per failure (e.g. 0.1 = 10% cheaper next try). */
+export const RESEARCH_COST_REDUCTION_PER_FAILURE = B.researchCostReductionPerFailure ?? 0.1;
+export const RESEARCH_COST_MIN_MULTIPLIER = B.researchCostMinMultiplier ?? 0.5;
+/** Research progress bar: base duration (ms). */
+export const RESEARCH_DURATION_BASE_MS = B.researchDurationBaseMs ?? 2500;
+export const RESEARCH_DURATION_PER_ROW_MS = B.researchDurationPerRowMs ?? 200;
+export const RESEARCH_SCIENTIST_DURATION_REDUCTION_PER_SCIENTIST = B.researchScientistDurationReductionPerScientist ?? 0.05;
+export const RESEARCH_SCIENTIST_DURATION_CAP = B.researchScientistDurationCap ?? 0.5;
+/** Prestige research points gained per prestige (spend for guaranteed success). */
+export const PRESTIGE_RESEARCH_POINTS_PER_PRESTIGE = B.prestigeResearchPointsPerPrestige ?? 1;
+/** Research data granted per successful expedition. */
+export const RESEARCH_DATA_PER_EXPEDITION_SUCCESS = B.researchDataPerExpeditionSuccess ?? 1;
+export const RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT = B.researchBranchBonusProductionPercent ?? 2;
+export const RESEARCH_BRANCH_BONUS_CLICK_PERCENT = B.researchBranchBonusClickPercent ?? 1;
+
 /** Crew capacity added per housing module built on any planet. */
 export const HOUSING_ASTRONAUT_CAPACITY = B.housingAstronautCapacity;
 
-/** Max total astronauts (free + assigned) from planets and housing. housingCount = sum of housing on all planets. */
-export function getMaxAstronauts(planetCount: number, housingCount: number = 0): number {
+/** Max total astronauts (free + assigned) from planets and housing. researchCapacityBonus: extra from research. */
+export function getMaxAstronauts(planetCount: number, housingCount: number = 0, researchCapacityBonus: number = 0): number {
   const base = Math.max(B.maxAstronautsBase, B.maxAstronautsBase * planetCount);
-  return base + housingCount * B.housingAstronautCapacity;
+  return base + housingCount * B.housingAstronautCapacity + researchCapacityBonus;
 }
 
 /** Base cost for first housing on a planet. Each additional housing on that planet costs more. */

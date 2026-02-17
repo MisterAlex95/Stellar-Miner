@@ -27,7 +27,13 @@ vi.mock('../presentation/toasts.js', () => ({ showMiniMilestoneToast: vi.fn() })
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
 vi.mock('./handlersSave.js', () => ({ saveSession: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));
-vi.mock('./research.js', () => ({ hasEffectiveFreeSlot: (p: { hasFreeSlot: () => boolean }) => p.hasFreeSlot() }));
+vi.mock('./research.js', () => ({
+  hasEffectiveFreeSlot: (p: { hasFreeSlot: () => boolean }) => p.hasFreeSlot(),
+  getResearchExpeditionDurationPercent: () => 0,
+  getResearchExpeditionDeathChancePercent: () => 0,
+  getResearchHousingCapacityBonus: () => 0,
+  addResearchData: () => {},
+}));
 
 describe('handlersPlanet', () => {
   beforeEach(() => {

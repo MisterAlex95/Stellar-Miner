@@ -7,11 +7,11 @@ import {
   clearExpedition,
   setExpeditionInProgress,
 } from './gameState.js';
-import { getMaxAstronauts, getAstronautCost, type CrewRole } from '../domain/constants.js';
+import { getMaxAstronauts, getAstronautCost, RESEARCH_DATA_PER_EXPEDITION_SUCCESS, type CrewRole } from '../domain/constants.js';
 import type { ExpeditionComposition } from '../domain/constants.js';
 import type { ExpeditionTierId } from '../domain/constants.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
-import { hasEffectiveFreeSlot } from './research.js';
+import { hasEffectiveFreeSlot, getResearchExpeditionDurationPercent, getResearchExpeditionDeathChancePercent, getResearchHousingCapacityBonus, addResearchData } from './research.js';
 import { emit } from './eventBus.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
@@ -32,7 +32,7 @@ export function handleBuyNewPlanet(): void {
   if (!planetService.canLaunchExpedition(player)) return;
   const result = planetService.startExpedition(player, null, 'medium');
   if (!result.started) return;
-  const durationMs = planetService.getExpeditionDurationMs(player, 'medium', result.composition.pilot ?? 0);
+  const durationMs = planetService.getExpeditionDurationMs(player, 'medium', result.composition.pilot ?? 0, getResearchExpeditionDurationPercent());
   const endsAt = Date.now() + durationMs;
   setExpeditionInProgress(endsAt, result.composition, durationMs, 'medium');
   refreshAfterPlanetAction();
@@ -47,7 +47,7 @@ export function handleLaunchExpeditionFromModal(tierId: ExpeditionTierId, compos
   if (!planetService.canLaunchExpedition(player, composition)) return;
   const result = planetService.startExpedition(player, composition, tierId);
   if (!result.started) return;
-  const durationMs = planetService.getExpeditionDurationMs(player, tierId, result.composition.pilot ?? 0);
+  const durationMs = planetService.getExpeditionDurationMs(player, tierId, result.composition.pilot ?? 0, getResearchExpeditionDurationPercent());
   const endsAt = Date.now() + durationMs;
   setExpeditionInProgress(endsAt, result.composition, durationMs, tierId);
   refreshAfterPlanetAction();
@@ -66,10 +66,11 @@ export function completeExpeditionIfDue(): void {
   const tierId = (difficulty === 'easy' || difficulty === 'medium' || difficulty === 'hard' ? difficulty : 'medium') as ExpeditionTierId;
   const player = session.player;
   const wasFirstPlanet = player.planets.length === 1;
-  const outcome = planetService.completeExpedition(player, composition, tierId, Math.random);
+  const outcome = planetService.completeExpedition(player, composition, tierId, Math.random, getResearchExpeditionDeathChancePercent());
   clearExpedition();
   const ui = getPresentationPort();
   if (outcome.success && outcome.planetName) {
+    addResearchData(RESEARCH_DATA_PER_EXPEDITION_SUCCESS);
     emit('planet_bought', { planetCount: player.planets.length });
     if (outcome.deaths > 0) {
       ui.showMiniMilestoneToast(tParam('expeditionDiscoveredWithDeaths', {
@@ -143,7 +144,7 @@ export function handleHireAstronaut(role: CrewRole = 'astronaut'): void {
   if (!session) return;
   const player = session.player;
   const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
-  const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
+  const maxCrew = getMaxAstronauts(player.planets.length, totalHousing, getResearchHousingCapacityBonus());
   const totalCrew = player.astronautCount;
   if (totalCrew >= maxCrew) return;
   const cost = getAstronautCost(totalCrew);

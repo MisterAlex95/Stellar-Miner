@@ -4,9 +4,8 @@
 import { getSession, getSettings, getExpeditionEndsAt, planetService } from '../../application/gameState.js';
 import { getUnlockedBlocks } from '../../application/progression.js';
 import { getQuestProgress } from '../../application/quests.js';
-import { RESEARCH_CATALOG, canAttemptResearch } from '../../application/research.js';
+import { RESEARCH_CATALOG, canAttemptResearch, hasEffectiveFreeSlot, getResearchHousingCapacityBonus } from '../../application/research.js';
 import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../../domain/constants.js';
-import { hasEffectiveFreeSlot } from '../../application/research.js';
 import { renderResearchSection } from '../researchView.js';
 import { renderDashboardSection } from '../dashboardView.js';
 import { renderUpgradeList } from '../upgradeListView.js';
@@ -15,7 +14,7 @@ import { renderCrewSection } from '../crewView.js';
 import { renderPrestigeSection } from '../prestigeView.js';
 import { renderStatisticsSection } from '../statisticsView.js';
 import { markPanelHydrated } from '../../application/lazyPanels.js';
-import { getNextAffordableUpgrade } from '../dashboardView.js';
+import { hasNewInstallableUpgrade } from '../dashboardView.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
@@ -172,7 +171,7 @@ export function updateTabBadges(): void {
     RESEARCH_CATALOG.some((n) => canAttemptResearch(n.id) && session.player.coins.gte(n.cost));
 
   const upgradesUnlocked = unlocked.has('upgrades');
-  const hasAffordableUpgrade = upgradesUnlocked && getNextAffordableUpgrade() !== null;
+  const hasNewModuleToInstall = upgradesUnlocked && hasNewInstallableUpgrade();
 
   const empireUnlocked = unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige');
   let hasEmpireAction = prestigeUnlocked && canPrestige;
@@ -180,7 +179,7 @@ export function updateTabBadges(): void {
     const player = session.player;
     if (unlocked.has('crew')) {
       const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
-      const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
+      const maxCrew = getMaxAstronauts(player.planets.length, totalHousing, getResearchHousingCapacityBonus());
       const atCap = player.astronautCount >= maxCrew;
       if (!atCap && player.coins.gte(getAstronautCost(player.freeCrewCount))) hasEmpireAction = true;
     }
@@ -196,7 +195,7 @@ export function updateTabBadges(): void {
   setTabBadge('empire', empireUnlocked && hasEmpireAction);
   setTabBadge('research', hasAttemptableResearch);
   setTabBadge('dashboard', false);
-  setTabBadge('upgrades', hasAffordableUpgrade);
+  setTabBadge('upgrades', hasNewModuleToInstall);
   setTabBadge('stats', false);
   updateTabMoreHasAction();
 }

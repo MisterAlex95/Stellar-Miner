@@ -29,7 +29,10 @@
   {"id":"combo-master","name":"Combo master","type":"comboMaster","value":1,"secret":true},
   {"id":"first-slot","name":"Expander","type":"totalSlotsGreaterThan","value":6},
   {"id":"speed-run","name":"Speed run","type":"totalCoinsEver","value":2000000,"secret":true},
+  {"id":"research-5","name":"Researcher","type":"researchNodesUnlocked","value":5},
   {"id":"research-10","name":"Scientist","type":"researchNodesUnlocked","value":10},
+  {"id":"research-15","name":"Lead scientist","type":"researchNodesUnlocked","value":15},
+  {"id":"research-20","name":"Lab director","type":"researchNodesUnlocked","value":20},
   {"id":"research-full","name":"Lab complete","type":"researchNodesUnlocked","value":38,"secret":true},
   {"id":"shooting-star","name":"Wish upon a star","type":"shootingStarClicked","value":1}
 ]

@@ -17,6 +17,8 @@
 | modifiers | object | No | See Modifiers below |
 | row | number | Yes | Row in tree (UI layout) |
 | col | number | Yes | Column in tree (UI layout) |
+| researchDataCost | number | No | Research data required (from expeditions) in addition to coins |
+| secret | boolean | No | If true, optional/side branch (UI can style differently) |
 
 ### modifiers (all optional)
 
@@ -28,9 +30,12 @@
 | crewFreeUpgrades | string[] | Upgrade ids that no longer require crew |
 | crewReduction | Record<string, number> | Upgrade id → reduction in required crew (e.g. orbital-station: 1) |
 | unlocksCrewRole | string | Role unlocked for hire: miner, scientist, medic, pilot, engineer |
+| expeditionDurationPercent | number | Expedition duration modifier (negative = faster) |
+| expeditionDeathChancePercent | number | Expedition death chance modifier (negative = safer) |
+| housingCapacityBonus | number | Extra max crew capacity (flat +N) |
 
 ## Notes
 
-- Effective success chance = node.successChance × scientistMultiplier (scientists in crew add up to +18% cap; see balance.json).
-- Research state (unlocked node ids) is stored in save as `unlockedResearch` and reset on prestige.
+- Effective success chance includes scientist multiplier, partial progress from failures, and pity (guaranteed after N failures). Effective cost decreases with failures (see balance.json).
+- Research state: unlocked node ids, research progress (failures, research data), and prestige research points. Unlocked and progress reset on prestige; prestige points persist and are added per prestige.
 - See [reference/research-formulas.md](../reference/research-formulas.md) for full node table and formulas.

@@ -27,13 +27,15 @@ import { t, tParam, type StringKey } from '../application/strings.js';
 import { PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
 import {
   getNextAffordableUpgrade,
-  getNextUpgradeGoalCoinOnly,
-  getNextUpgradeGoalWithState,
+  getBestNextAffordableUpgrade,
+  getBestNextUpgradeGoalCoinOnly,
+  getBestNextUpgradeGoalWithState,
   getNextAttemptableResearchAffordable,
   minutesUntil,
+  hasNewInstallableUpgrade,
 } from './dashboard/dashboardHelpers.js';
 
-export { getNextAffordableUpgrade } from './dashboard/dashboardHelpers.js';
+export { getNextAffordableUpgrade, hasNewInstallableUpgrade } from './dashboard/dashboardHelpers.js';
 
 const SHORTCUTS: { tab: string; labelKey: StringKey }[] = [
   { tab: 'mine', labelKey: 'tabMine' },
@@ -56,9 +58,9 @@ function buildDashboardHeroHtml(): string {
   const canPrestige = player.coins.gte(PRESTIGE_COIN_THRESHOLD);
   const expeditionEndsAt = getExpeditionEndsAt();
   const expeditionActive = expeditionEndsAt != null && expeditionEndsAt > Date.now();
-  const nextUpgrade = getNextAffordableUpgrade();
-  const nextGoalCoinOnly = getNextUpgradeGoalCoinOnly();
-  const nextGoalWithState = getNextUpgradeGoalWithState();
+  const nextUpgrade = getBestNextAffordableUpgrade();
+  const nextGoalCoinOnly = getBestNextUpgradeGoalCoinOnly();
+  const nextGoalWithState = getBestNextUpgradeGoalWithState();
   const affordableResearch = getNextAttemptableResearchAffordable();
   const researchInProgress = isResearchInProgress();
   const canLaunchExpedition = planetService.canLaunchExpedition(player);
@@ -181,9 +183,9 @@ function updateDashboardHeroInPlace(): void {
   const canPrestige = player.coins.gte(PRESTIGE_COIN_THRESHOLD);
   const expeditionEndsAt = getExpeditionEndsAt();
   const expeditionActive = expeditionEndsAt != null && expeditionEndsAt > Date.now();
-  const nextUpgrade = getNextAffordableUpgrade();
-  const nextGoalCoinOnly = getNextUpgradeGoalCoinOnly();
-  const nextGoalWithState = getNextUpgradeGoalWithState();
+  const nextUpgrade = getBestNextAffordableUpgrade();
+  const nextGoalCoinOnly = getBestNextUpgradeGoalCoinOnly();
+  const nextGoalWithState = getBestNextUpgradeGoalWithState();
   const affordableResearch = getNextAttemptableResearchAffordable();
   const researchInProgress = isResearchInProgress();
   const canLaunchExpedition = planetService.canLaunchExpedition(player);

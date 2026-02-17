@@ -1,6 +1,6 @@
 import { Player } from '../domain/entities/Player.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
-import { PRESTIGE_COIN_THRESHOLD, PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL } from '../domain/constants.js';
+import { PRESTIGE_COIN_THRESHOLD, PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL, PRESTIGE_RESEARCH_POINTS_PER_PRESTIGE } from '../domain/constants.js';
 import {
   getSession,
   setSession,
@@ -14,7 +14,7 @@ import {
 } from './gameState.js';
 import { generateQuest } from './quests.js';
 import { saveQuestState } from './questState.js';
-import { clearResearch } from './research.js';
+import { clearResearch, addPrestigeResearchPoints } from './research.js';
 import { clearEverUnlockedUpgradeTiers } from './catalogs.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
@@ -92,6 +92,7 @@ export function confirmPrestige(): void {
   setQuestState(newQuestState);
   saveQuestState(newQuestState);
   clearResearch();
+  addPrestigeResearchPoints(PRESTIGE_RESEARCH_POINTS_PER_PRESTIGE);
   clearEverUnlockedUpgradeTiers();
   notifyRefresh();
   setSessionClickCount(0);

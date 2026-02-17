@@ -8,6 +8,17 @@ import {
   SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST,
   SCIENTIST_RESEARCH_SUCCESS_CAP,
   PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL,
+  RESEARCH_PARTIAL_PROGRESS_PER_FAILURE,
+  RESEARCH_PARTIAL_PROGRESS_MAX_CHANCE_BONUS,
+  RESEARCH_PITY_FAILURES,
+  RESEARCH_COST_REDUCTION_PER_FAILURE,
+  RESEARCH_COST_MIN_MULTIPLIER,
+  RESEARCH_DURATION_BASE_MS,
+  RESEARCH_DURATION_PER_ROW_MS,
+  RESEARCH_SCIENTIST_DURATION_REDUCTION_PER_SCIENTIST,
+  RESEARCH_SCIENTIST_DURATION_CAP,
+  RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT,
+  RESEARCH_BRANCH_BONUS_CLICK_PERCENT,
   type CrewJobRole,
   CREW_JOB_ROLES,
 } from '../domain/constants.js';
@@ -17,6 +28,8 @@ import { t, tParam } from './strings.js';
 import type { StringKey } from './strings.js';
 
 export const RESEARCH_STORAGE_KEY = 'stellar-miner-research';
+export const RESEARCH_PROGRESS_STORAGE_KEY = 'stellar-miner-research-progress';
+export const PRESTIGE_RESEARCH_POINTS_KEY = 'stellar-miner-prestige-research-points';
 
 export type ResearchModifiers = {
   /** Additive percent applied to production (e.g. 5 => +5%). */
@@ -33,6 +46,12 @@ export type ResearchModifiers = {
   crewReduction?: Record<string, number>;
   /** Crew job role unlocked when this node is unlocked (e.g. "miner" → can hire Miners). */
   unlocksCrewRole?: CrewJobRole;
+  /** Expedition duration modifier: negative = faster (e.g. -5 => 5% shorter). */
+  expeditionDurationPercent?: number;
+  /** Expedition death chance modifier: negative = safer (e.g. -3 => 3% less). */
+  expeditionDeathChancePercent?: number;
+  /** Extra crew capacity from housing (flat +N). */
+  housingCapacityBonus?: number;
 };
 
 export type ResearchNode = {
@@ -50,6 +69,10 @@ export type ResearchNode = {
   row: number;
   /** Column index in the row (left to right). */
   col: number;
+  /** Optional: research data cost (from expeditions) in addition to coins. */
+  researchDataCost?: number;
+  /** Optional: hidden until prerequisites are visible (side branch). */
+  secret?: boolean;
 };
 
 export const RESEARCH_CATALOG: ResearchNode[] = researchData as ResearchNode[];
@@ -71,6 +94,103 @@ function saveUnlocked(ids: string[]): void {
   localStorage.setItem(RESEARCH_STORAGE_KEY, JSON.stringify(ids));
 }
 
+export type ResearchProgressState = {
+  researchData: number;
+  nodeProgress: Record<string, { failures: number }>;
+};
+
+function loadResearchProgress(): ResearchProgressState {
+  if (typeof localStorage === 'undefined') return { researchData: 0, nodeProgress: {} };
+  try {
+    const raw = localStorage.getItem(RESEARCH_PROGRESS_STORAGE_KEY);
+    if (!raw) return { researchData: 0, nodeProgress: {} };
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object') return { researchData: 0, nodeProgress: {} };
+    const o = parsed as Record<string, unknown>;
+    const researchData = typeof o.researchData === 'number' && o.researchData >= 0 ? o.researchData : 0;
+    const nodeProgress: Record<string, { failures: number }> = {};
+    if (o.nodeProgress && typeof o.nodeProgress === 'object') {
+      for (const [id, v] of Object.entries(o.nodeProgress)) {
+        if (v && typeof v === 'object' && typeof (v as { failures?: number }).failures === 'number') {
+          const f = (v as { failures: number }).failures;
+          if (f >= 0) nodeProgress[id] = { failures: f };
+        }
+      }
+    }
+    return { researchData, nodeProgress };
+  } catch {
+    return { researchData: 0, nodeProgress: {} };
+  }
+}
+
+function saveResearchProgress(state: ResearchProgressState): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(RESEARCH_PROGRESS_STORAGE_KEY, JSON.stringify(state));
+}
+
+/** Current progress state (for save/load). */
+export function getResearchProgressState(): ResearchProgressState {
+  return loadResearchProgress();
+}
+
+/** Restore progress state (on import). */
+export function setResearchProgressState(state: ResearchProgressState): void {
+  saveResearchProgress(state);
+}
+
+export function getResearchData(): number {
+  return loadResearchProgress().researchData;
+}
+
+export function addResearchData(amount: number): void {
+  const state = loadResearchProgress();
+  state.researchData = Math.max(0, state.researchData + amount);
+  saveResearchProgress(state);
+}
+
+function getFailureCount(nodeId: string): number {
+  return loadResearchProgress().nodeProgress[nodeId]?.failures ?? 0;
+}
+
+function incrementFailureCount(nodeId: string): void {
+  const state = loadResearchProgress();
+  const current = state.nodeProgress[nodeId]?.failures ?? 0;
+  state.nodeProgress[nodeId] = { failures: current + 1 };
+  saveResearchProgress(state);
+}
+
+function clearFailureCount(nodeId: string): void {
+  const state = loadResearchProgress();
+  delete state.nodeProgress[nodeId];
+  saveResearchProgress(state);
+}
+
+export function getPrestigeResearchPoints(): number {
+  if (typeof localStorage === 'undefined') return 0;
+  try {
+    const raw = localStorage.getItem(PRESTIGE_RESEARCH_POINTS_KEY);
+    if (!raw) return 0;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function addPrestigeResearchPoints(amount: number): void {
+  if (typeof localStorage === 'undefined') return;
+  const n = Math.max(0, getPrestigeResearchPoints() + amount);
+  localStorage.setItem(PRESTIGE_RESEARCH_POINTS_KEY, String(n));
+}
+
+export function spendPrestigeResearchPoint(): boolean {
+  const current = getPrestigeResearchPoints();
+  if (current < 1) return false;
+  if (typeof localStorage === 'undefined') return false;
+  localStorage.setItem(PRESTIGE_RESEARCH_POINTS_KEY, String(current - 1));
+  return true;
+}
+
 export function getUnlockedResearch(): string[] {
   return loadUnlocked();
 }
@@ -88,7 +208,36 @@ export function getUnlockedCrewRoles(): CrewJobRole[] {
   return roles;
 }
 
-/** Sum of a percent modifier from all unlocked nodes (e.g. productionPercent or clickPercent). */
+/** Branches: when all node ids in a branch are unlocked, grant bonus. */
+const RESEARCH_BRANCHES: Array<{ nodeIds: string[]; productionPercent?: number; clickPercent?: number }> = [
+  { nodeIds: ['automation', 'ai-assist', 'neural-boost'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT, clickPercent: RESEARCH_BRANCH_BONUS_CLICK_PERCENT },
+  { nodeIds: ['heavy-equipment', 'orbital-engineering', 'quantum-mining'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT },
+  { nodeIds: ['basic-refining', 'catalytic-cracking', 'plasma-smelting'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT },
+];
+
+function getBranchBonusProductionPercent(): number {
+  const unlocked = loadUnlocked();
+  let total = 0;
+  for (const branch of RESEARCH_BRANCHES) {
+    if (branch.nodeIds.every((id) => unlocked.includes(id)) && branch.productionPercent != null) {
+      total += branch.productionPercent;
+    }
+  }
+  return total;
+}
+
+function getBranchBonusClickPercent(): number {
+  const unlocked = loadUnlocked();
+  let total = 0;
+  for (const branch of RESEARCH_BRANCHES) {
+    if (branch.nodeIds.every((id) => unlocked.includes(id)) && branch.clickPercent != null) {
+      total += branch.clickPercent;
+    }
+  }
+  return total;
+}
+
+/** Sum of a percent modifier from all unlocked nodes (e.g. productionPercent or clickPercent) plus branch bonuses. */
 function sumUnlockedModifierPercent(key: 'productionPercent' | 'clickPercent'): number {
   const unlocked = loadUnlocked();
   let total = 0;
@@ -98,6 +247,8 @@ function sumUnlockedModifierPercent(key: 'productionPercent' | 'clickPercent'): 
       if (value != null) total += value;
     }
   }
+  if (key === 'productionPercent') total += getBranchBonusProductionPercent();
+  if (key === 'clickPercent') total += getBranchBonusClickPercent();
   return total;
 }
 
@@ -136,6 +287,97 @@ export function getResearchSuccessChanceMultiplier(scientistCount: number): numb
     scientistCount * SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST
   );
   return 1 + bonus;
+}
+
+/** Effective coin cost for attempting this node (reduced by previous failures; min 50% of base). */
+export function getEffectiveCost(nodeId: string): number {
+  const node = RESEARCH_CATALOG.find((n) => n.id === nodeId);
+  if (!node) return 0;
+  const failures = getFailureCount(nodeId);
+  const mult = Math.max(RESEARCH_COST_MIN_MULTIPLIER, 1 - RESEARCH_COST_REDUCTION_PER_FAILURE * failures);
+  return Math.max(1, Math.round(node.cost * mult));
+}
+
+/** Effective success chance (0–1) for this node: base × scientist + partial progress from failures; 1 if pity. */
+export function getEffectiveSuccessChance(nodeId: string, scientistCount: number): number {
+  const node = RESEARCH_CATALOG.find((n) => n.id === nodeId);
+  if (!node) return 0;
+  const failures = getFailureCount(nodeId);
+  if (failures >= RESEARCH_PITY_FAILURES) return 1;
+  const baseChance = node.successChance * getResearchSuccessChanceMultiplier(scientistCount);
+  const partialBonus = Math.min(
+    RESEARCH_PARTIAL_PROGRESS_MAX_CHANCE_BONUS,
+    failures * RESEARCH_PARTIAL_PROGRESS_PER_FAILURE
+  );
+  return Math.min(1, baseChance + partialBonus);
+}
+
+/** Expected coins to unlock (effective cost / effective chance). For display. */
+export function getExpectedCoinsToUnlock(nodeId: string, scientistCount: number): number {
+  const chance = getEffectiveSuccessChance(nodeId, scientistCount);
+  if (chance <= 0) return Infinity;
+  return Math.round(getEffectiveCost(nodeId) / chance);
+}
+
+/** Research progress bar duration (ms). Base + per row, reduced by scientists (capped). */
+export function getResearchDurationMs(nodeId: string, scientistCount: number): number {
+  const node = RESEARCH_CATALOG.find((n) => n.id === nodeId);
+  const row = node?.row ?? 0;
+  const base = RESEARCH_DURATION_BASE_MS + row * RESEARCH_DURATION_PER_ROW_MS;
+  const scientistReduction = Math.min(
+    RESEARCH_SCIENTIST_DURATION_CAP,
+    scientistCount * RESEARCH_SCIENTIST_DURATION_REDUCTION_PER_SCIENTIST
+  );
+  return Math.max(500, Math.round(base * (1 - scientistReduction)));
+}
+
+/** Failure count for this node (for UI / pity display). */
+export function getResearchFailureCount(nodeId: string): number {
+  return getFailureCount(nodeId);
+}
+
+/** Up to 3 node ids that can be attempted, sorted by expected cost (cheapest first). For "recommended" path highlight. */
+export function getRecommendedResearchNodeIds(scientistCount: number): string[] {
+  const attemptable = RESEARCH_CATALOG.filter((n) => canAttemptResearch(n.id))
+    .map((n) => ({ id: n.id, expected: getExpectedCoinsToUnlock(n.id, scientistCount) }))
+    .sort((a, b) => a.expected - b.expected);
+  return attemptable.slice(0, 3).map((x) => x.id);
+}
+
+/** Sum of expedition duration percent from research (negative = faster). */
+export function getResearchExpeditionDurationPercent(): number {
+  const unlocked = loadUnlocked();
+  let total = 0;
+  for (const node of RESEARCH_CATALOG) {
+    if (unlocked.includes(node.id) && node.modifiers.expeditionDurationPercent != null) {
+      total += node.modifiers.expeditionDurationPercent;
+    }
+  }
+  return total;
+}
+
+/** Sum of expedition death chance percent from research (negative = safer). */
+export function getResearchExpeditionDeathChancePercent(): number {
+  const unlocked = loadUnlocked();
+  let total = 0;
+  for (const node of RESEARCH_CATALOG) {
+    if (unlocked.includes(node.id) && node.modifiers.expeditionDeathChancePercent != null) {
+      total += node.modifiers.expeditionDeathChancePercent;
+    }
+  }
+  return total;
+}
+
+/** Extra crew capacity from research (flat bonus). */
+export function getResearchHousingCapacityBonus(): number {
+  const unlocked = loadUnlocked();
+  let total = 0;
+  for (const node of RESEARCH_CATALOG) {
+    if (unlocked.includes(node.id) && node.modifiers.housingCapacityBonus != null) {
+      total += node.modifiers.housingCapacityBonus;
+    }
+  }
+  return total;
 }
 
 /** All upgrade ids that no longer use a slot thanks to unlocked research. */
@@ -322,7 +564,10 @@ export function isResearchUnlocked(id: string): boolean {
   return loadUnlocked().includes(id);
 }
 
-export function canAttemptResearch(id: string): boolean {
+export function canAttemptResearch(
+  id: string,
+  options?: { coinsAvailable?: number; researchDataAvailable?: number }
+): boolean {
   const unlocked = loadUnlocked();
   const node = RESEARCH_CATALOG.find((n) => n.id === id);
   if (!node) return false;
@@ -330,6 +575,10 @@ export function canAttemptResearch(id: string): boolean {
   for (const prereq of node.prerequisites) {
     if (!unlocked.includes(prereq)) return false;
   }
+  const cost = getEffectiveCost(id);
+  if (options?.coinsAvailable != null && options.coinsAvailable < cost) return false;
+  const dataCost = node.researchDataCost ?? 0;
+  if (dataCost > 0 && (options?.researchDataAvailable ?? getResearchData()) < dataCost) return false;
   return true;
 }
 
@@ -367,19 +616,34 @@ export function getCrewFreedByUnlockingNode(
 /** Optional: (upgradeId, kind, reduction amount) => display line for success message. */
 export type GetUpgradeDisplayLine = (upgradeId: string, kind: 'slot' | 'crew', n: number) => string;
 
+export type AttemptResearchOptions = {
+  usePrestigePoint?: boolean;
+};
+
 export function attemptResearch(
   id: string,
   spendCoins: (amount: number) => boolean,
   getUpgradeDisplayLine?: GetUpgradeDisplayLine,
-  scientistCount: number = 0
+  scientistCount: number = 0,
+  options?: AttemptResearchOptions
 ): { success: boolean; message: string } {
   const node = RESEARCH_CATALOG.find((n) => n.id === id);
   if (!node) return { success: false, message: 'Unknown research.' };
   if (!canAttemptResearch(id)) return { success: false, message: 'Prerequisites not met or already unlocked.' };
-  if (!spendCoins(node.cost)) return { success: false, message: 'Not enough coins.' };
-  const effectiveChance = Math.min(1, node.successChance * getResearchSuccessChanceMultiplier(scientistCount));
+  const effectiveCost = getEffectiveCost(id);
+  const dataCost = node.researchDataCost ?? 0;
+  if (dataCost > 0) {
+    const state = loadResearchProgress();
+    if (state.researchData < dataCost) return { success: false, message: 'Not enough research data.' };
+    state.researchData -= dataCost;
+    saveResearchProgress(state);
+  }
+  if (!spendCoins(effectiveCost)) return { success: false, message: 'Not enough coins.' };
+  const usePity = options?.usePrestigePoint && getPrestigeResearchPoints() >= 1 && spendPrestigeResearchPoint();
+  const effectiveChance = usePity ? 1 : getEffectiveSuccessChance(id, scientistCount);
   const success = Math.random() < effectiveChance;
   if (success) {
+    clearFailureCount(id);
     const unlocked = loadUnlocked();
     unlocked.push(id);
     saveUnlocked(unlocked);
@@ -414,12 +678,14 @@ export function attemptResearch(
     }
     return { success: true, message: `${node.name} complete! ${mods.join(', ')}.` };
   }
+  incrementFailureCount(id);
   return { success: false, message: 'Research failed. Coins spent. Try again.' };
 }
 
 export function clearResearch(): void {
   if (typeof localStorage === 'undefined') return;
   localStorage.removeItem(RESEARCH_STORAGE_KEY);
+  localStorage.removeItem(RESEARCH_PROGRESS_STORAGE_KEY);
 }
 
 /** Research IDs currently running the "construction" progress bar. Enables parallel research. */

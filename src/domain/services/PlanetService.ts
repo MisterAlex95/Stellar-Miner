@@ -75,9 +75,14 @@ export class PlanetService {
     return true;
   }
 
-  /** Expedition duration in ms for current planet count, optional tier, and optional pilot count (pilots reduce duration). */
-  getExpeditionDurationMs(player: Player, tierId?: ExpeditionTierId, pilotCount: number = 0): number {
-    return getExpeditionDurationMs(player.planets.length, tierId, pilotCount);
+  /** Expedition duration in ms. researchDurationPercent optional (from research, negative = faster). */
+  getExpeditionDurationMs(
+    player: Player,
+    tierId?: ExpeditionTierId,
+    pilotCount: number = 0,
+    researchDurationPercent: number = 0
+  ): number {
+    return getExpeditionDurationMs(player.planets.length, tierId, pilotCount, researchDurationPercent);
   }
 
   /** Start expedition: spend coins + crew. Returns composition and tier for completion. */
@@ -99,16 +104,17 @@ export class PlanetService {
     return { started: true, composition: { ...composition }, tierId };
   }
 
-  /** Complete expedition: roll deaths, add planet and veterans on success. Call when expedition duration has elapsed. */
+  /** Complete expedition: roll deaths, add planet and veterans on success. researchDeathChancePercent optional (from research, negative = safer). */
   completeExpedition(
     player: Player,
     composition: ExpeditionComposition,
     tierId: ExpeditionTierId = 'medium',
-    roll: () => number = Math.random
+    roll: () => number = Math.random,
+    researchDeathChancePercent: number = 0
   ): ExpeditionOutcome {
     const totalSent = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
     const medicCount = composition.medic ?? 0;
-    const deathChance = getExpeditionDeathChanceWithMedics(medicCount, tierId);
+    const deathChance = getExpeditionDeathChanceWithMedics(medicCount, tierId, researchDeathChancePercent);
     let deaths = 0;
     for (let i = 0; i < totalSent; i++) {
       if (roll() < deathChance) deaths++;
@@ -128,12 +134,13 @@ export class PlanetService {
     return { success: false, totalSent, survivors: 0, deaths: totalSent, planetName: undefined };
   }
 
-  /** Launch expedition: spend coins + crew (by composition or default). Survivors become veterans. */
+  /** Launch expedition: spend coins + crew (by composition or default). Survivors become veterans. researchDeathChancePercent optional. */
   launchExpedition(
     player: Player,
     rollOrComposition: (() => number) | ExpeditionComposition = Math.random,
     roll: () => number = Math.random,
-    tierId: ExpeditionTierId = 'medium'
+    tierId: ExpeditionTierId = 'medium',
+    researchDeathChancePercent: number = 0
   ): ExpeditionOutcome {
     const cost = this.getNewPlanetCost(player);
     const required = this.getExpeditionAstronautsRequired(player);
@@ -152,7 +159,7 @@ export class PlanetService {
     player.spendCoins(cost);
     const totalSent = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
     const medicCount = composition.medic ?? 0;
-    const deathChance = getExpeditionDeathChanceWithMedics(medicCount, tierId);
+    const deathChance = getExpeditionDeathChanceWithMedics(medicCount, tierId, researchDeathChancePercent);
     let deaths = 0;
     for (let i = 0; i < totalSent; i++) {
       if (rollFn() < deathChance) deaths++;

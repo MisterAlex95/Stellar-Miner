@@ -1,7 +1,7 @@
 import { getSession, getSettings } from '../application/gameState.js';
 import { formatNumber } from '../application/format.js';
 import { getAssignedAstronauts } from '../application/crewHelpers.js';
-import { getUnlockedCrewRoles } from '../application/research.js';
+import { getUnlockedCrewRoles, getResearchHousingCapacityBonus } from '../application/research.js';
 import {
   getAstronautCost,
   getMaxAstronauts,
@@ -65,7 +65,7 @@ export function renderCrewSection(): void {
   const assigned = getAssignedAstronauts(session);
   const free = player.freeCrewCount;
   const totalHousing = player.planets.reduce((s, p) => s + p.housingCount, 0);
-  const maxCrew = getMaxAstronauts(player.planets.length, totalHousing);
+  const maxCrew = getMaxAstronauts(player.planets.length, totalHousing, getResearchHousingCapacityBonus());
   const totalCrew = player.astronautCount;
   const atCap = totalCrew >= maxCrew;
   const cost = getAstronautCost(free);

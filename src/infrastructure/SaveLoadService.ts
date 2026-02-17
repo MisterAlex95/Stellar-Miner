@@ -1,7 +1,14 @@
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import type { ISaveLoadService } from '../domain/services/ISaveLoadService.js';
 import { emit } from '../application/eventBus.js';
-import { RESEARCH_STORAGE_KEY } from '../application/research.js';
+import {
+  RESEARCH_STORAGE_KEY,
+  RESEARCH_PROGRESS_STORAGE_KEY,
+  PRESTIGE_RESEARCH_POINTS_KEY,
+  getResearchProgressState,
+  getPrestigeResearchPoints,
+  setResearchProgressState,
+} from '../application/research.js';
 
 export type SessionDeserializer = (data: SavedSession) => GameSession;
 export type GetResearchProductionMultiplier = () => number;
@@ -83,6 +90,10 @@ export type SavedSession = {
   expedition?: SavedExpedition;
   /** Unlocked research node ids (restored on import so click/production modifiers work). */
   unlockedResearch?: string[];
+  /** Research progress (failures, research data). Restored on import. */
+  researchProgress?: { researchData: number; nodeProgress: Record<string, { failures: number }> };
+  /** Prestige research points (survive prestige). Restored on import. */
+  prestigeResearchPoints?: number;
 };
 
 function isSavedSession(data: unknown): data is SavedSession {
@@ -280,6 +291,15 @@ export class SaveLoadService implements ISaveLoadService {
         const ids = data.unlockedResearch.filter((id: unknown) => typeof id === 'string') as string[];
         if (ids.length > 0) localStorage.setItem(RESEARCH_STORAGE_KEY, JSON.stringify(ids));
       }
+      if (typeof localStorage !== 'undefined' && data.researchProgress) {
+        const rp = data.researchProgress as { researchData?: number; nodeProgress?: Record<string, { failures: number }> };
+        if (typeof rp.researchData === 'number' && rp.nodeProgress && typeof rp.nodeProgress === 'object') {
+          setResearchProgressState({ researchData: rp.researchData, nodeProgress: rp.nodeProgress });
+        }
+      }
+      if (typeof localStorage !== 'undefined' && typeof data.prestigeResearchPoints === 'number' && data.prestigeResearchPoints >= 0) {
+        localStorage.setItem(PRESTIGE_RESEARCH_POINTS_KEY, String(data.prestigeResearchPoints));
+      }
       return session;
     } catch {
       return null;
@@ -370,6 +390,12 @@ export class SaveLoadService implements ISaveLoadService {
     if (options?.expedition) payload.expedition = options.expedition;
     const unlockedResearch = this.getUnlockedResearch();
     if (unlockedResearch.length > 0) payload.unlockedResearch = unlockedResearch;
+    const researchProgress = getResearchProgressState();
+    if (researchProgress.researchData > 0 || Object.keys(researchProgress.nodeProgress).length > 0) {
+      payload.researchProgress = researchProgress;
+    }
+    const prestigeResearchPoints = getPrestigeResearchPoints();
+    if (prestigeResearchPoints > 0) payload.prestigeResearchPoints = prestigeResearchPoints;
     return payload;
   }
 
