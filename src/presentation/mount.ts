@@ -20,8 +20,6 @@ import {
   handlePrestige,
   handleHireAstronaut,
   handleClaimQuest,
-  handleExportSave,
-  handleImportSave,
   handleDebugAction,
   closeDebugMenu,
   toggleDebugMenu,
@@ -46,14 +44,12 @@ import {
   dismissIntroModal,
 } from './progressionView.js';
 import { initTooltips } from './tooltip.js';
-import { bindSettingsForm } from './bindSettingsForm.js';
 import { wireSettingsSubscribers } from '../application/refreshSubscribers.js';
 import { APP_VERSION, hasNewUpdate } from '../application/version.js';
 import { getChangelog } from '../application/changelog.js';
 import { buildChangelogHtml } from './components/changelog.js';
 import { buildDebugPanelHtml } from './components/debugPanel.js';
 import { getOpenOverlayElement, openOverlay, closeOverlay } from './components/overlay.js';
-import { getAppHtml, getStatsBlockHtml, getPanelsOnlyHtml } from './appShell.js';
 import {
   switchTab,
   updateTabMenuVisibility,
@@ -126,17 +122,10 @@ export function mount(container?: HTMLElement): void {
   const app = document.getElementById('app');
   const legacyRoot = document.getElementById('legacy-root');
   const legacyPanels = document.getElementById('legacy-panels');
-  const useVueShell = Boolean(legacyRoot && legacyPanels);
-  const root = useVueShell ? (app ?? null) : (container ?? app);
-  if (!root) return;
+  if (!app || !legacyRoot || !legacyPanels) return;
   applyThemeAndMotion();
-  if (useVueShell) {
-    legacyRoot!.innerHTML = getStatsBlockHtml();
-    legacyPanels!.innerHTML = getPanelsOnlyHtml();
-  } else {
-    (root as HTMLElement).innerHTML = getAppHtml();
-  }
   applyTranslations();
+  const root = app;
 
   function goToTab(tabId: string): void {
     pushTabState(tabId);
@@ -203,34 +192,21 @@ export function mount(container?: HTMLElement): void {
   // --- Modals: info, section rules, events hint ---
   const settingsBtn = document.getElementById('settings-btn');
   const settingsOverlay = document.getElementById('settings-overlay');
-  const settingsClose = document.getElementById('settings-close');
-  const infoBtn = document.getElementById('info-btn');
   const infoOverlay = document.getElementById('info-overlay');
-  const infoClose = document.getElementById('info-close');
-  if (infoBtn && infoOverlay) {
-    infoBtn.addEventListener('click', () => openInfoModal(updateVersionAndChangelogUI, renderChangelogList));
+  if (infoOverlay) {
     infoOverlay.addEventListener('click', (e) => {
       if (e.target === infoOverlay) closeInfoModal();
     });
   }
-  if (infoClose) infoClose.addEventListener('click', closeInfoModal);
 
-  const achievementsBtn = document.getElementById('achievements-btn');
   const achievementsOverlay = document.getElementById(ACHIEVEMENTS_OVERLAY_ID);
-  const achievementsModalClose = document.getElementById('achievements-modal-close');
-  if (achievementsBtn && achievementsOverlay) {
-    achievementsBtn.addEventListener('click', openAchievementsModal);
+  if (achievementsOverlay) {
     achievementsOverlay.addEventListener('click', (e) => {
       if (e.target === achievementsOverlay) closeAchievementsModal();
     });
   }
-  if (achievementsModalClose) achievementsModalClose.addEventListener('click', closeAchievementsModal);
 
-  const sectionRulesClose = document.getElementById('section-rules-close');
-  const sectionRulesGotIt = document.getElementById('section-rules-got-it');
   const sectionRulesOverlay = document.getElementById('section-rules-overlay');
-  if (sectionRulesClose) sectionRulesClose.addEventListener('click', closeSectionRulesModal);
-  if (sectionRulesGotIt) sectionRulesGotIt.addEventListener('click', closeSectionRulesModal);
   if (sectionRulesOverlay) {
     sectionRulesOverlay.addEventListener('click', (e) => {
       if (e.target === sectionRulesOverlay) closeSectionRulesModal();
@@ -239,7 +215,6 @@ export function mount(container?: HTMLElement): void {
 
   const eventsHintTrigger = document.getElementById('events-hint-trigger');
   const eventsHintOverlay = document.getElementById(EVENTS_HINT_OVERLAY_ID);
-  const eventsHintClose = document.getElementById('events-hint-close');
   function closeEventsHintModal(): void {
     closeOverlay(EVENTS_HINT_OVERLAY_ID, EVENTS_HINT_OPEN_CLASS);
   }
@@ -248,13 +223,11 @@ export function mount(container?: HTMLElement): void {
       openOverlay(EVENTS_HINT_OVERLAY_ID, EVENTS_HINT_OPEN_CLASS, { focusId: 'events-hint-close' });
     });
   }
-  if (eventsHintClose) eventsHintClose.addEventListener('click', closeEventsHintModal);
   if (eventsHintOverlay) {
     eventsHintOverlay.addEventListener('click', (e: MouseEvent) => {
       if (e.target === eventsHintOverlay) closeEventsHintModal();
     });
   }
-
   function closeChartHelpModal(): void {
     closeOverlay(CHART_HELP_OVERLAY_ID, CHART_HELP_OPEN_CLASS);
   }
@@ -270,15 +243,12 @@ export function mount(container?: HTMLElement): void {
     if (bodyEl) bodyEl.textContent = t(descKey as StringKey);
     openOverlay(CHART_HELP_OVERLAY_ID, CHART_HELP_OPEN_CLASS, { focusId: 'chart-help-close' });
   });
-  const chartHelpClose = document.getElementById('chart-help-close');
   const chartHelpOverlay = document.getElementById(CHART_HELP_OVERLAY_ID);
-  if (chartHelpClose) chartHelpClose.addEventListener('click', closeChartHelpModal);
   if (chartHelpOverlay) {
     chartHelpOverlay.addEventListener('click', (e: MouseEvent) => {
       if (e.target === chartHelpOverlay) closeChartHelpModal();
     });
   }
-
   if (settingsOverlay) {
     settingsOverlay.addEventListener('click', (e) => {
       if (e.target === settingsOverlay) closeSettings();
@@ -332,68 +302,25 @@ export function mount(container?: HTMLElement): void {
     applyTranslations();
   });
 
-  const settingsInLegacy = settingsOverlay?.closest('#legacy-root');
-  if (settingsInLegacy) {
-    if (settingsClose) settingsClose.addEventListener('click', closeSettings);
-    bindSettingsForm();
-    const exportBtn = document.getElementById('settings-export-btn');
-    const importBtn = document.getElementById('settings-import-btn');
-    const importFileEl = document.getElementById('settings-import-file') as HTMLInputElement | null;
-    if (exportBtn) exportBtn.addEventListener('click', handleExportSave);
-    if (importBtn) importBtn.addEventListener('click', () => importFileEl?.click());
-    if (importFileEl) {
-      importFileEl.addEventListener('change', async (e: Event) => {
-        const input = e.target as HTMLInputElement;
-        const file = input.files?.[0];
-        if (!file) return;
-        const text = await file.text();
-        const ok = await handleImportSave(text);
-        input.value = '';
-        if (ok) location.reload();
-        else alert(t('invalidSaveFile'));
-      });
-    }
-    const resetBtn = document.getElementById('settings-reset-btn');
-    if (resetBtn) resetBtn.addEventListener('click', openResetConfirmModal);
-  }
-
-  // --- Reset & prestige confirm modals ---
-  const resetConfirmCancel = document.getElementById('reset-confirm-cancel');
-  const resetConfirmReset = document.getElementById('reset-confirm-reset');
+  // --- Reset & prestige confirm modals (overlay click to close; buttons handled by Vue) ---
   const resetConfirmOverlay = document.getElementById('reset-confirm-overlay');
-  if (resetConfirmCancel) resetConfirmCancel.addEventListener('click', closeResetConfirmModal);
-  if (resetConfirmReset) resetConfirmReset.addEventListener('click', handleResetProgress);
   if (resetConfirmOverlay) {
     resetConfirmOverlay.addEventListener('click', (e) => { if (e.target === resetConfirmOverlay) closeResetConfirmModal(); });
   }
-
-  const prestigeConfirmCancel = document.getElementById('prestige-confirm-cancel');
-  const prestigeConfirmDo = document.getElementById('prestige-confirm-do');
   const prestigeConfirmOverlay = document.getElementById('prestige-confirm-overlay');
-  if (prestigeConfirmCancel) prestigeConfirmCancel.addEventListener('click', closePrestigeConfirmModal);
-  if (prestigeConfirmDo) prestigeConfirmDo.addEventListener('click', confirmPrestige);
   if (prestigeConfirmOverlay) {
     prestigeConfirmOverlay.addEventListener('click', (e) => { if (e.target === prestigeConfirmOverlay) closePrestigeConfirmModal(); });
   }
-
-  const prestigeRewardsBtn = document.getElementById('prestige-rewards-btn');
-  const prestigeRewardsClose = document.getElementById('prestige-rewards-close');
   const prestigeRewardsOverlayEl = document.getElementById('prestige-rewards-overlay');
-  if (prestigeRewardsBtn) prestigeRewardsBtn.addEventListener('click', openPrestigeRewardsModal);
-  if (prestigeRewardsClose) prestigeRewardsClose.addEventListener('click', closePrestigeRewardsModal);
   if (prestigeRewardsOverlayEl) {
     prestigeRewardsOverlayEl.addEventListener('click', (e) => { if (e.target === prestigeRewardsOverlayEl) closePrestigeRewardsModal(); });
   }
-
-  const planetDetailClose = document.getElementById('planet-detail-close');
   const planetDetailOverlay = document.getElementById(PLANET_DETAIL_OVERLAY_ID);
-  if (planetDetailClose) planetDetailClose.addEventListener('click', closePlanetDetail);
   if (planetDetailOverlay) {
     planetDetailOverlay.addEventListener('click', (e) => {
       if (e.target === planetDetailOverlay) closePlanetDetail();
     });
   }
-
   bindUpgradeChoosePlanetModal();
   bindExpeditionModal();
 

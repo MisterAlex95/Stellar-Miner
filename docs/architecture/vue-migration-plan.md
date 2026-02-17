@@ -2,7 +2,7 @@
 
 Incremental plan to migrate the presentation layer from vanilla TypeScript/DOM to Vue 3, without rewriting domain or application layers. The app remains a single Vite + TypeScript codebase; Vue is introduced gradually so the game stays playable at each step.
 
-**Current state (phases 0–6 + step 4 done):** Vue 3 root wraps the app; **Pinia** is used for state. Legacy UI mounts into `#legacy-root`. View state lives in Pinia stores (`useGameStateStore`, `useToastStore`); the game loop calls `updateGameStateBridge()` which delegates to the store. The Stats, Dashboard, Research, and Upgrades tabs are Vue-driven (wrapper components inject vanilla HTML and watch the store to update). Empire tab remains vanilla. Toasts use `useToastStore` and `ToastContainer`. **Shell in Vue:** `App.vue` renders `AppHeader` and `AppTabs`; `getAppHtml()` no longer outputs header or tab bars—only modals, stats section, and panel divs. Tab switching and header actions go through Vue; `switchTab()` still toggles panel visibility and is called from Vue and from keyboard (1–6). Mount code is resilient to missing legacy tab DOM. Phase 7 (further cleanup, v-memo, component tests) is optional.
+**Current state (migration complete):** Vue 3 root wraps the app; **Pinia** for state. **No HTML injection in Vue shell:** `#legacy-root` and `#legacy-panels` contain Vue components only (`StatsBlock`, `PanelsShell`); `mount()` no longer injects `getStatsBlockHtml()` or `getPanelsOnlyHtml()`. **Shell:** `App.vue` renders `AppHeader` (with `HeaderActions`), `StatsBlock`, `AppTabs`, `PanelsShell`, all modals (`SettingsModal`, `InfoModal`, `AchievementsModal`, reset/prestige confirm/rewards, `EventsHintModal`, `ChartHelpModal`, `SectionRulesModal`, `UpgradeChoosePlanetModal`, `PlanetDetailModal`, `ExpeditionModal`, `IntroModal`), and `ToastContainer`. **Panels:** Mine (canvas + quest section), Dashboard, Empire, Research, Upgrades, Stats are Vue: content is in `PanelsShell` and each tab’s content is a Vue panel (EmpirePanel, ResearchPanel, etc.) mounted into its container when the tab is first opened. **Modals:** All overlays are Vue components; handlers and overlay helpers still use `openOverlay`/`closeOverlay` by ID; Vue renders the DOM with the same IDs. **Vue-only mount:** `mount()` requires `#legacy-root` and `#legacy-panels` (created by Vue); the former non-Vue path and `appShell.ts` (getAppHtml) have been removed. Phase 7 (v-memo, component tests) remains optional.
 
 ---
 
@@ -21,18 +21,17 @@ Incremental plan to migrate the presentation layer from vanilla TypeScript/DOM t
 2. **Types**: ensure `gameState`, handlers, and port types are easy to import from Vue components (they live in `application/` and are already TS).
 3. **Document** which presentation files map to which panels/features (see inventory below) so we know the migration order.
 
-**Presentation inventory (for migration order):**
+**Presentation inventory (migration status):**
 
-| Area | Vanilla files | Notes |
-|------|----------------|-------|
-| Entry / shell | `mount.ts`, `appShell.ts`, `mount/mountTabs.ts`, `mount/mountModals.ts` | Full layout, tabs, modals |
-| Mine tab | `MineZoneCanvas.ts`, `MineZone3D.ts`, stats (coin/production), combo | Canvas + stats strip |
-| Empire tab | `planetListView.ts`, `planetDetailView.ts`, `crewView.ts`, `prestigeView.ts`, `questView.ts`, `dashboardView.ts`, `housingView.ts` | Panel `empire` |
-| Research tab | `researchView.ts` | Panel `research` |
-| Upgrades tab | `upgradeListView.ts`, `upgradeChoosePlanetModal.ts`, `expeditionModal.ts` | Panel `upgrades` |
-| Stats tab | `statisticsView.ts` | Panel `stats` |
-| Shared UI | `tooltip.ts`, `toasts.ts`, `components/toasts.ts`, `components/overlay.ts`, `components/modal.ts`, `progressionView.ts`, `bindSettingsForm.ts` | Toasts, overlays, modals, settings, intro |
-| Components | `components/` (changelog, debugPanel, progressBar, upgradeCard, etc.) | Reusable building blocks |
+| Area | Status | Notes |
+|------|--------|-------|
+| Entry / shell | **Vue** | `App.vue`, `StatsBlock.vue`, `PanelsShell.vue`; mount only wires bindings, no HTML inject in Vue shell |
+| Mine tab | **Vue shell** | `PanelsShell` provides structure; canvas + quest still updated by mount/questView by ID |
+| Empire tab | **Vue** | `EmpirePanel.vue`, `useEmpireData`, `useEmpireActions`; planet detail/expedition modals Vue |
+| Research / Upgrades / Stats / Dashboard | **Vue** | Vue panels mount into PanelsShell containers |
+| Modals | **Vue** | Settings, Info, Achievements, reset/prestige, events hint, chart help, section rules, upgrade choose planet, planet detail, expedition, intro |
+| Shared UI | **Vue + legacy** | Toasts Vue (ToastContainer); overlay.ts, progressionView, bindSettingsForm still used by handlers |
+| Components | **Legacy** | `components/` (changelog, progressBar, upgradeCard, etc.) used by Vue or mount |
 
 ---
 
@@ -141,7 +140,7 @@ For each:
 1. Move header (offline banner, title, buttons: info, achievements, settings) into a Vue component; buttons emit or call injected handlers (open settings, open changelog, etc.).
 2. Tab list and tab panels container: Vue component that owns `activePanel`, renders tab buttons and the corresponding panel component (Mine, Dashboard, Empire, Research, Upgrades, Stats). This replaces the current tab switching and `switchTab` usage; `switchTab` can become a wrapper that updates Vue state so the rest of the app (e.g. game loop’s `runPanelUpdates`) still knows the active panel if needed.
 3. Layout (tabs vs one-page): controlled by settings; Vue reads from bridge and renders either tabbed layout or single scrollable page.
-4. Remove the remaining legacy mount (e.g. `getAppHtml()`, `mount.ts`’s full DOM creation) and any dead vanilla view code.
+4. ~~Remove the remaining legacy mount (e.g. `getAppHtml()`, `mount.ts`'s full DOM creation) and any dead vanilla view code.~~ Done: appShell removed; mount() requires Vue shell.
 
 **Deliverable:** Full UI is Vue; no remaining vanilla presentation except possibly canvas helpers and debug panel.
 
