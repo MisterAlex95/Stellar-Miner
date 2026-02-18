@@ -394,7 +394,7 @@
 import { t } from '../../../application/strings.js';
 import { useGameStateStore } from '../stores/gameState.js';
 import { handleClaimQuest } from '../../../application/handlers.js';
-import { openSectionRulesModal } from '../../mount/mountModals.js';
+import { openSectionRulesModal } from '../mountModals.js';
 import { useSectionCollapse } from '../composables/useSectionCollapse.js';
 import { useAppUIStore } from '../stores/appUI.js';
 import MineZoneCanvas from './MineZoneCanvas.vue';

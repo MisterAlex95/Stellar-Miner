@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { t } from '../../../application/strings.js';
-import { closeInfoModal } from '../../mount/mountModals.js';
+import { closeInfoModal } from '../mountModals.js';
 import { useAppUIStore } from '../stores/appUI.js';
 import { getChangelog } from '../../../application/changelog.js';
 

@@ -23,7 +23,7 @@ import {
   SECTION_RULES_OVERLAY_CLASS,
   ACHIEVEMENTS_OVERLAY_ID,
   ACHIEVEMENTS_OVERLAY_OPEN_CLASS,
-} from '../../mount/mountModals.js';
+} from '../mountModals.js';
 
 const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';

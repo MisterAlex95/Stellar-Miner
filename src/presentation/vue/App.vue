@@ -22,6 +22,7 @@
     <ExpeditionModal />
     <IntroModal />
     <ToastContainer />
+    <FloatingFeedback />
     <DebugPanel />
     <GlobalTooltip />
   </div>
@@ -32,6 +33,7 @@ import { watch, onMounted } from 'vue';
 import AppHeader from './AppHeader.vue';
 import AppTabs from './AppTabs.vue';
 import ToastContainer from './ToastContainer.vue';
+import FloatingFeedback from './components/FloatingFeedback.vue';
 import SettingsModal from './components/SettingsModal.vue';
 import InfoModal from './components/InfoModal.vue';
 import AchievementsModal from './components/AchievementsModal.vue';

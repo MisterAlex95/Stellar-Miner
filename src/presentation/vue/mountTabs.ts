@@ -1,6 +1,6 @@
 /**
- * Tab switching, badges, layout. Extracted from mount.ts.
- * Tab/panel visibility is driven by Vue store (PanelsShell); this module only updates store, storage, URL, and lazy-mounts panels.
+ * Tab switching, badges, layout. Tab/panel visibility is driven by Vue store (PanelsShell);
+ * this module only updates store, storage, URL, and lazy-mounts panels.
  */
 import { createApp } from 'vue';
 import { getSession, getSettings, getExpeditionEndsAt, planetService } from '../../application/gameState.js';
@@ -9,15 +9,15 @@ import { getQuestProgress } from '../../application/quests.js';
 import { RESEARCH_CATALOG, canAttemptResearch, hasEffectiveFreeSlot, getResearchHousingCapacityBonus } from '../../application/research.js';
 import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../../domain/constants.js';
 import { markPanelHydrated } from '../../application/lazyPanels.js';
-import StatisticsPanel from '../vue/panels/StatisticsPanel.vue';
-import DashboardPanel from '../vue/panels/DashboardPanel.vue';
-import ResearchPanel from '../vue/panels/ResearchPanel.vue';
-import UpgradesPanel from '../vue/panels/UpgradesPanel.vue';
-import EmpirePanel from '../vue/panels/EmpirePanel.vue';
-import { hasNewInstallableUpgrade } from '../dashboard/dashboardHelpers.js';
-import { getPinia } from '../vue/piniaInstance.js';
-import { useGameStateStore } from '../vue/stores/gameState.js';
-import type { TabsSnapshot } from '../vue/stores/gameState.js';
+import StatisticsPanel from './panels/StatisticsPanel.vue';
+import DashboardPanel from './panels/DashboardPanel.vue';
+import ResearchPanel from './panels/ResearchPanel.vue';
+import UpgradesPanel from './panels/UpgradesPanel.vue';
+import EmpirePanel from './panels/EmpirePanel.vue';
+import { hasNewInstallableUpgrade } from './dashboardHelpers.js';
+import { getPinia } from './piniaInstance.js';
+import { useGameStateStore } from './stores/gameState.js';
+import type { TabsSnapshot } from './stores/gameState.js';
 
 function mountVuePanel(containerId: string, component: unknown, datasetKey: string): void {
   const container = document.getElementById(containerId);

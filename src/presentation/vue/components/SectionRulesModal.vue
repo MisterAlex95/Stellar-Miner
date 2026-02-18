@@ -58,7 +58,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { t, type StringKey } from '../../../application/strings.js';
-import { closeSectionRulesModal } from '../../mount/mountModals.js';
+import { closeSectionRulesModal } from '../mountModals.js';
 import { useAppUIStore } from '../stores/appUI.js';
 
 const appUI = useAppUIStore();

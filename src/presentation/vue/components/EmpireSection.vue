@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { t } from '../../../application/strings.js';
-import { openSectionRulesModal } from '../../mount/mountModals.js';
+import { openSectionRulesModal } from '../mountModals.js';
 
 const props = withDefaults(
   defineProps<{

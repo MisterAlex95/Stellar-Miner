@@ -11,7 +11,7 @@ vi.mock('../presentation/upgradeList/upgradeList.js', () => ({
   renderUpgradeList: vi.fn(),
   flashUpgradeCard: vi.fn(),
 }));
-vi.mock('../presentation/toasts/toasts.js', () => ({ showMiniMilestoneToast: vi.fn() }));
+vi.mock('../presentation/vue/toasts.js', () => ({ showMiniMilestoneToast: vi.fn() }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
 vi.mock('./handlersSave.js', () => ({ saveSession: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));

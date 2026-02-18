@@ -4,11 +4,11 @@ import { DAILY_BONUS_COINS } from '../../application/catalogs.js';
 import { t, tParam } from '../../application/strings.js';
 import { getCatalogEventName } from '../../application/i18nCatalogs.js';
 import type { GameEvent } from '../../domain/entities/GameEvent.js';
-import { showToast } from '../vue/lib/toasts.js';
+import { showToast } from './lib/toasts.js';
 import {
-  showFloatingReward as showFloatingRewardComponent,
-  showFloatingCoin as showFloatingCoinComponent,
-} from '../vue/lib/floatingFeedback.js';
+  showFloatingReward as showFloatingRewardImpl,
+  showFloatingCoin as showFloatingCoinImpl,
+} from './lib/floatingFeedback.js';
 
 export function showAchievementToast(name: string): void {
   showToast(tParam('achievementToast', { name }), 'achievement', { duration: 4000 });
@@ -48,7 +48,7 @@ export function showSuperLuckyToast(coins: number): void {
 export function showFloatingReward(amount: number, anchor: HTMLElement): void {
   const settings = getSettings();
   const text = `+${formatNumber(amount, settings.compactNumbers)} ⬡`;
-  showFloatingRewardComponent(text, anchor);
+  showFloatingRewardImpl(text, anchor);
 }
 
 export function showQuestStreakToast(streak: number, mult: number): void {
@@ -79,7 +79,7 @@ export function showFloatingCoin(
   const displayText =
     options?.critical ? `✧ CRITICAL +${formatted}` : options?.superLucky ? `★ +${formatted}` : `+${formatted}`;
   const variant = options?.critical ? 'critical' : options?.superLucky ? 'super-lucky' : options?.lucky ? 'lucky' : 'default';
-  showFloatingCoinComponent(displayText, clientX, clientY, { zone, floats }, { variant });
+  showFloatingCoinImpl(displayText, clientX, clientY, { zone, floats }, { variant });
 }
 
 export function showMilestoneToast(coins: number): void {

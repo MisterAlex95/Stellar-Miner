@@ -4,7 +4,7 @@ import { createPresentationPort } from './presentation/vue/presentationPortImpl.
 import { startStarfield } from './presentation/canvas/StarfieldCanvas.js';
 import { mountVueApp } from './presentation/vue/main.js';
 import { initPresentation } from './presentation/vue/initPresentation.js';
-import { switchTab, getTabsSnapshot } from './presentation/mount/mountTabs.js';
+import { switchTab, getTabsSnapshot } from './presentation/vue/mountTabs.js';
 import {
   getOrCreateSession,
   setSession,
@@ -37,7 +37,7 @@ import { getProgressionSnapshot } from './application/progressionSnapshot.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/modals/introModal.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
-import { showOfflineToast } from './presentation/toasts/toasts.js';
+import { showOfflineToast } from './presentation/vue/toasts.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
 import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';

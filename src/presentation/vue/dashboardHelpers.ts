@@ -4,7 +4,7 @@
 import Decimal from 'break_infinity.js';
 import { getSession, getSettings, planetService } from '../../application/gameState.js';
 import { UPGRADE_CATALOG, getUnlockedUpgradeTiers, getUpgradeCost } from '../../application/catalogs.js';
-import { getUpgradeCardState } from '../vue/lib/upgradeCard.js';
+import { getUpgradeCardState } from '../../application/upgradeCardState.js';
 import { getCatalogUpgradeName } from '../../application/i18nCatalogs.js';
 import { getPlanetType, getPlanetTypeMultiplier } from '../../application/planetAffinity.js';
 import { RESEARCH_CATALOG, canAttemptResearch } from '../../application/research.js';

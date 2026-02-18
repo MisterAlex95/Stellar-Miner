@@ -7,7 +7,7 @@ import { notifyRefresh } from './refreshSignal.js';
 import { LAST_DAILY_BONUS_KEY } from './catalogs.js';
 
 vi.mock('../presentation/upgradeList/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
-vi.mock('../presentation/toasts/toasts.js', () => ({
+vi.mock('../presentation/vue/toasts.js', () => ({
   showFloatingCoin: vi.fn(),
   showSuperLuckyToast: vi.fn(),
   showCriticalToast: vi.fn(),

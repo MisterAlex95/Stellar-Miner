@@ -13,7 +13,7 @@ import {
   switchTab,
   getInitialTab,
   replaceTabState,
-} from '../mount/mountTabs.js';
+} from './mountTabs.js';
 import { useBootstrap } from './composables/useBootstrap.js';
 
 /** Updates appUI store so InfoModal and HeaderActions show version and update badge (Vue-driven). */

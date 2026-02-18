@@ -21,7 +21,7 @@ import {
   getBestNextUpgradeGoalWithState,
   getNextAttemptableResearchAffordable,
   minutesUntil,
-} from '../../dashboard/dashboardHelpers.js';
+} from '../dashboardHelpers.js';
 import { useGameStateStore } from '../stores/gameState.js';
 
 export type HeroState = {

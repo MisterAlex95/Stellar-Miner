@@ -6,7 +6,7 @@ import { handleClaimQuest } from './handlersQuest.js';
 import { notifyRefresh } from './refreshSignal.js';
 
 vi.mock('../presentation/upgradeList/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
-vi.mock('../presentation/toasts/toasts.js', () => ({
+vi.mock('../presentation/vue/toasts.js', () => ({
   showFloatingReward: vi.fn(),
   showQuestStreakToast: vi.fn(),
 }));
