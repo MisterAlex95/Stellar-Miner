@@ -3,7 +3,7 @@
  * Used by MineZoneCanvas.vue.
  */
 import { onUnmounted } from 'vue';
-import { createMineZone3D } from '../../canvas/MineZone3D.js';
+import { createMineZone3D } from '../canvas/MineZone3D.js';
 import { getSettings, getEventContext, setMineZoneCanvasApi } from '../../../application/gameState.js';
 
 export function useMineZoneCanvas(container: HTMLElement | null): void {

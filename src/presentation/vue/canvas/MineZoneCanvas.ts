@@ -1,4 +1,4 @@
-import { PLANETS_PER_SOLAR_SYSTEM } from '../../application/solarSystems.js';
+import { PLANETS_PER_SOLAR_SYSTEM } from '../../../application/solarSystems.js';
 import {
   generateProceduralPlanetTexture,
   getHorizontalScrollOffset,
