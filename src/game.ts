@@ -1,10 +1,10 @@
 import './styles/index.css';
 import { setPresentationPort } from './application/uiBridge.js';
-import { createPresentationPort } from './presentation/vue/presentationPortImpl.js';
-import { startStarfield } from './presentation/vue/canvas/StarfieldCanvas.js';
-import { mountVueApp } from './presentation/vue/main.js';
-import { initPresentation } from './presentation/vue/initPresentation.js';
-import { switchTab, getTabsSnapshot } from './presentation/vue/mountTabs.js';
+import { createPresentationPort } from './presentation/presentationPortImpl.js';
+import { startStarfield } from './presentation/canvas/StarfieldCanvas.js';
+import { mountVueApp } from './presentation/main.js';
+import { initPresentation } from './presentation/initPresentation.js';
+import { switchTab, getTabsSnapshot } from './presentation/mountTabs.js';
 import {
   getOrCreateSession,
   setSession,
@@ -34,17 +34,17 @@ import { getComboSnapshot } from './application/comboSnapshot.js';
 import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { getProgressionSnapshot } from './application/progressionSnapshot.js';
-import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/vue/introModal.js';
+import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/introModal.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
-import { showOfflineToast } from './presentation/vue/toasts.js';
+import { showOfflineToast } from './presentation/toasts.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
 import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';
-import { getElement } from './presentation/vue/lib/domUtils.js';
+import { getElement } from './presentation/lib/domUtils.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
 import { PANEL_IDS, getPanelElementId, type PanelId } from './application/panelConfig.js';
-import { updateGameStateBridge, getGameStateBridge } from './presentation/vue/gameStateBridge.js';
+import { updateGameStateBridge, getGameStateBridge } from './presentation/gameStateBridge.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 80;

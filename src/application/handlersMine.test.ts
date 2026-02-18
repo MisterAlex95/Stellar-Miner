@@ -6,8 +6,8 @@ import { handleMineClick } from './handlersMine.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { LAST_DAILY_BONUS_KEY } from './catalogs.js';
 
-vi.mock('../presentation/upgradeList/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
-vi.mock('../presentation/vue/toasts.js', () => ({
+vi.mock('../presentation/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
+vi.mock('../presentation/toasts.js', () => ({
   showFloatingCoin: vi.fn(),
   showSuperLuckyToast: vi.fn(),
   showCriticalToast: vi.fn(),
