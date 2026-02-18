@@ -1,11 +1,11 @@
 <template>
-  <div class="app-wrapper vue-shell">
+  <div ref="appWrapperRef" class="app-wrapper vue-shell">
     <AppHeader />
-    <div id="legacy-root">
+    <div ref="legacyRootRef" id="legacy-root">
       <StatsBlock />
     </div>
     <AppTabs v-show="store.layout === 'tabs'" />
-    <div id="legacy-panels">
+    <div ref="legacyPanelsRef" id="legacy-panels">
       <PanelsShell />
     </div>
     <SettingsModal />
@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import AppHeader from './AppHeader.vue';
 import AppTabs from './AppTabs.vue';
 import ToastContainer from './ToastContainer.vue';
@@ -52,13 +52,18 @@ import GlobalTooltip from './components/GlobalTooltip.vue';
 import StatsBlock from './components/StatsBlock.vue';
 import PanelsShell from './components/PanelsShell.vue';
 import { useGameStateStore } from './stores/gameState.js';
+import { useAppUIStore } from './stores/appUI.js';
 import { useGlobalKeyboard } from './composables/useGlobalKeyboard.js';
 import { useChartHelpTrigger } from './composables/useChartHelpTrigger.js';
 
 const store = useGameStateStore();
+const appUI = useAppUIStore();
+const appWrapperRef = ref<HTMLElement | null>(null);
+const legacyRootRef = ref<HTMLElement | null>(null);
+const legacyPanelsRef = ref<HTMLElement | null>(null);
 
 function syncAppAttributes(): void {
-  const app = document.getElementById('app');
+  const app = appUI.appRoot;
   if (app) {
     app.setAttribute('data-active-tab', store.activeTab);
     app.setAttribute('data-layout', store.layout);
@@ -66,7 +71,15 @@ function syncAppAttributes(): void {
 }
 
 onMounted(() => {
+  appUI.setAppRoot(appWrapperRef.value?.parentElement ?? null);
+  appUI.setLegacyRoot(legacyRootRef.value ?? null);
+  appUI.setLegacyPanels(legacyPanelsRef.value ?? null);
   syncAppAttributes();
+});
+onBeforeUnmount(() => {
+  appUI.setAppRoot(null);
+  appUI.setLegacyRoot(null);
+  appUI.setLegacyPanels(null);
 });
 watch(
   () => [store.activeTab, store.layout],

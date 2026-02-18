@@ -125,13 +125,14 @@ function getEventColors(ids: string[], baseAccent: string, baseDim: string): [st
 
 export function startStarfield(
   getSettings?: () => StarfieldSettings,
-  getEventContext?: () => EventContext
+  getEventContext?: () => EventContext,
+  appElement?: HTMLElement | null
 ): { update: (dt: number) => void; draw: () => void; resize: () => void } {
   canvas = document.createElement('canvas');
   canvas.id = 'starfield-canvas';
   canvas.setAttribute('aria-hidden', 'true');
-  const app = document.getElementById('app');
-  if (app && app.parentNode) {
+  const app = appElement ?? document.getElementById('app');
+  if (app?.parentNode) {
     app.parentNode.insertBefore(canvas, app);
   } else {
     document.body.appendChild(canvas);

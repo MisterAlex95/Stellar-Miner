@@ -14,6 +14,7 @@
         :aria-selected="activeTab === tabId"
         :aria-controls="`panel-${tabId}`"
         :data-tab="tabId"
+        :title="tabLabel(tabId)"
         @click="goToTab(tabId)"
       >
         <span>{{ tabLabel(tabId) }}</span>
@@ -52,6 +53,7 @@
           class="app-tabs-menu-item"
           role="menuitem"
           :data-tab="tabId"
+          :title="tabLabel(tabId)"
           :class="{ 'app-tabs-menu-item--active': activeTab === tabId, 'app-tabs-menu-item--has-action': store.tabs.badges[tabId] }"
           @click="goToTab(tabId); menuOpen = false"
         >
@@ -77,6 +79,7 @@
       :class="{ 'app-tab-bottom--active': activeTab === tabId, 'app-tab-bottom--has-action': store.tabs.badges[tabId] }"
       role="tab"
       :data-tab="tabId"
+      :title="tabLabel(tabId)"
       :aria-selected="activeTab === tabId"
       @click="goToTab(tabId)"
     >
@@ -115,7 +118,8 @@
           type="button"
           class="app-tabs-bottom-menu-item"
           role="menuitem"
-          :data-tab="tabId"
+:data-tab="tabId"
+          :title="tabLabel(tabId)"
           :class="{ 'app-tabs-bottom-menu-item--active': activeTab === tabId, 'app-tabs-bottom-menu-item--has-action': store.tabs.badges[tabId] }"
           @click="goToTab(tabId); bottomMenuOpen = false"
         >
@@ -124,7 +128,7 @@
       </div>
     </div>
   </nav>
-  </div>
+</div>
 </template>
 
 <script setup lang="ts">

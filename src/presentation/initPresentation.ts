@@ -23,9 +23,12 @@ export function updateVersionAndChangelogUI(): void {
 }
 
 export function initPresentation(): void {
-  const app = document.getElementById('app');
-  const legacyRoot = document.getElementById('legacy-root');
-  const legacyPanels = document.getElementById('legacy-panels');
+  const pinia = getPinia();
+  if (!pinia) return;
+  const store = useAppUIStore(pinia);
+  const app = store.appRoot;
+  const legacyRoot = store.legacyRoot;
+  const legacyPanels = store.legacyPanels;
   if (!app || !legacyRoot || !legacyPanels) return;
 
   const bootstrap = useBootstrap();

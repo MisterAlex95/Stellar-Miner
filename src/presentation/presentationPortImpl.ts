@@ -116,6 +116,21 @@ function getQuestClaimAnchor(): HTMLElement | null {
   return pinia ? useAppUIStore(pinia).questClaimAnchor : null;
 }
 
+function getAppRoot(): HTMLElement | null {
+  const pinia = getPinia();
+  return pinia ? useAppUIStore(pinia).appRoot : null;
+}
+
+function getLegacyRoot(): HTMLElement | null {
+  const pinia = getPinia();
+  return pinia ? useAppUIStore(pinia).legacyRoot : null;
+}
+
+function getMineZoneElement(): HTMLElement | null {
+  const pinia = getPinia();
+  return pinia ? useAppUIStore(pinia).mineZoneElement : null;
+}
+
 export function createPresentationPort(): PresentationPort {
   return {
     showAchievementToast: toasts.showAchievementToast,
@@ -126,6 +141,9 @@ export function createPresentationPort(): PresentationPort {
     showEventToast: toasts.showEventToast,
     showFloatingReward: toasts.showFloatingReward,
     getQuestClaimAnchor,
+    getAppRoot,
+    getLegacyRoot,
+    getMineZoneElement,
     showFloatingCoin: toasts.showFloatingCoin,
     showSuperLuckyToast: toasts.showSuperLuckyToast,
     showCriticalToast: toasts.showCriticalToast,

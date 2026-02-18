@@ -37,9 +37,6 @@ export function openUpgradeChoosePlanetModal(opts: {
   maxCount?: number;
 }): void {
   const { upgradeId, action, planets, maxCount } = opts;
-  const overlay = document.getElementById(OVERLAY_ID);
-  if (!overlay) return;
-
   const session = getSession();
   const settings = getSettings();
   const bestTypesLower =

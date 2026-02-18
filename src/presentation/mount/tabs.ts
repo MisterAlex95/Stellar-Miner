@@ -17,12 +17,14 @@ import EmpirePanel from '../panels/EmpirePanel.vue';
 import { hasNewInstallableUpgrade } from '../lib/dashboardHelpers.js';
 import { getPinia } from '../piniaInstance.js';
 import { useGameStateStore } from '../stores/gameState.js';
+import { useAppUIStore } from '../stores/appUI.js';
 import type { TabsSnapshot } from '../stores/gameState.js';
 
 function mountVuePanel(containerId: string, component: unknown, datasetKey: string): void {
-  const container = document.getElementById(containerId);
-  if (!container || (container as HTMLElement & { dataset: Record<string, string> }).dataset[datasetKey]) return;
   const pinia = getPinia();
+  const container =
+    (pinia && useAppUIStore(pinia).panelContainers[containerId]) ?? document.getElementById(containerId);
+  if (!container || (container as HTMLElement & { dataset: Record<string, string> }).dataset[datasetKey]) return;
   const app = createApp(component as Parameters<typeof createApp>[0]);
   if (pinia) app.use(pinia);
   app.mount(container);
@@ -147,11 +149,11 @@ export function getTabsSnapshot(): TabsSnapshot {
 
 export function applyLayout(): void {
   const layout = getSettings().layout;
-  const app = document.getElementById('app');
-  if (app) app.setAttribute('data-layout', layout);
   const pinia = getPinia();
   if (pinia) {
     useGameStateStore(pinia).setLayout(layout);
+    const app = useAppUIStore(pinia).appRoot;
+    if (app) app.setAttribute('data-layout', layout);
   }
 }
 

@@ -45,6 +45,8 @@ import { getPresentationPort } from './application/uiBridge.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
 import { PANEL_IDS, getPanelElementId, type PanelId } from './application/panelConfig.js';
 import { updateGameStateBridge, getGameStateBridge } from './presentation/gameStateBridge.js';
+import { getPinia } from './presentation/piniaInstance.js';
+import { useGameStateStore } from './presentation/stores/gameState.js';
 
 let lastTime = performance.now();
 const QUEST_RENDER_INTERVAL_MS = 80;
@@ -148,10 +150,11 @@ const PANEL_REFRESH_ACTIONS: Partial<Record<PanelId, () => void>> = {};
 
 function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
   const session = getSession();
-  const appEl = document.getElementById('app');
+  const pinia = getPinia();
+  const activeTab = (pinia && useGameStateStore(pinia).activeTab) ?? 'mine';
   if (!session) {
     return {
-      activeTab: appEl?.getAttribute('data-active-tab') ?? 'mine',
+      activeTab,
       layout: getSettings().layout,
       coins: 0,
       production: 0,
@@ -180,7 +183,7 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
     };
   });
   return {
-    activeTab: appEl?.getAttribute('data-active-tab') ?? 'mine',
+    activeTab,
     layout: getSettings().layout,
     coins: session.player.coins.toNumber(),
     production: session.player.effectiveProductionRate.toNumber(),
@@ -224,7 +227,7 @@ function createRefreshViews(): () => void {
 async function init(): Promise<void> {
   setPresentationPort(createPresentationPort());
   mountVueApp();
-  const legacyRoot = document.getElementById('legacy-root');
+  const legacyRoot = getPresentationPort().getLegacyRoot();
   if (!legacyRoot) throw new Error('legacy-root not found after Vue mount');
   const session = await getOrCreateSession();
   setSession(session);
@@ -236,7 +239,7 @@ async function init(): Promise<void> {
   const gameStartTime = Date.now();
   setGameStartTime(gameStartTime);
   setNextEventAt(gameStartTime + MIN_EVENT_DELAY_MS);
-  setStarfieldApi(startStarfield(getSettings, getEventContext));
+  setStarfieldApi(startStarfield(getSettings, getEventContext, getPresentationPort().getAppRoot()));
   initPresentation();
   updateGameStateBridge(getBridgeSnapshot());
   const bridge = getGameStateBridge();

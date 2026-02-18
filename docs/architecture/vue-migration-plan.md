@@ -184,9 +184,16 @@ All four items completed:
 | Escape key | `appUI.overlayStack` pushed in `openOverlay`, popped in `closeOverlay`. useGlobalKeyboard uses `peekOverlay()` and `OVERLAY_CLOSERS[id]()`; no getElementById for Escape. |
 | Quest claim anchor | PanelsShell sets `appUI.questClaimAnchor` (ref on button); port `getQuestClaimAnchor()` returns it; quests.ts uses port instead of getElementById. |
 
-**AppTabs menu (click-outside):** Replaced `getElementById('app-tabs-menu'|'app-tabs-bottom-menu')` and `querySelector('.app-tabs-bottom-more-wrap')` with refs `appTabsMenuRef`, `appTabsBottomMenuRef`, `appTabsBottomMoreWrapRef`.
+**AppTabs menu (click-outside):** Replaced `getElementById`/`querySelector` with refs.
 
-Definition of done: no `getElementById`/`innerHTML` in handlers or modals for content; no getElementById for chart legend, tooltip, Escape, quest claim, or tabs menu. Only bootstrap (#app, legacy-root), canvas mount, overlay open/close by ID, and mount/tabs.ts panel container lookup remain.
+**Full cleanup (store/port + refs):**
+- **appRoot, legacyRoot, legacyPanels**: Set by App.vue refs; used by applyLayout, initPresentation, syncAppAttributes, getBridgeSnapshot (activeTab from store). No getElementById in game.ts or initPresentation for these.
+- **mineZoneElement, panelContainers**: Set by PanelsShell refs; handlersMine uses port.getAppRoot/getMineZoneElement; mountVuePanel uses store.panelContainers with getElementById fallback.
+- **StarfieldCanvas**: Receives app element from port.getAppRoot(); fallback getElementById only when not provided.
+- **Tab titles**: Removed .app-tab querySelector from applyTranslations; AppTabs uses :title="tabLabel(tabId)".
+- **upgradeChoosePlanet**: Removed redundant getElementById before openOverlay.
+
+Remaining (minimal): main.ts getElementById('app') for Vue mount entry; domUtils.getElementById for overlay open/close; strings.applyTranslations for [data-i18n] (no templates use it); mount/tabs fallback getElementById for panel containers; tests stubs.
 
 ---
 

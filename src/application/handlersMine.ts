@@ -46,7 +46,7 @@ function refreshAfterMine(): void {
 }
 
 function triggerShake(): void {
-  const app = document.getElementById('app');
+  const app = getPresentationPort().getAppRoot();
   if (!app) return;
   app.classList.remove('app--shake');
   void app.offsetWidth;
@@ -55,7 +55,7 @@ function triggerShake(): void {
 }
 
 function getMineZoneCenter(): { x: number; y: number } {
-  const zone = document.getElementById('mine-zone');
+  const zone = getPresentationPort().getMineZoneElement();
   if (!zone) return { x: 0, y: 0 };
   const rect = zone.getBoundingClientRect();
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };

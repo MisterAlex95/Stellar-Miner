@@ -46,17 +46,4 @@ export function applyTranslations(): void {
     const key = el.getAttribute('data-i18n-aria-label');
     if (key && key in stringsEn) el.setAttribute('aria-label', t(key as keyof typeof stringsEn));
   });
-  const tabTitleKeys: Record<string, keyof typeof stringsEn> = {
-    mine: 'tabMine',
-    dashboard: 'tabDashboard',
-    empire: 'tabBase',
-    research: 'tabResearch',
-    upgrades: 'tabUpgrades',
-    stats: 'tabStats',
-  };
-  document.querySelectorAll<HTMLElement>('.app-tab[data-tab]').forEach((btn) => {
-    const tabId = btn.getAttribute('data-tab');
-    const key = tabId ? tabTitleKeys[tabId] : null;
-    if (key && key in stringsEn) btn.title = t(key);
-  });
 }

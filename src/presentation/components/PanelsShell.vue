@@ -9,6 +9,7 @@
     :hidden="isPanelHidden('mine')"
   >
     <section
+      ref="mineZoneRef"
       id="mine-zone"
       class="mine-zone"
       :class="{ 'mine-zone--active': appUI.mineZoneActive }"
@@ -187,6 +188,7 @@
       </div>
       <div class="gameplay-block-body">
         <div
+          ref="dashboardContentRef"
           id="dashboard-content"
           class="dashboard-content"
         ></div>
@@ -202,7 +204,7 @@
     data-tab="empire"
     :hidden="isPanelHidden('empire')"
   >
-    <div id="empire-content"></div>
+    <div ref="empireContentRef" id="empire-content"></div>
   </div>
   <div
     id="panel-research"
@@ -268,6 +270,7 @@
           {{ researchDataDisplayLabel }}
         </p>
         <div
+          ref="researchListRef"
           id="research-list"
           class="research-list"
         ></div>
@@ -331,6 +334,7 @@
       <div class="gameplay-block-body">
         <p class="upgrades-hint">{{ t('upgradesHint') }}</p>
         <div
+          ref="upgradeListRef"
           id="upgrade-list"
           class="upgrade-list"
         ></div>
@@ -387,7 +391,7 @@
         </div>
       </div>
       <div class="gameplay-block-body">
-        <div id="statistics-container"></div>
+        <div ref="statisticsContainerRef" id="statistics-container"></div>
       </div>
     </section>
   </div>
@@ -410,12 +414,30 @@ const sectionCollapse = useSectionCollapse();
 const { label: researchDataDisplayLabel } = useResearchDataDisplay();
 const appUI = useAppUIStore();
 const questClaimBtnRef = ref<HTMLButtonElement | null>(null);
+const mineZoneRef = ref<HTMLElement | null>(null);
+const dashboardContentRef = ref<HTMLElement | null>(null);
+const empireContentRef = ref<HTMLElement | null>(null);
+const researchListRef = ref<HTMLElement | null>(null);
+const upgradeListRef = ref<HTMLElement | null>(null);
+const statisticsContainerRef = ref<HTMLElement | null>(null);
 
 onMounted(() => {
   if (questClaimBtnRef.value) appUI.setQuestClaimAnchor(questClaimBtnRef.value);
+  if (mineZoneRef.value) appUI.setMineZoneElement(mineZoneRef.value);
+  if (dashboardContentRef.value) appUI.setPanelContainer('dashboard-content', dashboardContentRef.value);
+  if (empireContentRef.value) appUI.setPanelContainer('empire-content', empireContentRef.value);
+  if (researchListRef.value) appUI.setPanelContainer('research-list', researchListRef.value);
+  if (upgradeListRef.value) appUI.setPanelContainer('upgrade-list', upgradeListRef.value);
+  if (statisticsContainerRef.value) appUI.setPanelContainer('statistics-container', statisticsContainerRef.value);
 });
 onBeforeUnmount(() => {
   appUI.setQuestClaimAnchor(null);
+  appUI.setMineZoneElement(null);
+  appUI.setPanelContainer('dashboard-content', null);
+  appUI.setPanelContainer('empire-content', null);
+  appUI.setPanelContainer('research-list', null);
+  appUI.setPanelContainer('upgrade-list', null);
+  appUI.setPanelContainer('statistics-container', null);
 });
 
 function onMineZoneClick(e: MouseEvent): void {

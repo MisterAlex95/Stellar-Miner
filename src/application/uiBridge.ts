@@ -20,6 +20,12 @@ export interface PresentationPort {
   showFloatingReward(amount: number, anchor: HTMLElement): void;
   /** Quest claim button element for floating reward (Vue sets via store). */
   getQuestClaimAnchor(): HTMLElement | null;
+  /** #app root element (Vue sets via store). */
+  getAppRoot(): HTMLElement | null;
+  /** Legacy root container (Vue sets via store). */
+  getLegacyRoot(): HTMLElement | null;
+  /** Mine zone element (Vue sets via store). */
+  getMineZoneElement(): HTMLElement | null;
   showFloatingCoin(
     amount: number,
     clientX: number,
@@ -108,6 +114,9 @@ const defaultPort: PresentationPort = {
   showEventToast: noopEvent,
   showFloatingReward: noopNumEl,
   getQuestClaimAnchor: () => null,
+  getAppRoot: () => null,
+  getLegacyRoot: () => null,
+  getMineZoneElement: () => null,
   showFloatingCoin: noopNumXY,
   showSuperLuckyToast: noopNum,
   showCriticalToast: noopNum,
