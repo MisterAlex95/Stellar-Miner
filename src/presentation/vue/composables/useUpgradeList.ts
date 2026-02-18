@@ -19,7 +19,7 @@ import {
   getUninstallingByPlanet,
   type InstallUninstallRange,
 } from '../../../application/upgradeHelpers.js';
-import { getUpgradeCardState, type UpgradeCardState } from '../../components/upgradeCard.js';
+import { getUpgradeCardState, type UpgradeCardState } from '../lib/upgradeCard.js';
 import { t } from '../../../application/strings.js';
 
 export type UpgradeCardItem = {

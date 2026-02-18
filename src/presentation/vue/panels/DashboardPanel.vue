@@ -70,7 +70,45 @@
         :pct="questCard.pct"
       />
 
-      <div v-if="liveHtml" class="dashboard-live" v-html="liveHtml"></div>
+      <div
+        v-if="liveData.events.length || liveData.expeditionRemaining != null || liveData.nextEventIn != null || liveData.showResearch"
+        class="dashboard-live"
+      >
+        <div
+          v-if="liveData.events.length"
+          class="dashboard-events"
+        >
+          <EventBadge
+            v-for="(ev, i) in liveData.events"
+            :key="i"
+            :name="ev.name"
+            :seconds-left="ev.secondsLeft"
+            :title="ev.title"
+            :modifier="ev.modifier"
+            :mult="ev.mult"
+          />
+        </div>
+        <span
+          v-if="liveData.expeditionRemaining != null"
+          class="dashboard-live-pill dashboard-live-pill--expedition"
+        >
+          {{ t('dashboardExpeditionInProgress') }} — {{ liveData.expeditionRemaining }}s
+        </span>
+        <span
+          v-if="liveData.nextEventIn != null"
+          class="dashboard-live-pill dashboard-live-pill--next"
+        >
+          {{ tParam('nextEventInFormat', { time: liveData.nextEventIn + 's' }) }}
+        </span>
+        <button
+          v-if="liveData.showResearch"
+          type="button"
+          class="dashboard-live-pill dashboard-live-pill--research"
+          data-goto="research"
+        >
+          {{ t('researching') }}
+        </button>
+      </div>
 
       <ShortcutGrid
         theme="dashboard"
@@ -84,8 +122,9 @@
 <script setup lang="ts">
 import { computed, unref } from 'vue';
 import { getSession } from '../../../application/gameState.js';
-import { t } from '../../../application/strings.js';
+import { t, tParam } from '../../../application/strings.js';
 import StatChip from '../components/StatChip.vue';
+import EventBadge from '../components/EventBadge.vue';
 import HeroBlock from '../components/HeroBlock.vue';
 import ProgressCard from '../components/ProgressCard.vue';
 import PillsRow from '../components/PillsRow.vue';
@@ -106,7 +145,7 @@ const hero = useDashboardHero();
 const prestige = useDashboardPrestige();
 const empirePills = useDashboardEmpire();
 const questCard = useDashboardQuestCard();
-const liveHtml = useDashboardLive();
+const liveData = useDashboardLive();
 const shortcutItems = useDashboardShortcuts();
 const { onDashboardClick } = useDashboardActions();
 </script>

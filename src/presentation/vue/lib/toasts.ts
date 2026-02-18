@@ -1,7 +1,7 @@
 /**
  * Shared toast implementation. Pushes to Vue toast store; ToastContainer renders.
  */
-import { pushToast } from '../vue/toastStore.js';
+import { pushToast } from '../toastStore.js';
 
 export const TOAST_CONTAINER_ID = 'event-toasts';
 

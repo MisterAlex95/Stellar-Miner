@@ -1,6 +1,6 @@
 /**
  * Bootstrap: theme, translations, layout from settings.
- * Used by initPresentation and can be called when settings change.
+ * Used by vue/initPresentation and can be called when settings change.
  */
 import { getSettings } from '../../../application/gameState.js';
 import { applyTranslations as applyTranslationsFromStrings } from '../../../application/strings.js';

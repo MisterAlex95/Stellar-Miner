@@ -1,28 +1,28 @@
 /**
  * Shared upgrade card state and HTML builder. Used by upgradeList for render and update.
  */
-import type { Player } from '../../domain/entities/Player.js';
-import { getSettings } from '../../application/gameState.js';
-import { formatNumber } from '../../application/format.js';
+import type { Player } from '../../../domain/entities/Player.js';
+import { getSettings } from '../../../application/gameState.js';
+import { formatNumber } from '../../../application/format.js';
 import {
   type UpgradeDef,
   createUpgrade,
   getUpgradeCost,
-} from '../../application/catalogs.js';
+} from '../../../application/catalogs.js';
 import {
   getEffectiveUpgradeUsesSlot,
   getEffectiveRequiredAstronauts,
-} from '../../application/research.js';
-import { t, tParam } from '../../application/strings.js';
+} from '../../../application/research.js';
+import { t, tParam } from '../../../application/strings.js';
 import {
   getCatalogUpgradeName,
   getCatalogUpgradeDesc,
-} from '../../application/i18nCatalogs.js';
-import { getPlanetDisplayName } from '../../application/solarSystems.js';
+} from '../../../application/i18nCatalogs.js';
+import { getPlanetDisplayName } from '../../../application/solarSystems.js';
 import {
   getBestPlanetTypes,
   getPlanetTypeMultiplier,
-} from '../../application/planetAffinity.js';
+} from '../../../application/planetAffinity.js';
 import { buttonWithTooltipHtml } from './buttonTooltip.js';
 import { escapeAttr } from './domUtils.js';
 

@@ -1,7 +1,6 @@
 /**
- * Presentation components barrel. Re-exports for cleaner imports.
+ * Presentation lib: shared DOM/utils used by Vue and modals. Re-exports for cleaner imports.
  */
-
 export { escapeAttr, escapeHtml, getElement } from './domUtils.js';
 export { createModalOverlay } from './modal.js';
 export { emptyStateHtml } from './emptyState.js';

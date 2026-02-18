@@ -14,7 +14,7 @@ import {
   handleUpgradeBuyMax,
   handleUpgradeUninstall,
 } from '../../application/handlers.js';
-import { openOverlay, closeOverlay } from '../components/overlay.js';
+import { openOverlay, closeOverlay } from '../vue/lib/overlay.js';
 import { getPinia } from '../vue/piniaInstance.js';
 import { useAppUIStore } from '../vue/stores/appUI.js';
 

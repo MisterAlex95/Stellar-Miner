@@ -11,7 +11,7 @@ vi.mock('../presentation/toasts/toasts.js', () => ({
   showPrestigeMilestoneToast: vi.fn(),
   showMiniMilestoneToast: vi.fn(),
 }));
-vi.mock('../presentation/components/overlay.js', () => ({
+vi.mock('../presentation/vue/lib/overlay.js', () => ({
   closeOverlay: vi.fn(),
 }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));

@@ -12,7 +12,9 @@ import { closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS }
 import { closeUpgradeChoosePlanetModal } from '../../modals/upgradeChoosePlanetModal.js';
 import { closeExpeditionModal } from '../../modals/expeditionModal.js';
 import { isIntroOverlayOpen, dismissIntroModal } from '../../modals/introModal.js';
-import { getOpenOverlayElement, closeOverlay } from '../../components/overlay.js';
+import { useOverlay } from './useOverlay.js';
+
+const { getOpenOverlayElement, closeOverlay } = useOverlay();
 import {
   closeSectionRulesModal,
   closeInfoModal,

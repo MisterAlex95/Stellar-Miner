@@ -35,12 +35,13 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
-import { closeOverlay } from '../../components/overlay.js';
+import { useOverlay } from '../composables/useOverlay.js';
 import { useGameStateStore } from '../stores/gameState.js';
 
 const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
 const store = useGameStateStore();
+const { closeOverlay } = useOverlay();
 
 function closeEventsHintModal(): void {
   closeOverlay(EVENTS_HINT_OVERLAY_ID, EVENTS_HINT_OPEN_CLASS);

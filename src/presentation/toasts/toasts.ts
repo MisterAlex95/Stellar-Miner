@@ -4,11 +4,11 @@ import { DAILY_BONUS_COINS } from '../../application/catalogs.js';
 import { t, tParam } from '../../application/strings.js';
 import { getCatalogEventName } from '../../application/i18nCatalogs.js';
 import type { GameEvent } from '../../domain/entities/GameEvent.js';
-import { showToast } from '../components/toasts.js';
+import { showToast } from '../vue/lib/toasts.js';
 import {
   showFloatingReward as showFloatingRewardComponent,
   showFloatingCoin as showFloatingCoinComponent,
-} from '../components/floatingFeedback.js';
+} from '../vue/lib/floatingFeedback.js';
 
 export function showAchievementToast(name: string): void {
   showToast(tParam('achievementToast', { name }), 'achievement', { duration: 4000 });

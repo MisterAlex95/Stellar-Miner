@@ -32,6 +32,10 @@ export const useAppUIStore = defineStore('appUI', {
       }[];
       maxCount?: number;
     } | null,
+    /** Section rules modal: when set, modal is open; Vue renders title + body. */
+    sectionRules: null as { titleKey: string; rulesKey: string } | null,
+    /** Quest claim animation: PanelsShell adds quest-section--claimed when true. */
+    questClaimedFlash: false,
   }),
   actions: {
     setInfoContent(version: string, hasUpdate: boolean): void {
@@ -73,6 +77,12 @@ export const useAppUIStore = defineStore('appUI', {
     },
     setUpgradeChoosePlanet(data: typeof this.upgradeChoosePlanet): void {
       this.upgradeChoosePlanet = data;
+    },
+    setSectionRules(data: { titleKey: string; rulesKey: string } | null): void {
+      this.sectionRules = data;
+    },
+    setQuestClaimedFlash(value: boolean): void {
+      this.questClaimedFlash = value;
     },
   },
 });

@@ -1,6 +1,8 @@
 import { onMounted, onUnmounted } from 'vue';
 import { t, type StringKey } from '../../../application/strings.js';
-import { openOverlay } from '../../components/overlay.js';
+import { useOverlay } from './useOverlay.js';
+
+const { openOverlay } = useOverlay();
 
 const CHART_HELP_OVERLAY_ID = 'chart-help-overlay';
 const CHART_HELP_OPEN_CLASS = 'chart-help-overlay--open';

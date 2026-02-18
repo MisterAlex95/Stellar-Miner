@@ -175,13 +175,14 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue';
 import { t } from '../../../application/strings.js';
-import { TOAST_CONTAINER_ID } from '../../components/toasts.js';
+import { TOAST_CONTAINER_ID } from '../lib/toasts.js';
 import { useGameStateStore } from '../stores/gameState.js';
 import { useStatsCompact } from '../composables/useStatsCompact.js';
-import { openOverlay } from '../../components/overlay.js';
+import { useOverlay } from '../composables/useOverlay.js';
 
 const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
+const { openOverlay } = useOverlay();
 
 function openEventsHintModal(): void {
   openOverlay(EVENTS_HINT_OVERLAY_ID, EVENTS_HINT_OPEN_CLASS, { focusId: 'events-hint-close' });

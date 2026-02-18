@@ -1,7 +1,7 @@
 /**
  * Shared line chart drawing for statistics. Used by StatisticsCharts.vue.
  */
-import { tParam } from '../../application/strings.js';
+import { tParam } from '../../../application/strings.js';
 
 export function updateChartLegend(
   legendId: string,

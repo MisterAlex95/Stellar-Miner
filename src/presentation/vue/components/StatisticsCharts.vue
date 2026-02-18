@@ -111,7 +111,7 @@ import {
   getCoinsGainedPerPeriod,
   getCoinsPerClickPerPeriod,
 } from '../../../application/statisticsData.js';
-import { CHART_COLORS, getChartIndexAtOffsetX, drawLineChart, updateChartLegend } from '../../components/chartUtils.js';
+import { CHART_COLORS, getChartIndexAtOffsetX, drawLineChart, updateChartLegend } from '../lib/chartUtils.js';
 import type { ChartRange } from '../../../application/statsHistory.js';
 
 const props = defineProps<{

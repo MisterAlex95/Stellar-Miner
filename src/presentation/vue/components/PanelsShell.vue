@@ -54,6 +54,7 @@
         'gameplay-block--unlocked': isSectionUnlocked('quest-section'),
         'gameplay-block--collapsed': sectionCollapse.isCollapsed('quest-section'),
         'quest-section--complete': store.quest.sectionComplete,
+        'quest-section--claimed': appUI.questClaimedFlash,
       }"
       data-block="quest"
       :aria-hidden="!isSectionUnlocked('quest-section')"

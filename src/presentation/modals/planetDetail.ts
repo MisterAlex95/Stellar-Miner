@@ -10,8 +10,8 @@ import { getPlanetType } from '../../application/planetAffinity.js';
 import { getEffectiveUsedSlots } from '../../application/research.js';
 import { getPlanetDisplayName, getSolarSystemName, PLANETS_PER_SOLAR_SYSTEM } from '../../application/solarSystems.js';
 import { t, tParam } from '../../application/strings.js';
-import { openOverlay, closeOverlay } from '../components/overlay.js';
-import { escapeAttr } from '../components/domUtils.js';
+import { openOverlay, closeOverlay } from '../vue/lib/overlay.js';
+import { escapeAttr } from '../vue/lib/domUtils.js';
 import { HOUSING_ASTRONAUT_CAPACITY } from '../../domain/constants.js';
 import { createPlanetScene, type PlanetScene } from '../canvas/planetDetail3D.js';
 

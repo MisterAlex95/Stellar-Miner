@@ -1,19 +1,18 @@
 /**
  * Concrete implementation of the presentation port. Wires application UI bridge to real UI.
  */
-
 import type { PresentationPort } from '../../application/uiBridge.js';
 import * as toasts from '../toasts/toasts.js';
-import { openOverlay, closeOverlay } from '../components/overlay.js';
-import { showToast } from '../components/toasts.js';
-import { getPinia } from '../vue/piniaInstance.js';
-import { useAppUIStore } from '../vue/stores/appUI.js';
+import { openOverlay, closeOverlay } from './lib/overlay.js';
+import { showToast } from './lib/toasts.js';
+import { getPinia } from './piniaInstance.js';
+import { useAppUIStore } from './stores/appUI.js';
 
 function addQuestClaimedAnimation(): void {
-  const q = document.getElementById('quest-section');
-  if (q) {
-    q.classList.add('quest-section--claimed');
-    setTimeout(() => q.classList.remove('quest-section--claimed'), 600);
+  const pinia = getPinia();
+  if (pinia) {
+    useAppUIStore(pinia).setQuestClaimedFlash(true);
+    setTimeout(() => useAppUIStore(pinia).setQuestClaimedFlash(false), 600);
   }
 }
 

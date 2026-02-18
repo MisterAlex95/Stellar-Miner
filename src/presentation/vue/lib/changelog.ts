@@ -1,7 +1,7 @@
 /**
  * Changelog list HTML builder for the "What's new" modal.
  */
-import type { ChangelogEntry } from '../../application/changelog.js';
+import type { ChangelogEntry } from '../../../application/changelog.js';
 import { escapeHtml } from './domUtils.js';
 
 export function buildChangelogHtml(entries: ChangelogEntry[]): string {

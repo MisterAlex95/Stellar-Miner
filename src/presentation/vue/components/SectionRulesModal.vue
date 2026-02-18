@@ -15,7 +15,9 @@
         <h2
           id="section-rules-title"
           class="section-rules-title"
-        ></h2>
+        >
+          {{ title }}
+        </h2>
         <button
           id="section-rules-close"
           type="button"
@@ -30,7 +32,14 @@
         <div
           id="section-rules-body"
           class="section-rules-body"
-        ></div>
+        >
+          <template v-for="(block, i) in rulesBlocks" :key="i">
+            <ul v-if="block.type === 'list'" class="section-rules-list">
+              <li v-for="(item, j) in block.items" :key="j">{{ item }}</li>
+            </ul>
+            <p v-else>{{ block.text }}</p>
+          </template>
+        </div>
       </div>
       <div class="section-rules-actions">
         <button
@@ -47,6 +56,44 @@
 </template>
 
 <script setup lang="ts">
-import { t } from '../../../application/strings.js';
+import { computed } from 'vue';
+import { t, type StringKey } from '../../../application/strings.js';
 import { closeSectionRulesModal } from '../../mount/mountModals.js';
+import { useAppUIStore } from '../stores/appUI.js';
+
+const appUI = useAppUIStore();
+
+const title = computed(() => {
+  const d = appUI.sectionRules;
+  return d ? t(d.titleKey as StringKey) : '';
+});
+
+type RulesBlock = { type: 'list'; items: string[] } | { type: 'paragraph'; text: string };
+
+function parseRulesContent(text: string): RulesBlock[] {
+  const blocks: RulesBlock[] = [];
+  const lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  let currentList: string[] | null = null;
+  for (const line of lines) {
+    const isListItem = line.startsWith('- ') || line.startsWith('• ');
+    const content = isListItem ? line.slice(2).trim() : line;
+    if (isListItem) {
+      if (!currentList) {
+        currentList = [];
+        blocks.push({ type: 'list', items: currentList });
+      }
+      currentList.push(content);
+    } else {
+      currentList = null;
+      blocks.push({ type: 'paragraph', text: content });
+    }
+  }
+  return blocks;
+}
+
+const rulesBlocks = computed(() => {
+  const d = appUI.sectionRules;
+  if (!d) return [];
+  return parseRulesContent(t(d.rulesKey as StringKey));
+});
 </script>

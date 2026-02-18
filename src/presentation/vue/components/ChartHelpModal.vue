@@ -37,10 +37,12 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
-import { closeOverlay } from '../../components/overlay.js';
+import { useOverlay } from '../composables/useOverlay.js';
 
 const CHART_HELP_OVERLAY_ID = 'chart-help-overlay';
 const CHART_HELP_OPEN_CLASS = 'chart-help-overlay--open';
+
+const { closeOverlay } = useOverlay();
 
 function closeChartHelpModal(): void {
   closeOverlay(CHART_HELP_OVERLAY_ID, CHART_HELP_OPEN_CLASS);
