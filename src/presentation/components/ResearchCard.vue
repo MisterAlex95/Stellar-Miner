@@ -90,7 +90,16 @@ const emit = defineEmits<{
 
 const cardRef = ref<HTMLElement | null>(null);
 
-const progress = computed(() => appUI.researchProgress[props.data.node.id]);
+/** Local progress set on click so overlay shows immediately before store update (e.g. when panel uses same Pinia but update is async). */
+const localProgress = ref<{ endTimeMs: number; totalDurationMs: number; hasCancel: boolean } | null>(null);
+
+const progress = computed(() => {
+  const fromStore = appUI.researchProgress[props.data.node.id];
+  const raw = fromStore ?? (localProgress.value && !props.data.done ? localProgress.value : null);
+  if (!raw) return undefined;
+  if (Date.now() > raw.endTimeMs + 50) return undefined;
+  return raw;
+});
 
 const cardClasses = computed(() => [
   'research-card',
@@ -102,10 +111,21 @@ const cardClasses = computed(() => [
 
 const progressBarWidth = ref(0);
 const progressBarTransitionMs = ref(0);
+let hideOverlayTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+watch(() => appUI.researchProgress[props.data.node.id], () => {
+  localProgress.value = null;
+});
 
 watch(progress, (p) => {
+  if (hideOverlayTimeoutId) {
+    clearTimeout(hideOverlayTimeoutId);
+    hideOverlayTimeoutId = null;
+  }
   if (!p) {
     progressBarWidth.value = 0;
+    progressBarTransitionMs.value = 0;
+    localProgress.value = null;
     return;
   }
   const now = Date.now();
@@ -114,8 +134,14 @@ watch(progress, (p) => {
   const initialPercent = p.totalDurationMs > 0 ? Math.min(100, (elapsed / p.totalDurationMs) * 100) : 0;
   progressBarWidth.value = initialPercent;
   progressBarTransitionMs.value = remainingMs;
+  hideOverlayTimeoutId = setTimeout(() => {
+    hideOverlayTimeoutId = null;
+    localProgress.value = null;
+  }, remainingMs + 100);
   nextTick(() => {
-    progressBarWidth.value = 100;
+    requestAnimationFrame(() => {
+      progressBarWidth.value = 100;
+    });
   });
 }, { immediate: true });
 
@@ -133,10 +159,14 @@ const attemptTitle = computed(() =>
 
 function onAttemptClick(): void {
   if (!props.data.canAttempt || !cardRef.value) return;
+  const totalDurationMs = Math.max(500, props.data.durationSec * 1000);
+  const endTimeMs = Date.now() + totalDurationMs;
+  localProgress.value = { endTimeMs, totalDurationMs, hasCancel: true };
   emit('attempt', props.data.node.id, cardRef.value);
 }
 
 function onCancelProgress(): void {
+  localProgress.value = null;
   getPresentationPort().cancelResearchProgress(props.data.node.id);
 }
 </script>

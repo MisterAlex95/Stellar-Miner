@@ -43,6 +43,4 @@ export {
   toggleDebugMenu,
   updateDebugPanel,
   handleDebugAction,
-  renderAchievementsList,
-  renderAchievementsModalContent,
 } from './handlersDebug.js';

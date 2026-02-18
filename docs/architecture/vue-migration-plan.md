@@ -2,7 +2,7 @@
 
 Incremental plan to migrate the presentation layer from vanilla TypeScript/DOM to Vue 3, without rewriting domain or application layers. The app remains a single Vite + TypeScript codebase; Vue is introduced gradually so the game stays playable at each step.
 
-**Current state:** Vue 3 root wraps the app; **Pinia** for state. **Shell:** `App.vue` renders `AppHeader`, `StatsBlock`, `AppTabs`, `PanelsShell`, all modals, `ToastContainer`, etc. **Panels:** Mine (canvas + quest/combo/stats from bridge), Dashboard, Empire, Research, Upgrades, Stats are Vue; game loop updates the **game state bridge** and Vue reads from it. **Modals:** All overlay shells are Vue components; some modal *content* is still filled imperatively (prestige text, last saved, chart help, expedition tiers/crew, planet detail body, debug stats). See **Remaining work (end of migration)** below for the phased plan to remove the last imperative DOM updates.
+**Current state:** **Migration complete.** Vue 3 root; Pinia for state. Shell, tabs, panels, modals, toasts are Vue. All modal and panel content is driven by store (appUI, gameState) and Vue templates; handlers call the presentation port (setPrestigeConfirmContent, setLastSavedText, setChartHelpContent, setExpeditionData, setPlanetDetailData, setDebugStats, setResearchProgress, setUpgradeProgress, etc.) and the port writes to Pinia; no getElementById/innerHTML for user-visible content in handlers. Optional cleanup (see end of doc): quest-claim anchor, chart tooltip, Escape-by-overlay.
 
 ---
 
@@ -173,34 +173,24 @@ For each:
 
 ---
 
-## Remaining work (end of migration)
+## Optional cleanup (post-migration)
 
-The shell, tabs, panels, and most modals are Vue. The game loop updates the **game state bridge** (Pinia store); Vue components read from it. The items below are the last imperative DOM updates to remove so that **all UI is driven by Vue (template + reactive state)**.
+All user-visible UI is now Vue (templates + store). Remaining imperative DOM is limited to bootstrap, canvas mount, and a few non-critical paths. Optional improvements:
 
-### Inventory of remaining imperative UI
+| Item | Location | Current | Optional change |
+|------|----------|---------|------------------|
+| Quest claim anchor | `quests.ts` | `getElementById('quest-claim')` for `showFloatingReward(reward, claimBtn)` | Expose ref from Vue and pass to port; or keep as-is. |
+| Chart legend / minmax | `chartUtils.ts` | `getElementById(legendId)` + `textContent` | Bind in StatisticsCharts.vue from computed data. |
+| Chart tooltip | `StatisticsCharts.vue` | `tooltipEl.value.textContent = text` | Vue template or ref binding. |
+| Escape key | `useGlobalKeyboard.ts` | `getElementById(overlayId)?.classList.contains(openClass)` to decide which modal to close | Store "top overlay" or stack; close by state instead of DOM. |
 
-| Item | Location | Current behaviour | Target |
-|------|----------|-------------------|--------|
-| Prestige confirm content | `handlersPrestige.ts` | `getElementById('prestige-confirm-desc'|'prestige-confirm-after')` + `textContent` in `onOpen` | Store (e.g. appUI) or props; PrestigeConfirmModal.vue renders from state |
-| Prestige rewards list | `handlersPrestige.ts` | `getElementById('prestige-rewards-list')` + `innerHTML` / `appendChild` in `onOpen` | Store or props; PrestigeRewardsModal.vue renders list in template |
-| Last saved indicator | `handlersSettings.ts` | `getElementById('last-saved-indicator')` + `textContent`; element in SettingsModal.vue | Store (e.g. `lastSaveTimestamp`) or composable; SettingsModal displays reactive value |
-| Chart help title/body | `useChartHelpTrigger.ts` | `getElementById('chart-help-modal-title'|'chart-help-modal-body')` + `textContent` before opening | Store (e.g. appUI `chartHelpTitle` / `chartHelpBody`); ChartHelpModal.vue reads and displays |
-| Research data label | ResearchPanel.vue | `watch` → `getElementById('research-data-display')` + `textContent` | Template binding to `researchDataLabel` (no getElementById) |
-| Research progress overlay | `handlersResearch.ts` | `document.createElement` + `innerHTML` + `appendChild` on card | Vue component (e.g. inside ResearchCard) or store-driven overlay; handlers only set state |
-| Upgrade install/uninstall overlay | `handlersUpgrade.ts` | Same: createElement + innerHTML on card | Vue component (e.g. inside UpgradeCard) or store-driven overlay; handlers only set state |
-| Debug panel stats | `handlersDebug.ts` | `getElementById('debug-stats')` + `innerHTML`; achievements list same | DebugPanel.vue template: stats and achievements from store or computed from getSession/getUnlockedAchievements |
-| Expedition modal content | `modals/expedition.ts` | Tiers and crew picker built with `innerHTML` / `textContent` in TS | ExpeditionModal.vue: template + state (store or composable); TS only prepares data and writes to store |
-| Planet detail body | `modals/planetDetail.ts` | `getElementById('planet-detail-body')` + `innerHTML` (stats + list); 3D stays Three.js | PlanetDetailModal.vue: stats and list in template; 3D container remains ref + imperative mount |
-| Quest claim anchor | `quests.ts` | `getElementById('quest-claim')` only for `showFloatingReward(reward, claimBtn)` | Optional: expose ref from PanelsShell or pass element via event; or keep single getElementById for anchor |
+Definition of done (already met): no `getElementById`/`innerHTML` in handlers or modals for modal/panel content; port writes to Pinia, Vue renders. Allowed: getElementById for canvas mount, overlay open/close by ID, and the optional items above.
 
 ---
 
-### Plan (phased)
+*(Phases A–D completed: prestige, last saved, chart help, research data, research/upgrade overlays, debug stats, expedition and planet detail use store + Vue templates. Dead code renderAchievementsList/renderAchievementsModalContent removed.)*
 
-**Phase A — Quick wins (no new components)**  
-*Goal: Remove getElementById/textContent from modal content and one panel.*
-
-1. **Prestige modals**
+1. ~~**Prestige modals**~~
    - Add to appUI store (or dedicated prestige modal state): `prestigeConfirmDesc`, `prestigeConfirmAfter`, `prestigeConfirmGainEstimate`, `prestigeRewardsLevels` (array of strings).
    - In `openPrestigeConfirmModal` / `openPrestigeRewardsModal`: compute strings and call `setPrestigeConfirmContent(desc, after, gainEstimate)` / `setPrestigeRewardsContent(levels)` instead of touching DOM.
    - PrestigeConfirmModal.vue: bind desc, after, and gain-estimate paragraph to store state.

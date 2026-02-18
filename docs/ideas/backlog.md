@@ -158,9 +158,9 @@ Concrete ideas that build on current systems (quests, events, upgrades, prestige
 
 - In the upgrade list or in stats: "Next recommended: Drill Mk.I" (cheapest upgrade that increases production the most, or first not owned). Uses existing catalogs and progression.
 
-**10. Soft cap on offline progress**
+**10. Soft cap on offline progress** — *Done*
 
-- Instead of a hard 12 h cap, decay slowly after 12 h (e.g. 80% after 14 h, 50% after 24 h). Rewards coming back without making offline better than active play.
+- Implemented: decay after 12 h (80% at 14 h, 50% at 24 h, 25% at 48 h, then 25% floor). No hard stop.
 
 **11. Combo decay indicator**
 

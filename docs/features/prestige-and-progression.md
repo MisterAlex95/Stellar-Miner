@@ -30,5 +30,5 @@
 ## Offline progress
 
 - **Minimum absence**: 1 minute before offline coins apply. Config in SaveLoadService (MIN_OFFLINE_MS).
-- **Cap**: Full production rate for up to 12 hours. After 12 h: 80% rate for 12–14 h, then linear decay to 50% at 24 h; beyond 24 h, 50% rate. Applied on load; see [data/save-format.md](../data/save-format.md) and SaveLoadService.
+- **Soft cap** (no hard stop): Full production rate for up to 12 h. Then decay: 80% for 12–14 h, linear 80%→50% by 24 h, linear 50%→25% by 48 h; beyond 48 h, 25% rate floor. Applied on load; see [data/save-format.md](../data/save-format.md) and SaveLoadService.
 

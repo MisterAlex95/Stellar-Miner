@@ -4,8 +4,6 @@ import { getResearchProductionMultiplier } from './research.js';
 import { getEventPoolForRun } from './catalogs.js';
 import { getRunStats } from './gameState.js';
 import { pushActiveEventInstance } from './gameState.js';
-import { ACHIEVEMENTS, getUnlockedAchievements } from './achievements.js';
-import { getCatalogAchievementName, getCatalogAchievementDesc } from './i18nCatalogs.js';
 import { t } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
@@ -85,32 +83,4 @@ export function handleDebugAction(action: string): void {
     session.player.addPlanet(Planet.create(id, name));
   }
   refreshAfterDebugAction();
-}
-
-export function renderAchievementsList(container: HTMLElement): void {
-  const unlocked = getUnlockedAchievements();
-  container.innerHTML = ACHIEVEMENTS.map((a) => {
-    const isUnlocked = unlocked.has(a.id);
-    const displayName = isUnlocked ? getCatalogAchievementName(a.id) : (a.secret ? t('achievementSecret') : getCatalogAchievementName(a.id));
-    const title = isUnlocked ? displayName : t('achievementLockedTitle');
-    const label = isUnlocked ? displayName : (a.secret ? t('achievementSecret') : t('locked'));
-    const statusClass = isUnlocked ? 'unlocked' : 'locked';
-    const icon = isUnlocked ? '✓' : '×';
-    return `<div class="achievement-item achievement-item--${statusClass}" title="${title}">${icon} ${label}</div>`;
-  }).join('');
-}
-
-/** Renders achievements for the dedicated achievements modal: name + description (description only when not hidden). */
-export function renderAchievementsModalContent(container: HTMLElement): void {
-  const unlocked = getUnlockedAchievements();
-  container.innerHTML = ACHIEVEMENTS.map((a) => {
-    const isUnlocked = unlocked.has(a.id);
-    const showDesc = isUnlocked || !a.secret;
-    const name = isUnlocked ? getCatalogAchievementName(a.id) : (a.secret ? t('achievementSecret') : getCatalogAchievementName(a.id));
-    const desc = showDesc ? getCatalogAchievementDesc(a.id) : '';
-    const statusClass = isUnlocked ? 'unlocked' : 'locked';
-    const icon = isUnlocked ? '✓' : '×';
-    const descHtml = desc ? `<p class="achievement-modal-desc">${desc}</p>` : '';
-    return `<div class="achievement-modal-item achievement-modal-item--${statusClass}">${icon} <span class="achievement-modal-name">${name}</span>${descHtml}</div>`;
-  }).join('');
 }

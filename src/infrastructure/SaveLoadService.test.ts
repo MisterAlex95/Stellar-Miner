@@ -379,6 +379,22 @@ describe('SaveLoadService', () => {
     expect(loaded!.session.player.coins.value.toNumber()).toBeGreaterThan(0);
   });
 
+  it('load applies offline progress in 48h+ window (soft cap floor 25%)', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000_000_000);
+    const player = Player.create('p1');
+    player.planets[0].addUpgrade(new Upgrade('drill-mk1', 'Drill', 0, new UpgradeEffect(10)));
+    player.setProductionRate(new ProductionRate(10));
+    const session = new GameSession('session-1', player);
+    const service = createSaveLoadService();
+    await service.save(session);
+    vi.setSystemTime(1_000_000_000_000 + 72 * 60 * 60 * 1000); // 72h
+    const loaded = await service.load();
+    vi.useRealTimers();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.session.player.coins.value.toNumber()).toBeGreaterThan(0);
+  });
+
   it('load returns null when deserialize throws', async () => {
     const badPayload = JSON.stringify({
       version: 1,

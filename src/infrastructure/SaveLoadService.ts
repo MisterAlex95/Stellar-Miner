@@ -23,11 +23,14 @@ const STATS_STORAGE_KEY = 'stellar-miner-stats';
 const STATS_HISTORY_STORAGE_KEY = 'stellar-miner-stats-history';
 const MIN_OFFLINE_MS = 60_000; // 1 min before offline progress counts
 const FULL_CAP_OFFLINE_MS = 12 * 60 * 60 * 1000; // full rate up to 12h
-// Soft decay after 12h: 12–14h at 80% rate, 14–24h linear 80%→50%, 24h+ at 50%
+// Soft cap: no hard stop. Decay after 12h → 80% at 14h, 50% at 24h, 25% at 48h, then 25% floor.
 const DECAY_12_14H_MS = 2 * 60 * 60 * 1000;
 const DECAY_12_14H_MULT = 0.8;
 const DECAY_14_24H_MS = 10 * 60 * 60 * 1000;
-const DECAY_24H_PLUS_MULT = 0.5;
+const DECAY_14_24H_AVG_MULT = 0.65; // average of 80% and 50%
+const DECAY_24_48H_MS = 24 * 60 * 60 * 1000;
+const DECAY_24_48H_AVG_MULT = 0.375; // average of 50% and 25%
+const DECAY_48H_PLUS_MULT = 0.25;
 
 export type SavedUpgrade = { id: string; name: string; cost: number | string; effect: { coinsPerSecond: number | string } };
 export type SavedInstallingUpgrade = { upgrade: SavedUpgrade; startAt?: number; endsAt: number; rateToAdd: number | string };
@@ -237,22 +240,32 @@ export class SaveLoadService implements ISaveLoadService {
         const cap12hSec = FULL_CAP_OFFLINE_MS / 1000;
         const decay12_14Sec = DECAY_12_14H_MS / 1000;
         const decay14_24Sec = DECAY_14_24H_MS / 1000;
+        const decay24_48Sec = DECAY_24_48H_MS / 1000;
         if (elapsedSec <= cap12hSec) {
           effectiveSeconds = elapsedSec;
         } else if (elapsedSec <= cap12hSec + decay12_14Sec) {
           effectiveSeconds = cap12hSec + (elapsedSec - cap12hSec) * DECAY_12_14H_MULT;
         } else if (elapsedSec <= cap12hSec + decay12_14Sec + decay14_24Sec) {
           const in14_24 = elapsedSec - cap12hSec - decay12_14Sec;
-          const t = in14_24 / decay14_24Sec;
-          const avgMult = 0.8 - (0.3 * t);
-          effectiveSeconds = cap12hSec + decay12_14Sec * DECAY_12_14H_MULT + in14_24 * avgMult;
-        } else {
-          const extra = elapsedSec - cap12hSec - decay12_14Sec - decay14_24Sec;
           effectiveSeconds =
             cap12hSec +
             decay12_14Sec * DECAY_12_14H_MULT +
-            decay14_24Sec * 0.65 +
-            extra * DECAY_24H_PLUS_MULT;
+            in14_24 * DECAY_14_24H_AVG_MULT;
+        } else if (elapsedSec <= cap12hSec + decay12_14Sec + decay14_24Sec + decay24_48Sec) {
+          const in24_48 = elapsedSec - cap12hSec - decay12_14Sec - decay14_24Sec;
+          effectiveSeconds =
+            cap12hSec +
+            decay12_14Sec * DECAY_12_14H_MULT +
+            decay14_24Sec * DECAY_14_24H_AVG_MULT +
+            in24_48 * DECAY_24_48H_AVG_MULT;
+        } else {
+          const extra48 = elapsedSec - cap12hSec - decay12_14Sec - decay14_24Sec - decay24_48Sec;
+          effectiveSeconds =
+            cap12hSec +
+            decay12_14Sec * DECAY_12_14H_MULT +
+            decay14_24Sec * DECAY_14_24H_AVG_MULT +
+            decay24_48Sec * DECAY_24_48H_AVG_MULT +
+            extra48 * DECAY_48H_PLUS_MULT;
         }
         const offlineCoins = session.player.effectiveProductionRate
           .mul(effectiveSeconds)

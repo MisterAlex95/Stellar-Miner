@@ -22,7 +22,10 @@ import type { TabsSnapshot } from '../stores/gameState.js';
 function mountVuePanel(containerId: string, component: unknown, datasetKey: string): void {
   const container = document.getElementById(containerId);
   if (!container || (container as HTMLElement & { dataset: Record<string, string> }).dataset[datasetKey]) return;
-  createApp(component as Parameters<typeof createApp>[0]).mount(container);
+  const pinia = getPinia();
+  const app = createApp(component as Parameters<typeof createApp>[0]);
+  if (pinia) app.use(pinia);
+  app.mount(container);
   (container as HTMLElement & { dataset: Record<string, string> }).dataset[datasetKey] = 'true';
 }
 
