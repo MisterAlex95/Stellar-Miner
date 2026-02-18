@@ -521,6 +521,11 @@
   margin-bottom: 1.5rem;
 }
 
+/* One-page layout: show all panels (no tab switching) */
+#app[data-layout="one-page"] .app-tab-panel {
+  display: block;
+}
+
 /* One-page layout: more separation between blocks */
 #app[data-layout="one-page"] .quest-section,
 #app[data-layout="one-page"] .dashboard-section,

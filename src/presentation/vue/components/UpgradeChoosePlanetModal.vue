@@ -3,6 +3,7 @@
     id="upgrade-choose-planet-overlay"
     class="upgrade-choose-planet-overlay"
     aria-hidden="true"
+    @click.self="closeUpgradeChoosePlanetModal"
   >
     <div
       class="upgrade-choose-planet-modal"
@@ -19,6 +20,7 @@
           type="button"
           class="upgrade-choose-planet-close"
           :aria-label="t('close')"
+          @click="closeUpgradeChoosePlanetModal"
         >
           ×
         </button>
@@ -28,7 +30,10 @@
         class="upgrade-choose-planet-list"
         role="list"
       ></div>
-      <div class="upgrade-choose-planet-actions">
+      <div
+        class="upgrade-choose-planet-actions"
+        @click="onActionsClick"
+      >
         <button
           id="upgrade-choose-planet-cancel"
           type="button"
@@ -43,4 +48,12 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
+import { closeUpgradeChoosePlanetModal } from '../../upgradeChoosePlanetModal.js';
+
+function onActionsClick(e: MouseEvent): void {
+  const target = e.target as HTMLElement;
+  if (target.id === 'upgrade-choose-planet-cancel' || target.closest('#upgrade-choose-planet-cancel')) {
+    closeUpgradeChoosePlanetModal();
+  }
+}
 </script>

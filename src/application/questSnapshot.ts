@@ -1,10 +1,24 @@
-import { getQuestState, setQuestState, getSettings } from '../application/gameState.js';
-import { formatNumber } from '../application/format.js';
-import { generateQuest, getQuestProgress, getQuestStreak, getQuestLastClaimAt } from '../application/quests.js';
-import { saveQuestState } from '../application/questState.js';
-import { QUEST_STREAK_WINDOW_MS, QUEST_STREAK_MAX, QUEST_STREAK_BONUS_PER_LEVEL } from '../application/catalogs.js';
-import { t, tParam } from '../application/strings.js';
-import type { QuestSnapshot } from './vue/stores/gameState.js';
+/**
+ * Quest section snapshot for the game state bridge. Moved from presentation/questView.
+ */
+import { getQuestState, setQuestState, getSettings } from './gameState.js';
+import { formatNumber } from './format.js';
+import { generateQuest, getQuestProgress, getQuestStreak, getQuestLastClaimAt } from './quests.js';
+import { saveQuestState } from './questState.js';
+import { QUEST_STREAK_WINDOW_MS, QUEST_STREAK_MAX, QUEST_STREAK_BONUS_PER_LEVEL } from './catalogs.js';
+import { t, tParam } from './strings.js';
+
+export type QuestSnapshot = {
+  progressPct: number;
+  progressText: string;
+  claimLabel: string;
+  claimDisabled: boolean;
+  claimTitle: string;
+  summary: string;
+  streakHint: string;
+  streakHintVisible: boolean;
+  sectionComplete: boolean;
+};
 
 function ensureQuest(): void {
   let questState = getQuestState();
@@ -15,7 +29,7 @@ function ensureQuest(): void {
   }
 }
 
-/** Build quest section snapshot for Vue (no DOM). */
+/** Build quest section snapshot for Vue bridge (no DOM). */
 export function getQuestSnapshot(): QuestSnapshot {
   ensureQuest();
   const q = getQuestState().quest;
@@ -59,4 +73,3 @@ export function getQuestSnapshot(): QuestSnapshot {
     sectionComplete: p.done,
   };
 }
-

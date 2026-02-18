@@ -143,6 +143,7 @@
             :aria-label="t('eventsHintTitle')"
             aria-haspopup="dialog"
             :title="t('eventsHintTitle')"
+            @click="openEventsHintModal"
           >
             ?
           </button>
@@ -177,6 +178,14 @@ import { t } from '../../../application/strings.js';
 import { TOAST_CONTAINER_ID } from '../../components/toasts.js';
 import { useGameStateStore } from '../stores/gameState.js';
 import { useStatsCompact } from '../composables/useStatsCompact.js';
+import { openOverlay } from '../../components/overlay.js';
+
+const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
+const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';
+
+function openEventsHintModal(): void {
+  openOverlay(EVENTS_HINT_OVERLAY_ID, EVENTS_HINT_OPEN_CLASS, { focusId: 'events-hint-close' });
+}
 
 const toastContainerId = TOAST_CONTAINER_ID;
 const store = useGameStateStore();

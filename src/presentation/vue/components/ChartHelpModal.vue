@@ -3,6 +3,7 @@
     id="chart-help-overlay"
     class="chart-help-overlay"
     aria-hidden="true"
+    @click.self="closeChartHelpModal"
   >
     <div
       class="chart-help-modal"

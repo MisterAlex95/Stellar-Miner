@@ -11,8 +11,8 @@
       </button>
       <span
         class="info-update-badge"
-        :class="{ 'info-update-badge--visible': hasUpdate }"
-        :aria-hidden="!hasUpdate"
+        :class="{ 'info-update-badge--visible': hasUpdate() }"
+        :aria-hidden="!hasUpdate()"
       ></span>
     </span>
     <button
@@ -35,18 +35,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { t } from '../../../application/strings.js';
-import { hasNewUpdate } from '../../../application/version.js';
 import { openSettings } from '../../../application/handlers.js';
 import { openInfoModal, openAchievementsModal } from '../../mount/mountModals.js';
-import { updateVersionAndChangelogUI, renderChangelogList } from '../../mount.js';
+import { updateVersionAndChangelogUI, renderChangelogList } from '../../initPresentation.js';
+import { useAppUIStore } from '../stores/appUI.js';
 
-const hasUpdate = ref(false);
-
-function updateHasUpdate(): void {
-  hasUpdate.value = hasNewUpdate();
-}
+const appUI = useAppUIStore();
+const hasUpdate = () => appUI.infoHasUpdate;
 
 function onInfoClick(): void {
   const list = document.getElementById('info-changelog-list');
@@ -61,7 +57,4 @@ function onSettingsClick(): void {
   openSettings();
 }
 
-onMounted(() => {
-  updateHasUpdate();
-});
 </script>

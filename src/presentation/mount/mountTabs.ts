@@ -1,5 +1,6 @@
 /**
  * Tab switching, badges, layout. Extracted from mount.ts.
+ * Tab/panel visibility is driven by Vue store (PanelsShell); this module only updates store, storage, URL, and lazy-mounts panels.
  */
 import { createApp } from 'vue';
 import { getSession, getSettings, getExpeditionEndsAt, planetService } from '../../application/gameState.js';
@@ -13,7 +14,9 @@ import DashboardPanel from '../vue/panels/DashboardPanel.vue';
 import ResearchPanel from '../vue/panels/ResearchPanel.vue';
 import UpgradesPanel from '../vue/panels/UpgradesPanel.vue';
 import EmpirePanel from '../vue/panels/EmpirePanel.vue';
-import { hasNewInstallableUpgrade } from '../dashboardView.js';
+import { hasNewInstallableUpgrade } from '../dashboard/dashboardHelpers.js';
+import { getPinia } from '../vue/piniaInstance.js';
+import { useGameStateStore } from '../vue/stores/gameState.js';
 import type { TabsSnapshot } from '../vue/stores/gameState.js';
 
 function mountVuePanel(containerId: string, component: unknown, datasetKey: string): void {
@@ -57,24 +60,10 @@ export function replaceTabState(tabId: string): void {
 }
 
 export function switchTab(tabId: string): void {
-  const tabs = document.querySelectorAll<HTMLElement>('.app-tab[data-tab]');
-  const panels = document.querySelectorAll('.app-tab-panel');
-  tabs.forEach((tab) => {
-    const isSelected = tab.getAttribute('data-tab') === tabId;
-    tab.classList.toggle('app-tab--active', isSelected);
-    tab.setAttribute('aria-selected', String(isSelected));
-  });
-  panels.forEach((panel) => {
-    const p = panel as HTMLElement;
-    const isSelected = p.getAttribute('data-tab') === tabId;
-    p.classList.toggle('app-tab-panel--active', isSelected);
-    p.hidden = !isSelected;
-  });
-  document.querySelectorAll<HTMLElement>('.app-tab-bottom[data-tab]').forEach((tab) => {
-    const isSelected = tab.getAttribute('data-tab') === tabId;
-    tab.classList.toggle('app-tab-bottom--active', isSelected);
-    tab.setAttribute('aria-selected', String(isSelected));
-  });
+  const pinia = getPinia();
+  if (pinia) {
+    useGameStateStore(pinia).setActiveTab(tabId);
+  }
   try {
     localStorage.setItem(TAB_STORAGE_KEY, tabId);
   } catch {
@@ -100,17 +89,6 @@ export function switchTab(tabId: string): void {
     mountVuePanel('statistics-container', StatisticsPanel, 'vueStatsMounted');
     markPanelHydrated('stats');
   }
-  document.querySelectorAll<HTMLElement>('.app-tabs-menu-item').forEach((item) => {
-    item.classList.toggle('app-tabs-menu-item--active', item.getAttribute('data-tab') === tabId);
-  });
-  document.querySelectorAll<HTMLElement>('.app-tabs-bottom-menu-item').forEach((item) => {
-    item.classList.toggle('app-tabs-bottom-menu-item--active', item.getAttribute('data-tab') === tabId);
-  });
-  const tabBottomMore = document.getElementById('tab-bottom-more');
-  const isOverflowTab = ['dashboard', 'research', 'upgrades', 'stats'].includes(tabId);
-  if (tabBottomMore) tabBottomMore.classList.toggle('app-tab-bottom-more--active', isOverflowTab);
-  const app = document.getElementById('app');
-  if (app) app.setAttribute('data-active-tab', tabId);
 }
 
 /** Build tabs visibility + badges snapshot for Vue (no DOM). */
@@ -167,26 +145,10 @@ export function getTabsSnapshot(): TabsSnapshot {
 export function applyLayout(): void {
   const layout = getSettings().layout;
   const app = document.getElementById('app');
-  const tabsNav = document.querySelector('.app-tabs') as HTMLElement | null;
-  const panels = document.querySelectorAll<HTMLElement>('.app-tab-panel');
   if (app) app.setAttribute('data-layout', layout);
-  if (layout === 'one-page') {
-    if (tabsNav) tabsNav.style.display = 'none';
-    panels.forEach((p) => {
-      p.style.display = 'block';
-      p.hidden = false;
-    });
-  } else {
-    if (tabsNav) tabsNav.style.display = '';
-    panels.forEach((p) => {
-      p.style.display = '';
-    });
-    const activeId =
-      document.querySelector('.app-tab--active')?.getAttribute('data-tab') ||
-      localStorage.getItem(TAB_STORAGE_KEY) ||
-      DEFAULT_TAB;
-    const validId = VALID_TAB_IDS.includes(activeId as TabId) ? activeId : DEFAULT_TAB;
-    switchTab(validId);
+  const pinia = getPinia();
+  if (pinia) {
+    useGameStateStore(pinia).setLayout(layout);
   }
 }
 

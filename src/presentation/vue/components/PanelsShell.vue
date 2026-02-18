@@ -1,28 +1,34 @@
 <template>
   <div
     id="panel-mine"
-    class="app-tab-panel app-tab-panel--active"
+    class="app-tab-panel"
+    :class="{ 'app-tab-panel--active': isPanelActive('mine') }"
     role="tabpanel"
     aria-labelledby="tab-mine"
     data-tab="mine"
+    :hidden="isPanelHidden('mine')"
   >
     <section
       id="mine-zone"
       class="mine-zone"
+      :class="{ 'mine-zone--active': appUI.mineZoneActive }"
       :title="t('mineZoneTitle')"
+      @click="onMineZoneClick"
+      @mousedown="appUI.setMineZoneActive(true)"
+      @mouseup="appUI.setMineZoneActive(false)"
+      @mouseleave="appUI.setMineZoneActive(false)"
     >
       <div
         id="mine-zone-floats"
         class="mine-zone-floats"
         aria-hidden="true"
       ></div>
-      <div
-        id="mine-zone-visual"
-        class="mine-zone-visual"
-      ></div>
+      <MineZoneCanvas />
       <p
         id="mine-zone-hint"
         class="mine-zone-hint"
+        :class="{ 'mine-zone-hint--dismissed': appUI.mineZoneHintDismissed }"
+        :aria-hidden="appUI.mineZoneHintDismissed"
       ></p>
       <span
         id="combo-indicator"
@@ -136,10 +142,11 @@
   <div
     id="panel-dashboard"
     class="app-tab-panel"
+    :class="{ 'app-tab-panel--active': isPanelActive('dashboard') }"
     role="tabpanel"
     aria-labelledby="tab-dashboard"
     data-tab="dashboard"
-    hidden
+    :hidden="isPanelHidden('dashboard')"
   >
     <section
       id="dashboard-section"
@@ -187,20 +194,22 @@
   <div
     id="panel-empire"
     class="app-tab-panel"
+    :class="{ 'app-tab-panel--active': isPanelActive('empire') }"
     role="tabpanel"
     aria-labelledby="tab-empire"
     data-tab="empire"
-    hidden
+    :hidden="isPanelHidden('empire')"
   >
     <div id="empire-content"></div>
   </div>
   <div
     id="panel-research"
     class="app-tab-panel"
+    :class="{ 'app-tab-panel--active': isPanelActive('research') }"
     role="tabpanel"
     aria-labelledby="tab-research"
     data-tab="research"
-    hidden
+    :hidden="isPanelHidden('research')"
   >
     <section
       id="research-section"
@@ -264,10 +273,11 @@
   <div
     id="panel-upgrades"
     class="app-tab-panel"
+    :class="{ 'app-tab-panel--active': isPanelActive('upgrades') }"
     role="tabpanel"
     aria-labelledby="tab-upgrades"
     data-tab="upgrades"
-    hidden
+    :hidden="isPanelHidden('upgrades')"
   >
     <section
       id="upgrades-section"
@@ -326,10 +336,11 @@
   <div
     id="panel-stats"
     class="app-tab-panel"
+    :class="{ 'app-tab-panel--active': isPanelActive('stats') }"
     role="tabpanel"
     aria-labelledby="tab-stats"
     data-tab="stats"
-    hidden
+    :hidden="isPanelHidden('stats')"
   >
     <section
       id="statistics-section"
@@ -384,12 +395,30 @@ import { useGameStateStore } from '../stores/gameState.js';
 import { handleClaimQuest } from '../../../application/handlers.js';
 import { openSectionRulesModal } from '../../mount/mountModals.js';
 import { useSectionCollapse } from '../composables/useSectionCollapse.js';
+import { useAppUIStore } from '../stores/appUI.js';
+import MineZoneCanvas from './MineZoneCanvas.vue';
+import { handleMineClick } from '../../../application/handlers.js';
 
 const store = useGameStateStore();
 const sectionCollapse = useSectionCollapse();
+const appUI = useAppUIStore();
+
+function onMineZoneClick(e: MouseEvent): void {
+  if (!appUI.mineZoneHintDismissed) appUI.dismissMineHint();
+  handleMineClick(e);
+}
 
 function isSectionUnlocked(sectionId: string): boolean {
   return store.progression.sectionUnlocked[sectionId] !== false;
+}
+
+function isPanelHidden(tabId: string): boolean {
+  if (store.layout === 'one-page') return false;
+  return store.activeTab !== tabId;
+}
+
+function isPanelActive(tabId: string): boolean {
+  return store.layout === 'tabs' && store.activeTab === tabId;
 }
 
 function onRulesClick(rulesKey: string, titleKey: string): void {

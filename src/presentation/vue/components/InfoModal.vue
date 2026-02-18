@@ -3,6 +3,7 @@
     id="info-overlay"
     class="info-overlay"
     aria-hidden="true"
+    @click.self="closeInfoModal"
   >
     <div
       class="info-modal"
@@ -27,7 +28,7 @@
           <span
             id="info-version-value"
             class="info-version-value"
-          >–</span>
+          >{{ appUI.infoVersion || '–' }}</span>
         </div>
         <div
           id="info-changelog-list"
@@ -42,4 +43,7 @@
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
 import { closeInfoModal } from '../../mount/mountModals.js';
+import { useAppUIStore } from '../stores/appUI.js';
+
+const appUI = useAppUIStore();
 </script>

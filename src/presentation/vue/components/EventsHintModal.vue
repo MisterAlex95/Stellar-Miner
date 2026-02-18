@@ -3,6 +3,7 @@
     id="events-hint-overlay"
     class="events-hint-overlay"
     aria-hidden="true"
+    @click.self="closeEventsHintModal"
   >
     <div
       class="events-hint-modal"

@@ -16,51 +16,16 @@ export type PlanetViewItem = {
 };
 
 /** Read-only stats block display data. Filled by getStatsSnapshot() from game loop. */
-export type StatsSnapshot = {
-  formattedCoins: string;
-  formattedProduction: string;
-  crewLine: string;
-  crewDetail: string;
-  crewByJob: { role: string; text: string }[];
-  showCrew: boolean;
-  crewCompact: string;
-  crewUnlocked: boolean;
-  productionBreakdown: string;
-  productionBreakdownVisible: boolean;
-  productionLive: boolean;
-  nextMilestoneText: string;
-  nextMilestoneVisible: boolean;
-  activeEventsHtml: string;
-  activeEventsVisible: boolean;
-  nextEventPct: number;
-  nextEventRowVisible: boolean;
-  nextEventLabelVisible: boolean;
-  eventsUnlocked: boolean;
-  coinsBump: boolean;
-  eventsHintBodyHtml: string;
-};
+import type { StatsSnapshot } from '../../../application/statsSnapshot.js';
+export type { StatsSnapshot };
 
 /** Read-only quest section display data. */
-export type QuestSnapshot = {
-  progressPct: number;
-  progressText: string;
-  claimLabel: string;
-  claimDisabled: boolean;
-  claimTitle: string;
-  summary: string;
-  streakHint: string;
-  streakHintVisible: boolean;
-  sectionComplete: boolean;
-};
+import type { QuestSnapshot } from '../../../application/questSnapshot.js';
+export type { QuestSnapshot };
 
 /** Combo indicator display (mine zone). */
-export type ComboSnapshot = {
-  active: boolean;
-  multLabel: string;
-  timeSec: string;
-  dataTier: string;
-  fading: boolean;
-};
+import type { ComboSnapshot } from '../../../application/comboSnapshot.js';
+export type { ComboSnapshot };
 
 /** Tab visibility and badges (from progression/unlocks). */
 export type TabsSnapshot = {
@@ -69,9 +34,8 @@ export type TabsSnapshot = {
 };
 
 /** Section locked/unlocked by progression (sectionId -> unlocked). */
-export type ProgressionSnapshot = {
-  sectionUnlocked: Record<string, boolean>;
-};
+import type { ProgressionSnapshot } from '../../../application/progressionSnapshot.js';
+export type { ProgressionSnapshot };
 
 export type GameStateSnapshot = {
   activeTab: string;
@@ -184,6 +148,9 @@ export const useGameStateStore = defineStore('gameState', {
     },
     setActiveTab(tabId: string): void {
       this.activeTab = tabId;
+    },
+    setLayout(layout: 'tabs' | 'one-page'): void {
+      this.layout = layout;
     },
   },
 });

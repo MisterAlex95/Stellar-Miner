@@ -3,7 +3,8 @@ import { setPresentationPort } from './application/uiBridge.js';
 import { createPresentationPort } from './presentation/presentationPortImpl.js';
 import { startStarfield } from './presentation/StarfieldCanvas.js';
 import { mountVueApp } from './presentation/vue/main.js';
-import { mount, switchTab, getTabsSnapshot } from './presentation/mount.js';
+import { initPresentation } from './presentation/initPresentation.js';
+import { switchTab, getTabsSnapshot } from './presentation/mount/mountTabs.js';
 import {
   getOrCreateSession,
   setSession,
@@ -26,15 +27,15 @@ import {
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory, getStatsHistory } from './application/statsHistory.js';
 import { getResearchProductionMultiplier } from './application/research.js';
-import { getStatsSnapshot } from './presentation/statsView.js';
-import { updateUpgradeListInPlace } from './presentation/upgradeListView.js';
-import { updateExpeditionProgress } from './presentation/planetListView.js';
+import { getStatsSnapshot } from './application/statsSnapshot.js';
+import { updateUpgradeListInPlace } from './presentation/upgradeList.js';
 import { updateQuestProgressStore } from './application/questProgressStore.js';
-import { getQuestSnapshot } from './presentation/questView.js';
-import { getComboSnapshot } from './presentation/comboView.js';
+import { getQuestSnapshot } from './application/questSnapshot.js';
+import { getComboSnapshot } from './application/comboSnapshot.js';
 import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
-import { maybeShowWelcomeModal, updateProgressionVisibility, getProgressionSnapshot } from './presentation/progressionView.js';
+import { getProgressionSnapshot } from './application/progressionSnapshot.js';
+import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/introModal.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
 import { showOfflineToast } from './presentation/toasts.js';
@@ -60,7 +61,6 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
   completeExpeditionIfDue();
   completeUpgradeInstallations(session, nowMs);
   completeUpgradeUninstallations(session, nowMs);
-  updateExpeditionProgress();
   const eventsUnlocked = getUnlockedBlocks(session).has('events');
   if (eventsUnlocked) {
     if (!lastEventsUnlocked) setNextEventAt(nowMs + FIRST_EVENT_DELAY_MS);
@@ -240,7 +240,7 @@ async function init(): Promise<void> {
   setGameStartTime(gameStartTime);
   setNextEventAt(gameStartTime + MIN_EVENT_DELAY_MS);
   setStarfieldApi(startStarfield(getSettings, getEventContext));
-  mount();
+  initPresentation();
   updateGameStateBridge(getBridgeSnapshot());
   const bridge = getGameStateBridge();
   if (!bridge.tabs.visible[bridge.activeTab]) {

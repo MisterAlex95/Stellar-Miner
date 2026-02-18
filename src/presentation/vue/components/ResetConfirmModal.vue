@@ -3,6 +3,7 @@
     id="reset-confirm-overlay"
     class="reset-confirm-overlay"
     aria-hidden="true"
+    @click.self="closeResetConfirmModal"
   >
     <div
       class="reset-confirm-modal"

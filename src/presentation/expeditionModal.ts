@@ -246,7 +246,8 @@ function getSelectedTierFromDom(): ExpeditionTierId | null {
   return (id === 'easy' || id === 'medium' || id === 'hard' ? id : null) as ExpeditionTierId | null;
 }
 
-function onLaunchClick(): void {
+/** Called when user clicks Launch; reads tier/crew from DOM and starts expedition. Exported for Vue. */
+export function onLaunchExpeditionClick(): void {
   const session = getSession();
   if (!session) return;
   const required = planetService.getExpeditionAstronautsRequired(session.player);
@@ -259,15 +260,5 @@ function onLaunchClick(): void {
   closeExpeditionModal();
 }
 
-export function bindExpeditionModal(): void {
-  const closeBtn = document.getElementById('expedition-modal-close');
-  const cancelBtn = document.getElementById('expedition-modal-cancel');
-  const overlay = document.getElementById(OVERLAY_ID);
-  closeBtn?.addEventListener('click', closeExpeditionModal);
-  cancelBtn?.addEventListener('click', closeExpeditionModal);
-  overlay?.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (target === overlay) closeExpeditionModal();
-    else if (target.id === 'expedition-modal-launch' || target.closest('#expedition-modal-launch')) onLaunchClick();
-  });
-}
+/** No-op: close, cancel and launch are handled by ExpeditionModal.vue. */
+export function bindExpeditionModal(): void {}

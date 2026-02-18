@@ -3,6 +3,7 @@
     id="planet-detail-overlay"
     class="planet-detail-overlay"
     aria-hidden="true"
+    @click.self="closePlanetDetail"
   >
     <div
       class="planet-detail-modal"
@@ -31,5 +32,5 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
-import { closePlanetDetail } from '../../planetDetailView.js';
+import { closePlanetDetail } from '../../planetDetail.js';
 </script>

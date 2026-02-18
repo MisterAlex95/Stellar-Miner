@@ -4,7 +4,7 @@
     <div id="legacy-root">
       <StatsBlock />
     </div>
-    <AppTabs />
+    <AppTabs v-show="store.layout === 'tabs'" />
     <div id="legacy-panels">
       <PanelsShell />
     </div>
@@ -22,10 +22,12 @@
     <ExpeditionModal />
     <IntroModal />
     <ToastContainer />
+    <DebugPanel />
   </div>
 </template>
 
 <script setup lang="ts">
+import { watch, onMounted } from 'vue';
 import AppHeader from './AppHeader.vue';
 import AppTabs from './AppTabs.vue';
 import ToastContainer from './ToastContainer.vue';
@@ -42,11 +44,34 @@ import UpgradeChoosePlanetModal from './components/UpgradeChoosePlanetModal.vue'
 import PlanetDetailModal from './components/PlanetDetailModal.vue';
 import ExpeditionModal from './components/ExpeditionModal.vue';
 import IntroModal from './components/IntroModal.vue';
+import DebugPanel from './components/DebugPanel.vue';
 import StatsBlock from './components/StatsBlock.vue';
 import PanelsShell from './components/PanelsShell.vue';
+import { useGameStateStore } from './stores/gameState.js';
+import { useGlobalKeyboard } from './composables/useGlobalKeyboard.js';
+import { useChartHelpTrigger } from './composables/useChartHelpTrigger.js';
 
-// Vue shell: header, stats block in #legacy-root, tabs, tab panels in #legacy-panels, toasts.
-// Game init and mount() are triggered from game.ts after this app is mounted.
+const store = useGameStateStore();
+
+function syncAppAttributes(): void {
+  const app = document.getElementById('app');
+  if (app) {
+    app.setAttribute('data-active-tab', store.activeTab);
+    app.setAttribute('data-layout', store.layout);
+  }
+}
+
+onMounted(() => {
+  syncAppAttributes();
+});
+watch(
+  () => [store.activeTab, store.layout],
+  () => syncAppAttributes(),
+  { flush: 'sync' },
+);
+
+useGlobalKeyboard();
+useChartHelpTrigger();
 </script>
 
 <style scoped>

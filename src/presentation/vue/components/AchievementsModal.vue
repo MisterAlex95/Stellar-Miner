@@ -3,6 +3,7 @@
     :id="ACHIEVEMENTS_OVERLAY_ID"
     class="achievements-overlay"
     aria-hidden="true"
+    @click.self="closeAchievementsModal"
   >
     <div
       class="achievements-modal"

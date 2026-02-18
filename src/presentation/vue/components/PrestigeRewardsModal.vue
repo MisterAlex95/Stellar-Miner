@@ -3,6 +3,7 @@
     id="prestige-rewards-overlay"
     class="prestige-rewards-overlay"
     aria-hidden="true"
+    @click.self="closePrestigeRewardsModal"
   >
     <div
       class="prestige-rewards-modal"

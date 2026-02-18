@@ -1,4 +1,5 @@
 <template>
+  <div class="app-tabs-wrapper">
   <nav class="app-tabs vue-shell-tabs" role="tablist" :aria-label="t('gameSections')">
     <div class="app-tabs-scroll">
       <button
@@ -120,6 +121,7 @@
       </div>
     </div>
   </nav>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -175,7 +177,6 @@ function tabLabel(tabId: string): string {
 function goToTab(tabId: string): void {
   pushTabState(tabId);
   switchTab(tabId);
-  store.setActiveTab(tabId);
 }
 
 function onDocumentClick(e: MouseEvent): void {

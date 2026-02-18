@@ -1,11 +1,21 @@
-import { getClickTimestamps, updateRunMaxComboMult } from '../application/gameState.js';
-import { COMBO_WINDOW_MS, COMBO_MIN_CLICKS, COMBO_MULT_PER_LEVEL, COMBO_MAX_MULT } from '../application/catalogs.js';
-import { getCatalogComboName } from '../application/i18nCatalogs.js';
-import type { ComboSnapshot } from './vue/stores/gameState.js';
+/**
+ * Combo indicator snapshot for the game state bridge. Moved from presentation/comboView.
+ */
+import { getClickTimestamps, updateRunMaxComboMult } from './gameState.js';
+import { COMBO_WINDOW_MS, COMBO_MIN_CLICKS, COMBO_MULT_PER_LEVEL, COMBO_MAX_MULT } from './catalogs.js';
+import { getCatalogComboName } from './i18nCatalogs.js';
+
+export type ComboSnapshot = {
+  active: boolean;
+  multLabel: string;
+  timeSec: string;
+  dataTier: string;
+  fading: boolean;
+};
 
 const COMBO_FADING_MS = 700;
 
-/** Build combo indicator snapshot for Vue (no DOM). */
+/** Build combo indicator snapshot for Vue bridge (no DOM). */
 export function getComboSnapshot(): ComboSnapshot {
   const clickTimestamps = getClickTimestamps();
   const now = Date.now();
@@ -33,4 +43,3 @@ export function getComboSnapshot(): ComboSnapshot {
     fading,
   };
 }
-

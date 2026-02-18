@@ -3,6 +3,7 @@
     id="settings-overlay"
     class="settings-overlay"
     aria-hidden="true"
+    @click.self="closeSettings"
   >
     <div
       class="settings-modal"

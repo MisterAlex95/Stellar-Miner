@@ -3,6 +3,7 @@
     id="expedition-modal-overlay"
     class="expedition-modal-overlay"
     aria-hidden="true"
+    @click.self="closeExpeditionModal"
   >
     <div
       class="expedition-modal"
@@ -19,6 +20,7 @@
           type="button"
           class="expedition-modal-close"
           :aria-label="t('close')"
+          @click="closeExpeditionModal"
         >
           ×
         </button>
@@ -59,7 +61,10 @@
           class="expedition-modal-crew-wrap"
         ></div>
       </div>
-      <div class="expedition-modal-actions">
+      <div
+        class="expedition-modal-actions"
+        @click="onActionsClick"
+      >
         <button
           id="expedition-modal-cancel"
           type="button"
@@ -82,4 +87,14 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
+import { closeExpeditionModal, onLaunchExpeditionClick } from '../../expeditionModal.js';
+
+function onActionsClick(e: MouseEvent): void {
+  const target = e.target as HTMLElement;
+  if (target.id === 'expedition-modal-cancel' || target.closest('#expedition-modal-cancel')) {
+    closeExpeditionModal();
+  } else if (target.id === 'expedition-modal-launch' || target.closest('#expedition-modal-launch')) {
+    onLaunchExpeditionClick();
+  }
+}
 </script>

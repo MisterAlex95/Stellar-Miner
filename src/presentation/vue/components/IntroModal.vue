@@ -3,6 +3,7 @@
     id="intro-overlay"
     class="intro-overlay"
     aria-hidden="true"
+    @click.self="dismissIntroModal"
   >
     <div
       class="intro-modal"
@@ -39,4 +40,5 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
+import { dismissIntroModal } from '../../introModal.js';
 </script>

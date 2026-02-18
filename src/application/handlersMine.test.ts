@@ -6,10 +6,7 @@ import { handleMineClick } from './handlersMine.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { LAST_DAILY_BONUS_KEY } from './catalogs.js';
 
-vi.mock('../presentation/statsView.js', () => ({ updateStats: vi.fn() }));
-vi.mock('../presentation/upgradeListView.js', () => ({ renderUpgradeList: vi.fn() }));
-vi.mock('../presentation/questView.js', () => ({ renderQuestSection: vi.fn() }));
-vi.mock('../presentation/comboView.js', () => ({ updateComboIndicator: vi.fn() }));
+vi.mock('../presentation/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
 vi.mock('../presentation/toasts.js', () => ({
   showFloatingCoin: vi.fn(),
   showSuperLuckyToast: vi.fn(),

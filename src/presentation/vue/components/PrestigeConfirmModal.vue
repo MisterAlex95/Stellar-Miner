@@ -3,6 +3,7 @@
     id="prestige-confirm-overlay"
     class="prestige-confirm-overlay"
     aria-hidden="true"
+    @click.self="closePrestigeConfirmModal"
   >
     <div
       class="prestige-confirm-modal"

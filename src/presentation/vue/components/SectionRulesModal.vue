@@ -3,6 +3,7 @@
     id="section-rules-overlay"
     class="section-rules-overlay"
     aria-hidden="true"
+    @click.self="closeSectionRulesModal"
   >
     <div
       class="section-rules-modal"

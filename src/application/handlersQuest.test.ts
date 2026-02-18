@@ -5,9 +5,7 @@ import { Player } from '../domain/entities/Player.js';
 import { handleClaimQuest } from './handlersQuest.js';
 import { notifyRefresh } from './refreshSignal.js';
 
-vi.mock('../presentation/statsView.js', () => ({ updateStats: vi.fn() }));
-vi.mock('../presentation/upgradeListView.js', () => ({ renderUpgradeList: vi.fn() }));
-vi.mock('../presentation/questView.js', () => ({ renderQuestSection: vi.fn() }));
+vi.mock('../presentation/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
 vi.mock('../presentation/toasts.js', () => ({
   showFloatingReward: vi.fn(),
   showQuestStreakToast: vi.fn(),
