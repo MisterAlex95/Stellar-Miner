@@ -18,6 +18,8 @@ export interface PresentationPort {
   showQuestStreakToast(streak: number, mult: number): void;
   showEventToast(gameEvent: GameEvent): void;
   showFloatingReward(amount: number, anchor: HTMLElement): void;
+  /** Quest claim button element for floating reward (Vue sets via store). */
+  getQuestClaimAnchor(): HTMLElement | null;
   showFloatingCoin(
     amount: number,
     clientX: number,
@@ -105,6 +107,7 @@ const defaultPort: PresentationPort = {
   showQuestStreakToast: noopNumNum,
   showEventToast: noopEvent,
   showFloatingReward: noopNumEl,
+  getQuestClaimAnchor: () => null,
   showFloatingCoin: noopNumXY,
   showSuperLuckyToast: noopNum,
   showCriticalToast: noopNum,

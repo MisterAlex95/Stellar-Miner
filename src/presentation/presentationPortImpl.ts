@@ -111,6 +111,11 @@ function setPlanetDetailData(data: Parameters<PresentationPort['setPlanetDetailD
   if (pinia) useAppUIStore(pinia).setPlanetDetailData(data);
 }
 
+function getQuestClaimAnchor(): HTMLElement | null {
+  const pinia = getPinia();
+  return pinia ? useAppUIStore(pinia).questClaimAnchor : null;
+}
+
 export function createPresentationPort(): PresentationPort {
   return {
     showAchievementToast: toasts.showAchievementToast,
@@ -120,6 +125,7 @@ export function createPresentationPort(): PresentationPort {
     showQuestStreakToast: toasts.showQuestStreakToast,
     showEventToast: toasts.showEventToast,
     showFloatingReward: toasts.showFloatingReward,
+    getQuestClaimAnchor,
     showFloatingCoin: toasts.showFloatingCoin,
     showSuperLuckyToast: toasts.showSuperLuckyToast,
     showCriticalToast: toasts.showCriticalToast,

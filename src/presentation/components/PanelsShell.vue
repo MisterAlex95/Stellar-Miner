@@ -127,6 +127,7 @@
           class="btn-tooltip-wrap"
         >
           <button
+            ref="questClaimBtnRef"
             id="quest-claim"
             type="button"
             class="quest-claim-btn"
@@ -393,6 +394,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { t } from '../../application/strings.js';
 import { useGameStateStore } from '../stores/gameState.js';
 import { handleClaimQuest } from '../../application/handlers.js';
@@ -407,6 +409,14 @@ const store = useGameStateStore();
 const sectionCollapse = useSectionCollapse();
 const { label: researchDataDisplayLabel } = useResearchDataDisplay();
 const appUI = useAppUIStore();
+const questClaimBtnRef = ref<HTMLButtonElement | null>(null);
+
+onMounted(() => {
+  if (questClaimBtnRef.value) appUI.setQuestClaimAnchor(questClaimBtnRef.value);
+});
+onBeforeUnmount(() => {
+  appUI.setQuestClaimAnchor(null);
+});
 
 function onMineZoneClick(e: MouseEvent): void {
   if (!appUI.mineZoneHintDismissed) appUI.dismissMineHint();

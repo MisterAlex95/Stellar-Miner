@@ -38,6 +38,22 @@ function closeChartHelpModal(): void {
   closeOverlay(CHART_HELP_OVERLAY_ID, CHART_HELP_OPEN_CLASS);
 }
 
+const OVERLAY_CLOSERS: Record<string, () => void> = {
+  'reset-confirm-overlay': closeResetConfirmModal,
+  'prestige-confirm-overlay': closePrestigeConfirmModal,
+  'prestige-rewards-overlay': closePrestigeRewardsModal,
+  'intro-overlay': dismissIntroModal,
+  'section-rules-overlay': closeSectionRulesModal,
+  'info-overlay': closeInfoModal,
+  [ACHIEVEMENTS_OVERLAY_ID]: closeAchievementsModal,
+  [EVENTS_HINT_OVERLAY_ID]: closeEventsHintModal,
+  [CHART_HELP_OVERLAY_ID]: closeChartHelpModal,
+  [PLANET_DETAIL_OVERLAY_ID]: closePlanetDetail,
+  'upgrade-choose-planet-overlay': closeUpgradeChoosePlanetModal,
+  'expedition-modal-overlay': closeExpeditionModal,
+  'settings-overlay': closeSettings,
+};
+
 /**
  * Global keyboard: Escape (close modals), Tab (focus trap in overlay), Space (mine), F3 (debug panel).
  * Call from App.vue onMounted. Uses appUI store for mineZoneActive, mineZoneHintDismissed, debugOpen.
@@ -75,33 +91,14 @@ export function useGlobalKeyboard(): void {
       return;
     }
     if (e.key === 'Escape') {
-      if (document.getElementById('reset-confirm-overlay')?.classList.contains('reset-confirm-overlay--open'))
-        closeResetConfirmModal();
-      else if (document.getElementById('prestige-confirm-overlay')?.classList.contains('prestige-confirm-overlay--open'))
-        closePrestigeConfirmModal();
-      else if (document.getElementById('prestige-rewards-overlay')?.classList.contains('prestige-rewards-overlay--open'))
-        closePrestigeRewardsModal();
-      else if (isIntroOverlayOpen()) dismissIntroModal();
-      else if (document.getElementById('section-rules-overlay')?.classList.contains(SECTION_RULES_OVERLAY_CLASS))
-        closeSectionRulesModal();
-      else if (document.getElementById('info-overlay')?.classList.contains('info-overlay--open')) closeInfoModal();
-      else if (document.getElementById(ACHIEVEMENTS_OVERLAY_ID)?.classList.contains(ACHIEVEMENTS_OVERLAY_OPEN_CLASS))
-        closeAchievementsModal();
-      else if (document.getElementById(EVENTS_HINT_OVERLAY_ID)?.classList.contains(EVENTS_HINT_OPEN_CLASS))
-        closeEventsHintModal();
-      else if (document.getElementById(CHART_HELP_OVERLAY_ID)?.classList.contains(CHART_HELP_OPEN_CLASS))
-        closeChartHelpModal();
-      else if (document.getElementById(PLANET_DETAIL_OVERLAY_ID)?.classList.contains(PLANET_DETAIL_OPEN_CLASS))
-        closePlanetDetail();
-      else if (
-        document.getElementById('upgrade-choose-planet-overlay')?.classList.contains('upgrade-choose-planet-overlay--open')
-      )
-        closeUpgradeChoosePlanetModal();
-      else if (
-        document.getElementById('expedition-modal-overlay')?.classList.contains('expedition-modal-overlay--open')
-      )
-        closeExpeditionModal();
-      else if (document.getElementById('settings-overlay')?.classList.contains('settings-overlay--open')) closeSettings();
+      if (isIntroOverlayOpen()) {
+        dismissIntroModal();
+        return;
+      }
+      const top = appUI.peekOverlay();
+      if (top && OVERLAY_CLOSERS[top]) {
+        OVERLAY_CLOSERS[top]();
+      }
       return;
     }
     if (e.code === 'Space') {

@@ -348,7 +348,7 @@ export function claimQuest(callbacks: ClaimQuestCallbacks): boolean {
   saveQuestState(newState);
   callbacks.notifyRefresh();
   const ui = getPresentationPort();
-  const claimBtn = document.getElementById('quest-claim');
+  const claimBtn = ui.getQuestClaimAnchor();
   if (claimBtn) ui.showFloatingReward(reward, claimBtn);
   if (streak > 1) ui.showQuestStreakToast(streak, bonusMult);
   return true;

@@ -63,6 +63,10 @@ export const useAppUIStore = defineStore('appUI', {
       composition: Record<string, number>;
       selectedTier: string;
     } | null,
+    /** Overlay stack for Escape key: overlayId pushed on open, popped on close. */
+    overlayStack: [] as string[],
+    /** Quest claim button element for floating reward anchor (set by PanelsShell). */
+    questClaimAnchor: null as HTMLElement | null,
     /** Planet detail modal: when set, modal is open; Vue renders stats and upgrades; 3D scene mounted in Vue. */
     planetDetail: null as {
       planetId: string;
@@ -191,6 +195,19 @@ export const useAppUIStore = defineStore('appUI', {
     },
     clearPlanetDetail(): void {
       this.planetDetail = null;
+    },
+    pushOverlay(overlayId: string): void {
+      this.overlayStack = [...this.overlayStack, overlayId];
+    },
+    popOverlay(overlayId: string): void {
+      const i = this.overlayStack.lastIndexOf(overlayId);
+      if (i >= 0) this.overlayStack = this.overlayStack.slice(0, i).concat(this.overlayStack.slice(i + 1));
+    },
+    peekOverlay(): string | undefined {
+      return this.overlayStack[this.overlayStack.length - 1];
+    },
+    setQuestClaimAnchor(el: HTMLElement | null): void {
+      this.questClaimAnchor = el;
     },
   },
 });

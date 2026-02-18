@@ -302,17 +302,21 @@ describe('quests', () => {
     vi.stubGlobal('document', origDoc);
   });
 
-  it('claimQuest calls showFloatingReward with claim button when element exists', () => {
+  it('claimQuest calls showFloatingReward with claim button when getQuestClaimAnchor returns element', () => {
     const mockBtn = { id: 'quest-claim' } as unknown as HTMLElement;
-    vi.stubGlobal('document', { getElementById: (id: string) => (id === 'quest-claim' ? mockBtn : null) });
+    const showFloatingReward = vi.fn();
+    setPresentationPort({
+      ...getDefaultPresentationPort(),
+      showFloatingReward,
+      getQuestClaimAnchor: () => mockBtn,
+      showQuestStreakToast: vi.fn(),
+    });
     const player = Player.create('p1');
     player.addCoins(10000);
     setSession(new GameSession('s1', player));
     setQuestState({
       quest: { type: 'coins', target: 100, reward: 50, description: 'Reach 100 coins' },
     });
-    const showFloatingReward = vi.fn();
-    setPresentationPort({ ...getDefaultPresentationPort(), showFloatingReward, showQuestStreakToast: vi.fn() });
     claimQuest({ notifyRefresh: vi.fn() });
     expect(showFloatingReward).toHaveBeenCalledWith(50, mockBtn);
   });

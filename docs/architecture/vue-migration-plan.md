@@ -173,18 +173,18 @@ For each:
 
 ---
 
-## Optional cleanup (post-migration)
+## Optional cleanup (post-migration) — done
 
-All user-visible UI is now Vue (templates + store). Remaining imperative DOM is limited to bootstrap, canvas mount, and a few non-critical paths. Optional improvements:
+All four items completed:
 
-| Item | Location | Current | Optional change |
-|------|----------|---------|------------------|
-| Quest claim anchor | `quests.ts` | `getElementById('quest-claim')` for `showFloatingReward(reward, claimBtn)` | Expose ref from Vue and pass to port; or keep as-is. |
-| Chart legend / minmax | `chartUtils.ts` | `getElementById(legendId)` + `textContent` | Bind in StatisticsCharts.vue from computed data. |
-| Chart tooltip | `StatisticsCharts.vue` | `tooltipEl.value.textContent = text` | Vue template or ref binding. |
-| Escape key | `useGlobalKeyboard.ts` | `getElementById(overlayId)?.classList.contains(openClass)` to decide which modal to close | Store "top overlay" or stack; close by state instead of DOM. |
+| Item | Change |
+|------|--------|
+| Chart legend / minmax | `chartUtils.getChartMinMaxText()` returns string; StatisticsCharts.vue binds `chartLegendMinmax[id]` in template. No getElementById in chartUtils. |
+| Chart tooltip | Reactive state `tooltipText`, `tooltipVisible`, `tooltipLeft`, `tooltipTop`; template binds content and position. |
+| Escape key | `appUI.overlayStack` pushed in `openOverlay`, popped in `closeOverlay`. useGlobalKeyboard uses `peekOverlay()` and `OVERLAY_CLOSERS[id]()`; no getElementById for Escape. |
+| Quest claim anchor | PanelsShell sets `appUI.questClaimAnchor` (ref on button); port `getQuestClaimAnchor()` returns it; quests.ts uses port instead of getElementById. |
 
-Definition of done (already met): no `getElementById`/`innerHTML` in handlers or modals for modal/panel content; port writes to Pinia, Vue renders. Allowed: getElementById for canvas mount, overlay open/close by ID, and the optional items above.
+Definition of done: no `getElementById`/`innerHTML` in handlers or modals for content; no getElementById for chart legend, tooltip, Escape, or quest claim. Only bootstrap (#app, legacy-root), canvas mount, and overlay open/close by ID remain.
 
 ---
 

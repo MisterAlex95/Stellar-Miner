@@ -37,7 +37,7 @@
         <div class="statistics-chart-legend" id="chart-legend-coins">
           <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins"></span>
           <span class="statistics-chart-legend-label">{{ t('chartLegendCoins') }}</span>
-          <span class="statistics-chart-legend-minmax">{{ t('chartLegendMinMaxPlaceholder') }}</span>
+          <span class="statistics-chart-legend-minmax">{{ chartLegendMinmax['chart-legend-coins'] || t('chartLegendMinMaxPlaceholder') }}</span>
         </div>
       </div>
       <div class="statistics-chart-wrap">
@@ -46,7 +46,7 @@
         <div class="statistics-chart-legend" id="chart-legend-production">
           <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--production"></span>
           <span class="statistics-chart-legend-label">{{ t('chartLegendProduction') }}</span>
-          <span class="statistics-chart-legend-minmax">{{ t('chartLegendMinMaxPlaceholder') }}</span>
+          <span class="statistics-chart-legend-minmax">{{ chartLegendMinmax['chart-legend-production'] || t('chartLegendMinMaxPlaceholder') }}</span>
         </div>
       </div>
       <div class="statistics-chart-wrap">
@@ -55,7 +55,7 @@
         <div class="statistics-chart-legend" id="chart-legend-total-ever">
           <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--total-ever"></span>
           <span class="statistics-chart-legend-label">{{ t('chartLegendTotalEver') }}</span>
-          <span class="statistics-chart-legend-minmax">{{ t('chartLegendMinMaxPlaceholder') }}</span>
+          <span class="statistics-chart-legend-minmax">{{ chartLegendMinmax['chart-legend-total-ever'] || t('chartLegendMinMaxPlaceholder') }}</span>
         </div>
       </div>
       <div class="statistics-chart-wrap">
@@ -64,7 +64,7 @@
         <div class="statistics-chart-legend" id="chart-legend-coins-gained">
           <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-gained"></span>
           <span class="statistics-chart-legend-label">{{ t('chartLegendCoinsGained') }}</span>
-          <span class="statistics-chart-legend-minmax">{{ t('chartLegendMinMaxPlaceholder') }}</span>
+          <span class="statistics-chart-legend-minmax">{{ chartLegendMinmax['chart-legend-coins-gained'] || t('chartLegendMinMaxPlaceholder') }}</span>
         </div>
       </div>
       <div class="statistics-chart-wrap">
@@ -73,7 +73,7 @@
         <div class="statistics-chart-legend" id="chart-legend-coins-per-click">
           <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-per-click"></span>
           <span class="statistics-chart-legend-label">{{ t('chartLegendCoinsPerClick') }}</span>
-          <span class="statistics-chart-legend-minmax">{{ t('chartLegendMinMaxPlaceholder') }}</span>
+          <span class="statistics-chart-legend-minmax">{{ chartLegendMinmax['chart-legend-coins-per-click'] || t('chartLegendMinMaxPlaceholder') }}</span>
         </div>
       </div>
       <div class="statistics-chart-wrap">
@@ -82,7 +82,7 @@
         <div class="statistics-chart-legend" id="chart-legend-clicks">
           <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--clicks"></span>
           <span class="statistics-chart-legend-label">{{ t('chartLegendClicks') }}</span>
-          <span class="statistics-chart-legend-minmax">{{ t('chartLegendMinMaxPlaceholder') }}</span>
+          <span class="statistics-chart-legend-minmax">{{ chartLegendMinmax['chart-legend-clicks'] || t('chartLegendMinMaxPlaceholder') }}</span>
         </div>
       </div>
       <div class="statistics-chart-wrap">
@@ -91,11 +91,19 @@
         <div class="statistics-chart-legend" id="chart-legend-coins-from-clicks">
           <span class="statistics-chart-legend-swatch statistics-chart-legend-swatch--coins-from-clicks"></span>
           <span class="statistics-chart-legend-label">{{ t('chartLegendCoinsFromClicks') }}</span>
-          <span class="statistics-chart-legend-minmax">{{ t('chartLegendMinMaxPlaceholder') }}</span>
+          <span class="statistics-chart-legend-minmax">{{ chartLegendMinmax['chart-legend-coins-from-clicks'] || t('chartLegendMinMaxPlaceholder') }}</span>
         </div>
       </div>
     </div>
-    <div ref="tooltipEl" id="chart-tooltip" class="statistics-chart-tooltip" aria-live="polite" aria-hidden="true"></div>
+    <div
+      ref="tooltipEl"
+      id="chart-tooltip"
+      class="statistics-chart-tooltip"
+      :class="{ 'statistics-chart-tooltip--visible': tooltipVisible }"
+      aria-live="polite"
+      :aria-hidden="!tooltipVisible"
+      :style="{ left: tooltipLeft + 'px', top: tooltipTop + 'px' }"
+    >{{ tooltipText }}</div>
   </section>
 </template>
 
@@ -111,7 +119,7 @@ import {
   getCoinsGainedPerPeriod,
   getCoinsPerClickPerPeriod,
 } from '../../application/statisticsData.js';
-import { CHART_COLORS, getChartIndexAtOffsetX, drawLineChart, updateChartLegend } from '../lib/chartUtils.js';
+import { CHART_COLORS, getChartIndexAtOffsetX, drawLineChart, getChartMinMaxText } from '../lib/chartUtils.js';
 import type { ChartRange } from '../../application/statsHistory.js';
 
 const props = defineProps<{
@@ -129,6 +137,11 @@ const coinsPerClickCanvas = ref<HTMLCanvasElement | null>(null);
 const clicksCanvas = ref<HTMLCanvasElement | null>(null);
 const coinsFromClicksCanvas = ref<HTMLCanvasElement | null>(null);
 const tooltipEl = ref<HTMLElement | null>(null);
+const chartLegendMinmax = ref<Record<string, string>>({});
+const tooltipText = ref('');
+const tooltipVisible = ref(false);
+const tooltipLeft = ref(0);
+const tooltipTop = ref(0);
 
 const hoverState = ref<{ canvasId: string; index: number } | null>(null);
 
@@ -161,34 +174,36 @@ function drawCharts(): void {
   const clicksHover = h?.canvasId === 'chart-clicks' ? h.index : null;
   const coinsFromClicksHover = h?.canvasId === 'chart-coins-from-clicks' ? h.index : null;
 
+  const minmax: Record<string, string> = {};
   if (coinsCanvas.value) {
     drawLineChart(coinsCanvas.value, coinsValues, { colorStroke: CHART_COLORS.stroke, colorFill: CHART_COLORS.fill, legendLabel: t('chartLegendCoins'), formatValue: formatVal }, coinsHover);
-    updateChartLegend('chart-legend-coins', t('chartLegendCoins'), Math.min(...coinsValues), Math.max(...coinsValues), formatVal);
+    minmax['chart-legend-coins'] = getChartMinMaxText(Math.min(...coinsValues), Math.max(...coinsValues), formatVal);
   }
   if (productionCanvas.value) {
     drawLineChart(productionCanvas.value, productionValues, { colorStroke: CHART_COLORS.strokeProduction, colorFill: CHART_COLORS.fillProduction, legendLabel: t('chartLegendProduction'), formatValue: formatVal }, productionHover);
-    updateChartLegend('chart-legend-production', t('chartLegendProduction'), Math.min(...productionValues), Math.max(...productionValues), formatVal);
+    minmax['chart-legend-production'] = getChartMinMaxText(Math.min(...productionValues), Math.max(...productionValues), formatVal);
   }
   if (totalEverCanvas.value) {
     drawLineChart(totalEverCanvas.value, totalEverValues, { colorStroke: CHART_COLORS.strokeTotalEver, colorFill: CHART_COLORS.fillTotalEver, legendLabel: t('chartLegendTotalEver'), formatValue: formatVal }, totalEverHover);
-    updateChartLegend('chart-legend-total-ever', t('chartLegendTotalEver'), Math.min(...totalEverValues), Math.max(...totalEverValues), formatVal);
+    minmax['chart-legend-total-ever'] = getChartMinMaxText(Math.min(...totalEverValues), Math.max(...totalEverValues), formatVal);
   }
   if (coinsGainedCanvas.value && coinsGainedValues.length >= 2) {
     drawLineChart(coinsGainedCanvas.value, coinsGainedValues, { colorStroke: CHART_COLORS.strokeCoinsGained, colorFill: CHART_COLORS.fillCoinsGained, legendLabel: t('chartLegendCoinsGained'), formatValue: formatVal }, coinsGainedHover);
-    updateChartLegend('chart-legend-coins-gained', t('chartLegendCoinsGained'), Math.min(...coinsGainedValues), Math.max(...coinsGainedValues), formatVal);
+    minmax['chart-legend-coins-gained'] = getChartMinMaxText(Math.min(...coinsGainedValues), Math.max(...coinsGainedValues), formatVal);
   }
   if (coinsPerClickCanvas.value && coinsPerClickValues.length >= 2) {
     drawLineChart(coinsPerClickCanvas.value, coinsPerClickValues, { colorStroke: CHART_COLORS.strokeCoinsPerClick, colorFill: CHART_COLORS.fillCoinsPerClick, legendLabel: t('chartLegendCoinsPerClick'), formatValue: formatVal }, coinsPerClickHover);
-    updateChartLegend('chart-legend-coins-per-click', t('chartLegendCoinsPerClick'), Math.min(...coinsPerClickValues), Math.max(...coinsPerClickValues), formatVal);
+    minmax['chart-legend-coins-per-click'] = getChartMinMaxText(Math.min(...coinsPerClickValues), Math.max(...coinsPerClickValues), formatVal);
   }
   if (clicksCanvas.value && clicksValues.length >= 2) {
     drawLineChart(clicksCanvas.value, clicksValues, { colorStroke: CHART_COLORS.strokeClicks, colorFill: CHART_COLORS.fillClicks, legendLabel: t('chartLegendClicks'), formatValue: formatVal }, clicksHover);
-    updateChartLegend('chart-legend-clicks', t('chartLegendClicks'), Math.min(...clicksValues), Math.max(...clicksValues), formatVal);
+    minmax['chart-legend-clicks'] = getChartMinMaxText(Math.min(...clicksValues), Math.max(...clicksValues), formatVal);
   }
   if (coinsFromClicksCanvas.value && coinsFromClicksValues.length >= 2) {
     drawLineChart(coinsFromClicksCanvas.value, coinsFromClicksValues, { colorStroke: CHART_COLORS.strokeCoinsFromClicks, colorFill: CHART_COLORS.fillCoinsFromClicks, legendLabel: t('chartLegendCoinsFromClicks'), formatValue: formatVal }, coinsFromClicksHover);
-    updateChartLegend('chart-legend-coins-from-clicks', t('chartLegendCoinsFromClicks'), Math.min(...coinsFromClicksValues), Math.max(...coinsFromClicksValues), formatVal);
+    minmax['chart-legend-coins-from-clicks'] = getChartMinMaxText(Math.min(...coinsFromClicksValues), Math.max(...coinsFromClicksValues), formatVal);
   }
+  chartLegendMinmax.value = minmax;
 }
 
 type ValueType = 'coins' | 'production' | 'totalEver' | 'coinsGained' | 'coinsPerClickPerPeriod' | 'clicksPerPeriod' | 'coinsFromClicksPerPeriod';
@@ -216,31 +231,29 @@ function onChartMouseMove(e: MouseEvent, canvasId: string, valueType: ValueType)
   } else {
     text = `${formatNumber(p.coinsFromClicksInPeriod ?? 0, compact)} ⬡`;
   }
-  if (tooltipEl.value) {
-    tooltipEl.value.textContent = text;
-    tooltipEl.value.setAttribute('aria-hidden', 'false');
-    const offset = 12;
-    let left = e.clientX + offset;
-    let top = e.clientY + offset;
-    tooltipEl.value.style.left = `${left}px`;
-    tooltipEl.value.style.top = `${top}px`;
-    tooltipEl.value.classList.add('statistics-chart-tooltip--visible');
-    const rect = tooltipEl.value.getBoundingClientRect();
-    if (left + rect.width > window.innerWidth) left = e.clientX - rect.width - offset;
-    if (top + rect.height > window.innerHeight) top = e.clientY - rect.height - offset;
-    if (top < 0) top = offset;
-    if (left < 0) left = offset;
-    tooltipEl.value.style.left = `${left}px`;
-    tooltipEl.value.style.top = `${top}px`;
-  }
+  const offset = 12;
+  let left = e.clientX + offset;
+  let top = e.clientY + offset;
+  tooltipText.value = text;
+  tooltipLeft.value = left;
+  tooltipTop.value = top;
+  tooltipVisible.value = true;
+  nextTick(() => {
+    if (tooltipEl.value) {
+      const rect = tooltipEl.value.getBoundingClientRect();
+      if (left + rect.width > window.innerWidth) left = e.clientX - rect.width - offset;
+      if (top + rect.height > window.innerHeight) top = e.clientY - rect.height - offset;
+      if (top < 0) top = offset;
+      if (left < 0) left = offset;
+      tooltipLeft.value = left;
+      tooltipTop.value = top;
+    }
+  });
 }
 
 function hideTooltip(): void {
   hoverState.value = null;
-  if (tooltipEl.value) {
-    tooltipEl.value.classList.remove('statistics-chart-tooltip--visible');
-    tooltipEl.value.setAttribute('aria-hidden', 'true');
-  }
+  tooltipVisible.value = false;
 }
 
 function bindCanvas(

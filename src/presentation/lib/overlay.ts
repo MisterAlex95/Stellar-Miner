@@ -3,6 +3,8 @@
  * Use with overlays created via createModalOverlay or any div that uses a --open modifier class.
  */
 import { getElement } from './domUtils.js';
+import { getPinia } from '../piniaInstance.js';
+import { useAppUIStore } from '../stores/appUI.js';
 
 export interface OverlaySpec {
   id: string;
@@ -42,6 +44,8 @@ export function openOverlay(
   if (!overlay) return;
   overlay.classList.add(openClass);
   overlay.setAttribute('aria-hidden', 'false');
+  const pinia = getPinia();
+  if (pinia) useAppUIStore(pinia).pushOverlay(overlayId);
   requestAnimationFrame(() => {
     options?.onOpen?.();
     if (options?.focusId) getElement(options.focusId)?.focus();
@@ -57,6 +61,8 @@ export function closeOverlay(overlayId: string, openClass: string): void {
     overlay.classList.remove(openClass);
     overlay.setAttribute('aria-hidden', 'true');
   }
+  const pinia = getPinia();
+  if (pinia) useAppUIStore(pinia).popOverlay(overlayId);
 }
 
 /**

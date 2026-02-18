@@ -3,17 +3,13 @@
  */
 import { tParam } from '../../application/strings.js';
 
-export function updateChartLegend(
-  legendId: string,
-  _legendLabel: string,
+/** Returns formatted min–max string for chart legend (Vue binds this in template). */
+export function getChartMinMaxText(
   min: number,
   max: number,
   formatValue: (n: number) => string
-): void {
-  const el = document.getElementById(legendId);
-  if (!el) return;
-  const minmaxEl = el.querySelector('.statistics-chart-legend-minmax');
-  if (minmaxEl) minmaxEl.textContent = tParam('chartMinMax', { min: formatValue(min), max: formatValue(max) });
+): string {
+  return tParam('chartMinMax', { min: formatValue(min), max: formatValue(max) });
 }
 
 function clamp(value: number, min: number, max: number): number {
