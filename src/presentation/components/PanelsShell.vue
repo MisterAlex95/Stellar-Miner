@@ -263,7 +263,9 @@
           id="research-data-display"
           class="research-data-line"
           aria-live="polite"
-        ></p>
+        >
+          {{ researchDataDisplayLabel }}
+        </p>
         <div
           id="research-list"
           class="research-list"
@@ -396,12 +398,14 @@ import { useGameStateStore } from '../stores/gameState.js';
 import { handleClaimQuest } from '../../application/handlers.js';
 import { openSectionRulesModal } from '../modals/mount.js';
 import { useSectionCollapse } from '../composables/useSectionCollapse.js';
+import { useResearchDataDisplay } from '../composables/useResearchDataDisplay.js';
 import { useAppUIStore } from '../stores/appUI.js';
 import MineZoneCanvas from './MineZoneCanvas.vue';
 import { handleMineClick } from '../../application/handlers.js';
 
 const store = useGameStateStore();
 const sectionCollapse = useSectionCollapse();
+const { label: researchDataDisplayLabel } = useResearchDataDisplay();
 const appUI = useAppUIStore();
 
 function onMineZoneClick(e: MouseEvent): void {

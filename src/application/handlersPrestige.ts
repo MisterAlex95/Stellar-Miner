@@ -1,6 +1,13 @@
 import { Player } from '../domain/entities/Player.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
-import { PRESTIGE_COIN_THRESHOLD, PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL, PRESTIGE_RESEARCH_POINTS_PER_PRESTIGE } from '../domain/constants.js';
+import {
+  PRESTIGE_COIN_THRESHOLD,
+  PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL,
+  PRESTIGE_RESEARCH_POINTS_PER_PRESTIGE,
+  PRESTIGE_BONUS_PER_LEVEL,
+  PRESTIGE_PLANET_BONUS_PER_PLANET,
+  PRESTIGE_RESEARCH_BONUS_PER_NODE,
+} from '../domain/constants.js';
 import {
   getSession,
   setSession,
@@ -14,7 +21,7 @@ import {
 } from './gameState.js';
 import { generateQuest } from './quests.js';
 import { saveQuestState } from './questState.js';
-import { clearResearch, addPrestigeResearchPoints } from './research.js';
+import { clearResearch, addPrestigeResearchPoints, getUnlockedResearch } from './research.js';
 import { clearEverUnlockedUpgradeTiers } from './catalogs.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
@@ -30,21 +37,43 @@ function refreshAfterPrestige(): void {
   checkAchievements();
 }
 
+const PRESTIGE_BASE_PCT = 7;
+const PRESTIGE_PLANET_PCT = 1;
+const PRESTIGE_RESEARCH_PCT = 0.5;
+
+/** Total prestige production bonus in percent (level + planets + research banked). */
+export function getPrestigeProductionPercent(player: Player): number {
+  return (
+    player.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL * 100 +
+    player.prestigePlanetBonus * PRESTIGE_PLANET_BONUS_PER_PLANET * 100 +
+    player.prestigeResearchBonus * PRESTIGE_RESEARCH_BONUS_PER_NODE * 100
+  );
+}
+
 export function openPrestigeConfirmModal(): void {
+  const session = getSession();
+  if (session) {
+    const player = session.player;
+    const nextLevel = player.prestigeLevel + 1;
+    const planetsThisRun = Math.max(0, player.planets.length - 1);
+    const researchCount = getUnlockedResearch().length;
+    const levelPct = nextLevel * PRESTIGE_BASE_PCT;
+    const planetPct = (player.prestigePlanetBonus + planetsThisRun) * PRESTIGE_PLANET_PCT;
+    const researchPct = (player.prestigeResearchBonus + researchCount) * PRESTIGE_RESEARCH_PCT;
+    const totalPct = Math.round(levelPct + planetPct + researchPct);
+    const desc = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: totalPct });
+    const after = tParam('prestigeConfirmAfter', { level: nextLevel, pct: totalPct });
+    const gainEstimate = tParam('prestigeConfirmGainEstimate', {
+      level: nextLevel,
+      levelPct: Math.round(levelPct),
+      planetPct: Math.round(planetPct),
+      researchPct: Math.round(researchPct),
+      totalPct,
+    });
+    getPresentationPort().setPrestigeConfirmContent(desc, after, gainEstimate);
+  }
   getPresentationPort().openOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open', {
     focusId: 'prestige-confirm-cancel',
-    onOpen: () => {
-      const session = getSession();
-      const descEl = document.getElementById('prestige-confirm-desc');
-      const afterEl = document.getElementById('prestige-confirm-after');
-      if (session && descEl) {
-        const nextLevel = session.player.prestigeLevel + 1;
-        descEl.textContent = tParam('prestigeConfirmDescLevel', { level: nextLevel, pct: Math.round(nextLevel * 5) });
-        if (afterEl) {
-          afterEl.textContent = tParam('prestigeConfirmAfter', { level: nextLevel, pct: Math.round(nextLevel * 5) });
-        }
-      }
-    },
   });
 }
 
@@ -53,23 +82,15 @@ export function closePrestigeConfirmModal(): void {
 }
 
 export function openPrestigeRewardsModal(): void {
-  const listEl = document.getElementById('prestige-rewards-list');
-  if (!listEl) return;
+  const levels: string[] = [t('prestigeReward1')];
+  for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
+    const prod = Math.round(level * PRESTIGE_BONUS_PER_LEVEL * 100);
+    const click = Math.round((level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL);
+    levels.push(tParam('prestigeRewardLevelFormat', { level, prod, click }));
+  }
+  getPresentationPort().setPrestigeRewardsContent(levels);
   getPresentationPort().openOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open', {
     focusId: 'prestige-rewards-close',
-    onOpen: () => {
-      listEl.innerHTML = '';
-      const li1 = document.createElement('li');
-      li1.textContent = t('prestigeReward1');
-      listEl.appendChild(li1);
-      for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
-        const prod = Math.round(level * 5);
-        const click = Math.round((level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL);
-        const li = document.createElement('li');
-        li.textContent = tParam('prestigeRewardLevelFormat', { level, prod, click });
-        listEl.appendChild(li);
-      }
-    },
   });
 }
 
@@ -82,7 +103,11 @@ export function confirmPrestige(): void {
   if (!session) return;
   if (!session.player.coins.gte(PRESTIGE_COIN_THRESHOLD)) return;
   closePrestigeConfirmModal();
-  const newPlayer = Player.createAfterPrestige(session.player);
+  const newPlayer = Player.createAfterPrestige(
+    session.player,
+    session.player.planets.length,
+    getUnlockedResearch().length
+  );
   setSession(new GameSession(session.id, newPlayer, []));
   setActiveEventInstances([]);
   clearExpedition();
@@ -106,7 +131,11 @@ export function confirmPrestige(): void {
     }
   }
   emit('prestige', { level: newPlayer.prestigeLevel });
-  if (PRESTIGE_MILESTONE_LEVELS.includes(newPlayer.prestigeLevel)) ui.showPrestigeMilestoneToast(newPlayer.prestigeLevel);
+  const newPct = Math.round(getPrestigeProductionPercent(newPlayer));
+  ui.showMiniMilestoneToast(tParam('prestigeCompleteToast', { pct: newPct }));
+  if (PRESTIGE_MILESTONE_LEVELS.includes(newPlayer.prestigeLevel)) {
+    ui.showPrestigeMilestoneToast(newPlayer.prestigeLevel, newPct);
+  }
   refreshAfterPrestige();
 }
 

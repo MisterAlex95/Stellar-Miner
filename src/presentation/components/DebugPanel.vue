@@ -22,7 +22,16 @@
         <div
           class="debug-section"
           id="debug-stats"
-        />
+        >
+          <div
+            v-for="(row, i) in appUI.debugStats"
+            :key="i"
+            class="debug-row"
+          >
+            <span>{{ row.label }}</span>
+            <span>{{ row.value }}</span>
+          </div>
+        </div>
         <div class="debug-section">
           <div class="debug-actions">
             <button

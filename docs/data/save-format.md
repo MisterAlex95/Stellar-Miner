@@ -34,6 +34,8 @@ The game persists the current session to localStorage and supports export/import
 | upgrades | SavedUpgrade[] | No | Legacy: flat list of owned upgrades (when no planets) |
 | artifacts | array | Yes | { id, name, effect, isActive }[] |
 | prestigeLevel | number | Yes | Prestige level (persistent) |
+| prestigePlanetBonus | number | No | Banked +1% per planet discovered at each prestige (persistent) |
+| prestigeResearchBonus | number | No | Banked +0.5% per research node at each prestige (persistent) |
 | totalCoinsEver | number \| string | Yes | Lifetime coins (persistent) |
 | astronautCount | number | No | Total crew count (legacy; use crewByRole when present) |
 | crewByRole | SavedCrewByRole | No | Count per role (astronaut, miner, scientist, pilot, medic, engineer) |

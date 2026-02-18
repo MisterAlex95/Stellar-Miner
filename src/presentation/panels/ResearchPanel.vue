@@ -47,22 +47,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { t, tParam } from '../../application/strings.js';
 import { startResearchWithProgress } from '../../application/handlers.js';
 import { useResearchCollapsed } from '../composables/useResearchCollapsed.js';
 import { useResearchTiers } from '../composables/useResearchTiers.js';
-import { useResearchDataDisplay } from '../composables/useResearchDataDisplay.js';
 import ResearchCard from '../components/ResearchCard.vue';
 
 const { collapsedTiers, toggleTier } = useResearchCollapsed();
 const { tiers } = useResearchTiers(collapsedTiers);
-const { label: researchDataLabel } = useResearchDataDisplay();
-
-watch(researchDataLabel, (val) => {
-  const el = document.getElementById('research-data-display');
-  if (el) el.textContent = val;
-}, { immediate: true });
 
 const pathHighlightIds = ref<Set<string>>(new Set());
 

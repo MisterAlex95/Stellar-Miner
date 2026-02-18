@@ -22,7 +22,7 @@ vi.mock('./questState.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./questState.js')>();
   return { ...actual, saveQuestState: vi.fn() };
 });
-vi.mock('./research.js', () => ({ clearResearch: vi.fn(), addPrestigeResearchPoints: vi.fn() }));
+vi.mock('./research.js', () => ({ clearResearch: vi.fn(), addPrestigeResearchPoints: vi.fn(), getUnlockedResearch: () => [] }));
 
 describe('handlersPrestige', () => {
   beforeEach(() => {

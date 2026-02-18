@@ -34,7 +34,7 @@ describe('handlersUpgrade', () => {
       completeUpgradeInstallations(session, Date.now() + INSTALL_WAIT_MS);
 
       expect(player.upgrades.filter((u) => u.id === 'mining-robot').length).toBe(beforeCount + 1);
-      expect(player.coins.value.toNumber()).toBe(beforeCoins - 45);
+      expect(player.coins.value.toNumber()).toBe(beforeCoins - 60);
     });
 
     it('purchases drill-mk1 when player has coins and planet has slot (tier 2 needs no crew)', () => {

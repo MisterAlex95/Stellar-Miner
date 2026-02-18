@@ -242,7 +242,7 @@ Mine coins (click or idle), buy upgrades and hire crew, expand to new planets, c
 ### Prestige
 
 - **Threshold**: **5,000,000** coins (current wallet).
-- **Effect**: Reset run (coins, planets, upgrades, crew, research). Keep **Prestige level** and **total coins ever**. **+4%** production per Prestige level (permanent, stacking). From **Prestige 2** onward, **+4%** click per level (stacking).
+- **Effect**: Reset run (coins, planets, upgrades, crew, research). Keep **Prestige level** and **total coins ever**. **Production**: +7% per level (base) + banked +1% per planet discovered at prestige + banked +0.5% per research node at prestige (permanent). From **Prestige 2** onward, **+4%** click per level (stacking).
 
 ### Offline progress
 

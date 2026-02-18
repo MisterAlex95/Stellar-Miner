@@ -113,60 +113,47 @@ export type UpgradeInstallProgressOptions = {
   onCancel: () => void;
 };
 
-/** Show installation progress overlay. durations: ms per step (1/X, 2/X, …). Optional onCancel shows a Cancel button. */
+/** Show installation progress overlay (Vue reads from store). durations: ms per step (1/X, 2/X, …). Optional onCancel shows a Cancel button. */
 export function showUpgradeInstallProgress(
-  cardEl: HTMLElement,
+  _cardEl: HTMLElement,
   durations: number[],
   options?: UpgradeInstallProgressOptions
 ): void {
   const total = Math.max(1, durations.length);
-  const overlay = document.createElement('div');
-  overlay.className = 'upgrade-install-progress-overlay';
-  overlay.setAttribute('aria-live', 'polite');
-  overlay.setAttribute('aria-busy', 'true');
-  const cancelHtml = options?.onCancel
-    ? `<button type="button" class="upgrade-progress-cancel" data-i18n="cancel">Cancel</button>`
-    : '';
-  overlay.innerHTML =
-    '<div class="upgrade-install-progress-track"><div class="upgrade-install-progress-fill"></div></div><span class="upgrade-install-progress-label"></span>' +
-    cancelHtml;
-  cardEl.appendChild(overlay);
-  cardEl.classList.add('upgrade-card--installing');
-  const fillEl = overlay.querySelector('.upgrade-install-progress-fill') as HTMLElement;
-  const labelEl = overlay.querySelector('.upgrade-install-progress-label') as HTMLElement;
-  const cancelBtn = overlay.querySelector('.upgrade-progress-cancel') as HTMLButtonElement | null;
-  if (!fillEl || !labelEl) return;
-
+  const key = options ? `${options.upgradeId}-${options.planetId}` : `install-${Date.now()}`;
   let cancelled = false;
   const timeouts: ReturnType<typeof setTimeout>[] = [];
-  if (cancelBtn && options?.onCancel) {
-    cancelBtn.textContent = t('cancel');
-    cancelBtn.addEventListener('click', () => {
-      cancelled = true;
-      timeouts.forEach(clearTimeout);
-      options.onCancel();
-      overlay.remove();
-      cardEl.classList.remove('upgrade-card--installing');
-    });
-  }
+  const onCancel = (): void => {
+    cancelled = true;
+    timeouts.forEach(clearTimeout);
+    getPresentationPort().setUpgradeProgress(key, null);
+    options?.onCancel();
+  };
+  getPresentationPort().setUpgradeProgress(
+    key,
+    {
+      current: 1,
+      total,
+      label: tParam('upgradingCount', { current: '1', total: String(total) }),
+      showCancel: !!options?.onCancel,
+      isUninstall: false,
+    },
+    options?.onCancel ? onCancel : undefined
+  );
 
   function runStep(current: number): void {
     if (cancelled) return;
     if (current > total) {
-      overlay.remove();
-      cardEl.classList.remove('upgrade-card--installing');
+      getPresentationPort().setUpgradeProgress(key, null);
       return;
     }
     const durationMs = durations[current - 1] ?? durations[0] ?? 4000;
-    labelEl.textContent = tParam('upgradingCount', { current: String(current), total: String(total) });
-    fillEl.style.transition = 'none';
-    fillEl.style.width = '0%';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (cancelled) return;
-        fillEl.style.transition = `width ${durationMs}ms linear`;
-        fillEl.style.width = '100%';
-      });
+    getPresentationPort().setUpgradeProgress(key, {
+      current,
+      total,
+      label: tParam('upgradingCount', { current: String(current), total: String(total) }),
+      showCancel: !!options?.onCancel,
+      isUninstall: false,
     });
     const tid = setTimeout(() => runStep(current + 1), durationMs);
     timeouts.push(tid);
@@ -180,50 +167,32 @@ export type UpgradeUninstallProgressOptions = {
   onCancel: () => void;
 };
 
-/** Show uninstall progress overlay (same look as install). Optional onCancel shows a Cancel button. */
+/** Show uninstall progress overlay (Vue reads from store). Optional onCancel shows a Cancel button. */
 export function showUpgradeUninstallProgress(
-  cardEl: HTMLElement,
+  _cardEl: HTMLElement,
   durationMs: number,
   options?: UpgradeUninstallProgressOptions
 ): void {
-  const overlay = document.createElement('div');
-  overlay.className = 'upgrade-install-progress-overlay';
-  overlay.setAttribute('aria-live', 'polite');
-  overlay.setAttribute('aria-busy', 'true');
-  const cancelHtml = options?.onCancel
-    ? `<button type="button" class="upgrade-progress-cancel" data-i18n="cancel">Cancel</button>`
-    : '';
-  overlay.innerHTML =
-    '<div class="upgrade-install-progress-track"><div class="upgrade-install-progress-fill"></div></div><span class="upgrade-install-progress-label"></span>' +
-    cancelHtml;
-  cardEl.appendChild(overlay);
-  cardEl.classList.add('upgrade-card--installing');
-  const fillEl = overlay.querySelector('.upgrade-install-progress-fill') as HTMLElement;
-  const labelEl = overlay.querySelector('.upgrade-install-progress-label') as HTMLElement;
-  const cancelBtn = overlay.querySelector('.upgrade-progress-cancel') as HTMLButtonElement | null;
-  if (!fillEl || !labelEl) return;
-  labelEl.textContent = tParam('uninstallingCount', { current: '1', total: '1' });
-  fillEl.style.transition = 'none';
-  fillEl.style.width = '0%';
-  const tid = setTimeout(() => {
-    overlay.remove();
-    cardEl.classList.remove('upgrade-card--installing');
+  const key = options ? `${options.upgradeId}-${options.planetId}` : `uninstall-${Date.now()}`;
+  getPresentationPort().setUpgradeProgress(
+    key,
+    {
+      current: 1,
+      total: 1,
+      label: tParam('uninstallingCount', { current: '1', total: '1' }),
+      showCancel: !!options?.onCancel,
+      isUninstall: true,
+    },
+    options?.onCancel
+      ? () => {
+          getPresentationPort().setUpgradeProgress(key, null);
+          options!.onCancel();
+        }
+      : undefined
+  );
+  setTimeout(() => {
+    getPresentationPort().setUpgradeProgress(key, null);
   }, durationMs);
-  if (cancelBtn && options?.onCancel) {
-    cancelBtn.textContent = t('cancel');
-    cancelBtn.addEventListener('click', () => {
-      clearTimeout(tid);
-      options.onCancel();
-      overlay.remove();
-      cardEl.classList.remove('upgrade-card--installing');
-    });
-  }
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      fillEl.style.transition = `width ${durationMs}ms linear`;
-      fillEl.style.width = '100%';
-    });
-  });
 }
 
 /** Cancel installing upgrades (refund coins, unassign crew). Returns true if any were cancelled. */

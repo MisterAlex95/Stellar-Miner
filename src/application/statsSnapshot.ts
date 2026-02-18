@@ -29,6 +29,7 @@ import {
   getResearchHousingCapacityBonus,
 } from './research.js';
 import { getEstimatedClickRate } from './productionHelpers.js';
+import { getPrestigeProductionPercent } from './handlersPrestige.js';
 import { t, tParam, type StringKey } from './strings.js';
 import { getCatalogEventName } from './i18nCatalogs.js';
 import { formatDuration } from './playTimeStats.js';
@@ -147,7 +148,7 @@ export function getStatsSnapshot(): StatsSnapshot {
   let productionBreakdown = '';
   const base = player.productionRate.value;
   const planetBonus = player.planets.length > 1 ? (player.planets.length - 1) * 5 : 0;
-  const prestigeBonus = player.prestigeLevel > 0 ? player.prestigeLevel * 5 : 0;
+  const prestigeBonus = getPrestigeProductionPercent(player);
   const minerBonus = 1 + player.crewByRole.miner * 0.018;
   const otherCrewBonus =
     1 +

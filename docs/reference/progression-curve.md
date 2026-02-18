@@ -24,16 +24,16 @@ Cost for the next copy of an upgrade: **baseCost × 1.19^ownedCount**. Productio
 
 | Tier | Name             | Base cost (⬡) | Prod (/s) | Crew | Typical time to afford first (idle at prev. prod) |
 |------|------------------|---------------|-----------|------|----------------------------------------------------|
-| 1    | Mining Robot     | 45            | 0.8       | 0    | ~45 clicks (~1 min active)                         |
-| 2    | Drill Mk.I       | 1,800         | 8         | 1    | ~38 min at 0.8/s                                  |
-| 3    | Drill Mk.II      | 22,000        | 42        | 2    | ~46 min at 8/s                                    |
-| 4    | Asteroid Rig     | 220,000       | 200       | 2    | ~1.5 h at 42/s                                    |
-| 5    | Orbital Station  | 2,500,000     | 1,000     | 3    | ~3.5 h at 200/s                                   |
-| 6    | Deep Core Drill  | 28,000,000    | 5,000     | 3    | ~7 h at 1,000/s                                   |
-| 7    | Stellar Harvester| 320,000,000   | 25,000    | 4    | ~18 h at 5,000/s                                  |
-| 8    | Quantum Extractor| 3,500,000,000 | 125,000   | 4    | ~1.5 d at 25,000/s                                |
-| 9    | Void Crusher     | 42,000,000,000| 625,000   | 5    | ~4 d at 125,000/s                                 |
-| 10   | Nexus Collector  | 550,000,000,000 | 3,125,000| 5    | ~2+ weeks at 625,000/s                            |
+| 1    | Mining Robot     | 60            | 0.8       | 0    | ~60 clicks (~1 min active)                         |
+| 2    | Drill Mk.I       | 1,800         | 8         | 0    | ~38 min at 0.8/s                                  |
+| 3    | Drill Mk.II      | 22,000        | 50        | 1    | ~46 min at 8/s                                    |
+| 4    | Asteroid Rig     | 220,000       | 270       | 1    | ~1.2 h at 50/s                                    |
+| 5    | Orbital Station  | 2,500,000     | 1,600     | 2    | ~2.5 h at 270/s                                   |
+| 6    | Deep Core Drill  | 28,000,000    | 9,500     | 2    | ~4.9 h at 1,600/s                                 |
+| 7    | Stellar Harvester| 320,000,000   | 50,000    | 3    | ~9.4 h at 9,500/s                                  |
+| 8    | Quantum Extractor| 3,500,000,000 | 312,500   | 3    | ~19 h at 50,000/s                                 |
+| 9    | Void Crusher     | 42,000,000,000| 1,875,000 | 4    | ~1.5 d at 312,500/s                                |
+| 10   | Nexus Collector  | 550,000,000,000 | 10,937,500| 4    | ~3–4 d at 1,875,000/s                             |
 
 ### 2.1 Upgrade install duration
 
@@ -45,7 +45,7 @@ Default: `installDurationBaseMs: 6000`, `installDurationCostFactor: 0.18`, `inst
 
 | Tier | Upgrade            | Base cost (⬡) | log10(cost) | costMult | tier^1.4 | Duration (ms) | Duration  |
 |------|--------------------|---------------|-------------|----------|----------|---------------|-----------|
-| 1    | Mining Robot       | 45            | 1.65        | 1.30     | 1.00     | 7,800         | ~8 s      |
+| 1    | Mining Robot       | 60            | 1.78        | 1.31     | 1.00     | 7,800         | ~8 s      |
 | 2    | Drill Mk.I         | 1,800         | 3.26        | 1.59     | 2.64     | 25,200        | ~25 s     |
 | 3    | Drill Mk.II        | 22,000        | 4.34        | 1.78     | 4.55     | 48,700        | ~49 s     |
 | 4    | Asteroid Rig       | 220,000       | 5.34        | 1.96     | 6.96     | 81,900        | ~1m 22s   |
@@ -134,7 +134,7 @@ Toast milestones use **total coins ever** (lifetime), not current wallet.
 ## 6. Prestige
 
 - **Threshold**: 5,000,000 coins (current wallet).
-- **Effect**: Reset run (coins, planets, upgrades, crew, research); keep total coins ever and Prestige level. +4% production per prestige level (permanent, stacking). From Prestige 2 onward, +4% click per level.
+- **Effect**: Reset run (coins, planets, upgrades, crew, research); keep total coins ever and Prestige level. **Production bonus**: +7% per level (base) + banked +1% per planet discovered at each prestige + banked +0.5% per research node completed at each prestige (permanent, stacking). From Prestige 2 onward, +4% click per level.
 - **First prestige**: typically 6–15 h first run (idle + some clicks). Later runs faster due to prestige bonus and knowledge of the curve.
 
 ---
@@ -143,11 +143,11 @@ Toast milestones use **total coins ever** (lifetime), not current wallet.
 
 | Phase              | Coins (order) | Time (rough) | Main action                    |
 |--------------------|---------------|--------------|---------------------------------|
-| First upgrade      | 45            | <1 min       | Click to 45 (Mining Robot)      |
-| First automation   | 45 → 1.8K     | 30–45 min    | Idle 0.8/s, then buy Drill Mk.I |
+| First upgrade      | 60            | <1 min       | Click to 60 (Mining Robot)      |
+| First automation   | 60 → 1.8K     | 30–45 min    | Idle 0.8/s, then buy Drill Mk.I |
 | Crew + research   | 1.8K → 22K    | 2–4 h        | Hire 1–2, research, more drills |
 | Planets            | 22K → 250K    | 2–4 h        | First expedition, more upgrades |
 | Quest + grind      | 250K → 5M     | 4–10 h       | Quests, events, full slots      |
-| First prestige     | 5M            | —            | Prestige, restart with +4%      |
+| First prestige     | 5M            | —            | Prestige, restart with +7% (level) + planets + research |
 
 *All times are indicative and depend on activity (idle vs active), RNG (events, research), and choices (quests, order of purchases).*

@@ -45,14 +45,43 @@
         </button>
       </div>
     </template>
+    <div
+      v-if="progress"
+      class="research-progress-overlay"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="research-progress-track">
+        <div
+          class="research-progress-fill"
+          :style="{
+            width: progressBarWidth + '%',
+            transition: progressBarTransitionMs > 0 ? `width ${progressBarTransitionMs}ms linear` : 'none',
+          }"
+        />
+      </div>
+      <span class="research-progress-label">{{ t('researching') }}</span>
+      <button
+        v-if="progress?.hasCancel"
+        type="button"
+        class="research-progress-cancel"
+        @click="onCancelProgress"
+      >
+        {{ t('cancel') }}
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch, nextTick } from 'vue';
+import { storeToRefs } from 'pinia';
 import { t, tParam } from '../../application/strings.js';
 import type { ResearchNodeDisplayData } from '../../application/researchDisplay.js';
+import { useAppUIStore } from '../stores/appUI.js';
+import { getPresentationPort } from '../../application/uiBridge.js';
 
+const appUI = storeToRefs(useAppUIStore());
 const props = defineProps<{ data: ResearchNodeDisplayData }>();
 const emit = defineEmits<{
   attempt: [id: string, cardEl: HTMLElement];
@@ -61,12 +90,34 @@ const emit = defineEmits<{
 
 const cardRef = ref<HTMLElement | null>(null);
 
+const progress = computed(() => appUI.researchProgress[props.data.node.id]);
+
 const cardClasses = computed(() => [
   'research-card',
   props.data.done && 'research-card--done',
   props.data.isRecommended && 'research-card--recommended',
   props.data.isSecret && 'research-card--secret',
+  progress.value && 'research-card--in-progress',
 ].filter(Boolean));
+
+const progressBarWidth = ref(0);
+const progressBarTransitionMs = ref(0);
+
+watch(progress, (p) => {
+  if (!p) {
+    progressBarWidth.value = 0;
+    return;
+  }
+  const now = Date.now();
+  const remainingMs = Math.max(0, p.endTimeMs - now);
+  const elapsed = p.totalDurationMs - remainingMs;
+  const initialPercent = p.totalDurationMs > 0 ? Math.min(100, (elapsed / p.totalDurationMs) * 100) : 0;
+  progressBarWidth.value = initialPercent;
+  progressBarTransitionMs.value = remainingMs;
+  nextTick(() => {
+    progressBarWidth.value = 100;
+  });
+}, { immediate: true });
 
 const chanceText = computed(() =>
   props.data.scientistBonusPct > 0
@@ -83,5 +134,9 @@ const attemptTitle = computed(() =>
 function onAttemptClick(): void {
   if (!props.data.canAttempt || !cardRef.value) return;
   emit('attempt', props.data.node.id, cardRef.value);
+}
+
+function onCancelProgress(): void {
+  getPresentationPort().cancelResearchProgress(props.data.node.id);
 }
 </script>

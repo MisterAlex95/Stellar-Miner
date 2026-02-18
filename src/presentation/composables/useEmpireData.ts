@@ -19,12 +19,12 @@ import {
   getEffectiveUsedSlots,
   hasEffectiveFreeSlot,
 } from '../../application/research.js';
+import { getPrestigeProductionPercent } from '../../application/handlersPrestige.js';
 import {
   getAstronautCost,
   getMaxAstronauts,
   CREW_ROLES,
   PRESTIGE_COIN_THRESHOLD,
-  PRESTIGE_BONUS_PER_LEVEL,
   HOUSING_ASTRONAUT_CAPACITY,
   isNextExpeditionNewSystem,
   MINER_PRODUCTION_BONUS,
@@ -352,7 +352,7 @@ export function useEmpireData() {
     const settings = getSettings();
     const canPrestige = player.coins.gte(PRESTIGE_COIN_THRESHOLD);
     const title = getPrestigeTitle(player.prestigeLevel);
-    const prestigePct = Math.round(player.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL * 100);
+    const prestigePct = Math.round(getPrestigeProductionPercent(player));
     const statusText =
       player.prestigeLevel > 0
         ? `Prestige level ${player.prestigeLevel} — ${title} (+${prestigePct}% prod). Need ${formatNumber(PRESTIGE_COIN_THRESHOLD, settings.compactNumbers)} ⬡ to prestige again.`

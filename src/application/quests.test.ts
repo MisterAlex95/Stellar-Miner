@@ -76,7 +76,7 @@ describe('quests', () => {
   });
 
   it('generateQuest can return prestige_today quest when random in range and player has prestiged once', () => {
-    setSession(new GameSession('s1', Player.createAfterPrestige(Player.create('p1'))));
+    setSession(new GameSession('s1', Player.createAfterPrestige(Player.create('p1'), 1, 0)));
     vi.spyOn(Math, 'random').mockReturnValue(0.85);
     const q = generateQuest();
     vi.restoreAllMocks();
@@ -85,7 +85,7 @@ describe('quests', () => {
   });
 
   it('generateQuest only offers prestige_today target = next step when player has prestiged at least once', () => {
-    const player = Player.createAfterPrestige(Player.create('p1'));
+    const player = Player.createAfterPrestige(Player.create('p1'), 1, 0);
     setSession(new GameSession('s1', player));
     const today = new Date().toISOString().slice(0, 10);
     storage['stellar-miner-prestiges-today'] = JSON.stringify({ date: today, count: 0 });

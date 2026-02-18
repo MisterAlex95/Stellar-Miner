@@ -78,6 +78,8 @@ export type SavedSession = {
     upgrades?: SavedUpgrade[];
     artifacts: Array<{ id: string; name: string; effect: unknown; isActive: boolean }>;
     prestigeLevel: number;
+    prestigePlanetBonus?: number;
+    prestigeResearchBonus?: number;
     totalCoinsEver: number | string;
     astronautCount?: number;
     crewByRole?: SavedCrewByRole;
@@ -371,6 +373,8 @@ export class SaveLoadService implements ISaveLoadService {
           isActive: a.isActive,
         })),
         prestigeLevel: session.player.prestigeLevel,
+        prestigePlanetBonus: session.player.prestigePlanetBonus,
+        prestigeResearchBonus: session.player.prestigeResearchBonus,
         totalCoinsEver: session.player.totalCoinsEver.toString(),
         astronautCount: session.player.astronautCount,
         crewByRole: session.player.crewByRole,

@@ -186,7 +186,9 @@
               id="last-saved-indicator"
               class="settings-last-saved"
               aria-live="polite"
-            ></p>
+            >
+              {{ appUI.lastSavedText }}
+            </p>
           </div>
           <div class="settings-option settings-reset">
             <button
@@ -209,13 +211,16 @@ import { getSettings, setSettings } from '../../application/gameState.js';
 import type { Settings } from '../../../settings.js';
 import { t } from '../../application/strings.js';
 import { subscribe } from '../../application/eventBus.js';
+import { storeToRefs } from 'pinia';
 import {
   closeSettings,
   updateLastSavedIndicator,
   openResetConfirmModal,
 } from '../../application/handlers.js';
+import { useAppUIStore } from '../stores/appUI.js';
 import { handleExportSave, handleImportSave } from '../../application/handlers.js';
 
+const appUI = storeToRefs(useAppUIStore());
 const settings = reactive<Settings>({ ...getSettings() });
 const importFileInputRef = ref<HTMLInputElement | null>(null);
 

@@ -22,7 +22,14 @@
         id="prestige-rewards-list"
         class="prestige-rewards-list"
         aria-describedby="prestige-rewards-desc"
-      ></ul>
+      >
+        <li
+          v-for="(line, i) in prestigeRewardsLevels"
+          :key="i"
+        >
+          {{ line }}
+        </li>
+      </ul>
       <div class="prestige-confirm-actions">
         <button
           id="prestige-rewards-close"
@@ -38,6 +45,10 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { t } from '../../application/strings.js';
 import { closePrestigeRewardsModal } from '../../application/handlers.js';
+import { useAppUIStore } from '../stores/appUI.js';
+
+const { prestigeRewardsLevels } = storeToRefs(useAppUIStore());
 </script>

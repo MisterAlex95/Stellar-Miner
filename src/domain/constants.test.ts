@@ -33,7 +33,7 @@ describe('constants', () => {
   });
 
   it('PRESTIGE_BONUS_PER_LEVEL is from balance', () => {
-    expect(PRESTIGE_BONUS_PER_LEVEL).toBe(0.04);
+    expect(PRESTIGE_BONUS_PER_LEVEL).toBe(0.07);
   });
 
   it('PRESTIGE_COIN_THRESHOLD is from balance', () => {

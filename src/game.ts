@@ -41,7 +41,7 @@ import { showOfflineToast } from './presentation/toasts/index.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
 import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';
-import { getElement } from './presentation/lib/domUtils.js';
+import { getPresentationPort } from './application/uiBridge.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
 import { PANEL_IDS, getPanelElementId, type PanelId } from './application/panelConfig.js';
 import { updateGameStateBridge, getGameStateBridge } from './presentation/gameStateBridge.js';
@@ -90,8 +90,7 @@ function runPanelUpdates(nowMs: number): void {
   updateProgressionVisibility();
   // Tabs visibility/badges driven by Vue (bridge.tabs)
   // Stats panel is Vue-driven; it watches the bridge and updates itself
-  const debugPanel = getElement('debug-panel');
-  if (debugPanel && !debugPanel.classList.contains('debug-panel--closed')) updateDebugPanel();
+  if (getPresentationPort().getDebugOpen()) updateDebugPanel();
 }
 
 function runCanvasUpdates(session: ReturnType<typeof getSession>, canvasDt: number): void {

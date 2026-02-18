@@ -147,7 +147,7 @@ describe('Player', () => {
       2,
       0
     );
-    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(100 * (1 + 2 * 0.04), 10);
+    expect(p.effectiveProductionRate.toNumber()).toBeCloseTo(100 * (1 + 2 * 0.07), 10);
   });
 
   it('createAfterPrestige resets to one empty planet and increments prestige', () => {
@@ -155,7 +155,7 @@ describe('Player', () => {
     p.addCoins(500);
     p.setProductionRate(new ProductionRate(10));
     p.planets[0].addUpgrade(new Upgrade('u', 'U', 1, new UpgradeEffect(1)));
-    const after = Player.createAfterPrestige(p);
+    const after = Player.createAfterPrestige(p, p.planets.length, 0);
     expect(after.coins.value.toNumber()).toBe(0);
     expect(after.productionRate.value.toNumber()).toBe(0);
     expect(after.planets).toHaveLength(1);

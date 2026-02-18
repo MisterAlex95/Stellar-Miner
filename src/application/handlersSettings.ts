@@ -35,28 +35,23 @@ const RESET_LOCAL_STORAGE_KEYS: string[] = [
 import { getPresentationPort } from './uiBridge.js';
 import { notifyRefresh } from './refreshSignal.js';
 
-export function updateLastSavedIndicator(): void {
-  const el = document.getElementById('last-saved-indicator');
-  if (!el) return;
+function getLastSavedLabel(): string {
   const ts = saveLoad.getLastSaveTimestamp();
-  if (ts === null) {
-    el.textContent = '';
-    return;
-  }
+  if (ts === null) return '';
   const ago = Date.now() - ts;
-  if (ago < 3000) {
-    el.textContent = t('lastSavedJustNow');
-  } else if (ago < 60_000) {
-    el.textContent = tParam('lastSavedAgo', { time: tParam('lastSavedSecs', { n: Math.floor(ago / 1000) }) });
-  } else {
-    el.textContent = tParam('lastSavedAgo', { time: tParam('lastSavedMins', { n: Math.floor(ago / 60_000) }) });
-  }
+  if (ago < 3000) return t('lastSavedJustNow');
+  if (ago < 60_000) return tParam('lastSavedAgo', { time: tParam('lastSavedSecs', { n: Math.floor(ago / 1000) }) });
+  return tParam('lastSavedAgo', { time: tParam('lastSavedMins', { n: Math.floor(ago / 60_000) }) });
+}
+
+export function updateLastSavedIndicator(): void {
+  getPresentationPort().setLastSavedText(getLastSavedLabel());
 }
 
 export function openSettings(): void {
+  getPresentationPort().setLastSavedText(getLastSavedLabel());
   getPresentationPort().openOverlay('settings-overlay', 'settings-overlay--open', {
     focusId: 'settings-close',
-    onOpen: updateLastSavedIndicator,
   });
 }
 

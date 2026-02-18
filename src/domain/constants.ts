@@ -30,6 +30,8 @@ const B = balance as {
   expeditionDurationPerPlanetMs?: number;
   planetProductionBonus: number;
   prestigeBonusPerLevel: number;
+  prestigePlanetBonusPerPlanet?: number;
+  prestigeResearchBonusPerNode?: number;
   prestigeClickBonusPercentPerLevel: number;
   prestigeCoinThreshold: number;
   defaultBaseSlots: number;
@@ -167,8 +169,14 @@ export function getExpeditionDeathChanceWithMedics(
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */
 export const PLANET_PRODUCTION_BONUS = B.planetProductionBonus;
 
-/** Production bonus per prestige level (e.g. 0.05 = +5% per level). Applied after planet bonus. */
+/** Production bonus per prestige level (e.g. 0.07 = +7% per level). Applied after planet bonus. */
 export const PRESTIGE_BONUS_PER_LEVEL = B.prestigeBonusPerLevel;
+
+/** Production bonus per planet discovered (banked at prestige). E.g. 0.01 = +1% per planet. */
+export const PRESTIGE_PLANET_BONUS_PER_PLANET = B.prestigePlanetBonusPerPlanet ?? 0.01;
+
+/** Production bonus per research node completed (banked at prestige). E.g. 0.005 = +0.5% per node. */
+export const PRESTIGE_RESEARCH_BONUS_PER_NODE = B.prestigeResearchBonusPerNode ?? 0.005;
 
 /** Click bonus per prestige level (from prestige 2 onward). Prestige 1 unlocks research click; each further level adds this % to click reward. */
 export const PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL = B.prestigeClickBonusPercentPerLevel;

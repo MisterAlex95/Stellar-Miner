@@ -99,6 +99,8 @@ export function deserializeSession(data: SavedSession): GameSession {
   const crewAssignedToEquipment =
     player.crewAssignedToEquipment ??
     planets.reduce((sum, p) => sum + p.upgrades.reduce((s, u) => s + getEffectiveRequiredAstronauts(u.id), 0), 0);
+  const prestigePlanetBonus = player.prestigePlanetBonus ?? 0;
+  const prestigeResearchBonus = player.prestigeResearchBonus ?? 0;
   const newPlayer = new Player(
     player.id,
     Coins.from(player.coins),
@@ -109,7 +111,9 @@ export function deserializeSession(data: SavedSession): GameSession {
     new Decimal(player.totalCoinsEver),
     crewOrCount,
     veteranCount,
-    crewAssignedToEquipment
+    crewAssignedToEquipment,
+    prestigePlanetBonus,
+    prestigeResearchBonus
   );
   const activeEvents = data.activeEvents.map(
     (e) => new GameEvent(e.id, e.name, new EventEffect(e.effect.multiplier, e.effect.durationMs))

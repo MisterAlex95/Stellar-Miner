@@ -15,6 +15,8 @@ export interface FloatItem {
   activeClass: string;
   durationMs: number;
   exitMs: number;
+  /** Set by store after mount so visibility does not depend on ref callback. */
+  active: boolean;
 }
 
 export const useFloatingFeedbackStore = defineStore('floatingFeedback', {
@@ -23,10 +25,14 @@ export const useFloatingFeedbackStore = defineStore('floatingFeedback', {
     nextId: 0,
   }),
   actions: {
-    push(item: Omit<FloatItem, 'id'>): number {
+    push(item: Omit<FloatItem, 'id' | 'active'>): number {
       const id = ++this.nextId;
-      this.items.push({ ...item, id });
+      const entry: FloatItem = { ...item, id, active: false };
+      this.items.push(entry);
       const totalMs = item.durationMs + item.exitMs;
+      requestAnimationFrame(() => {
+        entry.active = true;
+      });
       setTimeout(() => {
         this.remove(id);
       }, totalMs);

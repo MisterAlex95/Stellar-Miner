@@ -10,7 +10,7 @@ import type { GameEvent } from '../../domain/entities/GameEvent.js';
 import { showToast } from './showToast.js';
 import {
   showFloatingReward as showFloatingRewardImpl,
-  showFloatingCoin as showFloatingCoinImpl,
+  showFloatingCoinFixed as showFloatingCoinFixedImpl,
 } from '../lib/floatingFeedback.js';
 
 export function showAchievementToast(name: string): void {
@@ -75,14 +75,12 @@ export function showFloatingCoin(
   clientY: number,
   options?: { lucky?: boolean; superLucky?: boolean; critical?: boolean }
 ): void {
-  const zone = document.getElementById('mine-zone');
-  const floats = document.getElementById('mine-zone-floats');
-  if (!zone || !floats) return;
   const formatted = formatFloatingCoinAmount(amount);
   const displayText =
     options?.critical ? `✧ CRITICAL +${formatted}` : options?.superLucky ? `★ +${formatted}` : `+${formatted}`;
   const variant = options?.critical ? 'critical' : options?.superLucky ? 'super-lucky' : options?.lucky ? 'lucky' : 'default';
-  showFloatingCoinImpl(displayText, clientX, clientY, { zone, floats }, { variant });
+  // Always use fixed/body so floating coin is visible (mine-zone Teleport was not showing).
+  showFloatingCoinFixedImpl(displayText, clientX, clientY, { variant });
 }
 
 export function showMilestoneToast(coins: number): void {
@@ -97,8 +95,9 @@ export function showCriticalToast(coins: number): void {
   showToast(tParam('criticalToastFormat', { coins: formatNumber(coins, false) }), 'critical', { duration: 2500 });
 }
 
-export function showPrestigeMilestoneToast(level: number): void {
-  showToast(tParam('prestigeMilestoneToastFormat', { level, pct: Math.round(level * 5) }), 'prestige-milestone', {
+export function showPrestigeMilestoneToast(level: number, pct?: number): void {
+  const displayPct = pct != null ? pct : Math.round(level * 7);
+  showToast(tParam('prestigeMilestoneToastFormat', { level, pct: displayPct }), 'prestige-milestone', {
     duration: 3500,
   });
 }

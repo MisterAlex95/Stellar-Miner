@@ -12,8 +12,11 @@
       aria-describedby="prestige-confirm-desc"
     >
       <h2 id="prestige-confirm-title">{{ t('prestigeConfirmTitle') }}</h2>
-      <p id="prestige-confirm-desc"></p>
-      <p id="prestige-confirm-after" class="prestige-confirm-after"></p>
+      <p id="prestige-confirm-desc">{{ appUI.prestigeConfirmDesc }}</p>
+      <p id="prestige-confirm-after" class="prestige-confirm-after">{{ appUI.prestigeConfirmAfter }}</p>
+      <p v-if="appUI.prestigeConfirmGainEstimate" id="prestige-confirm-gain" class="prestige-confirm-gain">
+        {{ appUI.prestigeConfirmGainEstimate }}
+      </p>
       <div class="prestige-confirm-actions">
         <button
           id="prestige-confirm-cancel"
@@ -37,6 +40,10 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { t } from '../../application/strings.js';
 import { closePrestigeConfirmModal, confirmPrestige } from '../../application/handlers.js';
+import { useAppUIStore } from '../stores/appUI.js';
+
+const appUI = storeToRefs(useAppUIStore());
 </script>

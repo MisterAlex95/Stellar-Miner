@@ -81,3 +81,29 @@ export function showFloatingCoin(
     });
   }
 }
+
+/**
+ * Shows a floating coin at fixed viewport coordinates (e.g. when mine zone container is not available).
+ */
+export function showFloatingCoinFixed(
+  displayText: string,
+  clientX: number,
+  clientY: number,
+  options?: ShowFloatingCoinOptions
+): void {
+  const variant = options?.variant ?? 'default';
+  const baseClass = 'float-coin' + (variant !== 'default' ? ` float-coin--${variant}` : '');
+  const pinia = getPinia();
+  if (!pinia) return;
+  const store = useFloatingFeedbackStore(pinia);
+  store.push({
+    content: displayText,
+    className: baseClass,
+    activeClass: 'float-coin--active',
+    left: clientX,
+    top: clientY,
+    parent: 'body',
+    durationMs: COIN_DURATION_MS,
+    exitMs: COIN_EXIT_MS,
+  });
+}

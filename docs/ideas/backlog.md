@@ -267,7 +267,7 @@ Small UX wins that make the game nicer to play without new mechanics. Implementa
 
 **7. Prestige modal: show new bonus**
 
-- In the prestige confirm modal, add a line: "After Prestige: level X → +Y% production forever." Uses current `prestigeLevel` and the +5% formula; no new domain logic.
+- ~~In the prestige confirm modal, add a line: "After Prestige: level X → +Y% production forever."~~ Done: modal shows total % and a gain-estimate breakdown (level + planets + research).
 
 **8. Offline recap toast**
 

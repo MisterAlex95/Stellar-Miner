@@ -2,7 +2,7 @@
 
 Incremental plan to migrate the presentation layer from vanilla TypeScript/DOM to Vue 3, without rewriting domain or application layers. The app remains a single Vite + TypeScript codebase; Vue is introduced gradually so the game stays playable at each step.
 
-**Current state (migration complete):** Vue 3 root wraps the app; **Pinia** for state. **No HTML injection in Vue shell:** `#legacy-root` and `#legacy-panels` contain Vue components only (`StatsBlock`, `PanelsShell`); `initPresentation()` (no mount.ts) no longer injects `getStatsBlockHtml()` or `getPanelsOnlyHtml()`. **Shell:** `App.vue` renders `AppHeader` (with `HeaderActions`), `StatsBlock`, `AppTabs`, `PanelsShell`, all modals (`SettingsModal`, `InfoModal`, `AchievementsModal`, reset/prestige confirm/rewards, `EventsHintModal`, `ChartHelpModal`, `SectionRulesModal`, `UpgradeChoosePlanetModal`, `PlanetDetailModal`, `ExpeditionModal`, `IntroModal`), and `ToastContainer`. **Panels:** Mine (canvas + quest section), Dashboard, Empire, Research, Upgrades, Stats are Vue: content is in `PanelsShell` and each tab’s content is a Vue panel (EmpirePanel, ResearchPanel, etc.) mounted into its container when the tab is first opened. **Modals:** All overlays are Vue components; handlers and overlay helpers still use `openOverlay`/`closeOverlay` by ID; Vue renders the DOM with the same IDs. **Vue-only mount:** `mount()` requires `#legacy-root` and `#legacy-panels` (created by Vue); the former non-Vue path and `appShell.ts` (getAppHtml) have been removed. Phase 7 (v-memo, component tests) remains optional.
+**Current state:** Vue 3 root wraps the app; **Pinia** for state. **Shell:** `App.vue` renders `AppHeader`, `StatsBlock`, `AppTabs`, `PanelsShell`, all modals, `ToastContainer`, etc. **Panels:** Mine (canvas + quest/combo/stats from bridge), Dashboard, Empire, Research, Upgrades, Stats are Vue; game loop updates the **game state bridge** and Vue reads from it. **Modals:** All overlay shells are Vue components; some modal *content* is still filled imperatively (prestige text, last saved, chart help, expedition tiers/crew, planet detail body, debug stats). See **Remaining work (end of migration)** below for the phased plan to remove the last imperative DOM updates.
 
 ---
 
@@ -170,3 +170,99 @@ For each:
 
 - Each phase should leave the app runnable and tests passing. If a phase is too large, split it (e.g. Empire into Crew + Prestige + Quests + Planets).
 - Rollback: keep the vanilla presentation in a branch until the full migration is validated; or migrate file-by-file and revert individual components if needed.
+
+---
+
+## Remaining work (end of migration)
+
+The shell, tabs, panels, and most modals are Vue. The game loop updates the **game state bridge** (Pinia store); Vue components read from it. The items below are the last imperative DOM updates to remove so that **all UI is driven by Vue (template + reactive state)**.
+
+### Inventory of remaining imperative UI
+
+| Item | Location | Current behaviour | Target |
+|------|----------|-------------------|--------|
+| Prestige confirm content | `handlersPrestige.ts` | `getElementById('prestige-confirm-desc'|'prestige-confirm-after')` + `textContent` in `onOpen` | Store (e.g. appUI) or props; PrestigeConfirmModal.vue renders from state |
+| Prestige rewards list | `handlersPrestige.ts` | `getElementById('prestige-rewards-list')` + `innerHTML` / `appendChild` in `onOpen` | Store or props; PrestigeRewardsModal.vue renders list in template |
+| Last saved indicator | `handlersSettings.ts` | `getElementById('last-saved-indicator')` + `textContent`; element in SettingsModal.vue | Store (e.g. `lastSaveTimestamp`) or composable; SettingsModal displays reactive value |
+| Chart help title/body | `useChartHelpTrigger.ts` | `getElementById('chart-help-modal-title'|'chart-help-modal-body')` + `textContent` before opening | Store (e.g. appUI `chartHelpTitle` / `chartHelpBody`); ChartHelpModal.vue reads and displays |
+| Research data label | ResearchPanel.vue | `watch` → `getElementById('research-data-display')` + `textContent` | Template binding to `researchDataLabel` (no getElementById) |
+| Research progress overlay | `handlersResearch.ts` | `document.createElement` + `innerHTML` + `appendChild` on card | Vue component (e.g. inside ResearchCard) or store-driven overlay; handlers only set state |
+| Upgrade install/uninstall overlay | `handlersUpgrade.ts` | Same: createElement + innerHTML on card | Vue component (e.g. inside UpgradeCard) or store-driven overlay; handlers only set state |
+| Debug panel stats | `handlersDebug.ts` | `getElementById('debug-stats')` + `innerHTML`; achievements list same | DebugPanel.vue template: stats and achievements from store or computed from getSession/getUnlockedAchievements |
+| Expedition modal content | `modals/expedition.ts` | Tiers and crew picker built with `innerHTML` / `textContent` in TS | ExpeditionModal.vue: template + state (store or composable); TS only prepares data and writes to store |
+| Planet detail body | `modals/planetDetail.ts` | `getElementById('planet-detail-body')` + `innerHTML` (stats + list); 3D stays Three.js | PlanetDetailModal.vue: stats and list in template; 3D container remains ref + imperative mount |
+| Quest claim anchor | `quests.ts` | `getElementById('quest-claim')` only for `showFloatingReward(reward, claimBtn)` | Optional: expose ref from PanelsShell or pass element via event; or keep single getElementById for anchor |
+
+---
+
+### Plan (phased)
+
+**Phase A — Quick wins (no new components)**  
+*Goal: Remove getElementById/textContent from modal content and one panel.*
+
+1. **Prestige modals**
+   - Add to appUI store (or dedicated prestige modal state): `prestigeConfirmDesc`, `prestigeConfirmAfter`, `prestigeConfirmGainEstimate`, `prestigeRewardsLevels` (array of strings).
+   - In `openPrestigeConfirmModal` / `openPrestigeRewardsModal`: compute strings and call `setPrestigeConfirmContent(desc, after, gainEstimate)` / `setPrestigeRewardsContent(levels)` instead of touching DOM.
+   - PrestigeConfirmModal.vue: bind desc, after, and gain-estimate paragraph to store state.
+   - PrestigeRewardsModal.vue: render `<ul>` with `v-for` over store array.
+   - Remove DOM updates from `handlersPrestige.ts`.
+
+2. **Last saved indicator**
+   - Add to appUI (or settings) store: `lastSaveTimestamp: number | null` and optionally a computed/formatted label, or a dedicated composable that handlers call to “set last save”.
+   - `updateLastSavedIndicator()`: instead of getElementById + textContent, update store (and optionally a formatted string).
+   - SettingsModal.vue: display the reactive value next to the existing `#last-saved-indicator` (or replace node with a Vue-bound element).
+
+3. **Chart help modal**
+   - Add to appUI: `chartHelpTitle: string`, `chartHelpBody: string`.
+   - useChartHelpTrigger: on click, set store and then open overlay (same openOverlay call).
+   - ChartHelpModal.vue: read title and body from store in template; remove IDs if not needed for a11y, or keep and bind.
+
+4. **ResearchPanel research-data-display**
+   - Replace the `watch` + getElementById with a template node that displays `researchDataLabel` (e.g. `<span id="research-data-display">{{ researchDataLabel }}</span>` or a ref and no ID). One-line change in ResearchPanel.vue.
+
+**Phase B — Overlays as Vue (small new surface)**  
+*Goal: Research and upgrade progress overlays become Vue-driven.*
+
+5. **Research progress overlay**
+   - Option A: Add a small Vue component (e.g. `ResearchProgressOverlay.vue`) used inside the research card; card gets a “progress” prop or injects progress state (researchId, percent, onCancel). Handlers call a store action like `setResearchProgress(id, percent, cancelHandler)` and the component shows when progress exists for that card.
+   - Option B: Global overlay component that shows a single “current research in progress” with card reference for positioning; store holds current researchId, percent, onCancel.
+   - Remove `overlay.innerHTML` and DOM creation from `handlersResearch.ts`; only update store and optionally call port for focus.
+
+6. **Upgrade install/uninstall overlay**
+   - Same idea: store holds “progress per card” or “current upgrade progress” (card key, current/total, label, onCancel). UpgradeCard (or a wrapper) renders a small overlay component when progress is set.
+   - Remove createElement/innerHTML from `handlersUpgrade.ts`; handlers only update store and callbacks.
+
+**Phase C — Debug panel**  
+*Goal: Debug panel content is 100% Vue template.*
+
+7. **Debug panel**
+   - Add debug state to appUI or a dedicated store: e.g. `debugStats: { coins, production, ... }`, `debugAchievements: Array<{id, name, desc, unlocked}>`. `updateDebugPanel()` and the achievements list builder in handlersDebug become: compute data and call `setDebugStats(...)`, `setDebugAchievements(...)`.
+   - DebugPanel.vue: template for stats (rows) and achievements list; read from store. Remove empty `<div id="debug-stats">` and any getElementById in handlersDebug.
+
+**Phase D — Heavy modals (optional / later)**  
+*Goal: Expedition and planet detail content fully in Vue.*
+
+8. **Expedition modal**
+   - Move tier cards and crew picker into ExpeditionModal.vue template. State: selectedTier, composition, required, cost, isNewSystem, etc. (already computed in expedition.ts). On open, expedition.ts calls a store action with this state; modal renders and handles tier/crew clicks by updating store and re-calling a thin “update expedition UI” that only updates store (no DOM). Canvas thumbnails can stay imperative (ref + startPlanetThumbnail3DLoop).
+   - This is the largest refactor: all `innerHTML` and `textContent` in modals/expedition.ts become store-driven Vue template.
+
+9. **Planet detail modal**
+   - Same pattern: build a “planet detail” state (name, system, type, production, slots, housing, crew, moons, extra, upgradeCounts). planetDetail.ts on open writes this to store; PlanetDetailModal.vue template renders it. Three.js scene stays: mount in a ref in the modal and call createPlanetScene in onMounted when state is set.
+
+10. **Quest claim anchor (optional)**
+    - If we want zero getElementById in quest flow: PanelsShell (or a child) exposes a ref for the claim button and provides it to the port or to a composable that showFloatingReward can use. Otherwise keep the single getElementById for the anchor; low impact.
+
+---
+
+### Order and dependencies
+
+- **Phase A** can be done in any order; no dependency between 1–4. Do 1 (prestige) and 2 (last saved) first for maximum removal of DOM writes in hot paths.
+- **Phase B** depends on having a pattern for “overlay state in store”; can re-use appUI or a small `progressOverlay` store.
+- **Phase C** is independent; can be done before or after B.
+- **Phase D** is optional and can be last; Expedition and Planet detail are the heaviest but already work.
+
+### Definition of done
+
+- No `getElementById` / `querySelector` in application layer for UI content (allowed: overlay open/close by ID if Vue still uses those IDs on elements).
+- No `innerHTML` / `textContent` in handlers or modals for user-visible content; all such content is rendered by Vue templates bound to store or props.
+- Optional: no getElementById in presentation except for canvas/Three.js mount points and focus management (e.g. overlay focusId).

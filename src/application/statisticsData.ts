@@ -22,6 +22,8 @@ import { formatNumber } from './format.js';
 import {
   PLANET_PRODUCTION_BONUS,
   PRESTIGE_BONUS_PER_LEVEL,
+  PRESTIGE_PLANET_BONUS_PER_PLANET,
+  PRESTIGE_RESEARCH_BONUS_PER_NODE,
   PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL,
   ASTRONAUT_PRODUCTION_BONUS,
 } from '../domain/constants.js';
@@ -105,7 +107,10 @@ export function computeStatisticsData(
   const assignedAstronauts = getAssignedAstronauts(session);
 
   const planetBonusPct = player.planets.length > 1 ? (player.planets.length - 1) * PLANET_PRODUCTION_BONUS * 100 : 0;
-  const prestigeBonusPct = player.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL * 100;
+  const prestigeBonusPct =
+    player.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL * 100 +
+    player.prestigePlanetBonus * PRESTIGE_PLANET_BONUS_PER_PLANET * 100 +
+    player.prestigeResearchBonus * PRESTIGE_RESEARCH_BONUS_PER_NODE * 100;
   const crewBonusPct = (player.astronautCount + assignedAstronauts) * ASTRONAUT_PRODUCTION_BONUS * 100;
 
   const totalSlots = player.planets.reduce((s, p) => s + p.maxUpgrades, 0);

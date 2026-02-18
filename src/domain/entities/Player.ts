@@ -7,7 +7,9 @@ import { Planet } from './Planet.js';
 import {
   PLANET_PRODUCTION_BONUS,
   PRESTIGE_BONUS_PER_LEVEL,
-MINER_PRODUCTION_BONUS,
+  PRESTIGE_PLANET_BONUS_PER_PLANET,
+  PRESTIGE_RESEARCH_BONUS_PER_NODE,
+  MINER_PRODUCTION_BONUS,
     OTHER_CREW_PRODUCTION_BONUS,
     ENGINEER_PRODUCTION_BONUS,
   VETERAN_PRODUCTION_BONUS,
@@ -59,7 +61,9 @@ export class Player {
     totalCoinsEver: DecimalSource,
     crewByRoleOrAstronautCount?: CrewByRole | number,
     veteranCount: number = 0,
-    crewAssignedToEquipment: number = 0
+    crewAssignedToEquipment: number = 0,
+    public readonly prestigePlanetBonus: number = 0,
+    public readonly prestigeResearchBonus: number = 0
   ) {
     this.planets = planets ? [...planets] : [];
     this.totalCoinsEver = toDecimal(totalCoinsEver);
@@ -124,7 +128,11 @@ export class Player {
   /** Production rate from upgrades × planet bonus × prestige × crew jobs (miner/scientist/pilot only) × veterans × morale. */
   get effectiveProductionRate(): Decimal {
     const planetBonus = 1 + (this.planets.length - 1) * PLANET_PRODUCTION_BONUS;
-    const prestigeBonus = 1 + this.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL;
+    const prestigeBonus =
+      1 +
+      this.prestigeLevel * PRESTIGE_BONUS_PER_LEVEL +
+      this.prestigePlanetBonus * PRESTIGE_PLANET_BONUS_PER_PLANET +
+      this.prestigeResearchBonus * PRESTIGE_RESEARCH_BONUS_PER_NODE;
     const minerBonus = 1 + this.crewByRole.miner * MINER_PRODUCTION_BONUS;
     const otherCrewBonus =
       1 +
@@ -228,9 +236,18 @@ export class Player {
     }
   }
 
-  /** Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, 0 veterans, prestige level +1. */
-  static createAfterPrestige(oldPlayer: Player): Player {
+  /**
+   * Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, 0 veterans, prestige level +1.
+   * Banks planet bonus (planetsAtPrestige - 1) and research bonus (researchNodesAtPrestige) into permanent bonuses.
+   */
+  static createAfterPrestige(
+    oldPlayer: Player,
+    planetsAtPrestige: number,
+    researchNodesAtPrestige: number
+  ): Player {
     const firstPlanetName = generatePlanetName(`planet-1-${Date.now()}-${Math.random()}`);
+    const newPlanetBonus = oldPlayer.prestigePlanetBonus + Math.max(0, planetsAtPrestige - 1);
+    const newResearchBonus = oldPlayer.prestigeResearchBonus + researchNodesAtPrestige;
     return new Player(
       oldPlayer.id,
       Coins.from(0),
@@ -241,13 +258,15 @@ export class Player {
       oldPlayer.totalCoinsEver,
       DEFAULT_CREW_BY_ROLE,
       0,
-      0
+      0,
+      newPlanetBonus,
+      newResearchBonus
     );
   }
 
   static create(id: string): Player {
     const firstPlanetName = generatePlanetName(`planet-1-${Date.now()}-${Math.random()}`);
     const firstPlanet = Planet.create('planet-1', firstPlanetName);
-    return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, DEFAULT_CREW_BY_ROLE, 0, 0);
+    return new Player(id, Coins.from(0), ProductionRate.from(0), [firstPlanet], [], 0, 0, DEFAULT_CREW_BY_ROLE, 0, 0, 0, 0);
   }
 }

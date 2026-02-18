@@ -21,65 +21,10 @@ import { checkAchievements } from './achievements.js';
 /** End timestamp (Date.now()) per research id, for restoring progress bars after re-render. */
 const researchProgressEndTimeMs = new Map<string, number>();
 
-type ResearchProgressCancelOption = {
-  getCancelHandler: (overlayEl: HTMLElement) => () => void;
-};
-
-function addProgressOverlayToCard(
-  cardEl: HTMLElement,
-  id: string,
-  endTimeMs: number,
-  totalDurationMs: number,
-  cancelOption?: ResearchProgressCancelOption
-): void {
-  const now = Date.now();
-  const remainingMs = Math.max(0, endTimeMs - now);
-  const elapsedMs = totalDurationMs - remainingMs;
-  const widthPercent = totalDurationMs > 0 ? Math.min(100, (elapsedMs / totalDurationMs) * 100) : 0;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'research-progress-overlay';
-  overlay.setAttribute('aria-live', 'polite');
-  overlay.setAttribute('aria-busy', 'true');
-  const cancelHtml =
-    cancelOption?.getCancelHandler != null
-      ? `<button type="button" class="research-progress-cancel" data-i18n="cancel">Cancel</button>`
-      : '';
-  overlay.innerHTML =
-    '<div class="research-progress-track"><div class="research-progress-fill"></div></div><span class="research-progress-label">' +
-    t('researching') +
-    '</span>' +
-    cancelHtml;
-  cardEl.appendChild(overlay);
-  cardEl.classList.add('research-card--in-progress');
-  const fillEl = overlay.querySelector('.research-progress-fill') as HTMLElement;
-  if (fillEl) {
-    fillEl.style.width = `${widthPercent}%`;
-    if (remainingMs > 0 && totalDurationMs > 0) {
-      requestAnimationFrame(() => {
-        fillEl.style.width = '100%';
-        fillEl.style.transition = `width ${remainingMs}ms linear`;
-      });
-    }
-  }
-  const cancelBtn = overlay.querySelector('.research-progress-cancel') as HTMLButtonElement | null;
-  if (cancelBtn && cancelOption?.getCancelHandler) {
-    cancelBtn.textContent = t('cancel');
-    cancelBtn.addEventListener('click', cancelOption.getCancelHandler(overlay));
-  }
-}
-
-function removeProgressOverlayFromCard(cardEl: HTMLElement): void {
-  const overlay = cardEl.querySelector('.research-progress-overlay');
-  if (overlay) overlay.remove();
-  cardEl.classList.remove('research-card--in-progress');
-}
-
 function refreshAfterResearch(researchId: string): void {
   removeResearchInProgress(researchId);
   researchProgressEndTimeMs.delete(researchId);
-  const card = document.querySelector<HTMLElement>(`[data-research-id="${researchId}"]`);
-  if (card) removeProgressOverlayFromCard(card);
+  getPresentationPort().setResearchProgress(researchId, null);
   notifyRefresh();
   getPresentationPort().renderResearchSection();
   const remainingIds = getResearchInProgressIds();
@@ -87,11 +32,9 @@ function refreshAfterResearch(researchId: string): void {
   const scientistCount = session?.player.crewByRole?.scientist ?? 0;
   for (const id of remainingIds) {
     const endMs = researchProgressEndTimeMs.get(id);
-    const remainingCard = document.querySelector<HTMLElement>(`[data-research-id="${id}"]`);
     const totalMs = getResearchDurationMs(id, scientistCount);
-    if (remainingCard && endMs) {
-      removeProgressOverlayFromCard(remainingCard);
-      addProgressOverlayToCard(remainingCard, id, endMs, totalMs);
+    if (endMs != null && totalMs > 0) {
+      getPresentationPort().setResearchProgress(id, { endTimeMs: endMs, totalDurationMs: totalMs, hasCancel: false });
     }
   }
 }
@@ -136,7 +79,7 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
   }
 }
 
-export function startResearchWithProgress(cardEl: HTMLElement, id: string): void {
+export function startResearchWithProgress(_cardEl: HTMLElement, id: string): void {
   if (isResearchInProgress(id)) return;
   const session = getSession();
   if (!session) return;
@@ -151,18 +94,16 @@ export function startResearchWithProgress(cardEl: HTMLElement, id: string): void
   researchProgressEndTimeMs.set(id, endTimeMs);
   addResearchInProgress(id);
   let timeoutId: ReturnType<typeof setTimeout>;
-  addProgressOverlayToCard(cardEl, id, endTimeMs, durationMs, {
-    getCancelHandler: (overlayEl) => () => {
-      clearTimeout(timeoutId);
-      session.player.addCoins(effectiveCost);
-      removeResearchInProgress(id);
-      researchProgressEndTimeMs.delete(id);
-      overlayEl.remove();
-      cardEl.classList.remove('research-card--in-progress');
-      notifyRefresh();
-    },
-  });
+  const onCancel = (): void => {
+    clearTimeout(timeoutId);
+    session.player.addCoins(effectiveCost);
+    removeResearchInProgress(id);
+    researchProgressEndTimeMs.delete(id);
+    notifyRefresh();
+  };
+  getPresentationPort().setResearchProgress(id, { endTimeMs, totalDurationMs: durationMs, hasCancel: true }, onCancel);
   timeoutId = setTimeout(() => {
+    getPresentationPort().setResearchProgress(id, null);
     handleResearchAttempt(id, { coinsAlreadySpent: true });
   }, durationMs);
 }

@@ -36,6 +36,51 @@ export const useAppUIStore = defineStore('appUI', {
     sectionRules: null as { titleKey: string; rulesKey: string } | null,
     /** Quest claim animation: PanelsShell adds quest-section--claimed when true. */
     questClaimedFlash: false,
+    /** Prestige confirm modal: text content set by handlers before opening. */
+    prestigeConfirmDesc: '',
+    prestigeConfirmAfter: '',
+    prestigeConfirmGainEstimate: '' as string,
+    /** Prestige rewards modal: list item strings (level 1, then 2..max). */
+    prestigeRewardsLevels: [] as string[],
+    /** Last saved indicator text (settings modal). Set by port when opening settings or on save. */
+    lastSavedText: '',
+    /** Chart help modal: title and body set before opening. */
+    chartHelpTitle: '',
+    chartHelpBody: '',
+    /** Research progress overlay per researchId. */
+    researchProgress: {} as Record<string, { endTimeMs: number; totalDurationMs: number; hasCancel: boolean }>,
+    /** Upgrade install/uninstall progress per card key (e.g. upgradeId-planetId or upgradeId). */
+    upgradeProgress: {} as Record<string, { current: number; total: number; label: string; showCancel: boolean; isUninstall?: boolean }>,
+    /** Debug panel: stats rows (label + value). */
+    debugStats: [] as { label: string; value: string }[],
+    /** Expedition modal: when set, modal is open; Vue renders tiers and crew from this + getSession(). */
+    expedition: null as {
+      costFormatted: string;
+      isNewSystem: boolean;
+      newSystemText: string;
+      newSystemTitle: string;
+      required: number;
+      composition: Record<string, number>;
+      selectedTier: string;
+    } | null,
+    /** Planet detail modal: when set, modal is open; Vue renders stats and upgrades; 3D scene mounted in Vue. */
+    planetDetail: null as {
+      planetId: string;
+      planetName: string;
+      planetType: string;
+      visualSeed: number;
+      displayName: string;
+      systemName: string;
+      typeLabel: string;
+      prodStr: string;
+      effectiveUsed: number;
+      maxUpgrades: number;
+      housingLine: string;
+      crewLine: string;
+      moonCount: number;
+      extraLabel: string;
+      upgradeItems: { name: string; count: number }[];
+    } | null,
   }),
   actions: {
     setInfoContent(version: string, hasUpdate: boolean): void {
@@ -83,6 +128,69 @@ export const useAppUIStore = defineStore('appUI', {
     },
     setQuestClaimedFlash(value: boolean): void {
       this.questClaimedFlash = value;
+    },
+    setPrestigeConfirmContent(desc: string, after: string, gainEstimate?: string): void {
+      this.prestigeConfirmDesc = desc;
+      this.prestigeConfirmAfter = after;
+      this.prestigeConfirmGainEstimate = gainEstimate ?? '';
+    },
+    setPrestigeRewardsContent(levels: string[]): void {
+      this.prestigeRewardsLevels = levels;
+    },
+    setLastSavedText(text: string): void {
+      this.lastSavedText = text;
+    },
+    setChartHelpContent(title: string, body: string): void {
+      this.chartHelpTitle = title;
+      this.chartHelpBody = body;
+    },
+    setResearchProgress(researchId: string, data: { endTimeMs: number; totalDurationMs: number; hasCancel: boolean } | null): void {
+      if (data === null) {
+        const next = { ...this.researchProgress };
+        delete next[researchId];
+        this.researchProgress = next;
+      } else {
+        this.researchProgress = { ...this.researchProgress, [researchId]: data };
+      }
+    },
+    setUpgradeProgress(key: string, data: { current: number; total: number; label: string; showCancel: boolean; isUninstall?: boolean } | null): void {
+      if (data === null) {
+        const next = { ...this.upgradeProgress };
+        delete next[key];
+        this.upgradeProgress = next;
+      } else {
+        this.upgradeProgress = { ...this.upgradeProgress, [key]: data };
+      }
+    },
+    setDebugStats(rows: { label: string; value: string }[]): void {
+      this.debugStats = rows;
+    },
+    setDebugOpen(open: boolean): void {
+      this.debugOpen = open;
+    },
+    setExpeditionData(data: typeof this.expedition): void {
+      this.expedition = data;
+    },
+    setExpeditionSelectedTier(tier: string): void {
+      if (this.expedition) this.expedition.selectedTier = tier;
+    },
+    setExpeditionCrew(role: string, delta: number): void {
+      if (!this.expedition) return;
+      const cur = this.expedition.composition[role] ?? 0;
+      const next = Math.max(0, cur + delta);
+      this.expedition = {
+        ...this.expedition,
+        composition: { ...this.expedition.composition, [role]: next },
+      };
+    },
+    clearExpedition(): void {
+      this.expedition = null;
+    },
+    setPlanetDetailData(data: typeof this.planetDetail): void {
+      this.planetDetail = data;
+    },
+    clearPlanetDetail(): void {
+      this.planetDetail = null;
     },
   },
 });

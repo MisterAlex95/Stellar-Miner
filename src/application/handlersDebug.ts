@@ -12,12 +12,6 @@ import { getPresentationPort } from './uiBridge.js';
 import { Planet } from '../domain/entities/Planet.js';
 import { generatePlanetName } from '../domain/constants.js';
 
-const DEBUG_PANEL_ID = 'debug-panel';
-
-function getDebugPanel(): HTMLElement | null {
-  return document.getElementById(DEBUG_PANEL_ID);
-}
-
 function refreshAfterDebugAction(): void {
   notifyRefresh();
   updateDebugPanel();
@@ -34,34 +28,23 @@ export function triggerRandomEvent(): void {
 }
 
 export function openDebugMenu(): void {
-  const panel = getDebugPanel();
-  if (panel) {
-    panel.classList.remove('debug-panel--closed');
-    panel.setAttribute('aria-hidden', 'false');
-    updateDebugPanel();
-  }
+  getPresentationPort().setDebugOpen(true);
+  updateDebugPanel();
 }
 
 export function closeDebugMenu(): void {
-  const panel = getDebugPanel();
-  if (panel) {
-    panel.classList.add('debug-panel--closed');
-    panel.setAttribute('aria-hidden', 'true');
-  }
+  getPresentationPort().setDebugOpen(false);
 }
 
 export function toggleDebugMenu(): void {
-  const panel = getDebugPanel();
-  if (!panel) return;
-  const isClosed = panel.classList.contains('debug-panel--closed');
+  const isClosed = !getPresentationPort().getDebugOpen();
   if (isClosed) openDebugMenu();
   else closeDebugMenu();
 }
 
 export function updateDebugPanel(): void {
-  const statsEl = document.getElementById('debug-stats');
   const session = getSession();
-  if (!statsEl || !session) return;
+  if (!session) return;
   const player = session.player;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
@@ -74,17 +57,18 @@ export function updateDebugPanel(): void {
   const rateNum = effectiveRate.toNumber();
   const coinsNum = player.coins.value.toNumber();
   const baseNum = player.productionRate.value.toNumber();
-  statsEl.innerHTML = `
-    <div class="debug-row"><span>${t('debugCoinsRaw')}</span><span>${Number.isFinite(coinsNum) ? coinsNum.toFixed(1) : player.coins.value.toString()}</span></div>
-    <div class="debug-row"><span>${t('debugProductionBase')}</span><span>${Number.isFinite(baseNum) ? baseNum.toFixed(1) : player.productionRate.value.toString()}/s</span></div>
-    <div class="debug-row"><span>${t('debugProductionEffective')}</span><span>${Number.isFinite(rateNum) ? rateNum.toFixed(1) : effectiveRate.toString()}/s</span></div>
-    <div class="debug-row"><span>${t('debugEventMult')}</span><span>×${eventMult.toFixed(1)}</span></div>
-    <div class="debug-row"><span>${t('debugPrestigeLevel')}</span><span>${player.prestigeLevel}</span></div>
-    <div class="debug-row"><span>${t('debugPlanets')}</span><span>${player.planets.length}</span></div>
-    <div class="debug-row"><span>${t('debugUpgradesTotal')}</span><span>${player.upgrades.length}</span></div>
-    <div class="debug-row"><span>${t('debugNextEventIn')}</span><span>${nextEventIn}s</span></div>
-    <div class="debug-row"><span>${t('debugActiveEvents')}</span><span>${activeCount}</span></div>
-  `;
+  const rows: { label: string; value: string }[] = [
+    { label: t('debugCoinsRaw'), value: Number.isFinite(coinsNum) ? coinsNum.toFixed(1) : player.coins.value.toString() },
+    { label: t('debugProductionBase'), value: `${Number.isFinite(baseNum) ? baseNum.toFixed(1) : player.productionRate.value.toString()}/s` },
+    { label: t('debugProductionEffective'), value: `${Number.isFinite(rateNum) ? rateNum.toFixed(1) : effectiveRate.toString()}/s` },
+    { label: t('debugEventMult'), value: `×${eventMult.toFixed(1)}` },
+    { label: t('debugPrestigeLevel'), value: String(player.prestigeLevel) },
+    { label: t('debugPlanets'), value: String(player.planets.length) },
+    { label: t('debugUpgradesTotal'), value: String(player.upgrades.length) },
+    { label: t('debugNextEventIn'), value: `${nextEventIn}s` },
+    { label: t('debugActiveEvents'), value: String(activeCount) },
+  ];
+  getPresentationPort().setDebugStats(rows);
 }
 
 export function handleDebugAction(action: string): void {
