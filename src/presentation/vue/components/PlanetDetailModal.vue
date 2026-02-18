@@ -32,5 +32,5 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
-import { closePlanetDetail } from '../../modals/planetDetail.js';
+import { closePlanetDetail } from '../planetDetail.js';
 </script>

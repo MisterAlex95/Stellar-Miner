@@ -9,10 +9,10 @@ import { getUnlockedCrewRoles, getResearchExpeditionDurationPercent, getResearch
 import type { CrewJobRole } from '../../domain/constants.js';
 import { formatNumber } from '../../application/format.js';
 import { t, tParam, type StringKey } from '../../application/strings.js';
-import { openOverlay, closeOverlay } from '../vue/lib/overlay.js';
-import { escapeAttr } from '../vue/lib/domUtils.js';
+import { openOverlay, closeOverlay } from './lib/overlay.js';
+import { escapeAttr } from './lib/domUtils.js';
 import { getPlanetType } from '../../application/planetAffinity.js';
-import { startPlanetThumbnail3DLoop } from '../canvas/planetThumbnail3D.js';
+import { startPlanetThumbnail3DLoop } from './canvas/planetThumbnail3D.js';
 import { handleLaunchExpeditionFromModal } from '../../application/handlersPlanet.js';
 
 const OVERLAY_ID = 'expedition-modal-overlay';

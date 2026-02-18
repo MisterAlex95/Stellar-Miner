@@ -14,9 +14,9 @@ import {
   handleUpgradeBuyMax,
   handleUpgradeUninstall,
 } from '../../application/handlers.js';
-import { openOverlay, closeOverlay } from '../vue/lib/overlay.js';
-import { getPinia } from '../vue/piniaInstance.js';
-import { useAppUIStore } from '../vue/stores/appUI.js';
+import { openOverlay, closeOverlay } from './lib/overlay.js';
+import { getPinia } from './piniaInstance.js';
+import { useAppUIStore } from './stores/appUI.js';
 
 const OVERLAY_ID = 'upgrade-choose-planet-overlay';
 const OPEN_CLASS = 'upgrade-choose-planet-overlay--open';

@@ -10,8 +10,8 @@ import {
   shouldShowWelcome,
   type BlockId,
 } from '../../application/progression.js';
-import { getPinia } from '../vue/piniaInstance.js';
-import { useAppUIStore } from '../vue/stores/appUI.js';
+import { getPinia } from './piniaInstance.js';
+import { useAppUIStore } from './stores/appUI.js';
 
 const INTRO_READY_DELAY_MS = 5000;
 const INTRO_PROGRESS_TICK_MS = 50;

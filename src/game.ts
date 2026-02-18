@@ -1,7 +1,7 @@
 import './styles/index.css';
 import { setPresentationPort } from './application/uiBridge.js';
 import { createPresentationPort } from './presentation/vue/presentationPortImpl.js';
-import { startStarfield } from './presentation/canvas/StarfieldCanvas.js';
+import { startStarfield } from './presentation/vue/canvas/StarfieldCanvas.js';
 import { mountVueApp } from './presentation/vue/main.js';
 import { initPresentation } from './presentation/vue/initPresentation.js';
 import { switchTab, getTabsSnapshot } from './presentation/vue/mountTabs.js';
@@ -34,7 +34,7 @@ import { getComboSnapshot } from './application/comboSnapshot.js';
 import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { getProgressionSnapshot } from './application/progressionSnapshot.js';
-import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/modals/introModal.js';
+import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/vue/introModal.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
 import { showOfflineToast } from './presentation/vue/toasts.js';

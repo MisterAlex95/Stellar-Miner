@@ -8,10 +8,10 @@ import {
   closePrestigeRewardsModal,
   closeSettings,
 } from '../../../application/handlers.js';
-import { closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from '../../modals/planetDetail.js';
-import { closeUpgradeChoosePlanetModal } from '../../modals/upgradeChoosePlanetModal.js';
-import { closeExpeditionModal } from '../../modals/expeditionModal.js';
-import { isIntroOverlayOpen, dismissIntroModal } from '../../modals/introModal.js';
+import { closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from '../planetDetail.js';
+import { closeUpgradeChoosePlanetModal } from '../upgradeChoosePlanetModal.js';
+import { closeExpeditionModal } from '../expeditionModal.js';
+import { isIntroOverlayOpen, dismissIntroModal } from '../introModal.js';
 import { useOverlay } from './useOverlay.js';
 
 const { getOpenOverlayElement, closeOverlay } = useOverlay();
