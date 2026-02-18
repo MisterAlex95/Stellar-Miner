@@ -4,7 +4,7 @@ import { createPresentationPort } from './presentation/presentationPortImpl.js';
 import { startStarfield } from './presentation/canvas/StarfieldCanvas.js';
 import { mountVueApp } from './presentation/main.js';
 import { initPresentation } from './presentation/initPresentation.js';
-import { switchTab, getTabsSnapshot } from './presentation/mountTabs.js';
+import { switchTab, getTabsSnapshot } from './presentation/mount/tabs.js';
 import {
   getOrCreateSession,
   setSession,
@@ -34,10 +34,10 @@ import { getComboSnapshot } from './application/comboSnapshot.js';
 import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { getProgressionSnapshot } from './application/progressionSnapshot.js';
-import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/introModal.js';
+import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/modals/intro.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
-import { showOfflineToast } from './presentation/toasts.js';
+import { showOfflineToast } from './presentation/toasts/index.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
 import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';

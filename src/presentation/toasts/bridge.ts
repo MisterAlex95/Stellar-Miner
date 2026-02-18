@@ -1,11 +1,11 @@
 /**
- * Toast API for non-Vue code (port, toasts.ts). Delegates to Pinia useToastStore.
+ * Toast API for non-Vue code (port, domain toasts). Delegates to Pinia useToastStore.
  */
-import { getPinia } from './piniaInstance.js';
-import { useToastStore, type ToastVariant } from './stores/toast.js';
+import { getPinia } from '../piniaInstance.js';
+import { useToastStore, type ToastVariant } from './store.js';
 
-export type { ToastVariant } from './stores/toast.js';
-export type { ToastItem } from './stores/toast.js';
+export type { ToastVariant } from './store.js';
+export type { ToastItem } from './store.js';
 
 export function getToastStore(): { items: { id: number; message: string; variant: ToastVariant; duration: number }[] } {
   const pinia = getPinia();

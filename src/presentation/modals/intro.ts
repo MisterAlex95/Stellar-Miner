@@ -1,7 +1,7 @@
 /**
  * Intro/welcome modal: show logic and 5s delay. UI state lives in appUI store; IntroModal.vue renders it.
  */
-import { getSession } from '../application/gameState.js';
+import { getSession } from '../../application/gameState.js';
 import {
   PROGRESSION_BLOCKS,
   getUnlockedBlocks,
@@ -9,9 +9,9 @@ import {
   markModalSeen,
   shouldShowWelcome,
   type BlockId,
-} from '../application/progression.js';
-import { getPinia } from './piniaInstance.js';
-import { useAppUIStore } from './stores/appUI.js';
+} from '../../application/progression.js';
+import { getPinia } from '../piniaInstance.js';
+import { useAppUIStore } from '../stores/appUI.js';
 
 const INTRO_READY_DELAY_MS = 5000;
 const INTRO_PROGRESS_TICK_MS = 50;

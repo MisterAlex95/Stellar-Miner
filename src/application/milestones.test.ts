@@ -6,7 +6,7 @@ import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { MILESTONES_STORAGE_KEY } from './catalogs.js';
 
-vi.mock('../presentation/toasts.js', () => ({ showMilestoneToast: vi.fn() }));
+vi.mock('../presentation/toasts/index.js', () => ({ showMilestoneToast: vi.fn() }));
 
 describe('milestones', () => {
   let storage: Record<string, string>;

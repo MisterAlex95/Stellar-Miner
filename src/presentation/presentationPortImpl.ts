@@ -2,9 +2,9 @@
  * Concrete implementation of the presentation port. Wires application UI bridge to real UI.
  */
 import type { PresentationPort } from '../application/uiBridge.js';
-import * as toasts from './toasts.js';
+import * as toasts from './toasts/index.js';
 import { openOverlay, closeOverlay } from './lib/overlay.js';
-import { showToast } from './lib/toasts.js';
+import { showToast } from './toasts/index.js';
 import { getPinia } from './piniaInstance.js';
 import { useAppUIStore } from './stores/appUI.js';
 

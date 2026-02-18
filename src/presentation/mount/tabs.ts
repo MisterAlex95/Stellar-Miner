@@ -3,21 +3,21 @@
  * this module only updates store, storage, URL, and lazy-mounts panels.
  */
 import { createApp } from 'vue';
-import { getSession, getSettings, getExpeditionEndsAt, planetService } from '../application/gameState.js';
-import { getUnlockedBlocks } from '../application/progression.js';
-import { getQuestProgress } from '../application/quests.js';
-import { RESEARCH_CATALOG, canAttemptResearch, hasEffectiveFreeSlot, getResearchHousingCapacityBonus } from '../application/research.js';
-import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../domain/constants.js';
-import { markPanelHydrated } from '../application/lazyPanels.js';
-import StatisticsPanel from './panels/StatisticsPanel.vue';
-import DashboardPanel from './panels/DashboardPanel.vue';
-import ResearchPanel from './panels/ResearchPanel.vue';
-import UpgradesPanel from './panels/UpgradesPanel.vue';
-import EmpirePanel from './panels/EmpirePanel.vue';
-import { hasNewInstallableUpgrade } from './dashboardHelpers.js';
-import { getPinia } from './piniaInstance.js';
-import { useGameStateStore } from './stores/gameState.js';
-import type { TabsSnapshot } from './stores/gameState.js';
+import { getSession, getSettings, getExpeditionEndsAt, planetService } from '../../application/gameState.js';
+import { getUnlockedBlocks } from '../../application/progression.js';
+import { getQuestProgress } from '../../application/quests.js';
+import { RESEARCH_CATALOG, canAttemptResearch, hasEffectiveFreeSlot, getResearchHousingCapacityBonus } from '../../application/research.js';
+import { PRESTIGE_COIN_THRESHOLD, getAstronautCost, getMaxAstronauts } from '../../domain/constants.js';
+import { markPanelHydrated } from '../../application/lazyPanels.js';
+import StatisticsPanel from '../panels/StatisticsPanel.vue';
+import DashboardPanel from '../panels/DashboardPanel.vue';
+import ResearchPanel from '../panels/ResearchPanel.vue';
+import UpgradesPanel from '../panels/UpgradesPanel.vue';
+import EmpirePanel from '../panels/EmpirePanel.vue';
+import { hasNewInstallableUpgrade } from '../lib/dashboardHelpers.js';
+import { getPinia } from '../piniaInstance.js';
+import { useGameStateStore } from '../stores/gameState.js';
+import type { TabsSnapshot } from '../stores/gameState.js';
 
 function mountVuePanel(containerId: string, component: unknown, datasetKey: string): void {
   const container = document.getElementById(containerId);

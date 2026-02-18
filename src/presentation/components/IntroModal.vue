@@ -49,7 +49,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { useAppUIStore } from '../stores/appUI.js';
 import { t } from '../../application/strings.js';
 import type { StringKey } from '../../application/strings.js';
-import { dismissIntroModal } from '../introModal.js';
+import { dismissIntroModal } from '../modals/intro.js';
 
 const appUI = useAppUIStore();
 const gotItRef = ref<HTMLButtonElement | null>(null);

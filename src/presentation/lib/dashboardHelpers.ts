@@ -2,14 +2,14 @@
  * Dashboard helper functions: upgrade goals, research, time estimates.
  */
 import Decimal from 'break_infinity.js';
-import { getSession, getSettings, planetService } from '../application/gameState.js';
-import { UPGRADE_CATALOG, getUnlockedUpgradeTiers, getUpgradeCost } from '../application/catalogs.js';
-import { getUpgradeCardState } from '../application/upgradeCardState.js';
-import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
-import { getPlanetType, getPlanetTypeMultiplier } from '../application/planetAffinity.js';
-import { RESEARCH_CATALOG, canAttemptResearch } from '../application/research.js';
-import type { ResearchNode } from '../application/research.js';
-import { getMaxBuyCount } from '../application/upgradeHelpers.js';
+import { getSession, getSettings, planetService } from '../../application/gameState.js';
+import { UPGRADE_CATALOG, getUnlockedUpgradeTiers, getUpgradeCost } from '../../application/catalogs.js';
+import { getUpgradeCardState } from '../../application/upgradeCardState.js';
+import { getCatalogUpgradeName } from '../../application/i18nCatalogs.js';
+import { getPlanetType, getPlanetTypeMultiplier } from '../../application/planetAffinity.js';
+import { RESEARCH_CATALOG, canAttemptResearch } from '../../application/research.js';
+import type { ResearchNode } from '../../application/research.js';
+import { getMaxBuyCount } from '../../application/upgradeHelpers.js';
 
 /** Ordered upgrade defs (by tier) the player can see. Next tier unlocks only when install is finished. */
 export function getOrderedUpgradeDefs(player: { upgrades: { id: string }[] }) {

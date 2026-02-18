@@ -8,10 +8,10 @@ import {
   closePrestigeRewardsModal,
   closeSettings,
 } from '../../application/handlers.js';
-import { closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from '../planetDetail.js';
-import { closeUpgradeChoosePlanetModal } from '../upgradeChoosePlanetModal.js';
-import { closeExpeditionModal } from '../expeditionModal.js';
-import { isIntroOverlayOpen, dismissIntroModal } from '../introModal.js';
+import { closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from '../modals/planetDetail.js';
+import { closeUpgradeChoosePlanetModal } from '../modals/upgradeChoosePlanet.js';
+import { closeExpeditionModal } from '../modals/expedition.js';
+import { isIntroOverlayOpen, dismissIntroModal } from '../modals/intro.js';
 import { useOverlay } from './useOverlay.js';
 
 const { getOpenOverlayElement, closeOverlay } = useOverlay();
@@ -23,7 +23,7 @@ import {
   SECTION_RULES_OVERLAY_CLASS,
   ACHIEVEMENTS_OVERLAY_ID,
   ACHIEVEMENTS_OVERLAY_OPEN_CLASS,
-} from '../mountModals.js';
+} from '../modals/mount.js';
 
 const EVENTS_HINT_OVERLAY_ID = 'events-hint-overlay';
 const EVENTS_HINT_OPEN_CLASS = 'events-hint-overlay--open';

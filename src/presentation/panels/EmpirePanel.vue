@@ -259,8 +259,8 @@ import {
   handleCancelExpedition,
   openPrestigeRewardsModal,
 } from '../../application/handlers.js';
-import { openExpeditionModal } from '../expeditionModal.js';
-import { openPlanetDetail } from '../planetDetail.js';
+import { openExpeditionModal } from '../modals/expedition.js';
+import { openPlanetDetail } from '../modals/planetDetail.js';
 import { renderPlanetThumbnails } from '../canvas/planetThumbnail3D.js';
 import { useEmpireData } from '../composables/useEmpireData.js';
 import EmpireSection from '../components/EmpireSection.vue';

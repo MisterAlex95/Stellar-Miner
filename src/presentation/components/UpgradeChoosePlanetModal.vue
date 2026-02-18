@@ -125,7 +125,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
 import { t } from '../../application/strings.js';
-import { closeUpgradeChoosePlanetModal, onPlanetChosen } from '../upgradeChoosePlanetModal.js';
+import { closeUpgradeChoosePlanetModal, onPlanetChosen } from '../modals/upgradeChoosePlanet.js';
 import { startPlanetThumbnail3DLoop } from '../canvas/planetThumbnail3D.js';
 import { useAppUIStore } from '../stores/appUI.js';
 

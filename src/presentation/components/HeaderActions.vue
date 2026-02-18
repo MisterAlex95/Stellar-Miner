@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { t } from '../../application/strings.js';
 import { openSettings } from '../../application/handlers.js';
-import { openInfoModal, openAchievementsModal } from '../mountModals.js';
+import { openInfoModal, openAchievementsModal } from '../modals/mount.js';
 import { updateVersionAndChangelogUI } from '../initPresentation.js';
 import { useAppUIStore } from '../stores/appUI.js';
 

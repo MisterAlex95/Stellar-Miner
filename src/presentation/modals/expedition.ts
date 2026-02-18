@@ -1,19 +1,19 @@
 /**
  * Modal to launch an expedition: choose difficulty (easy/medium/hard) and crew composition.
  */
-import { getSession, getSettings, getExpeditionEndsAt } from '../application/gameState.js';
-import { planetService } from '../application/gameState.js';
-import { getExpeditionTiers, getExpeditionTier, CREW_ROLES, generatePlanetName, isNextExpeditionNewSystem, type ExpeditionComposition, type ExpeditionTierId, type CrewRole } from '../domain/constants.js';
-import { getExpeditionDeathChanceWithMedics } from '../domain/constants.js';
-import { getUnlockedCrewRoles, getResearchExpeditionDurationPercent, getResearchExpeditionDeathChancePercent } from '../application/research.js';
-import type { CrewJobRole } from '../domain/constants.js';
-import { formatNumber } from '../application/format.js';
-import { t, tParam, type StringKey } from '../application/strings.js';
-import { openOverlay, closeOverlay } from './lib/overlay.js';
-import { escapeAttr } from './lib/domUtils.js';
-import { getPlanetType } from '../application/planetAffinity.js';
-import { startPlanetThumbnail3DLoop } from './canvas/planetThumbnail3D.js';
-import { handleLaunchExpeditionFromModal } from '../application/handlersPlanet.js';
+import { getSession, getSettings, getExpeditionEndsAt } from '../../application/gameState.js';
+import { planetService } from '../../application/gameState.js';
+import { getExpeditionTiers, getExpeditionTier, CREW_ROLES, generatePlanetName, isNextExpeditionNewSystem, type ExpeditionComposition, type ExpeditionTierId, type CrewRole } from '../../domain/constants.js';
+import { getExpeditionDeathChanceWithMedics } from '../../domain/constants.js';
+import { getUnlockedCrewRoles, getResearchExpeditionDurationPercent, getResearchExpeditionDeathChancePercent } from '../../application/research.js';
+import type { CrewJobRole } from '../../domain/constants.js';
+import { formatNumber } from '../../application/format.js';
+import { t, tParam, type StringKey } from '../../application/strings.js';
+import { openOverlay, closeOverlay } from '../lib/overlay.js';
+import { escapeAttr } from '../lib/domUtils.js';
+import { getPlanetType } from '../../application/planetAffinity.js';
+import { startPlanetThumbnail3DLoop } from '../canvas/planetThumbnail3D.js';
+import { handleLaunchExpeditionFromModal } from '../../application/handlersPlanet.js';
 
 const OVERLAY_ID = 'expedition-modal-overlay';
 const OPEN_CLASS = 'expedition-modal-overlay--open';

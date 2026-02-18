@@ -128,7 +128,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { t } from '../application/strings.js';
 import { useGameStateStore } from './stores/gameState.js';
-import { switchTab, pushTabState, VALID_TAB_IDS, HISTORY_STATE_KEY, type TabId } from './mountTabs.js';
+import { switchTab, pushTabState, VALID_TAB_IDS, HISTORY_STATE_KEY, type TabId } from './mount/tabs.js';
 
 const TAB_LABELS: Record<TabId, string> = {
   mine: 'tabMine',

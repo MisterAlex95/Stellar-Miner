@@ -1,14 +1,17 @@
-import { formatNumber } from '../application/format.js';
-import { getSettings } from '../application/gameState.js';
-import { DAILY_BONUS_COINS } from '../application/catalogs.js';
-import { t, tParam } from '../application/strings.js';
-import { getCatalogEventName } from '../application/i18nCatalogs.js';
-import type { GameEvent } from '../domain/entities/GameEvent.js';
-import { showToast } from './lib/toasts.js';
+/**
+ * Domain-specific toast functions (achievement, milestone, event, offline, etc.). Used by presentation port.
+ */
+import { formatNumber } from '../../application/format.js';
+import { getSettings } from '../../application/gameState.js';
+import { DAILY_BONUS_COINS } from '../../application/catalogs.js';
+import { t, tParam } from '../../application/strings.js';
+import { getCatalogEventName } from '../../application/i18nCatalogs.js';
+import type { GameEvent } from '../../domain/entities/GameEvent.js';
+import { showToast } from './showToast.js';
 import {
   showFloatingReward as showFloatingRewardImpl,
   showFloatingCoin as showFloatingCoinImpl,
-} from './lib/floatingFeedback.js';
+} from '../lib/floatingFeedback.js';
 
 export function showAchievementToast(name: string): void {
   showToast(tParam('achievementToast', { name }), 'achievement', { duration: 4000 });

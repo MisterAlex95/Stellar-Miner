@@ -2,21 +2,21 @@
  * Modal to choose a planet for install (Install/Max) or uninstall when the player has multiple planets.
  * List is rendered by UpgradeChoosePlanetModal.vue from appUI.upgradeChoosePlanet.
  */
-import { getSession, getSettings } from '../application/gameState.js';
-import { getEffectiveUpgradeUsesSlot } from '../application/research.js';
-import { getEffectiveUsedSlots } from '../application/research.js';
-import { getPlanetEffectiveProduction } from '../application/productionHelpers.js';
-import { getPlanetType, getBestPlanetTypes } from '../application/planetAffinity.js';
-import { getPlanetDisplayName } from '../application/solarSystems.js';
-import { formatNumber } from '../application/format.js';
+import { getSession, getSettings } from '../../application/gameState.js';
+import { getEffectiveUpgradeUsesSlot } from '../../application/research.js';
+import { getEffectiveUsedSlots } from '../../application/research.js';
+import { getPlanetEffectiveProduction } from '../../application/productionHelpers.js';
+import { getPlanetType, getBestPlanetTypes } from '../../application/planetAffinity.js';
+import { getPlanetDisplayName } from '../../application/solarSystems.js';
+import { formatNumber } from '../../application/format.js';
 import {
   handleUpgradeBuy,
   handleUpgradeBuyMax,
   handleUpgradeUninstall,
-} from '../application/handlers.js';
-import { openOverlay, closeOverlay } from './lib/overlay.js';
-import { getPinia } from './piniaInstance.js';
-import { useAppUIStore } from './stores/appUI.js';
+} from '../../application/handlers.js';
+import { openOverlay, closeOverlay } from '../lib/overlay.js';
+import { getPinia } from '../piniaInstance.js';
+import { useAppUIStore } from '../stores/appUI.js';
 
 const OVERLAY_ID = 'upgrade-choose-planet-overlay';
 const OPEN_CLASS = 'upgrade-choose-planet-overlay--open';

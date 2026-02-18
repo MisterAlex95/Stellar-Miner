@@ -3,7 +3,7 @@ import {
   openPrestigeConfirmModal,
   handleUpgradeBuy,
 } from '../../application/handlers.js';
-import { pushTabState, switchTab } from '../mountTabs.js';
+import { pushTabState, switchTab } from '../mount/tabs.js';
 import { useGameStateStore } from '../stores/gameState.js';
 
 /** Dashboard click handling and tab navigation. */

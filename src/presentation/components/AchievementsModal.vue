@@ -46,7 +46,7 @@ import { t } from '../../application/strings.js';
 import {
   closeAchievementsModal,
   ACHIEVEMENTS_OVERLAY_ID,
-} from '../mountModals.js';
+} from '../modals/mount.js';
 import { ACHIEVEMENTS, getUnlockedAchievements } from '../../application/achievements.js';
 import { getCatalogAchievementName, getCatalogAchievementDesc } from '../../application/i18nCatalogs.js';
 

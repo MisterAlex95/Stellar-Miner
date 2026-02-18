@@ -1,5 +1,5 @@
 /**
- * Pinia store for toasts. Push from port/toasts; ToastContainer renders.
+ * Pinia store for toasts. Push from port/domain toasts; ToastContainer renders.
  */
 import { defineStore } from 'pinia';
 

@@ -2,7 +2,7 @@ import { getSession } from '../../application/gameState.js';
 import {
   openUpgradeChoosePlanetModal,
   getPlanetsForInstallModal,
-} from '../upgradeChoosePlanetModal.js';
+} from '../modals/upgradeChoosePlanet.js';
 import {
   handleUpgradeBuy,
   handleUpgradeBuyMax,

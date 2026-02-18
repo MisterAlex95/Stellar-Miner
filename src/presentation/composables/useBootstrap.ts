@@ -4,7 +4,7 @@
  */
 import { getSettings } from '../../application/gameState.js';
 import { applyTranslations as applyTranslationsFromStrings } from '../../application/strings.js';
-import { applyLayout } from '../mountTabs.js';
+import { applyLayout } from '../mount/tabs.js';
 
 export function applyThemeAndMotion(): void {
   const s = getSettings();

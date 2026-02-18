@@ -4,7 +4,7 @@
  */
 import { updateLastSavedIndicator, applySettingsToUI } from '../application/handlers.js';
 import { subscribe } from '../application/eventBus.js';
-import { updateProgressionVisibility } from './introModal.js';
+import { updateProgressionVisibility } from './modals/intro.js';
 import { wireSettingsSubscribers } from '../application/refreshSubscribers.js';
 import { APP_VERSION, hasNewUpdate } from '../application/version.js';
 import { getPinia } from './piniaInstance.js';
@@ -13,7 +13,7 @@ import {
   switchTab,
   getInitialTab,
   replaceTabState,
-} from './mountTabs.js';
+} from './mount/tabs.js';
 import { useBootstrap } from './composables/useBootstrap.js';
 
 /** Updates appUI store so InfoModal and HeaderActions show version and update badge (Vue-driven). */

@@ -1,10 +1,10 @@
 /**
  * Modal open/close handlers. Used by Vue components and useGlobalKeyboard.
  */
-import { openOverlay, closeOverlay, getOpenOverlayElement } from './lib/overlay.js';
-import { markUpdateSeen } from '../application/version.js';
-import { getPinia } from './piniaInstance.js';
-import { useAppUIStore } from './stores/appUI.js';
+import { openOverlay, closeOverlay, getOpenOverlayElement } from '../lib/overlay.js';
+import { markUpdateSeen } from '../../application/version.js';
+import { getPinia } from '../piniaInstance.js';
+import { useAppUIStore } from '../stores/appUI.js';
 
 export const SECTION_RULES_OVERLAY_CLASS = 'section-rules-overlay--open';
 export const ACHIEVEMENTS_OVERLAY_ID = 'achievements-overlay';
