@@ -1,26 +1,25 @@
 /**
- * Presentation bootstrap: theme, translations, settings wiring, intro, tabs, tooltips.
- * Replaces mount.ts. All event bindings live in Vue.
+ * Presentation bootstrap: theme, translations, settings wiring, intro, tabs.
+ * Replaces mount.ts. All event bindings live in Vue (tooltips via GlobalTooltip).
  */
-import { getSettings } from '../application/gameState.js';
-import { applyTranslations } from '../application/strings.js';
-import { updateLastSavedIndicator, applySettingsToUI } from '../application/handlers.js';
-import { subscribe } from '../application/eventBus.js';
-import { bindIntroModal, updateProgressionVisibility } from './introModal.js';
-import { initTooltips } from './tooltip.js';
-import { wireSettingsSubscribers } from '../application/refreshSubscribers.js';
-import { APP_VERSION, hasNewUpdate } from '../application/version.js';
-import { getChangelog } from '../application/changelog.js';
-import { buildChangelogHtml } from './components/changelog.js';
-import { getPinia } from './vue/piniaInstance.js';
-import { useAppUIStore } from './vue/stores/appUI.js';
+import { getSettings } from '../../application/gameState.js';
+import { applyTranslations } from '../../application/strings.js';
+import { updateLastSavedIndicator, applySettingsToUI } from '../../application/handlers.js';
+import { subscribe } from '../../application/eventBus.js';
+import { bindIntroModal, updateProgressionVisibility } from '../modals/introModal.js';
+import { wireSettingsSubscribers } from '../../application/refreshSubscribers.js';
+import { APP_VERSION, hasNewUpdate } from '../../application/version.js';
+import { getChangelog } from '../../application/changelog.js';
+import { buildChangelogHtml } from '../components/changelog.js';
+import { getPinia } from '../vue/piniaInstance.js';
+import { useAppUIStore } from '../vue/stores/appUI.js';
 import {
   switchTab,
   applyLayout,
   getInitialTab,
   replaceTabState,
-} from './mount/mountTabs.js';
-import { bindUpgradeChoosePlanetModal } from './upgradeChoosePlanetModal.js';
+} from '../mount/mountTabs.js';
+import { bindUpgradeChoosePlanetModal } from '../modals/upgradeChoosePlanetModal.js';
 
 function applyThemeAndMotion(): void {
   const s = getSettings();
@@ -65,8 +64,6 @@ export function initPresentation(): void {
   replaceTabState(initialTab);
   switchTab(initialTab);
   applyLayout();
-
-  initTooltips();
 
   updateVersionAndChangelogUI();
 }

@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { createMineZone3D } from '../../MineZone3D.js';
+import { createMineZone3D } from '../../canvas/MineZone3D.js';
 import { getSettings, getEventContext, setMineZoneCanvasApi } from '../../../application/gameState.js';
 
 const containerRef = ref<HTMLElement | null>(null);

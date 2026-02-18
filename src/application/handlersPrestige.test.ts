@@ -6,8 +6,8 @@ import { confirmPrestige } from './handlersPrestige.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { PRESTIGE_COIN_THRESHOLD } from '../domain/constants.js';
 
-vi.mock('../presentation/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
-vi.mock('../presentation/toasts.js', () => ({
+vi.mock('../presentation/upgradeList/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
+vi.mock('../presentation/toasts/toasts.js', () => ({
   showPrestigeMilestoneToast: vi.fn(),
   showMiniMilestoneToast: vi.fn(),
 }));

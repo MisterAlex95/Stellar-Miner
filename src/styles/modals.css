@@ -482,6 +482,11 @@
   z-index: 1;
 }
 
+.upgrade-choose-planet-item--recommended {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb, 99, 102, 241), 0.08);
+}
+
 .upgrade-choose-planet-item-header {
   display: flex;
   align-items: center;

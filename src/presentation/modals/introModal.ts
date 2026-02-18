@@ -1,4 +1,4 @@
-import { getSession } from '../application/gameState.js';
+import { getSession } from '../../application/gameState.js';
 import {
   PROGRESSION_BLOCKS,
   getUnlockedBlocks,
@@ -6,9 +6,9 @@ import {
   markModalSeen,
   shouldShowWelcome,
   type BlockId,
-} from '../application/progression.js';
-import { t, type StringKey } from '../application/strings.js';
-import { openOverlay, closeOverlay, isOverlayOpen } from './components/overlay.js';
+} from '../../application/progression.js';
+import { t, type StringKey } from '../../application/strings.js';
+import { openOverlay, closeOverlay, isOverlayOpen } from '../components/overlay.js';
 
 const INTRO_READY_DELAY_MS = 5000;
 

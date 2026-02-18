@@ -40,5 +40,5 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
-import { dismissIntroModal } from '../../introModal.js';
+import { dismissIntroModal } from '../../modals/introModal.js';
 </script>

@@ -38,7 +38,7 @@
 import { t } from '../../../application/strings.js';
 import { openSettings } from '../../../application/handlers.js';
 import { openInfoModal, openAchievementsModal } from '../../mount/mountModals.js';
-import { updateVersionAndChangelogUI, renderChangelogList } from '../../initPresentation.js';
+import { updateVersionAndChangelogUI, renderChangelogList } from '../../bootstrap/initPresentation.js';
 import { useAppUIStore } from '../stores/appUI.js';
 
 const appUI = useAppUIStore();

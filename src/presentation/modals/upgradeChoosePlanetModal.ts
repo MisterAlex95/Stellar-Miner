@@ -1,17 +1,17 @@
 /**
- * Modal to choose a planet for install (Buy/Max) or uninstall when the player has multiple planets.
+ * Modal to choose a planet for install (Install/Max) or uninstall when the player has multiple planets.
  * Each option has a collapse/expand (default closed) for full details + preview, and a "Select" button.
  */
-import type { Planet } from '../domain/entities/Planet.js';
-import type { GameSession } from '../domain/aggregates/GameSession.js';
-import { getSession, getSettings } from '../application/gameState.js';
-import { getEffectiveUpgradeUsesSlot } from '../application/research.js';
-import { getEffectiveUsedSlots } from '../application/research.js';
-import { getPlanetEffectiveProduction } from '../application/productionHelpers.js';
-import { getPlanetType, getBestPlanetTypes } from '../application/planetAffinity.js';
-import { getPlanetDisplayName } from '../application/solarSystems.js';
-import { formatNumber } from '../application/format.js';
-import { t } from '../application/strings.js';
+import type { Planet } from '../../domain/entities/Planet.js';
+import type { GameSession } from '../../domain/aggregates/GameSession.js';
+import { getSession, getSettings } from '../../application/gameState.js';
+import { getEffectiveUpgradeUsesSlot } from '../../application/research.js';
+import { getEffectiveUsedSlots } from '../../application/research.js';
+import { getPlanetEffectiveProduction } from '../../application/productionHelpers.js';
+import { getPlanetType, getBestPlanetTypes } from '../../application/planetAffinity.js';
+import { getPlanetDisplayName } from '../../application/solarSystems.js';
+import { formatNumber } from '../../application/format.js';
+import { t } from '../../application/strings.js';
 import {
   handleUpgradeBuy,
   handleUpgradeBuyMax,
@@ -20,10 +20,10 @@ import {
   showUpgradeUninstallProgress,
   cancelUpgradeInstall,
   cancelUpgradeUninstall,
-} from '../application/handlers.js';
-import { openOverlay, closeOverlay } from './components/overlay.js';
-import { escapeAttr } from './components/domUtils.js';
-import { startPlanetThumbnail3DLoop } from './planetThumbnail3D.js';
+} from '../../application/handlers.js';
+import { openOverlay, closeOverlay } from '../components/overlay.js';
+import { escapeAttr } from '../components/domUtils.js';
+import { startPlanetThumbnail3DLoop } from '../canvas/planetThumbnail3D.js';
 
 const OVERLAY_ID = 'upgrade-choose-planet-overlay';
 const OPEN_CLASS = 'upgrade-choose-planet-overlay--open';
@@ -84,14 +84,18 @@ export function openUpgradeChoosePlanetModal(opts: {
   listEl.innerHTML = '';
   const bestTypesLower =
     action === 'buy' || action === 'max'
-      ? getBestPlanetTypes(upgradeId).map((t) => t.toLowerCase())
+      ? getBestPlanetTypes(upgradeId).map((ty) => ty.toLowerCase())
       : [];
 
   for (const p of planets) {
     const fullPlanet = session?.player.planets.find((pl) => pl.id === p.id);
+    const isRecommended =
+      bestTypesLower.length > 0 &&
+      fullPlanet &&
+      bestTypesLower.includes(getPlanetType(fullPlanet.name));
     const item = document.createElement('div');
     item.setAttribute('role', 'listitem');
-    item.className = 'upgrade-choose-planet-item upgrade-choose-planet-item--collapsed';
+    item.className = 'upgrade-choose-planet-item upgrade-choose-planet-item--collapsed' + (isRecommended ? ' upgrade-choose-planet-item--recommended' : '');
     item.setAttribute('data-planet-id', p.id);
 
     const header = document.createElement('div');
@@ -107,14 +111,12 @@ export function openUpgradeChoosePlanetModal(opts: {
     chip.textContent = `×${installedCount}`;
     chip.setAttribute('aria-label', `${installedCount} ${t('upgradeChoosePlanetInstalledOnPlanet')}`);
 
-    const isRecommended =
-      bestTypesLower.length > 0 &&
-      fullPlanet &&
-      bestTypesLower.includes(getPlanetType(fullPlanet.name));
     const recommendedSpan = document.createElement('span');
     if (isRecommended) {
       recommendedSpan.className = 'upgrade-choose-planet-recommended';
       recommendedSpan.textContent = t('recommended');
+      recommendedSpan.setAttribute('title', t('upgradeChoosePlanetRecommendedHint'));
+      recommendedSpan.setAttribute('aria-label', t('upgradeChoosePlanetRecommendedHint'));
     }
 
     const toggleBtn = document.createElement('button');

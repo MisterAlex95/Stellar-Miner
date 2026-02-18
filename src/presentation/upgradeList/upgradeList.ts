@@ -1,19 +1,19 @@
-import { getSession, getSettings } from '../application/gameState.js';
+import { getSession, getSettings } from '../../application/gameState.js';
 import {
   UPGRADE_CATALOG,
   getDisplayUnlockedUpgradeTiers,
   getUpgradeCost,
   UPGRADE_DISPLAY_COUNT,
-} from '../application/catalogs.js';
-import { getEffectiveUpgradeUsesSlot, getEffectiveRequiredAstronauts } from '../application/research.js';
-import { getPlanetDisplayName } from '../application/solarSystems.js';
-import { t, tParam } from '../application/strings.js';
-import { formatNumber } from '../application/format.js';
-import { getCatalogUpgradeName } from '../application/i18nCatalogs.js';
-import { notifyRefresh } from '../application/refreshSignal.js';
-import { cancelUpgradeInstall, cancelUpgradeUninstall } from '../application/handlers.js';
-import { updateTooltipForButton } from './components/buttonTooltip.js';
-import { getUpgradeCardState, buildUpgradeCardHtml } from './components/upgradeCard.js';
+} from '../../application/catalogs.js';
+import { getEffectiveUpgradeUsesSlot, getEffectiveRequiredAstronauts } from '../../application/research.js';
+import { getPlanetDisplayName } from '../../application/solarSystems.js';
+import { t, tParam } from '../../application/strings.js';
+import { formatNumber } from '../../application/format.js';
+import { getCatalogUpgradeName } from '../../application/i18nCatalogs.js';
+import { notifyRefresh } from '../../application/refreshSignal.js';
+import { cancelUpgradeInstall, cancelUpgradeUninstall } from '../../application/handlers.js';
+import { updateTooltipForButton } from '../components/buttonTooltip.js';
+import { getUpgradeCardState, buildUpgradeCardHtml } from '../components/upgradeCard.js';
 
 const UPGRADE_LIST_ID = 'upgrade-list';
 

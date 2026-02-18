@@ -3,7 +3,7 @@
  * Drop-in replacement for createMineZoneCanvas (same API).
  */
 import * as THREE from 'three';
-import { PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
+import { PLANETS_PER_SOLAR_SYSTEM } from '../../application/solarSystems.js';
 import {
   generateProceduralPlanetTexture,
   type PlanetPaletteName,

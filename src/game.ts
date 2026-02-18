@@ -1,9 +1,9 @@
 import './styles/index.css';
 import { setPresentationPort } from './application/uiBridge.js';
-import { createPresentationPort } from './presentation/presentationPortImpl.js';
-import { startStarfield } from './presentation/StarfieldCanvas.js';
+import { createPresentationPort } from './presentation/bootstrap/presentationPortImpl.js';
+import { startStarfield } from './presentation/canvas/StarfieldCanvas.js';
 import { mountVueApp } from './presentation/vue/main.js';
-import { initPresentation } from './presentation/initPresentation.js';
+import { initPresentation } from './presentation/bootstrap/initPresentation.js';
 import { switchTab, getTabsSnapshot } from './presentation/mount/mountTabs.js';
 import {
   getOrCreateSession,
@@ -28,17 +28,17 @@ import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DE
 import { recordStatsIfDue, loadStatsHistory, getStatsHistory } from './application/statsHistory.js';
 import { getResearchProductionMultiplier } from './application/research.js';
 import { getStatsSnapshot } from './application/statsSnapshot.js';
-import { updateUpgradeListInPlace } from './presentation/upgradeList.js';
+import { updateUpgradeListInPlace } from './presentation/upgradeList/upgradeList.js';
 import { updateQuestProgressStore } from './application/questProgressStore.js';
 import { getQuestSnapshot } from './application/questSnapshot.js';
 import { getComboSnapshot } from './application/comboSnapshot.js';
 import { getPlanetDisplayName } from './application/solarSystems.js';
 import { getUnlockedBlocks } from './application/progression.js';
 import { getProgressionSnapshot } from './application/progressionSnapshot.js';
-import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/introModal.js';
+import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/modals/introModal.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
 import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
-import { showOfflineToast } from './presentation/toasts.js';
+import { showOfflineToast } from './presentation/toasts/toasts.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
 import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';

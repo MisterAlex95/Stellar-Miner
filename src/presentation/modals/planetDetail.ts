@@ -2,18 +2,18 @@
  * Planet detail modal: large interactive 3D planet (three.js) with stats.
  * Opens when clicking a planet preview in the planet list.
  */
-import type { Planet } from '../domain/entities/Planet.js';
-import { getSession, getSettings } from '../application/gameState.js';
-import { formatNumber } from '../application/format.js';
-import { getPlanetEffectiveProduction } from '../application/productionHelpers.js';
-import { getPlanetType } from '../application/planetAffinity.js';
-import { getEffectiveUsedSlots } from '../application/research.js';
-import { getPlanetDisplayName, getSolarSystemName, PLANETS_PER_SOLAR_SYSTEM } from '../application/solarSystems.js';
-import { t, tParam } from '../application/strings.js';
-import { openOverlay, closeOverlay } from './components/overlay.js';
-import { escapeAttr } from './components/domUtils.js';
-import { HOUSING_ASTRONAUT_CAPACITY } from '../domain/constants.js';
-import { createPlanetScene, type PlanetScene } from './planetDetail3D.js';
+import type { Planet } from '../../domain/entities/Planet.js';
+import { getSession, getSettings } from '../../application/gameState.js';
+import { formatNumber } from '../../application/format.js';
+import { getPlanetEffectiveProduction } from '../../application/productionHelpers.js';
+import { getPlanetType } from '../../application/planetAffinity.js';
+import { getEffectiveUsedSlots } from '../../application/research.js';
+import { getPlanetDisplayName, getSolarSystemName, PLANETS_PER_SOLAR_SYSTEM } from '../../application/solarSystems.js';
+import { t, tParam } from '../../application/strings.js';
+import { openOverlay, closeOverlay } from '../components/overlay.js';
+import { escapeAttr } from '../components/domUtils.js';
+import { HOUSING_ASTRONAUT_CAPACITY } from '../../domain/constants.js';
+import { createPlanetScene, type PlanetScene } from '../canvas/planetDetail3D.js';
 
 export const PLANET_DETAIL_OVERLAY_ID = 'planet-detail-overlay';
 export const PLANET_DETAIL_OPEN_CLASS = 'planet-detail-overlay--open';

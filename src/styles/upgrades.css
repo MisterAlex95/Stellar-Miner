@@ -8,7 +8,7 @@
 .upgrade-list {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.65rem;
 }
 
 .upgrade-group-header {

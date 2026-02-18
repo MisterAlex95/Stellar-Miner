@@ -87,7 +87,7 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
-import { closeExpeditionModal, onLaunchExpeditionClick } from '../../expeditionModal.js';
+import { closeExpeditionModal, onLaunchExpeditionClick } from '../../modals/expeditionModal.js';
 
 function onActionsClick(e: MouseEvent): void {
   const target = e.target as HTMLElement;

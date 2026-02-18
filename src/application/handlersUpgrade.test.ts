@@ -7,11 +7,11 @@ import { completeUpgradeInstallations } from './upgradeInstallation.js';
 /** Generous delay so all upgrades (variable duration by tier/cost) finish in tests. Must exceed gameConfig install formula (e.g. drill-mk1 ~25s). */
 const INSTALL_WAIT_MS = 60_000;
 
-vi.mock('../presentation/upgradeList.js', () => ({
+vi.mock('../presentation/upgradeList/upgradeList.js', () => ({
   renderUpgradeList: vi.fn(),
   flashUpgradeCard: vi.fn(),
 }));
-vi.mock('../presentation/toasts.js', () => ({ showMiniMilestoneToast: vi.fn() }));
+vi.mock('../presentation/toasts/toasts.js', () => ({ showMiniMilestoneToast: vi.fn() }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
 vi.mock('./handlersSave.js', () => ({ saveSession: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));

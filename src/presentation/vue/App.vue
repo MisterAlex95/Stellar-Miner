@@ -23,6 +23,7 @@
     <IntroModal />
     <ToastContainer />
     <DebugPanel />
+    <GlobalTooltip />
   </div>
 </template>
 
@@ -45,6 +46,7 @@ import PlanetDetailModal from './components/PlanetDetailModal.vue';
 import ExpeditionModal from './components/ExpeditionModal.vue';
 import IntroModal from './components/IntroModal.vue';
 import DebugPanel from './components/DebugPanel.vue';
+import GlobalTooltip from './components/GlobalTooltip.vue';
 import StatsBlock from './components/StatsBlock.vue';
 import PanelsShell from './components/PanelsShell.vue';
 import { useGameStateStore } from './stores/gameState.js';

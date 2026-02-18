@@ -19,8 +19,8 @@ import {
 } from './handlersPlanet.js';
 import { getNewPlanetCost } from '../domain/constants.js';
 
-vi.mock('../presentation/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
-vi.mock('../presentation/toasts.js', () => ({ showMiniMilestoneToast: vi.fn() }));
+vi.mock('../presentation/upgradeList/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
+vi.mock('../presentation/toasts/toasts.js', () => ({ showMiniMilestoneToast: vi.fn() }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
 vi.mock('./handlersSave.js', () => ({ saveSession: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));

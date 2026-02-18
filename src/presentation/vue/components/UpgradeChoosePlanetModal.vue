@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { t } from '../../../application/strings.js';
-import { closeUpgradeChoosePlanetModal } from '../../upgradeChoosePlanetModal.js';
+import { closeUpgradeChoosePlanetModal } from '../../modals/upgradeChoosePlanetModal.js';
 
 function onActionsClick(e: MouseEvent): void {
   const target = e.target as HTMLElement;
