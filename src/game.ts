@@ -28,7 +28,6 @@ import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DE
 import { recordStatsIfDue, loadStatsHistory, getStatsHistory } from './application/statsHistory.js';
 import { getResearchProductionMultiplier } from './application/research.js';
 import { getStatsSnapshot } from './application/statsSnapshot.js';
-import { updateUpgradeListInPlace } from './presentation/upgradeList/upgradeList.js';
 import { updateQuestProgressStore } from './application/questProgressStore.js';
 import { getQuestSnapshot } from './application/questSnapshot.js';
 import { getComboSnapshot } from './application/comboSnapshot.js';
@@ -81,7 +80,6 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
     const earned = rateDec.mul(dt).toNumber();
     if (Number.isFinite(earned)) addRunCoins(earned);
   }
-  updateUpgradeListInPlace();
   recordStatsIfDue(nowMs, session.player.coins.value, rateDec, session.player.totalCoinsEver, getSessionClickCount(), getSessionCoinsFromClicks());
 }
 

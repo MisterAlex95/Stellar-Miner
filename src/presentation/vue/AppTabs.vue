@@ -1,7 +1,7 @@
 <template>
   <div class="app-tabs-wrapper">
   <nav class="app-tabs vue-shell-tabs" role="tablist" :aria-label="t('gameSections')">
-    <div class="app-tabs-scroll">
+    <div ref="tabsScrollRef" class="app-tabs-scroll">
       <button
         v-for="tabId in tabIds"
         :key="tabId"
@@ -27,7 +27,7 @@
         ref="tabMoreRef"
         type="button"
         class="app-tab app-tab-more"
-        :class="{ 'app-tab-more--active': isActiveTabInOverflow, 'app-tab-more--has-action': hasActionInOverflow }"
+        :class="{ 'app-tab-more--active': showActiveOnMore, 'app-tab-more--has-action': showHasActionOnMore }"
         id="tab-more"
         aria-haspopup="true"
         :aria-expanded="menuOpen"
@@ -89,7 +89,7 @@
         ref="tabBottomMoreRef"
         type="button"
         class="app-tab-bottom app-tab-bottom-more"
-        :class="{ 'app-tab-bottom-more--active': isActiveTabInBottomOverflow, 'app-tab-bottom-more--has-action': hasActionInBottomOverflow }"
+        :class="{ 'app-tab-bottom-more--active': showActiveOnBottomMore, 'app-tab-bottom-more--has-action': showHasActionOnBottomMore }"
         id="tab-bottom-more"
         aria-haspopup="true"
         :aria-expanded="bottomMenuOpen"
@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { t } from '../../application/strings.js';
 import { useGameStateStore } from './stores/gameState.js';
 import { switchTab, pushTabState, VALID_TAB_IDS, HISTORY_STATE_KEY, type TabId } from '../mount/mountTabs.js';
@@ -144,6 +144,9 @@ const menuOpen = ref(false);
 const bottomMenuOpen = ref(false);
 const tabMoreRef = ref<HTMLElement | null>(null);
 const tabBottomMoreRef = ref<HTMLElement | null>(null);
+const tabsScrollRef = ref<HTMLElement | null>(null);
+/** Which tab ids are currently visible inside the top tab scroll area (layout-based). */
+const tabVisibleInScroll = reactive<Record<string, boolean>>({});
 
 const activeTab = computed(() => store.activeTab);
 const tabIds = VALID_TAB_IDS as unknown as TabId[];
@@ -170,8 +173,39 @@ const isActiveTabInBottomOverflow = computed(() =>
   (bottomOverflowTabIds as readonly string[]).includes(store.activeTab),
 );
 
+/** Active tab is in overflow list AND actually hidden in scroll (not visible in bar) */
+const isActiveTabActuallyInOverflow = computed(() => {
+  if (!isActiveTabInOverflow.value) return false;
+  const visible = tabVisibleInScroll[store.activeTab];
+  return visible === false;
+});
+/** At least one overflow tab has a badge AND is actually hidden in scroll */
+const hasActionActuallyInOverflow = computed(() =>
+  overflowTabIds.some(
+    (id) =>
+      store.tabs.visible[id] &&
+      store.tabs.badges[id] &&
+      tabVisibleInScroll[id] === false,
+  ),
+);
+/** Only show orange on "..." when the overflow menu has items and active tab is hidden in it */
+const showActiveOnMore = computed(
+  () => visibleOverflowCount.value > 0 && isActiveTabActuallyInOverflow.value,
+);
+/** Only show green on "..." when a tab that is actually hidden has a badge */
+const showHasActionOnMore = computed(
+  () => visibleOverflowCount.value > 0 && hasActionActuallyInOverflow.value,
+);
+const showActiveOnBottomMore = computed(
+  () => visibleBottomOverflowCount.value > 0 && isActiveTabInBottomOverflow.value,
+);
+const showHasActionOnBottomMore = computed(
+  () => visibleBottomOverflowCount.value > 0 && hasActionInBottomOverflow.value,
+);
+
 function tabLabel(tabId: string): string {
-  return t(TAB_LABELS[tabId as TabId] ?? 'tabMine');
+  const key = TAB_LABELS[tabId as TabId] ?? 'tabMine';
+  return t(key as Parameters<typeof t>[0]);
 }
 
 function goToTab(tabId: string): void {
@@ -218,14 +252,32 @@ function onPopState(e: PopStateEvent): void {
   if (tabId && VALID_TAB_IDS.includes(tabId as TabId)) goToTab(tabId);
 }
 
+let scrollObserver: IntersectionObserver | null = null;
+
 onMounted(() => {
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('keydown', onDocumentKeydown);
   window.addEventListener('popstate', onPopState);
+
+  const scrollEl = tabsScrollRef.value;
+  if (scrollEl) {
+    scrollObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const id = (entry.target as HTMLElement).getAttribute('data-tab');
+          if (id) tabVisibleInScroll[id] = entry.isIntersecting;
+        }
+      },
+      { root: scrollEl, rootMargin: '0px', threshold: 0 },
+    );
+    scrollEl.querySelectorAll<HTMLElement>('[data-tab]').forEach((el) => scrollObserver?.observe(el));
+  }
 });
 onUnmounted(() => {
   document.removeEventListener('click', onDocumentClick);
   document.removeEventListener('keydown', onDocumentKeydown);
   window.removeEventListener('popstate', onPopState);
+  scrollObserver?.disconnect();
+  scrollObserver = null;
 });
 </script>

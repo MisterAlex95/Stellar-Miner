@@ -1,31 +1,24 @@
 <template>
-  <div class="upgrade-list" @click="onUpgradeClick">
-    <div ref="cardsContainerRef" class="upgrade-list-cards"></div>
+  <div id="upgrade-list" class="upgrade-list" @click="onUpgradeClick">
+    <div v-if="cards.length === 0" class="empty-state" id="upgrades-empty-state">
+      <span class="empty-state-icon" aria-hidden="true"></span>
+      <p class="empty-state-text">{{ emptyText }}</p>
+    </div>
+    <div v-else class="upgrade-list-cards">
+      <UpgradeCard
+        v-for="item in cards"
+        :key="item.def.id"
+        :state="item.state"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue';
-import { useGameStateStore } from '../stores/gameState.js';
-import { renderUpgradeList, updateUpgradeListInPlace } from '../../upgradeList/upgradeList.js';
+import { useUpgradeList } from '../composables/useUpgradeList.js';
 import { useUpgradeActions } from '../composables/useUpgradeActions.js';
+import UpgradeCard from '../components/UpgradeCard.vue';
 
-const gameState = useGameStateStore();
+const { cards, emptyText } = useUpgradeList();
 const { onUpgradeClick } = useUpgradeActions();
-const cardsContainerRef = ref<HTMLElement | null>(null);
-
-onMounted(() => {
-  nextTick(() => {
-    const container = cardsContainerRef.value;
-    if (container) renderUpgradeList(container);
-  });
-});
-
-watch(
-  () => gameState,
-  () => {
-    updateUpgradeListInPlace();
-  },
-  { deep: true }
-);
 </script>
