@@ -14,6 +14,24 @@ export const useAppUIStore = defineStore('appUI', {
     introBlockId: null as string | null,
     introCanClose: false,
     introProgress: 0,
+    /** Upgrade choose planet modal: when set, modal is open; list is rendered by Vue. */
+    upgradeChoosePlanet: null as {
+      upgradeId: string;
+      action: 'buy' | 'max' | 'uninstall';
+      planets: {
+        id: string;
+        name: string;
+        displayName: string;
+        usedSlots: number;
+        maxUpgrades: number;
+        installedCount: number;
+        productionStr: string;
+        planetType: string;
+        visualSeed: number;
+        isRecommended: boolean;
+      }[];
+      maxCount?: number;
+    } | null,
   }),
   actions: {
     setInfoContent(version: string, hasUpdate: boolean): void {
@@ -52,6 +70,9 @@ export const useAppUIStore = defineStore('appUI', {
       this.introBlockId = null;
       this.introCanClose = false;
       this.introProgress = 0;
+    },
+    setUpgradeChoosePlanet(data: typeof this.upgradeChoosePlanet): void {
+      this.upgradeChoosePlanet = data;
     },
   },
 });

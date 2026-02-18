@@ -37,14 +37,12 @@ function formatRulesContent(text: string): DocumentFragment {
   return frag;
 }
 
-export function openInfoModal(updateVersionAndChangelogUI: () => void, renderChangelogList: (container: HTMLElement) => void): void {
-  const list = document.getElementById('info-changelog-list');
+export function openInfoModal(updateVersionAndChangelogUI: () => void): void {
   openOverlay('info-overlay', 'info-overlay--open', {
     focusId: 'info-close',
     onOpen: () => {
       markUpdateSeen();
       updateVersionAndChangelogUI();
-      if (list) renderChangelogList(list);
     },
   });
 }

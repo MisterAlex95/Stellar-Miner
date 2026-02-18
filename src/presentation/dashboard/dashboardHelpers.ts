@@ -9,7 +9,7 @@ import { getCatalogUpgradeName } from '../../application/i18nCatalogs.js';
 import { getPlanetType, getPlanetTypeMultiplier } from '../../application/planetAffinity.js';
 import { RESEARCH_CATALOG, canAttemptResearch } from '../../application/research.js';
 import type { ResearchNode } from '../../application/research.js';
-import { getMaxBuyCount } from '../upgradeList/upgradeList.js';
+import { getMaxBuyCount } from '../../application/upgradeHelpers.js';
 
 /** Ordered upgrade defs (by tier) the player can see. Next tier unlocks only when install is finished. */
 export function getOrderedUpgradeDefs(player: { upgrades: { id: string }[] }) {

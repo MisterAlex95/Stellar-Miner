@@ -7,18 +7,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { createMineZone3D } from '../../canvas/MineZone3D.js';
-import { getSettings, getEventContext, setMineZoneCanvasApi } from '../../../application/gameState.js';
+import { ref, onMounted } from 'vue';
+import { useMineZoneCanvas } from '../composables/useMineZoneCanvas.js';
 
 const containerRef = ref<HTMLElement | null>(null);
 
 onMounted(() => {
-  if (!containerRef.value) return;
-  setMineZoneCanvasApi(createMineZone3D(containerRef.value, getSettings, getEventContext));
-});
-
-onUnmounted(() => {
-  setMineZoneCanvasApi(null);
+  useMineZoneCanvas(containerRef.value);
 });
 </script>

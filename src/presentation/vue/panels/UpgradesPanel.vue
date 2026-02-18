@@ -8,7 +8,7 @@
       <UpgradeCard
         v-for="item in cards"
         :key="item.def.id"
-        :state="item.state"
+        :item="item"
       />
     </div>
   </div>

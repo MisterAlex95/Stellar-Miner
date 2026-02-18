@@ -7,10 +7,6 @@ import {
   handleUpgradeBuy,
   handleUpgradeBuyMax,
   handleUpgradeUninstall,
-  showUpgradeInstallProgress,
-  showUpgradeUninstallProgress,
-  cancelUpgradeInstall,
-  cancelUpgradeUninstall,
 } from '../../../application/handlers.js';
 
 /** Upgrade list click handling: buy, max, uninstall. */
@@ -45,22 +41,7 @@ export function useUpgradeActions() {
           // ignore
         }
       } else if (uninstallPlanetId) {
-        const result = handleUpgradeUninstall(upgradeId, uninstallPlanetId);
-        if (result.uninstalled && result.durationMs != null) {
-          const durationMs = result.durationMs;
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              const cardEl = document.querySelector<HTMLElement>(`.upgrade-card[data-upgrade-id="${upgradeId}"]`);
-              if (cardEl) {
-                showUpgradeUninstallProgress(cardEl, durationMs, {
-                  upgradeId,
-                  planetId: uninstallPlanetId,
-                  onCancel: () => cancelUpgradeUninstall(upgradeId, uninstallPlanetId),
-                });
-              }
-            });
-          });
-        }
+        handleUpgradeUninstall(upgradeId, uninstallPlanetId);
       }
       return;
     }
@@ -82,14 +63,7 @@ export function useUpgradeActions() {
         }
       } else {
         const planetId = player?.planets[0]?.id;
-        const result = handleUpgradeBuyMax(upgradeId, planetId, Number.isFinite(maxCount) ? maxCount : undefined);
-        if (result.bought > 0 && result.durations.length > 0 && card instanceof HTMLElement && planetId) {
-          showUpgradeInstallProgress(card, result.durations, {
-            upgradeId,
-            planetId,
-            onCancel: () => cancelUpgradeInstall(upgradeId, planetId, result.durations.length),
-          });
-        }
+        handleUpgradeBuyMax(upgradeId, planetId, Number.isFinite(maxCount) ? maxCount : undefined);
       }
       return;
     }
@@ -102,14 +76,7 @@ export function useUpgradeActions() {
         }
       } else {
         const planetId = player?.planets[0]?.id;
-        const result = handleUpgradeBuy(upgradeId, planetId);
-        if (result.bought && result.durations.length > 0 && card instanceof HTMLElement && planetId) {
-          showUpgradeInstallProgress(card, result.durations, {
-            upgradeId,
-            planetId,
-            onCancel: () => cancelUpgradeInstall(upgradeId, planetId, result.durations.length),
-          });
-        }
+        handleUpgradeBuy(upgradeId, planetId);
       }
     }
   }

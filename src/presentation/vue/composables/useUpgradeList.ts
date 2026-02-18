@@ -11,7 +11,14 @@ import {
   type UpgradeDef,
 } from '../../../application/catalogs.js';
 import { getPlanetDisplayName } from '../../../application/solarSystems.js';
-import { getMaxBuyCount } from '../../upgradeList/upgradeList.js';
+import {
+  getMaxBuyCount,
+  getInstallingRanges,
+  getInstallingCountByPlanet,
+  getUninstallingRanges,
+  getUninstallingByPlanet,
+  type InstallUninstallRange,
+} from '../../../application/upgradeHelpers.js';
 import { getUpgradeCardState, type UpgradeCardState } from '../../components/upgradeCard.js';
 import { t } from '../../../application/strings.js';
 
@@ -20,6 +27,12 @@ export type UpgradeCardItem = {
   def: UpgradeDef;
   planetsForSelect: { id: string; name: string }[];
   choosePlanet: boolean;
+  /** Active installs (endsAt > now); for progress overlay */
+  installingRanges: InstallUninstallRange[];
+  installingByPlanet: { planetId: string; count: number }[];
+  /** Active uninstalls (endsAt > now) */
+  uninstallingRanges: InstallUninstallRange[];
+  uninstallingByPlanet: { planetId: string }[];
 };
 
 export function useUpgradeList() {
@@ -43,6 +56,7 @@ export function useUpgradeList() {
     );
     const defsToShow = allUnlockedDefs.slice(0, UPGRADE_DISPLAY_COUNT);
 
+    const now = Date.now();
     return defsToShow.map((def) => {
       const maxCount = getMaxBuyCount(def.id);
       const state = getUpgradeCardState(def, player, settings, hasFreeSlot, maxCount);
@@ -51,7 +65,18 @@ export function useUpgradeList() {
         const idx = player.planets.findIndex((pl) => pl.id === p.id);
         return { id: p.id, name: getPlanetDisplayName(p.name, idx >= 0 ? idx : 0) };
       });
-      return { state, def, planetsForSelect, choosePlanet };
+      const installingRanges = getInstallingRanges(def.id).filter((r) => r.endsAt > now);
+      const uninstallingRanges = getUninstallingRanges(def.id).filter((r) => r.endsAt > now);
+      return {
+        state,
+        def,
+        planetsForSelect,
+        choosePlanet,
+        installingRanges,
+        installingByPlanet: getInstallingCountByPlanet(def.id),
+        uninstallingRanges,
+        uninstallingByPlanet: getUninstallingByPlanet(def.id),
+      };
     });
   });
 

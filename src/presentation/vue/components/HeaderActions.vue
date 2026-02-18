@@ -38,15 +38,14 @@
 import { t } from '../../../application/strings.js';
 import { openSettings } from '../../../application/handlers.js';
 import { openInfoModal, openAchievementsModal } from '../../mount/mountModals.js';
-import { updateVersionAndChangelogUI, renderChangelogList } from '../../bootstrap/initPresentation.js';
+import { updateVersionAndChangelogUI } from '../../bootstrap/initPresentation.js';
 import { useAppUIStore } from '../stores/appUI.js';
 
 const appUI = useAppUIStore();
 const hasUpdate = () => appUI.infoHasUpdate;
 
 function onInfoClick(): void {
-  const list = document.getElementById('info-changelog-list');
-  if (list) openInfoModal(updateVersionAndChangelogUI, renderChangelogList);
+  openInfoModal(updateVersionAndChangelogUI);
 }
 
 function onAchievementsClick(): void {
