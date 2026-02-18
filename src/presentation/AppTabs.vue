@@ -37,6 +37,7 @@
         <span class="app-tab-more-dots">⋯</span>
       </button>
       <div
+        ref="appTabsMenuRef"
         class="app-tabs-menu"
         id="app-tabs-menu"
         role="menu"
@@ -82,6 +83,7 @@
       <span>{{ tabLabel(tabId) }}</span>
     </button>
     <div
+      ref="appTabsBottomMoreWrapRef"
       class="app-tabs-bottom-more-wrap"
       :class="{ 'app-tabs-bottom-more-wrap--empty': !visibleBottomOverflowCount }"
     >
@@ -99,6 +101,7 @@
         <span class="app-tab-more-dots">⋯</span>
       </button>
       <div
+        ref="appTabsBottomMenuRef"
         class="app-tabs-bottom-menu"
         id="app-tabs-bottom-menu"
         role="menu"
@@ -144,6 +147,9 @@ const menuOpen = ref(false);
 const bottomMenuOpen = ref(false);
 const tabMoreRef = ref<HTMLElement | null>(null);
 const tabBottomMoreRef = ref<HTMLElement | null>(null);
+const appTabsMenuRef = ref<HTMLElement | null>(null);
+const appTabsBottomMenuRef = ref<HTMLElement | null>(null);
+const appTabsBottomMoreWrapRef = ref<HTMLElement | null>(null);
 const tabsScrollRef = ref<HTMLElement | null>(null);
 /** Which tab ids are currently visible inside the top tab scroll area (layout-based). */
 const tabVisibleInScroll = reactive<Record<string, boolean>>({});
@@ -215,14 +221,11 @@ function goToTab(tabId: string): void {
 
 function onDocumentClick(e: MouseEvent): void {
   const target = e.target as Node;
-  if (menuOpen.value && tabMoreRef.value && !tabMoreRef.value.contains(target)) {
-    const menu = document.getElementById('app-tabs-menu');
-    if (menu && !menu.contains(target)) menuOpen.value = false;
+  if (menuOpen.value && tabMoreRef.value && !tabMoreRef.value.contains(target) && appTabsMenuRef.value && !appTabsMenuRef.value.contains(target)) {
+    menuOpen.value = false;
   }
-  if (bottomMenuOpen.value && tabBottomMoreRef.value && !tabBottomMoreRef.value.contains(target)) {
-    const menu = document.getElementById('app-tabs-bottom-menu');
-    const wrap = document.querySelector('.app-tabs-bottom-more-wrap');
-    if (wrap && !wrap.contains(target) && menu && !menu.contains(target)) bottomMenuOpen.value = false;
+  if (bottomMenuOpen.value && tabBottomMoreRef.value && !tabBottomMoreRef.value.contains(target) && appTabsBottomMoreWrapRef.value && !appTabsBottomMoreWrapRef.value.contains(target) && appTabsBottomMenuRef.value && !appTabsBottomMenuRef.value.contains(target)) {
+    bottomMenuOpen.value = false;
   }
 }
 

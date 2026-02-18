@@ -184,7 +184,9 @@ All four items completed:
 | Escape key | `appUI.overlayStack` pushed in `openOverlay`, popped in `closeOverlay`. useGlobalKeyboard uses `peekOverlay()` and `OVERLAY_CLOSERS[id]()`; no getElementById for Escape. |
 | Quest claim anchor | PanelsShell sets `appUI.questClaimAnchor` (ref on button); port `getQuestClaimAnchor()` returns it; quests.ts uses port instead of getElementById. |
 
-Definition of done: no `getElementById`/`innerHTML` in handlers or modals for content; no getElementById for chart legend, tooltip, Escape, or quest claim. Only bootstrap (#app, legacy-root), canvas mount, and overlay open/close by ID remain.
+**AppTabs menu (click-outside):** Replaced `getElementById('app-tabs-menu'|'app-tabs-bottom-menu')` and `querySelector('.app-tabs-bottom-more-wrap')` with refs `appTabsMenuRef`, `appTabsBottomMenuRef`, `appTabsBottomMoreWrapRef`.
+
+Definition of done: no `getElementById`/`innerHTML` in handlers or modals for content; no getElementById for chart legend, tooltip, Escape, quest claim, or tabs menu. Only bootstrap (#app, legacy-root), canvas mount, overlay open/close by ID, and mount/tabs.ts panel container lookup remain.
 
 ---
 
