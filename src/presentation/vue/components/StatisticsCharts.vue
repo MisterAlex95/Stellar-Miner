@@ -110,9 +110,8 @@ import { formatNumber } from '../../../application/format.js';
 import {
   getCoinsGainedPerPeriod,
   getCoinsPerClickPerPeriod,
-  updateChartLegend,
-} from '../../statisticsView.js';
-import { CHART_COLORS, getChartIndexAtOffsetX, drawLineChart } from '../../components/chartUtils.js';
+} from '../../../application/statisticsData.js';
+import { CHART_COLORS, getChartIndexAtOffsetX, drawLineChart, updateChartLegend } from '../../components/chartUtils.js';
 import type { ChartRange } from '../../../application/statsHistory.js';
 
 const props = defineProps<{

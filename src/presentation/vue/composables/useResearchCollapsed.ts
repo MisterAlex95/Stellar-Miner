@@ -2,7 +2,7 @@ import { ref, watch } from 'vue';
 import {
   loadCollapsedTiers,
   saveCollapsedTiers,
-} from '../../researchView.js';
+} from '../../../application/research.js';
 
 /** Reactive collapsed tier state for research panel, persisted to localStorage. */
 export function useResearchCollapsed() {

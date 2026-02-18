@@ -512,6 +512,17 @@
   white-space: nowrap;
 }
 
+.upgrade-choose-planet-recommended {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  border: 1px solid var(--accent);
+  white-space: nowrap;
+}
+
 .upgrade-choose-planet-toggle {
   flex-shrink: 0;
   width: 2rem;

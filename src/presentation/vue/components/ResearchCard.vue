@@ -34,10 +34,6 @@
           {{ tParam('researchDataRequirement', { n: String(data.dataCost) }) }}
         </p>
         <p v-if="data.hasPity" class="research-card-pity">{{ t('researchPityNext') }}</p>
-        <label v-if="data.prestigePoints >= 1" class="research-card-prestige-point">
-          <input type="checkbox" class="research-use-prestige-point" />
-          {{ t('researchUsePrestigePoint') }}
-        </label>
         <button
           type="button"
           class="research-attempt-btn"
@@ -55,7 +51,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { t, tParam } from '../../../application/strings.js';
-import type { ResearchNodeDisplayData } from '../../researchView.js';
+import type { ResearchNodeDisplayData } from '../../../application/researchDisplay.js';
 
 const props = defineProps<{ data: ResearchNodeDisplayData }>();
 const emit = defineEmits<{

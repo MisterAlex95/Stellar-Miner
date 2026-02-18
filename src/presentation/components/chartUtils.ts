@@ -1,6 +1,20 @@
 /**
- * Shared line chart drawing for statistics. Used by statisticsView.
+ * Shared line chart drawing for statistics. Used by StatisticsCharts.vue.
  */
+import { tParam } from '../../application/strings.js';
+
+export function updateChartLegend(
+  legendId: string,
+  _legendLabel: string,
+  min: number,
+  max: number,
+  formatValue: (n: number) => string
+): void {
+  const el = document.getElementById(legendId);
+  if (!el) return;
+  const minmaxEl = el.querySelector('.statistics-chart-legend-minmax');
+  if (minmaxEl) minmaxEl.textContent = tParam('chartMinMax', { min: formatValue(min), max: formatValue(max) });
+}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));

@@ -1,5 +1,8 @@
-import type { getSession } from '../application/gameState.js';
-import { formatNumber } from '../application/format.js';
+/**
+ * Research node display data for Vue panel. Moved from presentation/researchView.
+ */
+import type { getSession } from './gameState.js';
+import { formatNumber } from './format.js';
 import {
   getUnlockedResearch,
   canAttemptResearch,
@@ -13,12 +16,11 @@ import {
   getExpectedCoinsToUnlock,
   getResearchFailureCount,
   getResearchData,
-  getPrestigeResearchPoints,
   getRecommendedResearchNodeIds,
   type ResearchNode,
-} from '../application/research.js';
-import { t, tParam, type StringKey } from '../application/strings.js';
-import { getCatalogResearchName, getCatalogResearchDesc, getCatalogUpgradeName } from '../application/i18nCatalogs.js';
+} from './research.js';
+import { t, tParam, type StringKey } from './strings.js';
+import { getCatalogResearchName, getCatalogResearchDesc, getCatalogUpgradeName } from './i18nCatalogs.js';
 import type { CrewJobRole } from '../domain/constants.js';
 import { RESEARCH_PITY_FAILURES } from '../domain/constants.js';
 
@@ -66,7 +68,6 @@ export type ResearchNodeDisplayData = {
   durationSec: number;
   dataCost: number;
   hasPity: boolean;
-  prestigePoints: number;
   isRecommended: boolean;
   isSecret: boolean;
   pathNames: string[];
@@ -84,7 +85,6 @@ export function getResearchNodeDisplayData(
   unlocked: string[],
   scientistCount: number,
   researchData: number,
-  prestigePoints: number,
   recommendedIds: string[]
 ): ResearchNodeDisplayData {
   const done = unlocked.includes(node.id);
@@ -131,7 +131,6 @@ export function getResearchNodeDisplayData(
     durationSec,
     dataCost,
     hasPity,
-    prestigePoints,
     isRecommended,
     isSecret,
     pathNames,
@@ -141,30 +140,4 @@ export function getResearchNodeDisplayData(
     desc: getCatalogResearchDesc(node.id),
     levelLabel: node.row + 1,
   };
-}
-
-export const RESEARCH_TIER_COLLAPSED_KEY = 'stellar-miner-research-tier-collapsed';
-
-export function loadCollapsedTiers(): Set<number> {
-  if (typeof localStorage === 'undefined') return new Set();
-  try {
-    const raw = localStorage.getItem(RESEARCH_TIER_COLLAPSED_KEY);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw) as unknown;
-    return new Set(Array.isArray(arr) ? arr.filter((x): x is number => typeof x === 'number') : []);
-  } catch {
-    return new Set();
-  }
-}
-
-export function saveCollapsedTiers(collapsed: Set<number>): void {
-  if (typeof localStorage === 'undefined') return;
-  localStorage.setItem(RESEARCH_TIER_COLLAPSED_KEY, JSON.stringify([...collapsed]));
-}
-
-/** No-op when Research panel is Vue-mounted; kept for presentation port API. */
-export function renderResearchSection(): void {
-  const listEl = document.getElementById('research-list');
-  if (!listEl) return;
-  if ((listEl as HTMLElement & { dataset?: Record<string, string> }).dataset?.vueResearchMounted === 'true') return;
 }

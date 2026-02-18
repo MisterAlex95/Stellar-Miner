@@ -111,8 +111,7 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
         return true;
       };
   const scientistCount = session.player.crewByRole?.scientist ?? 0;
-  const usePrestigePoint = (document.querySelector(`[data-research-id="${id}"] .research-use-prestige-point`) as HTMLInputElement)?.checked ?? false;
-  const result = attemptResearch(id, spendCoins, getUpgradeDisplayLine, scientistCount, { usePrestigePoint });
+  const result = attemptResearch(id, spendCoins, getUpgradeDisplayLine, scientistCount);
 
   if (result.success) {
     const node = RESEARCH_CATALOG.find((n) => n.id === id);

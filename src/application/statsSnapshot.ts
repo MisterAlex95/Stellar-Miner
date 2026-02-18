@@ -1,3 +1,6 @@
+/**
+ * Stats block snapshot for the game state bridge. Moved from presentation/statsView.
+ */
 import Decimal from 'break_infinity.js';
 import {
   getSession,
@@ -12,27 +15,71 @@ import {
   getClickTimestamps,
   getSessionClickCount,
   getSessionCoinsFromClicks,
-} from '../application/gameState.js';
-import { formatNumber } from '../application/format.js';
-import { getAssignedAstronauts } from '../application/crewHelpers.js';
+  getDiscoveredEventIds,
+} from './gameState.js';
+import { formatNumber } from './format.js';
+import { getAssignedAstronauts } from './crewHelpers.js';
 import { getMaxAstronauts, CREW_ROLES, type CrewRole, type CrewJobRole } from '../domain/constants.js';
-import { EVENT_INTERVAL_MS, EVENT_CATALOG } from '../application/catalogs.js';
-import { getDiscoveredEventIds } from '../application/gameState.js';
-import { getNextMilestone, getUnlockedBlocks } from '../application/progression.js';
+import { EVENT_INTERVAL_MS, EVENT_CATALOG } from './catalogs.js';
+import { getNextMilestone, getUnlockedBlocks } from './progression.js';
 import {
   getResearchProductionMultiplier,
   getResearchProductionPercent,
   getUnlockedCrewRoles,
   getResearchHousingCapacityBonus,
-} from '../application/research.js';
-import { getEstimatedClickRate } from '../application/productionHelpers.js';
-import { t, tParam, type StringKey } from '../application/strings.js';
-import { getCatalogEventName } from '../application/i18nCatalogs.js';
-import { formatDuration } from '../application/playTimeStats.js';
-import { createEventBadgeHtml } from './components/eventBadge.js';
-import type { StatsSnapshot } from './vue/stores/gameState.js';
+} from './research.js';
+import { getEstimatedClickRate } from './productionHelpers.js';
+import { t, tParam, type StringKey } from './strings.js';
+import { getCatalogEventName } from './i18nCatalogs.js';
+import { formatDuration } from './playTimeStats.js';
 
-/** Build stats block snapshot for Vue (no DOM). Side effect: setLastCoinsForBump. */
+export type StatsSnapshot = {
+  formattedCoins: string;
+  formattedProduction: string;
+  crewLine: string;
+  crewDetail: string;
+  crewByJob: { role: string; text: string }[];
+  showCrew: boolean;
+  crewCompact: string;
+  crewUnlocked: boolean;
+  productionBreakdown: string;
+  productionBreakdownVisible: boolean;
+  productionLive: boolean;
+  nextMilestoneText: string;
+  nextMilestoneVisible: boolean;
+  activeEventsHtml: string;
+  activeEventsVisible: boolean;
+  nextEventPct: number;
+  nextEventRowVisible: boolean;
+  nextEventLabelVisible: boolean;
+  eventsUnlocked: boolean;
+  coinsBump: boolean;
+  eventsHintBodyHtml: string;
+};
+
+function escapeAmpLt(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+function escapeAttr(s: string): string {
+  return escapeAmpLt(s).replace(/"/g, '&quot;');
+}
+function escapeHtml(s: string): string {
+  return escapeAmpLt(s).replace(/>/g, '&gt;');
+}
+
+function createEventBadgeHtml(
+  eventName: string,
+  secondsLeft: number,
+  title: string,
+  options: { modifier: 'positive' | 'negative'; mult: number }
+): string {
+  const { modifier, mult } = options;
+  const multStr = mult >= 1 ? `×${mult}` : `×${mult}`;
+  const cls = `event-badge event-badge--${modifier}`;
+  return `<span class="${cls}" data-mult="${escapeAttr(String(mult))}" title="${escapeAttr(title)}"><span class="event-badge__name">${escapeAttr(eventName)}</span> <span class="event-badge__mult">${escapeAttr(multStr)}</span> <span class="event-badge__time">— ${secondsLeft}s</span></span>`;
+}
+
+/** Build stats block snapshot for Vue bridge (no DOM). Side effect: setLastCoinsForBump. */
 export function getStatsSnapshot(): StatsSnapshot {
   const session = getSession();
   const settings = getSettings();
@@ -140,6 +187,7 @@ export function getStatsSnapshot(): StatsSnapshot {
   let nextMilestoneText = '';
   let nextMilestoneVisible = false;
   const milestone = getNextMilestone(session);
+  let coinsPerSecondFromClicksForMilestone = 0;
   if (milestone) {
     nextMilestoneVisible = true;
     const remaining = new Decimal(milestone.coinsNeeded).sub(session.player.coins.value);
@@ -234,10 +282,4 @@ export function getStatsSnapshot(): StatsSnapshot {
     coinsBump,
     eventsHintBodyHtml,
   };
-}
-
-function escapeHtml(s: string): string {
-  const div = document.createElement('div');
-  div.textContent = s;
-  return div.innerHTML;
 }

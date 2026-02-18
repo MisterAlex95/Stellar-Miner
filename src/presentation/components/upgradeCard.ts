@@ -1,5 +1,5 @@
 /**
- * Shared upgrade card state and HTML builder. Used by upgradeListView for render and update.
+ * Shared upgrade card state and HTML builder. Used by upgradeList for render and update.
  */
 import type { Player } from '../../domain/entities/Player.js';
 import { getSettings } from '../../application/gameState.js';

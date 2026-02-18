@@ -1,5 +1,7 @@
+/**
+ * Statistics data for Vue stats panel. Moved from presentation/statisticsView.
+ */
 import {
-  getSession,
   getSettings,
   getGameStartTime,
   getNextEventAt,
@@ -10,22 +12,21 @@ import {
   getRunStats,
   getPrestigesToday,
   getExpeditionEndsAt,
-} from '../application/gameState.js';
-import { getTotalClicksEver, getUnlockedAchievements, ACHIEVEMENTS } from '../application/achievements.js';
-import { getQuestStreak } from '../application/quests.js';
-import { getAssignedAstronauts } from '../application/crewHelpers.js';
-import { getPlayTimeStats, formatDuration } from '../application/playTimeStats.js';
-import { getStatsHistory, type ChartRange, type HistoryPoint } from '../application/statsHistory.js';
-import { formatNumber } from '../application/format.js';
-import { PLANET_PRODUCTION_BONUS, PRESTIGE_BONUS_PER_LEVEL, PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL, ASTRONAUT_PRODUCTION_BONUS } from '../domain/constants.js';
+} from './gameState.js';
+import { getTotalClicksEver, getUnlockedAchievements, ACHIEVEMENTS } from './achievements.js';
+import { getQuestStreak } from './quests.js';
+import { getAssignedAstronauts } from './crewHelpers.js';
+import { getPlayTimeStats, formatDuration } from './playTimeStats.js';
+import { getStatsHistory, type ChartRange, type HistoryPoint } from './statsHistory.js';
+import { formatNumber } from './format.js';
 import {
-  STATS_HISTORY_INTERVAL_MS,
-  STATS_HISTORY_MAX_POINTS,
-  STATS_LONG_TERM_INTERVAL_MS,
-  STATS_LONG_TERM_MAX_POINTS,
-} from '../application/catalogs.js';
-import { getUnlockedBlocks } from '../application/progression.js';
-import type { BlockId } from '../application/progression.js';
+  PLANET_PRODUCTION_BONUS,
+  PRESTIGE_BONUS_PER_LEVEL,
+  PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL,
+  ASTRONAUT_PRODUCTION_BONUS,
+} from '../domain/constants.js';
+import { getUnlockedBlocks } from './progression.js';
+import type { BlockId } from './progression.js';
 import type { GameSession } from '../domain/aggregates/GameSession.js';
 import {
   getResearchProductionMultiplier,
@@ -34,22 +35,10 @@ import {
   getEffectiveUsedSlots,
   getUnlockedResearch,
   getExpectedCoinsPerClick,
-} from '../application/research.js';
-import { RESEARCH_CATALOG } from '../application/research.js';
-import { getComboName } from '../application/catalogs.js';
-import { t, tParam } from '../application/strings.js';
-import {
-  createStatisticsCard,
-  createStatisticsCardWide,
-  createStatisticsGroup,
-} from './components/statisticsCard.js';
-import {
-  CHART_PADDING,
-  CHART_COLORS,
-  getChartIndexAtOffsetX,
-  drawLineChart,
-  type ChartOptions,
-} from './components/chartUtils.js';
+  RESEARCH_CATALOG,
+} from './research.js';
+import { getComboName } from './catalogs.js';
+import { t, tParam } from './strings.js';
 
 /** Which block must be unlocked to show each statistics group. */
 export const STAT_GROUP_UNLOCK: Record<string, BlockId> = {
@@ -62,53 +51,6 @@ export const STAT_GROUP_UNLOCK: Record<string, BlockId> = {
   'quests-events': 'quest',
   achievements: 'upgrades',
 };
-
-const STAT_IDS = [
-  'coins',
-  'production',
-  'total-coins-ever',
-  'base-production',
-  'planet-bonus',
-  'prestige-bonus',
-  'crew-bonus',
-  'event-mult',
-  'research-bonus',
-  'planets-count',
-  'upgrades-count',
-  'slots-used',
-  'prestige-level',
-  'crew-count',
-  'assigned-astronauts',
-  'clicks-lifetime',
-  'clicks-session',
-  'coins-from-clicks-session',
-  'play-time',
-  'session-duration',
-  'quest-streak',
-  'active-events-count',
-  'next-event-in',
-  'achievements-unlocked',
-  'achievements-total',
-  'coins-per-click-avg',
-  'run-duration',
-  'run-coins-earned',
-  'run-quests-claimed',
-  'run-events-triggered',
-  'run-max-combo',
-  'run-avg-coins-per-sec',
-  'prestiges-today',
-  'research-nodes-unlocked',
-  'expedition-status',
-  'playing-since',
-  'peak-production-chart',
-] as const;
-
-export function updateChartLegend(legendId: string, legendLabel: string, min: number, max: number, formatValue: (n: number) => string): void {
-  const el = document.getElementById(legendId);
-  if (!el) return;
-  const minmaxEl = el.querySelector('.statistics-chart-legend-minmax');
-  if (minmaxEl) minmaxEl.textContent = tParam('chartMinMax', { min: formatValue(min), max: formatValue(max) });
-}
 
 /** Coins gained per period: first point 0, then delta of totalCoinsEver. */
 export function getCoinsGainedPerPeriod(history: HistoryPoint[]): number[] {
@@ -129,12 +71,6 @@ export function getCoinsPerClickPerPeriod(history: HistoryPoint[]): number[] {
     return clicks > 0 ? fromClicks / clicks : 0;
   });
 }
-
-/** @deprecated Stats panel is now Vue (StatisticsPanel.vue). Kept as no-op for any legacy callers. */
-export function renderStatisticsSection(_container: HTMLElement): void {
-  // No-op: stats UI is driven by Vue panel.
-}
-
 
 export type StatisticsData = {
   stats: Record<string, string>;
@@ -262,9 +198,4 @@ export function computeStatisticsData(
     'coins-per-click-avg': formatNumber(coinsPerClickDisplay, compact),
   };
   return { stats, groupVisible, eventsUnlocked };
-}
-
-/** @deprecated Stats panel is now Vue (StatisticsPanel.vue). Kept as no-op for any legacy callers. */
-export function updateStatisticsSection(): void {
-  // No-op: stats UI is driven by Vue panel and bridge.
 }

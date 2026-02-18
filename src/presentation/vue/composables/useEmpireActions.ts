@@ -7,7 +7,7 @@ import {
   openPrestigeRewardsModal,
 } from '../../../application/handlers.js';
 import { openExpeditionModal } from '../../expeditionModal.js';
-import { openPlanetDetail } from '../../planetDetailView.js';
+import { openPlanetDetail } from '../../planetDetail.js';
 
 /** Empire panel click delegation: expedition, planets, prestige, crew. Returns true if the click was handled. */
 export function onEmpireClick(e: Event): boolean {

@@ -50,42 +50,124 @@ const DEFAULT_PARAMS: Required<ProceduralPlanetParams> = {
 
 type GradientStop = { position: number; color: string };
 
-const PALETTES: Record<PlanetPaletteName, GradientStop[]> = {
+/** Multiple palette variants per type for visual diversity; one is picked by seed. */
+const PALETTE_VARIANTS: Record<PlanetPaletteName, GradientStop[][]> = {
   earth: [
-    { position: 0, color: '#0a0f1a' }, { position: 4, color: '#0f172a' }, { position: 10, color: '#1e3a5f' },
-    { position: 18, color: '#1e40af' }, { position: 26, color: '#1d4ed8' }, { position: 34, color: '#2563eb' },
-    { position: 40, color: '#3b82f6' }, { position: 44, color: '#60a5fa' }, { position: 48, color: '#93c5fd' },
-    { position: 50, color: '#0d9488' }, { position: 52, color: '#0f766e' }, { position: 55, color: '#15803d' },
-    { position: 58, color: '#166534' }, { position: 62, color: '#22c55e' }, { position: 68, color: '#65a30d' },
-    { position: 74, color: '#84cc16' }, { position: 80, color: '#a3e635' }, { position: 84, color: '#94a3b8' },
-    { position: 88, color: '#64748b' }, { position: 92, color: '#475569' }, { position: 96, color: '#e2e8f0' }, { position: 100, color: '#f8fafc' },
+    [
+      { position: 0, color: '#0a0f1a' }, { position: 4, color: '#0f172a' }, { position: 10, color: '#1e3a5f' },
+      { position: 18, color: '#1e40af' }, { position: 26, color: '#1d4ed8' }, { position: 34, color: '#2563eb' },
+      { position: 40, color: '#3b82f6' }, { position: 44, color: '#60a5fa' }, { position: 48, color: '#93c5fd' },
+      { position: 50, color: '#0d9488' }, { position: 52, color: '#0f766e' }, { position: 55, color: '#15803d' },
+      { position: 58, color: '#166534' }, { position: 62, color: '#22c55e' }, { position: 68, color: '#65a30d' },
+      { position: 74, color: '#84cc16' }, { position: 80, color: '#a3e635' }, { position: 84, color: '#94a3b8' },
+      { position: 88, color: '#64748b' }, { position: 92, color: '#475569' }, { position: 96, color: '#e2e8f0' }, { position: 100, color: '#f8fafc' },
+    ],
+    [
+      { position: 0, color: '#0c1220' }, { position: 8, color: '#0f2847' }, { position: 16, color: '#1e3a5f' },
+      { position: 24, color: '#1e4976' }, { position: 32, color: '#2563eb' }, { position: 40, color: '#3b82f6' },
+      { position: 48, color: '#60a5fa' }, { position: 50, color: '#047857' }, { position: 54, color: '#059669' },
+      { position: 60, color: '#10b981' }, { position: 68, color: '#34d399' }, { position: 76, color: '#6ee7b7' },
+      { position: 82, color: '#99a2b4' }, { position: 88, color: '#64748b' }, { position: 94, color: '#cbd5e1' }, { position: 100, color: '#f1f5f9' },
+    ],
+    [
+      { position: 0, color: '#0a1628' }, { position: 10, color: '#1e3a5f' }, { position: 20, color: '#1d4ed8' },
+      { position: 32, color: '#2563eb' }, { position: 42, color: '#60a5fa' }, { position: 48, color: '#0f766e' },
+      { position: 52, color: '#0d9488' }, { position: 58, color: '#059669' }, { position: 64, color: '#22c55e' },
+      { position: 72, color: '#4ade80' }, { position: 80, color: '#86efac' }, { position: 86, color: '#94a3b8' },
+      { position: 92, color: '#64748b' }, { position: 100, color: '#e2e8f0' },
+    ],
   ],
   desert: [
-    { position: 0, color: '#1c1917' }, { position: 5, color: '#292524' }, { position: 12, color: '#44403c' },
-    { position: 18, color: '#57534e' }, { position: 24, color: '#78716c' }, { position: 30, color: '#a8a29e' },
-    { position: 38, color: '#b45309' }, { position: 45, color: '#a0826d' }, { position: 52, color: '#ca8a04' },
-    { position: 58, color: '#d4b896' }, { position: 65, color: '#e7d5b8' }, { position: 72, color: '#fde68a' },
-    { position: 78, color: '#e8dcc8' }, { position: 84, color: '#fef3c7' }, { position: 90, color: '#f5f0e8' }, { position: 100, color: '#fefce8' },
+    [
+      { position: 0, color: '#1c1917' }, { position: 5, color: '#292524' }, { position: 12, color: '#44403c' },
+      { position: 18, color: '#57534e' }, { position: 24, color: '#78716c' }, { position: 30, color: '#a8a29e' },
+      { position: 38, color: '#b45309' }, { position: 45, color: '#a0826d' }, { position: 52, color: '#ca8a04' },
+      { position: 58, color: '#d4b896' }, { position: 65, color: '#e7d5b8' }, { position: 72, color: '#fde68a' },
+      { position: 78, color: '#e8dcc8' }, { position: 84, color: '#fef3c7' }, { position: 90, color: '#f5f0e8' }, { position: 100, color: '#fefce8' },
+    ],
+    [
+      { position: 0, color: '#1a1512' }, { position: 8, color: '#3d2c1f' }, { position: 18, color: '#5c4033' },
+      { position: 28, color: '#8b6914' }, { position: 38, color: '#a16207' }, { position: 48, color: '#ca8a04' },
+      { position: 58, color: '#eab308' }, { position: 68, color: '#fde047' }, { position: 76, color: '#fef08a' },
+      { position: 84, color: '#fef9c3' }, { position: 92, color: '#fefce8' }, { position: 100, color: '#fffbeb' },
+    ],
+    [
+      { position: 0, color: '#291c14' }, { position: 10, color: '#4a3728' }, { position: 22, color: '#78350f' },
+      { position: 32, color: '#92400e' }, { position: 44, color: '#b45309' }, { position: 54, color: '#d97706' },
+      { position: 64, color: '#f59e0b' }, { position: 74, color: '#fbbf24' }, { position: 82, color: '#fde68a' },
+      { position: 90, color: '#fef3c7' }, { position: 100, color: '#fffbeb' },
+    ],
   ],
   ice: [
-    { position: 0, color: '#042f2e' }, { position: 6, color: '#0c4a6e' }, { position: 14, color: '#075985' },
-    { position: 22, color: '#0e7490' }, { position: 30, color: '#0891b2' }, { position: 38, color: '#06b6d4' },
-    { position: 46, color: '#22d3ee' }, { position: 54, color: '#67e8f9' }, { position: 62, color: '#a5f3fc' },
-    { position: 70, color: '#cffafe' }, { position: 76, color: '#e0f2fe' }, { position: 82, color: '#bae6fd' },
-    { position: 88, color: '#7dd3fc' }, { position: 94, color: '#f0f9ff' }, { position: 100, color: '#ecfeff' },
+    [
+      { position: 0, color: '#042f2e' }, { position: 6, color: '#0c4a6e' }, { position: 14, color: '#075985' },
+      { position: 22, color: '#0e7490' }, { position: 30, color: '#0891b2' }, { position: 38, color: '#06b6d4' },
+      { position: 46, color: '#22d3ee' }, { position: 54, color: '#67e8f9' }, { position: 62, color: '#a5f3fc' },
+      { position: 70, color: '#cffafe' }, { position: 76, color: '#e0f2fe' }, { position: 82, color: '#bae6fd' },
+      { position: 88, color: '#7dd3fc' }, { position: 94, color: '#f0f9ff' }, { position: 100, color: '#ecfeff' },
+    ],
+    [
+      { position: 0, color: '#0c1929' }, { position: 8, color: '#0e3344' }, { position: 18, color: '#155e75' },
+      { position: 28, color: '#0e7490' }, { position: 38, color: '#22d3ee' }, { position: 48, color: '#67e8f9' },
+      { position: 58, color: '#a5f3fc' }, { position: 68, color: '#cffafe' }, { position: 76, color: '#e0f2fe' },
+      { position: 84, color: '#bae6fd' }, { position: 92, color: '#f0f9ff' }, { position: 100, color: '#f0fdfa' },
+    ],
+    [
+      { position: 0, color: '#022c2f' }, { position: 10, color: '#134e4a' }, { position: 22, color: '#0f766e' },
+      { position: 34, color: '#14b8a6' }, { position: 46, color: '#2dd4bf' }, { position: 56, color: '#5eead4' },
+      { position: 66, color: '#99f6e4' }, { position: 76, color: '#ccfbf1' }, { position: 84, color: '#cffafe' },
+      { position: 92, color: '#ecfeff' }, { position: 100, color: '#f0fdfa' },
+    ],
   ],
   lava: [
-    { position: 0, color: '#000000' }, { position: 6, color: '#1c1917' }, { position: 14, color: '#451a03' },
-    { position: 22, color: '#7f1d1d' }, { position: 30, color: '#991b1b' }, { position: 38, color: '#b91c1c' },
-    { position: 46, color: '#dc2626' }, { position: 54, color: '#ea580c' }, { position: 62, color: '#f97316' },
-    { position: 70, color: '#fb923c' }, { position: 78, color: '#fbbf24' }, { position: 86, color: '#fde047' },
-    { position: 92, color: '#fef08a' }, { position: 100, color: '#fef9c3' },
+    [
+      { position: 0, color: '#000000' }, { position: 6, color: '#1c1917' }, { position: 14, color: '#451a03' },
+      { position: 22, color: '#7f1d1d' }, { position: 30, color: '#991b1b' }, { position: 38, color: '#b91c1c' },
+      { position: 46, color: '#dc2626' }, { position: 54, color: '#ea580c' }, { position: 62, color: '#f97316' },
+      { position: 70, color: '#fb923c' }, { position: 78, color: '#fbbf24' }, { position: 86, color: '#fde047' },
+      { position: 92, color: '#fef08a' }, { position: 100, color: '#fef9c3' },
+    ],
+    [
+      { position: 0, color: '#0a0a0a' }, { position: 8, color: '#2d0a0a' }, { position: 18, color: '#5c1010' },
+      { position: 28, color: '#991b1b' }, { position: 40, color: '#b91c1c' }, { position: 52, color: '#ef4444' },
+      { position: 62, color: '#f87171' }, { position: 72, color: '#fca5a5' }, { position: 80, color: '#fcd34d' },
+      { position: 88, color: '#fde047' }, { position: 94, color: '#fef08a' }, { position: 100, color: '#fef9c3' },
+    ],
+    [
+      { position: 0, color: '#1c1917' }, { position: 10, color: '#431407' }, { position: 22, color: '#7c2d12' },
+      { position: 34, color: '#c2410c' }, { position: 46, color: '#ea580c' }, { position: 56, color: '#f97316' },
+      { position: 66, color: '#fb923c' }, { position: 76, color: '#fdba74' }, { position: 84, color: '#fde68a' },
+      { position: 92, color: '#fef08a' }, { position: 100, color: '#fef3c7' },
+    ],
   ],
   gas: [
-    { position: 0, color: '#422006' }, { position: 30, color: '#92400e' }, { position: 55, color: '#ca8a04' },
-    { position: 80, color: '#facc15' }, { position: 100, color: '#fef08a' },
+    [
+      { position: 0, color: '#422006' }, { position: 15, color: '#713f12' }, { position: 30, color: '#92400e' },
+      { position: 45, color: '#a16207' }, { position: 55, color: '#ca8a04' }, { position: 70, color: '#eab308' },
+      { position: 80, color: '#facc15' }, { position: 90, color: '#fde047' }, { position: 100, color: '#fef08a' },
+    ],
+    [
+      { position: 0, color: '#292211' }, { position: 20, color: '#57534e' }, { position: 40, color: '#78716c' },
+      { position: 55, color: '#a8a29e' }, { position: 70, color: '#d6d3d1' }, { position: 85, color: '#fef08a' },
+      { position: 100, color: '#fef9c3' },
+    ],
+    [
+      { position: 0, color: '#3d2c0f' }, { position: 25, color: '#854d0e' }, { position: 50, color: '#ca8a04' },
+      { position: 65, color: '#facc15' }, { position: 78, color: '#fde047' }, { position: 90, color: '#fef08a' },
+      { position: 100, color: '#fefce8' },
+    ],
   ],
 };
+
+/** Legacy single palette per type (first variant) for backward compatibility. */
+const PALETTES: Record<PlanetPaletteName, GradientStop[]> = Object.fromEntries(
+  (Object.keys(PALETTE_VARIANTS) as PlanetPaletteName[]).map((k) => [k, PALETTE_VARIANTS[k][0]])
+) as Record<PlanetPaletteName, GradientStop[]>;
+
+function resolvePaletteStops(palette: PlanetPaletteName, seed: number): GradientStop[] {
+  const variants = PALETTE_VARIANTS[palette];
+  return variants[seed % variants.length];
+}
 
 function valueAt(seed: number, ix: number, iy: number): number {
   const n = (ix * 73856093) ^ (iy * 19349663) ^ seed;
@@ -152,9 +234,8 @@ function parseHex(hex: string): [number, number, number] {
   return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
 }
 
-function samplePaletteRGB(palette: PlanetPaletteName, t: number): [number, number, number] {
+function sampleStops(stops: GradientStop[], t: number): [number, number, number] {
   const p = clamp(t, 0, 100);
-  const stops = PALETTES[palette] ?? PALETTES.earth;
   let i = 0;
   while (i < stops.length - 1 && stops[i + 1].position < p) i++;
   if (i >= stops.length - 1) return parseHex(stops[stops.length - 1].color);
@@ -170,6 +251,46 @@ function samplePaletteRGB(palette: PlanetPaletteName, t: number): [number, numbe
     Math.round(c1[1] + (c2[1] - c1[1]) * s),
     Math.round(c1[2] + (c2[2] - c1[2]) * s),
   ];
+}
+
+function samplePaletteRGB(palette: PlanetPaletteName, t: number): [number, number, number] {
+  const stops = PALETTES[palette] ?? PALETTES.earth;
+  return sampleStops(stops, t);
+}
+
+/** Apply a small hue shift (0–1) to RGB for per-planet color variation. */
+function shiftHue(r: number, g: number, b: number, hueShift: number): [number, number, number] {
+  if (hueShift === 0) return [r, g, b];
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
+    else if (max === gn) h = ((bn - rn) / d + 2) / 6;
+    else h = ((rn - gn) / d + 4) / 6;
+  }
+  h = (h + hueShift + 1) % 1;
+  const hue2rgb = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  let nr: number, ng: number, nb: number;
+  if (s === 0) {
+    nr = ng = nb = l;
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    nr = hue2rgb(p, q, h + 1 / 3);
+    ng = hue2rgb(p, q, h);
+    nb = hue2rgb(p, q, h - 1 / 3);
+  }
+  return [Math.round(nr * 255), Math.round(ng * 255), Math.round(nb * 255)];
 }
 
 const WATER_LEVEL = 48;
@@ -230,6 +351,9 @@ export function generateProceduralPlanetTexture(
   const cloudThreshold = p.cloudThreshold;
   const cloudSoft = p.cloudSoft;
 
+  const paletteStops = resolvePaletteStops(palette, seed);
+  const hueShift = ((seed % 61) - 30) / 360 * 0.18;
+
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -286,7 +410,7 @@ export function generateProceduralPlanetTexture(
         t = clamp(t + flow * 12, 0, 100);
       }
 
-      let [r, g, b] = samplePaletteRGB(palette, t);
+      let [r, g, b] = sampleStops(paletteStops, t);
       const tintCfg = TYPE_TINT[palette];
       const tint = valueNoise2DSeamlessX(tintSeed, px, py, noiseScale * 3, periodX) * 2 - 1;
       const typeTint = valueNoise2DSeamlessX(seed + tintCfg.seedOffset, px, py, noiseScale * 1.2, periodX) * 2 - 1;
@@ -294,6 +418,8 @@ export function generateProceduralPlanetTexture(
       r = Math.round(r + tt * tintCfg.r);
       g = Math.round(g + tt * tintCfg.g);
       b = Math.round(b + tt * tintCfg.b);
+
+      [r, g, b] = shiftHue(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255), hueShift);
 
       if (cloudOpacity > 0) {
         const cloudNoise = fbmSeamlessX(cloudSeed, px, py, cloudScale, periodX, 4, 2.0, 0.5);

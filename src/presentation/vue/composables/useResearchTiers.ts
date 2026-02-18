@@ -4,10 +4,9 @@ import {
   getResearchTiers,
   getUnlockedResearch,
   getResearchData,
-  getPrestigeResearchPoints,
   getRecommendedResearchNodeIds,
 } from '../../../application/research.js';
-import { getResearchNodeDisplayData, type ResearchNodeDisplayData } from '../../researchView.js';
+import { getResearchNodeDisplayData, type ResearchNodeDisplayData } from '../../../application/researchDisplay.js';
 import { useGameStateStore } from '../stores/gameState.js';
 
 export type ResearchTierViewModel = {
@@ -29,7 +28,6 @@ export function useResearchTiers(collapsedTiers: Ref<Set<number>>) {
     const tierGroups = getResearchTiers();
     const scientistCount = session?.player.crewByRole?.scientist ?? 0;
     const researchData = getResearchData();
-    const prestigePoints = getPrestigeResearchPoints();
     const recommendedIds = getRecommendedResearchNodeIds(scientistCount);
     const collapsed = collapsedTiers.value;
 
@@ -45,7 +43,6 @@ export function useResearchTiers(collapsedTiers: Ref<Set<number>>) {
             unlocked,
             scientistCount,
             researchData,
-            prestigePoints,
             recommendedIds
           )
         )

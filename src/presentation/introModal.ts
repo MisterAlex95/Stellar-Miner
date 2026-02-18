@@ -9,7 +9,6 @@ import {
 } from '../application/progression.js';
 import { t, type StringKey } from '../application/strings.js';
 import { openOverlay, closeOverlay, isOverlayOpen } from './components/overlay.js';
-import type { ProgressionSnapshot } from './vue/stores/gameState.js';
 
 const INTRO_READY_DELAY_MS = 5000;
 
@@ -133,17 +132,6 @@ export function bindIntroModal(): void {
       onIntroGotIt(pendingIntroBlockId);
     });
   }
-}
-
-/** Build section unlocked map for Vue (no DOM). */
-export function getProgressionSnapshot(): ProgressionSnapshot {
-  const session = getSession();
-  const unlocked = session ? getUnlockedBlocks(session) : new Set<string>();
-  const sectionUnlocked: Record<string, boolean> = {};
-  for (const block of PROGRESSION_BLOCKS) {
-    if (block.sectionId) sectionUnlocked[block.sectionId] = unlocked.has(block.id);
-  }
-  return { sectionUnlocked };
 }
 
 /** Update previousUnlocked and show intro modal when a block is just unlocked. Section classes are driven by Vue via bridge. */

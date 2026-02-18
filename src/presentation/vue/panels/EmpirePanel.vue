@@ -260,7 +260,7 @@ import {
   openPrestigeRewardsModal,
 } from '../../../application/handlers.js';
 import { openExpeditionModal } from '../../expeditionModal.js';
-import { openPlanetDetail } from '../../planetDetailView.js';
+import { openPlanetDetail } from '../../planetDetail.js';
 import { renderPlanetThumbnails } from '../../planetThumbnail3D.js';
 import { useEmpireData } from '../composables/useEmpireData.js';
 import EmpireSection from '../components/EmpireSection.vue';

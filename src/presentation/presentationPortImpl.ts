@@ -6,8 +6,7 @@ import type { PresentationPort } from '../application/uiBridge.js';
 import * as toasts from './toasts.js';
 import { openOverlay, closeOverlay } from './components/overlay.js';
 import { showToast } from './components/toasts.js';
-import { renderResearchSection } from './researchView.js';
-import { flashUpgradeCard } from './upgradeListView.js';
+import { flashUpgradeCard } from './upgradeList.js';
 
 function addQuestClaimedAnimation(): void {
   const q = document.getElementById('quest-section');
@@ -33,7 +32,7 @@ export function createPresentationPort(): PresentationPort {
     showToast,
     flashUpgradeCard,
     updateComboIndicator: () => {},
-    renderResearchSection,
+    renderResearchSection: () => {},
     openOverlay,
     closeOverlay,
     addQuestClaimedAnimation,

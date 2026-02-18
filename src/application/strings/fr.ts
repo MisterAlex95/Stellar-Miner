@@ -193,7 +193,6 @@ export const stringsFr: Record<StringKey, string> = {
   researchAttemptDisabled: 'Remplissez les prérequis et ayez assez de pièces.',
   researchExpectedCost: 'Attendu ~{{cost}} ⬡',
   researchDurationSec: '~{{sec}}s',
-  researchUsePrestigePoint: 'Utiliser 1 point de recherche Prestige (succès garanti)',
   researchDataLabel: 'Données de recherche',
   researchDataRequirement: 'Requiert {{n}} données (expéditions)',
   researchPityNext: 'Prochaine tentative garantie (pity)',

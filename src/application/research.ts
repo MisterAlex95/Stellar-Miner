@@ -30,6 +30,24 @@ import type { StringKey } from './strings.js';
 export const RESEARCH_STORAGE_KEY = 'stellar-miner-research';
 export const RESEARCH_PROGRESS_STORAGE_KEY = 'stellar-miner-research-progress';
 export const PRESTIGE_RESEARCH_POINTS_KEY = 'stellar-miner-prestige-research-points';
+export const RESEARCH_TIER_COLLAPSED_KEY = 'stellar-miner-research-tier-collapsed';
+
+export function loadCollapsedTiers(): Set<number> {
+  if (typeof localStorage === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(RESEARCH_TIER_COLLAPSED_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw) as unknown;
+    return new Set(Array.isArray(arr) ? arr.filter((x): x is number => typeof x === 'number') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function saveCollapsedTiers(collapsed: Set<number>): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(RESEARCH_TIER_COLLAPSED_KEY, JSON.stringify([...collapsed]));
+}
 
 export type ResearchModifiers = {
   /** Additive percent applied to production (e.g. 5 => +5%). */
@@ -616,16 +634,11 @@ export function getCrewFreedByUnlockingNode(
 /** Optional: (upgradeId, kind, reduction amount) => display line for success message. */
 export type GetUpgradeDisplayLine = (upgradeId: string, kind: 'slot' | 'crew', n: number) => string;
 
-export type AttemptResearchOptions = {
-  usePrestigePoint?: boolean;
-};
-
 export function attemptResearch(
   id: string,
   spendCoins: (amount: number) => boolean,
   getUpgradeDisplayLine?: GetUpgradeDisplayLine,
-  scientistCount: number = 0,
-  options?: AttemptResearchOptions
+  scientistCount: number = 0
 ): { success: boolean; message: string } {
   const node = RESEARCH_CATALOG.find((n) => n.id === id);
   if (!node) return { success: false, message: 'Unknown research.' };
@@ -639,8 +652,7 @@ export function attemptResearch(
     saveResearchProgress(state);
   }
   if (!spendCoins(effectiveCost)) return { success: false, message: 'Not enough coins.' };
-  const usePity = options?.usePrestigePoint && getPrestigeResearchPoints() >= 1 && spendPrestigeResearchPoint();
-  const effectiveChance = usePity ? 1 : getEffectiveSuccessChance(id, scientistCount);
+  const effectiveChance = getEffectiveSuccessChance(id, scientistCount);
   const success = Math.random() < effectiveChance;
   if (success) {
     clearFailureCount(id);

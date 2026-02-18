@@ -194,7 +194,6 @@ export const stringsEn = {
   researchAttemptDisabled: 'Complete prerequisites and have enough coins.',
   researchExpectedCost: 'Expected ~{{cost}} ⬡',
   researchDurationSec: '~{{sec}}s',
-  researchUsePrestigePoint: 'Use 1 Prestige Research Point (guaranteed)',
   researchDataLabel: 'Research data',
   researchDataRequirement: 'Requires {{n}} research data (from expeditions)',
   researchPityNext: 'Next attempt guaranteed (pity)',

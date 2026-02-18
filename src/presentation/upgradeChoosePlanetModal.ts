@@ -8,7 +8,7 @@ import { getSession, getSettings } from '../application/gameState.js';
 import { getEffectiveUpgradeUsesSlot } from '../application/research.js';
 import { getEffectiveUsedSlots } from '../application/research.js';
 import { getPlanetEffectiveProduction } from '../application/productionHelpers.js';
-import { getPlanetType } from '../application/planetAffinity.js';
+import { getPlanetType, getBestPlanetTypes } from '../application/planetAffinity.js';
 import { getPlanetDisplayName } from '../application/solarSystems.js';
 import { formatNumber } from '../application/format.js';
 import { t } from '../application/strings.js';
@@ -82,6 +82,11 @@ export function openUpgradeChoosePlanetModal(opts: {
   }
 
   listEl.innerHTML = '';
+  const bestTypesLower =
+    action === 'buy' || action === 'max'
+      ? getBestPlanetTypes(upgradeId).map((t) => t.toLowerCase())
+      : [];
+
   for (const p of planets) {
     const fullPlanet = session?.player.planets.find((pl) => pl.id === p.id);
     const item = document.createElement('div');
@@ -102,6 +107,16 @@ export function openUpgradeChoosePlanetModal(opts: {
     chip.textContent = `×${installedCount}`;
     chip.setAttribute('aria-label', `${installedCount} ${t('upgradeChoosePlanetInstalledOnPlanet')}`);
 
+    const isRecommended =
+      bestTypesLower.length > 0 &&
+      fullPlanet &&
+      bestTypesLower.includes(getPlanetType(fullPlanet.name));
+    const recommendedSpan = document.createElement('span');
+    if (isRecommended) {
+      recommendedSpan.className = 'upgrade-choose-planet-recommended';
+      recommendedSpan.textContent = t('recommended');
+    }
+
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
     toggleBtn.className = 'upgrade-choose-planet-toggle';
@@ -115,7 +130,7 @@ export function openUpgradeChoosePlanetModal(opts: {
     selectBtn.setAttribute('data-planet-id', p.id);
     selectBtn.textContent = t('upgradeChoosePlanetSelect');
 
-    header.append(nameSpan, chip, toggleBtn, selectBtn);
+    header.append(nameSpan, chip, recommendedSpan, toggleBtn, selectBtn);
     item.appendChild(header);
 
     const body = document.createElement('div');
@@ -189,12 +204,9 @@ function toggleItemExpanded(item: HTMLElement): void {
   (toggleBtn as HTMLElement).textContent = !isCurrentlyExpanded ? COLLAPSE_MARKER : EXPAND_MARKER;
 }
 
+/** Bind list delegation for Select buttons (planet list is vanilla-rendered). Close/cancel/backdrop are handled by Vue. */
 export function bindUpgradeChoosePlanetModal(): void {
   const listEl = document.getElementById('upgrade-choose-planet-list');
-  const cancelBtn = document.getElementById('upgrade-choose-planet-cancel');
-  const closeBtn = document.getElementById('upgrade-choose-planet-close');
-  const overlay = document.getElementById(OVERLAY_ID);
-
   listEl?.addEventListener('click', (e: Event) => {
     const target = e.target as HTMLElement;
     const selectBtn = target.closest('button.upgrade-choose-planet-select');
@@ -208,14 +220,7 @@ export function bindUpgradeChoosePlanetModal(): void {
       const maxCountAttr = ov?.getAttribute('data-max-count');
       const maxCount = maxCountAttr != null ? parseInt(maxCountAttr, 10) : undefined;
       onPlanetChosen(upgradeId, planetId, action, Number.isFinite(maxCount) ? maxCount : undefined);
-      return;
     }
-  });
-
-  cancelBtn?.addEventListener('click', closeUpgradeChoosePlanetModal);
-  closeBtn?.addEventListener('click', closeUpgradeChoosePlanetModal);
-  overlay?.addEventListener('click', (e) => {
-    if (e.target === overlay) closeUpgradeChoosePlanetModal();
   });
 }
 

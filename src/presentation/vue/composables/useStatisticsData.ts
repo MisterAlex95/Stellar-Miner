@@ -5,7 +5,7 @@ import {
   computeStatisticsData,
   STAT_GROUP_UNLOCK,
   type StatisticsData,
-} from '../../statisticsView.js';
+} from '../../../application/statisticsData.js';
 import type { ChartRange } from '../../../application/statsHistory.js';
 
 const STATS_RANGE_STORAGE_KEY = 'stellar-miner-stats-range';

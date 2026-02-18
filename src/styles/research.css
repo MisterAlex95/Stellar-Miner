@@ -596,16 +596,3 @@
   margin: 0.15rem 0 0 0;
 }
 
-.research-card-prestige-point {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  margin: 0.35rem 0 0 0;
-  cursor: pointer;
-}
-
-.research-card-prestige-point input {
-  margin: 0;
-}
