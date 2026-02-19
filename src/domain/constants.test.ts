@@ -57,22 +57,21 @@ describe('constants', () => {
     expect(notBase).toBe(raw8);
   });
 
-  it('PLANET_NAMES has themed names', () => {
-    expect(PLANET_NAMES.length).toBeGreaterThan(0);
-    expect(PLANET_NAMES[0]).toBe('Titan');
+  it('PLANET_NAMES is an array (may be empty for full procedural names)', () => {
+    expect(Array.isArray(PLANET_NAMES)).toBe(true);
   });
 
-  it('getPlanetName returns name by index', () => {
-    expect(getPlanetName(0)).toBe('Titan');
-    expect(getPlanetName(1)).toBe('Nova Prime');
+  it('getPlanetName returns balance name when in range, else procedural by syllables', () => {
+    if (PLANET_NAMES.length > 0) {
+      expect(getPlanetName(0)).toBe(PLANET_NAMES[0]);
+    } else {
+      expect(getPlanetName(0)).toBe(generatePlanetName('planet-1'));
+    }
+    expect(getPlanetName(1)).toBe(generatePlanetName('planet-2'));
+    expect(getPlanetName(99)).toBe(generatePlanetName('planet-100'));
   });
 
-  it('getPlanetName falls back to Planet N when index >= length', () => {
-    expect(getPlanetName(PLANET_NAMES.length)).toBe(`Planet ${PLANET_NAMES.length + 1}`);
-    expect(getPlanetName(99)).toBe('Planet 100');
-  });
-
-  it('generatePlanetName is deterministic and returns two-word names', () => {
+  it('generatePlanetName is deterministic and returns two-word syllable-based names', () => {
     expect(generatePlanetName('planet-1')).toBe(generatePlanetName('planet-1'));
     expect(generatePlanetName('planet-2')).toBe(generatePlanetName('planet-2'));
     const name1 = generatePlanetName('planet-1');

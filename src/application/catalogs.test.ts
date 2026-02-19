@@ -18,9 +18,10 @@ import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 
 describe('catalogs', () => {
   it('createUpgrade returns Upgrade instance', () => {
-    const u = createUpgrade(UPGRADE_CATALOG[0]);
+    const def = UPGRADE_CATALOG[0];
+    const u = createUpgrade(def);
     expect(u.id).toBe('mining-robot');
-    expect(u.effect.coinsPerSecond.toNumber()).toBe(0.8);
+    expect(u.effect.coinsPerSecond.toNumber()).toBe(def.coinsPerSecond);
     expect(u.usesSlot).toBe(false);
   });
 

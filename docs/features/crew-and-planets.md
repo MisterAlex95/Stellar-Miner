@@ -20,7 +20,7 @@
 
 ## Planet affinity
 
-- **Planet type** (rocky, desert, ice, volcanic, gas) is derived from planet **name** (hash). Each upgrade has a multiplier per type in [planetAffinity.json](../../src/data/planetAffinity.json). Production from an upgrade on a planet is multiplied by the affinity for that upgrade id and planet type. See [data/planet-affinity-schema.md](../data/planet-affinity-schema.md).
+- **Planet type** (rocky, desert, ice, volcanic, gas) is derived from planet **name** (hash). Each module has an optional affinity (multiplier per type) in [modules.json](../../src/data/modules.json). Production from a module on a planet is multiplied by the affinity for that module id and planet type. See [data/modules-schema.md](../data/modules-schema.md).
 
 ## Housing
 

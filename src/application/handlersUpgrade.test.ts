@@ -4,6 +4,7 @@ import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { handleUpgradeBuy, handleUpgradeBuyMax } from './handlersUpgrade.js';
 import { completeUpgradeInstallations } from './upgradeInstallation.js';
+import { UPGRADE_CATALOG } from './catalogs.js';
 /** Generous delay so all upgrades (variable duration by tier/cost) finish in tests. Must exceed gameConfig install formula (e.g. drill-mk1 ~25s). */
 const INSTALL_WAIT_MS = 60_000;
 
@@ -26,6 +27,7 @@ describe('handlersUpgrade', () => {
     it('purchases mining-robot (no slot, no crew) and updates player', () => {
       const session = getSession();
       const player = session.player;
+      const cost = UPGRADE_CATALOG.find((d) => d.id === 'mining-robot')!.cost;
       player.addCoins(100);
       const beforeCoins = player.coins.value.toNumber();
       const beforeCount = player.upgrades.filter((u) => u.id === 'mining-robot').length;
@@ -34,7 +36,7 @@ describe('handlersUpgrade', () => {
       completeUpgradeInstallations(session, Date.now() + INSTALL_WAIT_MS);
 
       expect(player.upgrades.filter((u) => u.id === 'mining-robot').length).toBe(beforeCount + 1);
-      expect(player.coins.value.toNumber()).toBe(beforeCoins - 60);
+      expect(player.coins.value.toNumber()).toBe(beforeCoins - cost);
     });
 
     it('purchases drill-mk1 when player has coins and planet has slot (tier 2 needs no crew)', () => {

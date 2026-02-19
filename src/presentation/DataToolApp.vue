@@ -246,9 +246,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@reference "../styles/index.css";
-
 .btn {
-  @apply px-3 py-1.5 rounded-md text-sm bg-surface border border-border hover:bg-card disabled:opacity-50 disabled:cursor-not-allowed;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.btn:hover:not(:disabled) {
+  background: var(--bg-card);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

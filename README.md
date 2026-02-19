@@ -50,7 +50,7 @@ src/
 │                     # planetAffinity, version, changelog
 ├── presentation/     # mount; tabs: Mine, Empire, Research, Upgrades, Stats; views + components
 ├── infrastructure/   # SaveLoadService (save/load/export/import, version, validateSavePayload)
-├── data/             # JSON: upgrades, events, research, achievements, progression, planetAffinity, changelog
+├── data/             # JSON: modules (catalog + planet affinity), events, research, achievements, progression, changelog
 ├── settings.ts       # User settings: starfield, layout, pause when background, theme, sound, reducedMotion
 ├── main.ts           # Domain sanity check / CLI entry
 ├── game.ts           # Game bootstrap and loop

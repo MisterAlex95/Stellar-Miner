@@ -12,7 +12,6 @@ import discoveryFlavor from '../data/discoveryFlavor.json';
 import narrator from '../data/narrator.json';
 import prestigeLore from '../data/prestigeLore.json';
 import questFlavor from '../data/questFlavor.json';
-import planetAffinity from '../data/planetAffinity.json';
 import researchIconMapping from '../data/researchIconMapping.json';
 import changelog from '../data/changelog.json';
 
@@ -28,7 +27,6 @@ export const STATIC_DATA: Record<string, unknown> = {
   narrator,
   prestigeLore,
   questFlavor,
-  planetAffinity,
   researchIconMapping,
   changelog,
 };

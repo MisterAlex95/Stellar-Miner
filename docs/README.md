@@ -29,7 +29,6 @@ This folder is the single source for Stellar Miner documentation: architecture, 
   - [Achievements schema](data/achievements-schema.md)
   - [Progression schema](data/progression-schema.md)
   - [Balance and config](data/balance-and-config.md)
-  - [Planet affinity schema](data/planet-affinity-schema.md)
 
 ## Reference (formulas and tables)
 

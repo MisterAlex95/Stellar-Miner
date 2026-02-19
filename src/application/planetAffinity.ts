@@ -1,9 +1,13 @@
 import { Decimal } from '../domain/bigNumber.js';
 import type { Planet } from '../domain/entities/Planet.js';
-import planetAffinityData from '../data/planetAffinity.json';
+import modulesData from '../data/modules.json';
 
-const PLANET_TYPES = (planetAffinityData as { planetTypes: string[] }).planetTypes;
-const AFFINITY = (planetAffinityData as { affinity: Record<string, Record<string, number>> }).affinity;
+type ModulesData = { planetTypes: string[]; modules: { id: string; affinity?: Record<string, number> }[] };
+const { planetTypes: PLANET_TYPES, modules: MODULES } = modulesData as ModulesData;
+const AFFINITY: Record<string, Record<string, number>> = {};
+for (const m of MODULES) {
+  if (m.affinity && Object.keys(m.affinity).length > 0) AFFINITY[m.id] = m.affinity;
+}
 
 function hash(s: string): number {
   let h = 0;

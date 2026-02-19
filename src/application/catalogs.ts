@@ -7,6 +7,7 @@ import gameConfig from '../data/gameConfig.json';
 import modulesData from '../data/modules.json';
 import eventsData from '../data/events.json';
 
+const MODULES_LIST = (modulesData as { modules: unknown[] }).modules;
 const T = gameConfig.timing;
 const S = gameConfig.storageKeys;
 const C = gameConfig.combo;
@@ -35,9 +36,11 @@ export type UpgradeDef = {
   requiredAstronauts: number;
   /** If false, this upgrade does not use a planet slot (default true). */
   usesSlot?: boolean;
+  /** Per-planet-type production multiplier (optional; default 1). */
+  affinity?: Record<string, number>;
 };
 
-export const UPGRADE_CATALOG: UpgradeDef[] = modulesData as UpgradeDef[];
+export const UPGRADE_CATALOG: UpgradeDef[] = MODULES_LIST as UpgradeDef[];
 
 const UPGRADES_CONFIG = (gameConfig as {
   upgrades?: {

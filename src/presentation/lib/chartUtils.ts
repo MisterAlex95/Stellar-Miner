@@ -156,3 +156,94 @@ export function drawLineChart(
     ctx.stroke();
   }
 }
+
+export type MultiSeriesItem = { title: string; values: number[]; colorStroke: string };
+
+/** Draw multiple series on one canvas, each normalized to 0–1 for comparison. */
+export function drawMultiLineChart(
+  canvas: HTMLCanvasElement,
+  series: MultiSeriesItem[],
+  hoveredIndex?: number | null
+): void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx || series.length === 0) return;
+  const maxLen = Math.max(...series.map((s) => s.values.length), 2);
+  if (maxLen < 2) return;
+
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return;
+  const w = Math.round(rect.width * dpr);
+  const h = Math.round(rect.height * dpr);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+  const cw = rect.width;
+  const ch = rect.height;
+  const padding = CHART_PADDING;
+  const chartW = cw - padding.left - padding.right;
+  const chartH = ch - padding.top - padding.bottom;
+  const chartTop = padding.top;
+  const chartBottom = padding.top + chartH;
+
+  ctx.clearRect(0, 0, cw, ch);
+  ctx.strokeStyle = 'rgba(42, 47, 61, 0.5)';
+  ctx.lineWidth = 1;
+  for (let g = 0; g <= CHART_GRID_LINES; g++) {
+    const gy = chartTop + (chartH * g) / CHART_GRID_LINES;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, gy);
+    ctx.lineTo(padding.left + chartW, gy);
+    ctx.stroke();
+  }
+
+  const stepX = chartW / (maxLen - 1);
+  for (const s of series) {
+    const vals = s.values;
+    if (vals.length < 2) continue;
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const range = max - min || 1;
+    const points: { x: number; y: number }[] = [];
+    for (let i = 0; i < vals.length; i++) {
+      const x = padding.left + i * stepX;
+      const y = chartTop + chartH - ((vals[i] - min) / range) * chartH;
+      points.push({ x, y });
+    }
+    ctx.strokeStyle = s.colorStroke;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+    ctx.stroke();
+
+    if (hoveredIndex != null && hoveredIndex >= 0 && hoveredIndex < vals.length) {
+      const idx = Math.min(hoveredIndex, points.length - 1);
+      const pt = points[idx];
+      ctx.fillStyle = s.colorStroke;
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, HOVER_DOT_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+
+  if (hoveredIndex != null && hoveredIndex >= 0 && hoveredIndex < maxLen) {
+    const x = padding.left + hoveredIndex * stepX;
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash(HOVER_LINE_DASH);
+    ctx.beginPath();
+    ctx.moveTo(x, chartBottom);
+    ctx.lineTo(x, chartTop);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
