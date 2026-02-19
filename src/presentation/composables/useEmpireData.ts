@@ -130,6 +130,8 @@ export interface PlanetCardVm {
   visualSeed: number;
   planetType: string;
   infoTooltip: string;
+  /** First-contact flavor from discovery (if any). */
+  discoveryFlavor?: string;
 }
 
 export interface PlanetSystemVm {
@@ -305,12 +307,14 @@ export function useEmpireData() {
         : tParam('needCoinsForHousing', { cost: formatNumber(housingCost, settings.compactNumbers) });
       const planetType = getPlanetType(p.name);
       const typeLabel = planetType.charAt(0).toUpperCase() + planetType.slice(1);
-      const infoTooltip = [
+      const infoLines = [
         displayName,
         `${t('planetInfoType')}: ${typeLabel}`,
         `${t('planetInfoSlots')}: ${effectiveUsed}/${p.maxUpgrades}`,
         `${t('planetInfoProduction')}: ${prodStr}/s`,
-      ].join('\n');
+      ];
+      if (p.discoveryFlavor) infoLines.push(p.discoveryFlavor);
+      const infoTooltip = infoLines.join('\n');
 
       const card: PlanetCardVm = {
         id: p.id,
@@ -331,6 +335,7 @@ export function useEmpireData() {
         visualSeed: p.visualSeed ?? 0,
         planetType,
         infoTooltip,
+        discoveryFlavor: p.discoveryFlavor,
       };
       if (!groups.has(systemIndex)) groups.set(systemIndex, []);
       groups.get(systemIndex)!.push(card);

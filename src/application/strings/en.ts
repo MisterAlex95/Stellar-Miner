@@ -270,6 +270,16 @@ export const stringsEn = {
   runAvgCoinsPerSec: 'Avg coins/s (run)',
   questsEventsTitle: 'Quests & events',
   achievementsTitle: 'Achievements',
+  codexTitle: 'Archive',
+  codexLockedPlaceholder: '???',
+  codexCategoryAchievement: 'Achievements',
+  codexCategoryEvent: 'Events',
+  codexCategoryExpedition: 'Expeditions',
+  codexCategoryPlanet: 'Planets',
+  codexCategoryPrestige: 'Prestige',
+  codexCategoryQuest: 'Quests',
+  codexCategoryResearch: 'Research',
+  codexIntro: 'Unlocked logs and lore. New entries appear as you play.',
   currentCoins: 'Current coins',
   productionEffective: 'Production (effective)',
   totalCoinsEverLabel: 'Total coins ever',
@@ -487,6 +497,9 @@ export const stringsEn = {
   planetDetailNoHousing: 'No housing built.',
   planetDetailNoCrew: 'No crew assigned.',
   planetDetailCrewLine: '{{n}}/{{max}} assigned',
+  planetDetailFirstContact: 'First contact',
+  discoveryLogTitle: 'Discovery log',
+  discoveryLogEmpty: 'No discoveries yet. Send an expedition to find new planets.',
 } as const;
 
 export type StringKey = keyof typeof stringsEn;

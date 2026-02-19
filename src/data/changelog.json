@@ -1,5 +1,26 @@
 [
   {
+    "version": "0.5.8",
+    "date": "2026-02",
+    "changes": [
+      "Codex/Archive: unlockable lore entries in Stats; entries unlock from achievements, events seen, planets, prestige; codexUnlocks persisted in save."
+    ]
+  },
+  {
+    "version": "0.5.7",
+    "date": "2026-02",
+    "changes": [
+      "Planet discovery log: first-contact flavor per planet type (discoveryFlavor.json), shown on expedition success toast and in planet detail; Discovery log section in Empire panel; flavor persisted in save."
+    ]
+  },
+  {
+    "version": "0.5.6",
+    "date": "2026-02",
+    "changes": [
+      "Quest story hooks: one-line intros per quest type from questFlavor.json, shown above quest description on dashboard."
+    ]
+  },
+  {
     "version": "0.5.5",
     "date": "2026-02",
     "changes": [

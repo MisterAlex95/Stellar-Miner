@@ -67,6 +67,7 @@
         :value="questCard.value"
         :target="questCard.target"
         :desc="questCard.desc"
+        :story-hook="questCard.storyHook"
         :pct="questCard.pct"
       />
 

@@ -144,6 +144,7 @@ const TAB_LABELS: Record<TabId, string> = {
   research: 'tabResearch',
   upgrades: 'tabUpgrades',
   stats: 'tabStats',
+  archive: 'codexTitle',
 };
 
 const store = useGameStateStore();
@@ -160,9 +161,9 @@ const tabVisibleInScroll = reactive<Record<string, boolean>>({});
 
 const activeTab = computed(() => store.activeTab);
 const tabIds = VALID_TAB_IDS as unknown as TabId[];
-const overflowTabIds = ['dashboard', 'empire', 'research', 'upgrades', 'stats'] as const;
+const overflowTabIds = ['dashboard', 'empire', 'research', 'upgrades', 'stats', 'archive'] as const;
 const bottomTabIds = ['mine', 'empire'] as const;
-const bottomOverflowTabIds = ['dashboard', 'research', 'upgrades', 'stats'] as const;
+const bottomOverflowTabIds = ['dashboard', 'research', 'upgrades', 'stats', 'archive'] as const;
 
 const visibleOverflowCount = computed(() =>
   overflowTabIds.filter((id) => store.tabs.visible[id]).length,

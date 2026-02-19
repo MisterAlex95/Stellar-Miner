@@ -17,10 +17,10 @@
 | Status | Count |
 |:---|:---:|
 | backlog | 31 |
-| todo | 2 |
+| todo | 1 |
 | in_progress | 0 |
 | blocked | 0 |
-| done | 5 |
+| done | 6 |
 
 ---
 
@@ -28,7 +28,7 @@
 
 | ID | Title |
 |:---|:---|
-| T-15 | Add event flavor text |
+| T-18 | Add planet discovery log |
 
 ---
 
@@ -37,6 +37,7 @@
 | ID | Title |
 |:---|:---|
 | T-16 | Add Codex or Archive |
+| T-17 | Add quest flavor text |
 
 ---
 

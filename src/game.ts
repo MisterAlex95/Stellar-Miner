@@ -38,6 +38,7 @@ import { getUnlockedBlocks } from './application/progression.js';
 import { getProgressionSnapshot } from './application/progressionSnapshot.js';
 import { maybeShowWelcomeModal, updateProgressionVisibility } from './presentation/modals/intro.js';
 import { updateDebugPanel, saveSession, triggerRandomEvent, completeExpeditionIfDue } from './application/handlers.js';
+import { checkCodexUnlocks } from './application/codex.js';
 import { completeUpgradeInstallations, completeUpgradeUninstallations } from './application/upgradeInstallation.js';
 import { showOfflineToast } from './presentation/toasts/index.js';
 import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/refreshSubscribers.js';
@@ -233,6 +234,7 @@ async function init(): Promise<void> {
   if (!mainContentRoot) throw new Error('main-content root not found after Vue mount');
   const session = await getOrCreateSession();
   setSession(session);
+  checkCodexUnlocks();
   loadStatsHistory();
   wireRefreshSubscribers(withErrorBoundary(createRefreshViews()));
   wireEventBusToRefresh();

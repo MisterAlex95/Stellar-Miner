@@ -88,6 +88,7 @@ export interface PresentationPort {
     moonCount: number;
     extraLabel: string;
     upgradeItems: { name: string; count: number }[];
+    discoveryFlavor?: string;
   } | null): void;
 }
 

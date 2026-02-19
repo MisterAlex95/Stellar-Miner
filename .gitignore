@@ -45,3 +45,7 @@ kanban/out/
 
 # Tooling / temp
 .cpm-tmp/
+
+# Task-driven workflow (optional local queue / generated prompt)
+.task-queue.txt
+.task-driven-prompt.txt

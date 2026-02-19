@@ -45,6 +45,7 @@ export type SavedPlanet = {
   visualSeed?: number;
   installingUpgrades?: SavedInstallingUpgrade[];
   uninstallingUpgrades?: SavedUninstallingUpgrade[];
+  discoveryFlavor?: string;
 };
 type SavedCrewByRole = {
   astronaut?: number;
@@ -92,6 +93,7 @@ export type SavedSession = {
   activeEvents: Array<{ id: string; name: string; effect: { multiplier: number; durationMs: number } }>;
   runStats?: SavedRunStats;
   discoveredEventIds?: string[];
+  codexUnlocks?: Array<{ id: string; at: number }>;
   expedition?: SavedExpedition;
   /** Unlocked research node ids (restored on import so click/production modifiers work). */
   unlockedResearch?: string[];
@@ -167,7 +169,7 @@ export class SaveLoadService implements ISaveLoadService {
   async save(
     session: GameSession,
     runStats?: SavedRunStats,
-    options?: { discoveredEventIds?: string[]; expedition?: SavedExpedition | null }
+    options?: { discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; expedition?: SavedExpedition | null }
   ): Promise<void> {
     if (typeof performance !== 'undefined' && performance.mark) performance.mark('save-start');
     const payload = this.serialize(session, runStats, options);
@@ -198,7 +200,7 @@ export class SaveLoadService implements ISaveLoadService {
     emit('save_success', undefined);
   }
 
-  async load(): Promise<{ session: GameSession; runStats?: SavedRunStats; discoveredEventIds?: string[]; expedition?: SavedExpedition } | null> {
+  async load(): Promise<{ session: GameSession; runStats?: SavedRunStats; discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; expedition?: SavedExpedition } | null> {
     if (typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -219,6 +221,16 @@ export class SaveLoadService implements ISaveLoadService {
     const runStats = data.runStats && typeof data.runStats === 'object' ? (data.runStats as SavedRunStats) : undefined;
     const discoveredEventIds = Array.isArray(data.discoveredEventIds)
       ? (data.discoveredEventIds as string[]).filter((id) => typeof id === 'string')
+      : undefined;
+    const codexUnlocks = Array.isArray(data.codexUnlocks)
+      ? (data.codexUnlocks as unknown[])
+          .map((item) => {
+            if (typeof item === 'object' && item !== null && 'id' in item && 'at' in item)
+              return { id: String((item as { id: unknown }).id), at: Number((item as { at: unknown }).at) };
+            if (typeof item === 'string') return { id: item, at: 0 };
+            return null;
+          })
+          .filter((r): r is { id: string; at: number } => r !== null)
       : undefined;
     const expedition =
       data.expedition &&
@@ -277,7 +289,7 @@ export class SaveLoadService implements ISaveLoadService {
         this.lastOfflineWasCapped = elapsed > FULL_CAP_OFFLINE_MS;
       }
     }
-    return { session, runStats, discoveredEventIds, expedition };
+    return { session, runStats, discoveredEventIds, codexUnlocks, expedition };
   }
 
   clearProgress(): void {
@@ -291,9 +303,12 @@ export class SaveLoadService implements ISaveLoadService {
     }
   }
 
-  /** Export current session as JSON string (for copy/download). */
-  exportSession(session: GameSession): string {
-    return JSON.stringify(this.serialize(session));
+  /** Export current session as JSON string (for copy/download). Optionally include runStats and extras (e.g. codexUnlocks). */
+  exportSession(
+    session: GameSession,
+    options?: { runStats?: SavedRunStats; discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; expedition?: SavedExpedition | null }
+  ): string {
+    return JSON.stringify(this.serialize(session, options?.runStats, options));
   }
 
   /** Import session from JSON string. Returns null if invalid. Restores unlocked research to localStorage when present. */
@@ -334,7 +349,7 @@ export class SaveLoadService implements ISaveLoadService {
   private serialize(
     session: GameSession,
     runStats?: SavedRunStats,
-    options?: { discoveredEventIds?: string[]; expedition?: SavedExpedition | null }
+    options?: { discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; expedition?: SavedExpedition | null }
   ): SavedSession {
     const payload: SavedSession = {
       version: SAVE_VERSION,
@@ -378,6 +393,7 @@ export class SaveLoadService implements ISaveLoadService {
                   endsAt: u.endsAt,
                 }))
               : undefined,
+          discoveryFlavor: p.discoveryFlavor,
         })),
         artifacts: session.player.artifacts.map((a) => ({
           id: a.id,
@@ -403,6 +419,9 @@ export class SaveLoadService implements ISaveLoadService {
     if (runStats) payload.runStats = runStats;
     if (options?.discoveredEventIds && options.discoveredEventIds.length > 0) {
       payload.discoveredEventIds = options.discoveredEventIds;
+    }
+    if (options?.codexUnlocks && options.codexUnlocks.length > 0) {
+      payload.codexUnlocks = options.codexUnlocks;
     }
     if (options?.expedition) payload.expedition = options.expedition;
     const unlockedResearch = this.getUnlockedResearch();

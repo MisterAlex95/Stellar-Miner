@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TaskDetectorConfig",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "object",
+      "properties": {
+        "codeComments": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "patterns": { "type": "array", "items": { "type": "string" } },
+            "globs": { "type": "array", "items": { "type": "string" } },
+            "excludeGlobs": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "projectTasks": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "directories": { "type": "array", "items": { "type": "string" } },
+            "tasksPath": { "type": "string" }
+          }
+        },
+        "failingChecks": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "command": { "type": "string" },
+                  "timeoutMs": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "taskQueueFile": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "path": { "type": "string" }
+          }
+        },
+        "githubIssues": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "owner": { "type": ["string", "null"] },
+            "repo": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "priority": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "log": {
+      "type": "object",
+      "properties": {
+        "idleMessage": { "type": "string" },
+        "actMessage": { "type": "string" }
+      }
+    }
+  },
+  "required": ["sources", "priority"]
+}

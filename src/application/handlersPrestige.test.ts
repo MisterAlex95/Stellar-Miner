@@ -15,6 +15,7 @@ vi.mock('../presentation/lib/overlay.js', () => ({
   closeOverlay: vi.fn(),
 }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
+vi.mock('./codex.js', () => ({ checkCodexUnlocks: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));
 vi.mock('./refreshSignal.js', () => ({ notifyRefresh: vi.fn() }));
 vi.mock('./quests.js', () => ({ generateQuest: () => ({ type: 'coins', target: 100, reward: 50, description: 'test' }) }));

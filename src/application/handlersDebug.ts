@@ -7,6 +7,7 @@ import { pushActiveEventInstance } from './gameState.js';
 import { t } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
+import { checkCodexUnlocks } from './codex.js';
 import { Planet } from '../domain/entities/Planet.js';
 import { generatePlanetName } from '../domain/constants.js';
 
@@ -23,6 +24,7 @@ export function triggerRandomEvent(): void {
   incrementRunEventsTriggered();
   addDiscoveredEvent(event.id);
   getPresentationPort().showEventToast(event, { firstTime });
+  checkCodexUnlocks();
   notifyRefresh();
 }
 

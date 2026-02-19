@@ -96,6 +96,7 @@ export function openPlanetDetail(planetId: string): void {
     moonCount,
     extraLabel,
     upgradeItems: buildUpgradeItems(planet),
+    discoveryFlavor: planet.discoveryFlavor,
   });
 
   openOverlay(PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS, {

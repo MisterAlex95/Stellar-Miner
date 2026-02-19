@@ -24,6 +24,8 @@ export class Planet {
   private _assignedCrew: number;
   /** Seed for procedural texture; set at creation so each planet looks different. Omit for legacy saves. */
   public readonly visualSeed: number | undefined;
+  /** First-contact flavor line shown when planet was discovered. Stored in save. */
+  public readonly discoveryFlavor: string | undefined;
 
   constructor(
     public readonly id: string,
@@ -34,7 +36,8 @@ export class Planet {
     assignedCrew: number = 0,
     visualSeed?: number,
     installingUpgrades: InstallingUpgrade[] = [],
-    uninstallingUpgrades: UninstallingUpgrade[] = []
+    uninstallingUpgrades: UninstallingUpgrade[] = [],
+    discoveryFlavor?: string
   ) {
     this._maxUpgrades = maxUpgrades;
     this.upgrades = upgrades ? [...upgrades] : [];
@@ -43,6 +46,7 @@ export class Planet {
     this._housingCount = Math.max(0, housingCount);
     this._assignedCrew = Math.max(0, assignedCrew);
     this.visualSeed = visualSeed;
+    this.discoveryFlavor = discoveryFlavor;
   }
 
   get assignedCrew(): number {
@@ -178,8 +182,8 @@ export class Planet {
     this._maxUpgrades += 1;
   }
 
-  static create(id: string, name: string, maxUpgrades: number = UPGRADES_PER_PLANET): Planet {
+  static create(id: string, name: string, maxUpgrades: number = UPGRADES_PER_PLANET, discoveryFlavor?: string): Planet {
     const visualSeed = Math.floor(Math.random() * 0xffff_ffff);
-    return new Planet(id, name, maxUpgrades, [], 0, 0, visualSeed);
+    return new Planet(id, name, maxUpgrades, [], 0, 0, visualSeed, [], [], discoveryFlavor);
   }
 }

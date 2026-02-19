@@ -23,6 +23,7 @@ export function getTabsSnapshot(hasNewModuleToInstall: boolean): TabsSnapshot {
     empire: unlocked.has('crew') || unlocked.has('planets') || unlocked.has('prestige'),
     research: unlocked.has('research'),
     stats: unlocked.has('upgrades'),
+    archive: unlocked.has('upgrades'),
   };
   const questProgress = getQuestProgress();
   const questClaimable = questProgress?.done ?? false;
@@ -59,6 +60,7 @@ export function getTabsSnapshot(hasNewModuleToInstall: boolean): TabsSnapshot {
     dashboard: false,
     upgrades: hasNewModuleToInstallResolved,
     stats: false,
+    archive: false,
   };
   return { visible, badges };
 }

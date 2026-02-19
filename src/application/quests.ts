@@ -1,5 +1,5 @@
 import Decimal from 'break_infinity.js';
-import type { QuestState, Quest } from './questState.js';
+import type { QuestState, Quest, QuestType } from './questState.js';
 import { saveQuestState } from './questState.js';
 import {
   UPGRADE_CATALOG,
@@ -13,6 +13,7 @@ import { getSession, getQuestState, setQuestState, incrementRunQuestsClaimed, ad
 import { getResearchProductionMultiplier } from './research.js';
 import { getPresentationPort } from './uiBridge.js';
 import gameConfig from '../data/gameConfig.json';
+import questFlavorData from '../data/questFlavor.json';
 
 export type { QuestState, Quest };
 
@@ -31,6 +32,15 @@ type QuestGenerationConfig = {
 };
 
 const TIER1_UPGRADE_IDS = UPGRADE_CATALOG.filter((d) => d.tier === 1).map((d) => d.id);
+
+type QuestFlavorMap = Record<string, string[]>;
+const questFlavor = questFlavorData as QuestFlavorMap;
+
+function pickRandomStoryHook(type: QuestType): string | undefined {
+  const intros = questFlavor[type];
+  if (!intros?.length) return undefined;
+  return intros[Math.floor(Math.random() * intros.length)];
+}
 
 /** How many "next step" targets to offer for coins/production (keeps difficulty curve smooth). */
 const NEXT_TARGETS_COUNT = 3;
@@ -196,6 +206,7 @@ export function generateQuest(): Quest {
         target: t,
         reward: Math.floor(t * Q.coins.rewardMult) + Q.coins.rewardBase,
         description: `Reach ${t.toLocaleString()} coins`,
+        storyHook: pickRandomStoryHook('coins'),
       };
     }
   }
@@ -208,6 +219,7 @@ export function generateQuest(): Quest {
       target,
       reward: Math.floor(target * Q.coins.rewardMult) + Q.coins.rewardBase,
       description: `Reach ${target.toLocaleString()} coins`,
+      storyHook: pickRandomStoryHook('coins'),
     };
   }
   if (chosenKey === 'production') {
@@ -218,6 +230,7 @@ export function generateQuest(): Quest {
       target,
       reward: target * Q.production.rewardMult + Q.production.rewardBase,
       description: `Reach ${target}/s production`,
+      storyHook: pickRandomStoryHook('production'),
     };
   }
   if (chosenKey === 'upgrade' && allowed.upgrade.length > 0) {
@@ -229,6 +242,7 @@ export function generateQuest(): Quest {
       targetId: def.id,
       reward: Math.floor(def.cost * Q.upgrade.rewardCostMult) + Q.upgrade.rewardBase,
       description: `Own ${pick.target}× ${def.name}`,
+      storyHook: pickRandomStoryHook('upgrade'),
     };
   }
   if (chosenKey === 'astronauts') {
@@ -239,6 +253,7 @@ export function generateQuest(): Quest {
       target,
       reward: Q.astronauts.rewardBase + target * Q.astronauts.rewardPerTarget,
       description: `Have ${target} astronaut${target > 1 ? 's' : ''}`,
+      storyHook: pickRandomStoryHook('astronauts'),
     };
   }
   if (chosenKey === 'prestige_today' && allowed.prestige_today.length > 0) {
@@ -249,6 +264,7 @@ export function generateQuest(): Quest {
       target,
       reward: cfg.rewardBase + target * cfg.rewardPerPrestige,
       description: `Prestige ${target} time${target > 1 ? 's' : ''} today`,
+      storyHook: pickRandomStoryHook('prestige_today'),
     };
   }
   if (chosenKey === 'combo_tier' && allowed.combo_tier.length > 0) {
@@ -260,6 +276,7 @@ export function generateQuest(): Quest {
       target,
       reward: cfg.rewardBase + Math.round(mult * 200),
       description: `Reach ×${mult} combo`,
+      storyHook: pickRandomStoryHook('combo_tier'),
     };
   }
   if (chosenKey === 'events_triggered' && allowed.events_triggered.length > 0) {
@@ -270,6 +287,7 @@ export function generateQuest(): Quest {
       target,
       reward: cfg.rewardBase + target * cfg.rewardPerEvent,
       description: `Trigger ${target} event${target > 1 ? 's' : ''} this run`,
+      storyHook: pickRandomStoryHook('events_triggered'),
     };
   }
   const cfg = Q.tier1_set ?? { reward: 1500 };
@@ -278,6 +296,7 @@ export function generateQuest(): Quest {
     target: TIER1_UPGRADE_IDS.length,
     reward: cfg.reward,
     description: 'Own at least one of every tier-1 upgrade',
+    storyHook: pickRandomStoryHook('tier1_set'),
   };
 }
 

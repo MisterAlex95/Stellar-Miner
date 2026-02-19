@@ -215,6 +215,47 @@
           </p>
         </template>
       </div>
+      <div
+        v-if="discoveryLogEntries.length > 0"
+        class="discovery-log-section"
+      >
+        <button
+          type="button"
+          id="discovery-log-toggle"
+          class="discovery-log-header"
+          :aria-expanded="!discoveryLogCollapsed"
+          aria-controls="discovery-log-list"
+          @click="discoveryLogCollapsed = !discoveryLogCollapsed"
+        >
+          <span class="discovery-log-toggle" aria-hidden="true">
+            {{ discoveryLogCollapsed ? '▶' : '▼' }}
+          </span>
+          <span class="discovery-log-title">{{ t('discoveryLogTitle') }}</span>
+        </button>
+        <div
+          v-show="!discoveryLogCollapsed"
+          id="discovery-log-list"
+          class="discovery-log-list"
+          role="region"
+          aria-labelledby="discovery-log-toggle"
+        >
+          <div
+            v-for="entry in discoveryLogEntries"
+            :key="entry.id"
+            class="discovery-log-entry"
+          >
+            <span class="discovery-log-name">{{ entry.displayName }}</span>
+            <p class="discovery-log-flavor">{{ entry.discoveryFlavor }}</p>
+          </div>
+        </div>
+      </div>
+      <div
+        v-else-if="planetSystems?.length"
+        class="discovery-log-empty"
+      >
+        <span class="discovery-log-empty-label">{{ t('discoveryLogTitle') }}</span>
+        <span class="discovery-log-empty-text">{{ t('discoveryLogEmpty') }}</span>
+      </div>
     </EmpireSection>
 
     <EmpireSection
@@ -270,6 +311,16 @@ const { crew, planetSystems, prestige, expedition, unlockedBlocks } = useEmpireD
 
 const planetListRef = ref<HTMLElement | null>(null);
 const collapsedSystems = ref<Set<number>>(new Set());
+const discoveryLogCollapsed = ref(false);
+
+const discoveryLogEntries = computed(() => {
+  const systems = planetSystems.value ?? [];
+  return systems.flatMap((s) => s.planets).filter((p) => p.discoveryFlavor).map((p) => ({
+    id: p.id,
+    displayName: p.displayName,
+    discoveryFlavor: p.discoveryFlavor ?? '',
+  }));
+});
 
 const planetSummary = computed(() => {
   const n = planetSystems.value?.flatMap((s) => s.planets).length ?? 0;
@@ -666,6 +717,101 @@ watch(
 .build-housing-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.discovery-log-section {
+  margin-bottom: 1rem;
+}
+
+.discovery-log-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  text-align: left;
+}
+
+.discovery-log-header:hover {
+  background: var(--bg-card);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.discovery-log-toggle {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.discovery-log-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.discovery-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-left: 0.25rem;
+}
+
+.discovery-log-entry {
+  padding: 0.5rem 0.65rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.discovery-log-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.discovery-log-flavor {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.discovery-log-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.discovery-log-empty-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.discovery-log-empty-text {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.4;
 }
 
 .expedition-area {

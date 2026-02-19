@@ -38,6 +38,23 @@ describe('quests', () => {
     expect(typeof q.description).toBe('string');
   });
 
+  it('generateQuest attaches storyHook from flavor when available', () => {
+    const coinsIntros = [
+      'The ledger won\'t fill itself.',
+      'Every credit counts in the belt.',
+      'Time to stack some ore-money.',
+      'Mission Control wants to see numbers.',
+      'The vault is calling.',
+    ];
+    vi.spyOn(Math, 'random').mockReturnValue(0.05);
+    const q = generateQuest();
+    vi.restoreAllMocks();
+    expect(q.type).toBe('coins');
+    expect(typeof q.storyHook).toBe('string');
+    expect(q.storyHook).toBeTruthy();
+    expect(coinsIntros).toContain(q.storyHook);
+  });
+
   it('generateQuest can return production quest when random in range', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.25);
     const q = generateQuest();

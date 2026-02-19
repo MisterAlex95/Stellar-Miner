@@ -92,6 +92,7 @@ export const useAppUIStore = defineStore('appUI', {
       moonCount: number;
       extraLabel: string;
       upgradeItems: { name: string; count: number }[];
+      discoveryFlavor?: string;
     } | null,
   }),
   actions: {

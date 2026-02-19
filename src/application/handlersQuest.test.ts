@@ -11,6 +11,7 @@ vi.mock('../presentation/toasts/index.js', () => ({
   showQuestStreakToast: vi.fn(),
 }));
 vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
+vi.mock('./codex.js', () => ({ checkCodexUnlocks: vi.fn() }));
 vi.mock('./refreshSignal.js', () => ({ notifyRefresh: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));
 

@@ -1,6 +1,13 @@
 import { Player } from '../domain/entities/Player.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
-import { getSession, setSession, setActiveEventInstances, setDiscoveredEventIds } from './gameState.js';
+import {
+  getSession,
+  setSession,
+  setActiveEventInstances,
+  setDiscoveredEventIds,
+  setCodexUnlocks,
+  setQuestState,
+} from './gameState.js';
 import { saveLoad } from './gameState.js';
 import { clearProgression } from './progression.js';
 import { t, tParam } from './strings.js';
@@ -84,6 +91,8 @@ export function handleResetProgress(): void {
   const freshPlayer = Player.create('player-1');
   freshPlayer.addCoins(0);
   setDiscoveredEventIds([]);
+  setCodexUnlocks([]);
+  setQuestState({ quest: null });
   setSession(new GameSession(currentSession.id, freshPlayer, []));
   setActiveEventInstances([]);
   location.reload();

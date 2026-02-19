@@ -127,4 +127,5 @@ const { data, chartRange, setChartRange } = useStatisticsData();
   flex-direction: column;
   gap: 1.5rem;
 }
+
 </style>

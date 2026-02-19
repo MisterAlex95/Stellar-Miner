@@ -68,6 +68,10 @@ let runStats: RunStats = {
 /** Event IDs the player has ever seen (persisted with save). Only these appear in the events hint. */
 let discoveredEventIds: string[] = [];
 
+/** Codex entries unlocked with timestamp (persisted with save). */
+export type CodexUnlockRecord = { id: string; at: number };
+let codexUnlocks: CodexUnlockRecord[] = [];
+
 let expeditionEndsAt: number | null = null;
 let expeditionComposition: ExpeditionComposition | null = null;
 let expeditionDurationMs = 0;
@@ -256,6 +260,40 @@ export function addDiscoveredEvent(eventId: string): void {
   discoveredEventIds = [...discoveredEventIds, eventId];
 }
 
+export function getCodexUnlocks(): string[] {
+  return codexUnlocks.map((r) => r.id);
+}
+
+export function getCodexUnlocksWithTime(): CodexUnlockRecord[] {
+  return [...codexUnlocks];
+}
+
+export function setCodexUnlocks(data: CodexUnlockRecord[] | string[]): void {
+  if (!Array.isArray(data)) {
+    codexUnlocks = [];
+    return;
+  }
+  if (data.length === 0) {
+    codexUnlocks = [];
+    return;
+  }
+  const first = data[0];
+  if (typeof first === 'string') {
+    codexUnlocks = (data as string[])
+      .filter((id) => typeof id === 'string')
+      .map((id) => ({ id, at: 0 }));
+    return;
+  }
+  codexUnlocks = (data as CodexUnlockRecord[])
+    .filter((r) => r && typeof r.id === 'string' && typeof r.at === 'number')
+    .map((r) => ({ id: r.id, at: r.at }));
+}
+
+export function addCodexUnlock(entryId: string): void {
+  if (typeof entryId !== 'string' || codexUnlocks.some((r) => r.id === entryId)) return;
+  codexUnlocks = [...codexUnlocks, { id: entryId, at: Date.now() }];
+}
+
 export function updateRunMaxComboMult(mult: number): void {
   if (mult > runStats.runMaxComboMult) runStats.runMaxComboMult = mult;
 }
@@ -376,6 +414,7 @@ export async function getOrCreateSession(): Promise<GameSession> {
     setSession(result.session);
     setRunStatsFromPayload(result.runStats ?? null);
     setDiscoveredEventIds(result.discoveredEventIds ?? []);
+    setCodexUnlocks(result.codexUnlocks ?? []);
     setExpeditionFromPayload(result.expedition ?? null);
     return result.session;
   }
@@ -383,5 +422,6 @@ export async function getOrCreateSession(): Promise<GameSession> {
   player.addCoins(0);
   setRunStatsFromPayload(null);
   setDiscoveredEventIds([]);
+  setCodexUnlocks([]);
   return new GameSession('session-1', player);
 }

@@ -4,6 +4,7 @@ import { emit } from './eventBus.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
+import { checkCodexUnlocks } from './codex.js';
 
 export function handleClaimQuest(): void {
   const streak = getQuestStreak();
@@ -12,5 +13,6 @@ export function handleClaimQuest(): void {
     emit('quest_claimed', { streak });
     getPresentationPort().addQuestClaimedAnimation();
     checkAchievements();
+    checkCodexUnlocks();
   }
 }

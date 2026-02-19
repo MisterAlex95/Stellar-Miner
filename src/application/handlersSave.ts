@@ -4,8 +4,10 @@ import {
   getRunStats,
   setRunStatsFromPayload,
   getDiscoveredEventIds,
+  getCodexUnlocksWithTime,
   getExpeditionForSave,
   setExpeditionFromPayload,
+  setCodexUnlocks,
   saveLoad,
   type SavedExpedition,
 } from './gameState.js';
@@ -13,13 +15,14 @@ import {
 function getSavePayload(): {
   session: ReturnType<typeof getSession>;
   runStats: ReturnType<typeof getRunStats>;
-  extras: { discoveredEventIds: string[]; expedition: SavedExpedition | null };
+  extras: { discoveredEventIds: string[]; codexUnlocks: Array<{ id: string; at: number }>; expedition: SavedExpedition | null };
 } {
   return {
     session: getSession(),
     runStats: getRunStats(),
     extras: {
       discoveredEventIds: getDiscoveredEventIds(),
+      codexUnlocks: getCodexUnlocksWithTime(),
       expedition: getExpeditionForSave(),
     },
   };
@@ -31,8 +34,8 @@ export function saveSession(): void {
 }
 
 export function handleExportSave(): void {
-  const session = getSession();
-  const json = saveLoad.exportSession(session);
+  const { session, runStats, extras } = getSavePayload();
+  const json = saveLoad.exportSession(session, { runStats, ...extras });
   if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(json).catch(() => {});
   }
@@ -46,11 +49,29 @@ export function handleExportSave(): void {
 }
 
 export async function handleImportSave(json: string): Promise<boolean> {
+  let parsed: { codexUnlocks?: unknown } | null = null;
+  try {
+    parsed = JSON.parse(json) as { codexUnlocks?: unknown };
+  } catch {
+    // importSession will fail too
+  }
   const session = saveLoad.importSession(json);
   if (!session) return false;
   setSession(session);
   setRunStatsFromPayload(null);
   setExpeditionFromPayload(null);
+  if (Array.isArray(parsed?.codexUnlocks)) {
+    const list = parsed.codexUnlocks as unknown[];
+    const normalized = list
+      .map((item) => {
+        if (typeof item === 'object' && item !== null && 'id' in item && 'at' in item)
+          return { id: String((item as { id: unknown }).id), at: Number((item as { at: unknown }).at) };
+        if (typeof item === 'string') return { id: item, at: 0 };
+        return null;
+      })
+      .filter((r): r is { id: string; at: number } => r !== null);
+    setCodexUnlocks(normalized);
+  }
   const { runStats, extras } = getSavePayload();
   await saveLoad.save(session, runStats, extras);
   return true;

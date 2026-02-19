@@ -1,0 +1,27 @@
+{
+  "rocky": [
+    "First scan: rich ore signatures. The crew reports solid ground.",
+    "Rock and dust as far as the sensors reach. A miner's dream.",
+    "Dense crust, stable orbit. Ready for rigs."
+  ],
+  "desert": [
+    "Endless dunes and heat. Solar collectors will love it.",
+    "The surface glows at dawn. Power potential is high.",
+    "Dry, quiet, and full of sunlight. First readings are promising."
+  ],
+  "ice": [
+    "Frozen waste. The cryo-extractors will feel at home.",
+    "Ice caps and subzero winds. Rare minerals locked in the frost.",
+    "Cold and pristine. Quantum extractors show unusual readings."
+  ],
+  "volcanic": [
+    "Magma flows and geothermal vents. The magma pump team is eager.",
+    "Unstable crust, immense energy. High risk, high yield.",
+    "Fire and ore. First contact: the ground is warm."
+  ],
+  "gas": [
+    "No landing. Gas siphon and orbital stations only.",
+    "A giant in the void. Harvest from the clouds.",
+    "Atmosphere rich in harvestables. The stellar harvester will earn its keep."
+  ]
+}

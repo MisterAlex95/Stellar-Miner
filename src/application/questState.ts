@@ -8,6 +8,8 @@ export type Quest = {
   targetId?: string;
   reward: number;
   description: string;
+  /** Optional one-line intro shown with the quest (from questFlavor). */
+  storyHook?: string;
 };
 
 export type QuestState = { quest: Quest | null };

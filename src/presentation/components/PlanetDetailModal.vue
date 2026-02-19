@@ -79,6 +79,13 @@
               <span class="planet-detail-stat-label">{{ t('planetDetailExtra') }}</span>
               <span class="planet-detail-stat-value">{{ planetDetail.extraLabel }}</span>
             </div>
+            <div
+              v-if="planetDetail.discoveryFlavor"
+              class="planet-detail-stat planet-detail-stat--flavor"
+            >
+              <span class="planet-detail-stat-label">{{ t('planetDetailFirstContact') }}</span>
+              <span class="planet-detail-stat-value planet-detail-flavor">{{ planetDetail.discoveryFlavor }}</span>
+            </div>
           </div>
           <div class="planet-detail-upgrades-section">
             <h4 class="planet-detail-upgrades-title">
@@ -334,6 +341,16 @@ function handleClose(): void {
 .planet-detail-stat-accent {
   color: var(--accent);
   font-weight: 600;
+}
+
+.planet-detail-stat--flavor {
+  grid-column: 1 / -1;
+}
+
+.planet-detail-flavor {
+  font-style: italic;
+  color: var(--text-dim);
+  line-height: 1.4;
 }
 
 .planet-detail-type--rocky { color: #a8a29e; }

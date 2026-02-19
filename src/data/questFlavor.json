@@ -1,0 +1,58 @@
+{
+  "coins": [
+    "The ledger won't fill itself.",
+    "Every credit counts in the belt.",
+    "Time to stack some ore-money.",
+    "Mission Control wants to see numbers.",
+    "The vault is calling."
+  ],
+  "production": [
+    "Throughput is the name of the game.",
+    "Crank the extractors.",
+    "More ore per second, more glory.",
+    "The belt is full—go get it.",
+    "Ramp up the operation."
+  ],
+  "upgrade": [
+    "Better gear, better yield.",
+    "The workshop has something for you.",
+    "Invest in the fleet.",
+    "One more unit could tip the scales.",
+    "Upgrades pay for themselves."
+  ],
+  "astronauts": [
+    "The crew makes the run.",
+    "Recruit another pair of hands.",
+    "More souls in the black.",
+    "A full roster means a full haul.",
+    "The void needs more operators."
+  ],
+  "prestige_today": [
+    "Another lap around the star.",
+    "Reset and rise again.",
+    "Today's the day for a fresh run.",
+    "The cycle continues.",
+    "One more rebirth before midnight."
+  ],
+  "combo_tier": [
+    "Chain those bonuses.",
+    "Keep the multiplier rolling.",
+    "Momentum is everything.",
+    "Stack the streak.",
+    "Don't break the combo."
+  ],
+  "events_triggered": [
+    "The belt is full of surprises.",
+    "Ride the chaos.",
+    "Events shape the run.",
+    "Embrace the random.",
+    "Trigger the unexpected."
+  ],
+  "tier1_set": [
+    "Complete the starter collection.",
+    "One of each from the first tier.",
+    "Cover the basics.",
+    "The foundation matters.",
+    "Round out the early lineup."
+  ]
+}

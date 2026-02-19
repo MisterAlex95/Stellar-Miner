@@ -1,0 +1,47 @@
+---
+description: Task-driven workflow. Only generate/execute prompts when the task detector finds pending tasks. No tasks = no LLM call.
+globs: true
+alwaysApply: false
+---
+# 500 · Task-driven workflow (cursor-project-master style)
+
+## Purpose
+Minimize unnecessary AI calls and token usage. The agent must **only** generate and execute task prompts when there are actual pending tasks.
+
+## Definition of "tasks"
+- **TODO / FIXME / XXX / HACK** in code (see `task-detector.config.json` → `sources.codeComments`)
+- **Open project tasks**: files in `project/tasks/todo/` or `project/tasks/in_progress/` (→ `sources.projectTasks`)
+- **Failing checks**: e.g. `npm run test` or `npm run typecheck` failing (→ `sources.failingChecks`)
+- **Explicit task queue file** (optional): one task per line (→ `sources.taskQueueFile`)
+- **GitHub issues** (optional, when enabled): open issues (→ `sources.githubIssues`)
+
+## Behavior
+
+1. **Before** generating any task-execution prompt, run the task detector:
+   ```bash
+   npm run task-driven
+   ```
+   Or to write the prompt to a file: `npm run task-driven:prompt`
+
+2. **If the script logs "Idle"** (no tasks detected):
+   - Do nothing. Remain idle.
+   - Do not call the LLM for task execution.
+   - No token usage for task workflow.
+
+3. **If the script logs "Acting"** (tasks found):
+   - Use the prompt printed to stdout (or from `.task-driven-prompt.txt` if you used `task-driven:prompt`).
+   - Prioritize and execute step-by-step as described in the prompt.
+
+## Configuration
+- **Config file:** `task-detector.config.json` at project root.
+- **Priority order** of task sources is defined by the `priority` array (first = highest).
+- Enable/disable each source via `sources.<name>.enabled`.
+- Customize idle/act log messages in `config.log.idleMessage` and `config.log.actMessage`.
+
+## Running continuously (background)
+```bash
+# Infinite loop: check every 60s, write prompt to .task-driven-prompt.txt when tasks exist (Ctrl+C to stop)
+npm run task-driven:watch
+# Custom interval (e.g. 30s): tsx scripts/task-detector/run.ts --watch --interval 30 --output .task-driven-prompt.txt
+```
+Only when the script writes a prompt should Cursor (or an automation) invoke the agent with that prompt.

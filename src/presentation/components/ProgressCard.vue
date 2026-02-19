@@ -5,6 +5,10 @@
       <span :class="valueClass">{{ value }}{{ target ? ` / ${target}` : '' }}</span>
     </div>
     <p
+      v-if="theme === 'dashboard-quest' && storyHook"
+      :class="storyHookClass"
+    >{{ storyHook }}</p>
+    <p
       v-if="theme === 'dashboard-quest' || desc"
       :class="descClass"
       :style="theme === 'dashboard-quest' && !desc ? { display: 'none' } : undefined"
@@ -29,6 +33,8 @@ const props = withDefaults(
     value: string;
     target?: string;
     desc?: string;
+    /** One-line intro for dashboard-quest (story hook). */
+    storyHook?: string;
     pct: number;
     cardClass?: string;
     theme?: 'default' | 'dashboard-prestige' | 'dashboard-quest';
@@ -44,6 +50,7 @@ const headerClass = isPrestige ? 'dashboard-progress-card-header' : isQuest ? 'd
 const labelClass = isPrestige ? 'dashboard-progress-card-label' : isQuest ? 'dashboard-quest-card-label' : 'progress-card-label';
 const valueClass = isPrestige ? 'dashboard-progress-card-value' : isQuest ? 'dashboard-quest-card-value' : 'progress-card-value';
 const descClass = isQuest ? 'dashboard-quest-desc' : 'progress-card-desc';
+const storyHookClass = 'dashboard-quest-story-hook';
 const barWrapClass = isPrestige ? 'dashboard-progress-bar-wrap' : isQuest ? 'dashboard-quest-bar-wrap' : 'progress-card-bar-wrap';
 const barClass = isPrestige ? 'dashboard-progress-bar' : isQuest ? 'dashboard-quest-bar' : 'progress-card-bar';
 </script>
@@ -111,6 +118,15 @@ const barClass = isPrestige ? 'dashboard-progress-bar' : isQuest ? 'dashboard-qu
   align-items: baseline;
   gap: 0.5rem;
   margin-bottom: 0.35rem;
+}
+
+.dashboard-quest-story-hook {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--text-dim);
+  line-height: 1.35;
+  opacity: 0.9;
 }
 
 .dashboard-quest-desc {

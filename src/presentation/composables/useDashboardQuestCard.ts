@@ -13,20 +13,22 @@ export function useDashboardQuestCard() {
   return computed(() => {
     store.runStats; // reactive dependency
     const s = getSession();
-    if (!s) return { show: false, value: '', target: '', desc: '', pct: 0 };
+    if (!s) return { show: false, value: '', target: '', desc: '', storyHook: '', pct: 0 };
     const unlocked = getUnlockedBlocks(s);
-    if (!unlocked.has('quest')) return { show: false, value: '', target: '', desc: '', pct: 0 };
+    if (!unlocked.has('quest')) return { show: false, value: '', target: '', desc: '', storyHook: '', pct: 0 };
     const questProgress = getQuestProgress();
     const questDone = questProgress?.done ?? false;
-    if (!questProgress || questDone) return { show: false, value: '', target: '', desc: '', pct: 0 };
+    if (!questProgress || questDone) return { show: false, value: '', target: '', desc: '', storyHook: '', pct: 0 };
     const pct = questProgress.target > 0 ? Math.min(100, (Number(questProgress.current) / questProgress.target) * 100) : 0;
     const questState = getQuestState();
     const questDesc = questState.quest?.description ?? '';
+    const storyHook = questState.quest?.storyHook ?? '';
     return {
       show: true,
       value: formatNumber(questProgress.current, false),
       target: formatNumber(questProgress.target, false),
       desc: questDesc,
+      storyHook,
       pct,
     };
   });

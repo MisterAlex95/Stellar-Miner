@@ -71,7 +71,8 @@ export function deserializeSession(data: SavedSession): GameSession {
         p.assignedCrew ?? 0,
         visualSeed,
         installingUpgrades,
-        uninstallingUpgrades
+        uninstallingUpgrades,
+        p.discoveryFlavor
       );
     });
   } else {

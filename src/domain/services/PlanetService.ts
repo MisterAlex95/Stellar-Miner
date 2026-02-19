@@ -104,13 +104,14 @@ export class PlanetService {
     return { started: true, composition: { ...composition }, tierId };
   }
 
-  /** Complete expedition: roll deaths, add planet and veterans on success. researchDeathChancePercent optional (from research, negative = safer). */
+  /** Complete expedition: roll deaths, add planet and veterans on success. researchDeathChancePercent optional (from research, negative = safer). getDiscoveryFlavor optional (application layer): (planetName) => first-contact flavor line. */
   completeExpedition(
     player: Player,
     composition: ExpeditionComposition,
     tierId: ExpeditionTierId = 'medium',
     roll: () => number = Math.random,
-    researchDeathChancePercent: number = 0
+    researchDeathChancePercent: number = 0,
+    getDiscoveryFlavor?: (planetName: string) => string
   ): ExpeditionOutcome {
     const totalSent = CREW_ROLES.reduce((s, r) => s + (composition[r] ?? 0), 0);
     const medicCount = composition.medic ?? 0;
@@ -124,7 +125,8 @@ export class PlanetService {
     if (success) {
       const id = `planet-${player.planets.length + 1}`;
       const name = generatePlanetName(id);
-      const planet = PlanetEntity.create(id, name);
+      const discoveryFlavor = getDiscoveryFlavor?.(name);
+      const planet = PlanetEntity.create(id, name, undefined, discoveryFlavor);
       const tier = getExpeditionTier(tierId);
       if (tier?.extraSlot) planet.addSlot();
       player.addPlanet(planet);
@@ -134,13 +136,14 @@ export class PlanetService {
     return { success: false, totalSent, survivors: 0, deaths: totalSent, planetName: undefined };
   }
 
-  /** Launch expedition: spend coins + crew (by composition or default). Survivors become veterans. researchDeathChancePercent optional. */
+  /** Launch expedition: spend coins + crew (by composition or default). Survivors become veterans. researchDeathChancePercent optional. getDiscoveryFlavor optional: (planetName) => first-contact flavor. */
   launchExpedition(
     player: Player,
     rollOrComposition: (() => number) | ExpeditionComposition = Math.random,
     roll: () => number = Math.random,
     tierId: ExpeditionTierId = 'medium',
-    researchDeathChancePercent: number = 0
+    researchDeathChancePercent: number = 0,
+    getDiscoveryFlavor?: (planetName: string) => string
   ): ExpeditionOutcome {
     const cost = this.getNewPlanetCost(player);
     const required = this.getExpeditionAstronautsRequired(player);
@@ -169,7 +172,8 @@ export class PlanetService {
     if (success) {
       const id = `planet-${player.planets.length + 1}`;
       const name = generatePlanetName(id);
-      const planet = PlanetEntity.create(id, name);
+      const discoveryFlavor = getDiscoveryFlavor?.(name);
+      const planet = PlanetEntity.create(id, name, undefined, discoveryFlavor);
       const tier = getExpeditionTier(tierId);
       if (tier?.extraSlot) planet.addSlot();
       player.addPlanet(planet);

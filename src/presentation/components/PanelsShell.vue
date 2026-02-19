@@ -402,6 +402,19 @@
       </div>
     </section>
   </div>
+  <div
+    id="panel-archive"
+    class="app-tab-panel"
+    :class="{ 'app-tab-panel--active': isPanelActive('archive') }"
+    role="tabpanel"
+    aria-labelledby="tab-archive"
+    data-tab="archive"
+    :hidden="isPanelHidden('archive')"
+  >
+    <div id="archive-content">
+      <ArchivePanel v-if="store.hydratedPanels.includes('archive')" />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -419,6 +432,7 @@ import EmpirePanel from '../panels/EmpirePanel.vue';
 import ResearchPanel from '../panels/ResearchPanel.vue';
 import UpgradesPanel from '../panels/UpgradesPanel.vue';
 import StatisticsPanel from '../panels/StatisticsPanel.vue';
+import ArchivePanel from '../panels/ArchivePanel.vue';
 import { handleMineClick } from '../../application/handlers.js';
 
 const store = useGameStateStore();

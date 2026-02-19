@@ -7,7 +7,7 @@ import { useGameStateStore } from './stores/gameState.js';
 
 const TAB_STORAGE_KEY = 'stellar-miner-active-tab';
 const DEFAULT_TAB = 'mine';
-const VALID_TAB_IDS = ['mine', 'dashboard', 'empire', 'research', 'upgrades', 'stats'] as const;
+const VALID_TAB_IDS = ['mine', 'dashboard', 'empire', 'research', 'upgrades', 'stats', 'archive'] as const;
 const HISTORY_STATE_KEY = 'tab';
 
 export type TabId = (typeof VALID_TAB_IDS)[number];
@@ -43,7 +43,7 @@ export function switchTab(tabId: string): void {
   if (pinia) {
     const gameState = useGameStateStore(pinia);
     gameState.setActiveTab(tabId);
-    if (['research', 'dashboard', 'upgrades', 'empire', 'stats'].includes(tabId)) {
+    if (['research', 'dashboard', 'upgrades', 'empire', 'stats', 'archive'].includes(tabId)) {
       gameState.markPanelHydrated(tabId);
       markPanelHydrated(tabId);
     }

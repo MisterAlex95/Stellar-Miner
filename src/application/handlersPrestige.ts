@@ -25,6 +25,7 @@ import { clearResearch, addPrestigeResearchPoints, getUnlockedResearch } from '.
 import { clearEverUnlockedUpgradeTiers } from './catalogs.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
+import { checkCodexUnlocks } from './codex.js';
 import { emit } from './eventBus.js';
 import { t, tParam } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
@@ -35,6 +36,7 @@ const PRESTIGE_MILESTONE_LEVELS = [2, 5, 10, 20];
 function refreshAfterPrestige(): void {
   notifyRefresh();
   checkAchievements();
+  checkCodexUnlocks();
 }
 
 const PRESTIGE_BASE_PCT = 7;

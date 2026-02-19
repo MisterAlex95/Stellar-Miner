@@ -16,11 +16,14 @@ import { emit } from './eventBus.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
+import { checkCodexUnlocks } from './codex.js';
+import { getDiscoveryFlavorForPlanetName } from './discoveryFlavor.js';
 import { t, tParam } from './strings.js';
 
 function refreshAfterPlanetAction(opts: { achievements?: boolean } = {}): void {
   notifyRefresh();
   if (opts.achievements) checkAchievements();
+  checkCodexUnlocks();
 }
 
 /** Launch expedition with default composition and medium tier (e.g. for tests or programmatic launch). */
@@ -66,24 +69,36 @@ export function completeExpeditionIfDue(): void {
   const tierId = (difficulty === 'easy' || difficulty === 'medium' || difficulty === 'hard' ? difficulty : 'medium') as ExpeditionTierId;
   const player = session.player;
   const wasFirstPlanet = player.planets.length === 1;
-  const outcome = planetService.completeExpedition(player, composition, tierId, Math.random, getResearchExpeditionDeathChancePercent());
+  const outcome = planetService.completeExpedition(
+    player,
+    composition,
+    tierId,
+    Math.random,
+    getResearchExpeditionDeathChancePercent(),
+    getDiscoveryFlavorForPlanetName
+  );
   clearExpedition();
   const ui = getPresentationPort();
   if (outcome.success && outcome.planetName) {
     addResearchData(RESEARCH_DATA_PER_EXPEDITION_SUCCESS);
     emit('planet_bought', { planetCount: player.planets.length });
+    const lastPlanet = player.planets[player.planets.length - 1];
+    const flavor = lastPlanet?.discoveryFlavor ?? '';
+    let message: string;
     if (outcome.deaths > 0) {
-      ui.showMiniMilestoneToast(tParam('expeditionDiscoveredWithDeaths', {
+      message = tParam('expeditionDiscoveredWithDeaths', {
         name: outcome.planetName,
         survivors: outcome.survivors,
         deaths: outcome.deaths,
-      }));
+      });
     } else {
-      ui.showMiniMilestoneToast(tParam('expeditionDiscoveredAllReturned', {
+      message = tParam('expeditionDiscoveredAllReturned', {
         name: outcome.planetName,
         survivors: outcome.survivors,
-      }));
+      });
     }
+    if (flavor) message += `\n${flavor}`;
+    ui.showMiniMilestoneToast(message);
     if (wasFirstPlanet && typeof localStorage !== 'undefined') {
       const key = 'stellar-miner-first-planet-toast';
       if (!localStorage.getItem(key)) {
