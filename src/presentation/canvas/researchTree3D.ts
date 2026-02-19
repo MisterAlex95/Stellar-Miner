@@ -262,6 +262,8 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
   let panX = 0;
   let panY = (totalRows - 1) * NODE_SPACING_Y - sizeY0 + 2.5;
   let zoom = 3;
+  let canvasW = 400;
+  let canvasH = 400;
   let isPointerDown = false;
   let didPan = false;
   let prevClientX = 0;
@@ -271,9 +273,16 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
   canvas.style.touchAction = 'none';
   canvas.style.cursor = 'grab';
 
-  function updateCamera(): void {
-    const sizeX = ORTHO_SIZE_BASE / zoom;
+  /** Ortho extents so that sizeX/sizeY = canvasW/canvasH → node circles stay round when canvas is resized. */
+  function getOrthoExtents(): { sizeX: number; sizeY: number } {
+    const aspect = canvasW / canvasH;
     const sizeY = (ORTHO_SIZE_BASE * ORTHO_HEIGHT_FACTOR) / zoom;
+    const sizeX = sizeY * aspect;
+    return { sizeX, sizeY };
+  }
+
+  function updateCamera(): void {
+    const { sizeX, sizeY } = getOrthoExtents();
     camera.left = -sizeX + panX;
     camera.right = sizeX + panX;
     camera.top = sizeY + panY;
@@ -293,8 +302,7 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
 
   function onPointerMove(e: PointerEvent): void {
     if (isPointerDown) {
-      const sizeX = ORTHO_SIZE_BASE / zoom;
-      const sizeY = (ORTHO_SIZE_BASE * ORTHO_HEIGHT_FACTOR) / zoom;
+      const { sizeX, sizeY } = getOrthoExtents();
       const dx = (e.clientX - prevClientX) * (sizeX * 2 / canvas.clientWidth);
       const dy = -(e.clientY - prevClientY) * (sizeY * 2 / canvas.clientHeight);
       if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) didPan = true;
@@ -459,7 +467,10 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
   updateCamera();
 
   function resize(w: number, h: number): void {
+    canvasW = w;
+    canvasH = h;
     renderer.setSize(w, h);
+    updateCamera();
   }
 
   function dispose(): void {
