@@ -113,3 +113,18 @@ import StatisticsCharts from '../components/StatisticsCharts.vue';
 
 const { data, chartRange, setChartRange } = useStatisticsData();
 </script>
+
+<style scoped>
+.statistics-intro {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 0 0 1.25rem 0;
+  line-height: 1.45;
+}
+
+.statistics-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+</style>

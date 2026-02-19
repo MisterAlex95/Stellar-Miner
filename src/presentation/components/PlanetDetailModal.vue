@@ -178,3 +178,229 @@ function handleClose(): void {
   closePlanetDetail();
 }
 </script>
+
+<style scoped>
+.planet-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
+}
+
+.planet-detail-overlay--open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.planet-detail-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.planet-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.planet-detail-header h2 {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.planet-detail-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.2s, background 0.2s;
+}
+
+.planet-detail-close:hover {
+  color: var(--text);
+  background: var(--bg-card);
+}
+
+.planet-detail-body {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.planet-detail-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.planet-detail-canvas-3d {
+  border-radius: 8px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+  background: transparent;
+  display: block;
+  margin: 0 auto;
+}
+
+.planet-detail-drag-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  opacity: 0.7;
+  text-align: center;
+}
+
+.planet-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.planet-detail-name {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+}
+
+.planet-detail-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+
+.planet-detail-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.planet-detail-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.planet-detail-stat-value {
+  font-size: 0.85rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.planet-detail-stat-value--prod {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.planet-detail-stat-accent {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.planet-detail-type--rocky { color: #a8a29e; }
+.planet-detail-type--desert { color: #d4b896; }
+.planet-detail-type--ice { color: #7dd3fc; }
+.planet-detail-type--volcanic { color: #f87171; }
+.planet-detail-type--gas { color: #facc15; }
+
+.planet-detail-upgrades-section {
+  margin-top: 0.25rem;
+}
+
+.planet-detail-upgrades-title {
+  margin: 0 0 0.5rem 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.planet-detail-upgrade-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.planet-detail-upgrade-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.6rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.planet-detail-upgrade-name {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.planet-detail-upgrade-count {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.planet-detail-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+@media (max-width: 480px) {
+  .planet-detail-modal {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .planet-detail-stats {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

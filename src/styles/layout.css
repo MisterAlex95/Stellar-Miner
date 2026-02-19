@@ -1,3 +1,8 @@
+/* Stats: no sticky on Mine tab (StatsBlock handles its own sticky/compact) */
+#app[data-active-tab="mine"] .stats {
+  position: static;
+}
+
 /* App container responsive */
 @media (max-width: 360px) {
   #app {

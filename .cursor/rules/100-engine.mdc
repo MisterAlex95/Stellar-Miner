@@ -1,0 +1,72 @@
+---
+description: The Core Engine. It orchestrates the project's entire lifecycle, from initial planning and scaffolding to the iterative task execution loop. It acts as the central state machine.
+globs: true
+alwaysApply: true
+---
+# 100 · Core Engine: Plan → Scaffold → Execute
+
+---
+## PHASE 1: PROJECT INITIALIZATION
+> This phase runs ONLY ONCE at the start of a project when `/project/plan.json` is absent or has no vertices.
+
+1. **REQUIREMENT VALIDATION**
+   - Read all documents in `/docs`.
+   - **MANDATORY CHECK:** If `PRD.md` is missing core features, or `TECH_SPEC.md` is missing `techStack` details, you **MUST PAUSE** and ask the user for clarification. Do not proceed with incomplete specifications.
+
+2. **TECH STACK & STARTER SELECTION**
+   - Detect `techStack` from `TECH_SPEC.md`. Default to `nextjs-prisma-tailwind-shadcn-supabase-vercel`.
+   - **Use your search capability** to find the official starter template on Vercel or GitHub for the selected stack. Prioritize templates with high star counts and recent updates.
+   - If new or unfamiliar frameworks are specified, use the `context7` MCP to fetch their latest official documentation to inform the scaffolding process.
+
+3. **SCAFFOLDING**
+   - Execute the starter's official CLI command with non-interactive flags (e.g., `npx create-next-app@latest ... --ts --tailwind`).
+   - **On Failure:** If scaffolding fails, automatically clean the directory, log the error in `TROUBLESHOOTING_LOG.md`, and prompt the user with the error details.
+   - **On Success:** Clean any demo files/routes to create a blank canvas including starter readme file and change meta data to project version. Run `npx tailwindcss init -p` if necessary.
+
+4. **DECOMPOSITION (PLAN GENERATION)**
+   - **INPUT:** Concatenate all files from `/docs` into a single context string.
+   - **PROMPT:** Convert the provided project documentation into a precise, machine-readable JSON work-plan. The output MUST be a valid JSON object matching the plan schema (vertices, edges).
+   - **Rules:** Task titles MUST be imperative; descriptions concise (≤ 140 chars); dependency graph acyclic; split tasks with >5 criteria; add `design_review: pending` when `ui_review: true`.
+   - **OUTPUT:**
+     a. Save the generated JSON to `/project/plan.json`.
+     b. For each task in the JSON, create a corresponding markdown file in `/project/tasks/todo/` using the `/project/_templates/task.md` template.
+     c. Commit the plan and tasks with `git commit -m "chore(plan): initial project decomposition"`.
+   - **KANBAN:** Run `npx @project-master-ai/cli kanban` to start the Kanban UI (or `cd kanban && npm install && npm run dev` if a local kanban app exists).
+
+5. **INITIALIZATION COMPLETE**
+   - Generate the `/project/project_status.md` dashboard.
+   - Activate the first task by moving it to `/project/tasks/in_progress/`.
+   - Report to the user: "Planning and setup are complete. I will now begin work on task T-1: [Task Title]."
+
+---
+## PHASE 2: TASK EXECUTION LOOP
+> This is the main work loop. It continues until `/project/tasks/todo/` and `/project/tasks/in_progress/` are both empty.
+
+For the active task in `/project/tasks/in_progress/`:
+
+A. **LOAD CONTEXT & PREPARE**
+   - Read the task file. Load ONLY the files listed in its `Context Binding`.
+   - If the task has `design_review: pending`, PAUSE and ask the user for a visual sign-off before writing code.
+
+B. **EXECUTE & VERIFY (TDD CYCLE)**
+   - Strictly adhere to the `200-quality.mdc` rule for TDD, contract-first development, and linting.
+   - Run `npm run test` (or equivalent) repeatedly until all tests for the current task pass.
+
+C. **CI/CD GATE**
+   - After local tests pass, commit and push to trigger the CI/CD pipeline. Monitor the CI result.
+   - If CI fails due to missing secrets, PAUSE and prompt the user to add them.
+   - If CI fails for any other reason, mark the task as failed, log the failure, and trigger the `300-adaption.mdc` failure-reflection loop.
+
+D. **ARCHIVE & REPORT**
+   - **On Green CI:** Bump `version` in `package.json` and add a changelog entry in `src/data/changelog.json` (new top entry: version, date, `changes` with one short line for this task). Then move the completed task to `./project/tasks/done/`, update its status to `Done`. Run `python scripts/report.py` if a reporting milestone is reached.
+
+E. **SELECT NEXT TASK & REPEAT**
+   - Update `/project/project_status.md`. Activate the next available task from `todo/` whose dependencies are met. Announce and repeat.
+
+---
+## PHASE 3: PROJECT RECONCILIATION
+> Triggered by `400-change.mdc` when the plan needs to be updated.
+
+1. **ANALYZE CHANGE IMPACT** – Semantic diff between updated `/docs` and `/project/plan.json`. Identify new, obsolete, and modified tasks.
+2. **UPDATE PLAN** – Archive obsolete; update modified; add new tasks.
+3. **REPORT & RESUME** – Summarize changes, resume Phase 2.

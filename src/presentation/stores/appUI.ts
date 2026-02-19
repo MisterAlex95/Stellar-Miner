@@ -67,14 +67,12 @@ export const useAppUIStore = defineStore('appUI', {
     overlayStack: [] as string[],
     /** Root #app element (set by App.vue for layout/attributes). */
     appRoot: null as HTMLElement | null,
-    /** Legacy root container (set by App.vue for game init check). */
-    legacyRoot: null as HTMLElement | null,
-    /** Legacy panels container (set by App.vue). */
-    legacyPanels: null as HTMLElement | null,
+    /** Main content container (set by App.vue for game init check). */
+    mainContentRoot: null as HTMLElement | null,
+    /** Panels container (set by App.vue). */
+    panelsRoot: null as HTMLElement | null,
     /** Mine zone element (set by PanelsShell for shake/float anchor). */
     mineZoneElement: null as HTMLElement | null,
-    /** Panel container elements for lazy Vue mount (set by PanelsShell). */
-    panelContainers: {} as Record<string, HTMLElement>,
     /** Quest claim button element for floating reward anchor (set by PanelsShell). */
     questClaimAnchor: null as HTMLElement | null,
     /** Planet detail modal: when set, modal is open; Vue renders stats and upgrades; 3D scene mounted in Vue. */
@@ -222,22 +220,14 @@ export const useAppUIStore = defineStore('appUI', {
     setAppRoot(el: HTMLElement | null): void {
       this.appRoot = el;
     },
-    setLegacyRoot(el: HTMLElement | null): void {
-      this.legacyRoot = el;
+    setMainContentRoot(el: HTMLElement | null): void {
+      this.mainContentRoot = el;
     },
-    setLegacyPanels(el: HTMLElement | null): void {
-      this.legacyPanels = el;
+    setPanelsRoot(el: HTMLElement | null): void {
+      this.panelsRoot = el;
     },
     setMineZoneElement(el: HTMLElement | null): void {
       this.mineZoneElement = el;
-    },
-    setPanelContainer(id: string, el: HTMLElement | null): void {
-      if (el) this.panelContainers = { ...this.panelContainers, [id]: el };
-      else {
-        const next = { ...this.panelContainers };
-        delete next[id];
-        this.panelContainers = next;
-      }
     },
   },
 });

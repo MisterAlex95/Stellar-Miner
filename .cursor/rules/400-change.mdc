@@ -1,0 +1,31 @@
+---
+description: The Change Controller. Interrupt handler for mid-project scope changes. Ensures the project adapts to new requirements systematically.
+globs: true
+alwaysApply: true
+---
+# 400 · Change Controller: Interrupt, Document, Re-plan
+
+## CONTEXT
+Triggered by a user command that indicates a change in requirements (e.g. "Add a new feature", "Change the authentication method", "/replan").
+
+---
+### PROTOCOL: THE CHANGE MANAGEMENT LIFECYCLE
+
+**STEP 1: ACKNOWLEDGE & SAFE-PAUSE**
+- Acknowledge: "Change request received. Pausing current work to process the update."
+- If a task is in `/project/tasks/in_progress/`, move it back to `/project/tasks/todo/` so the system is stable.
+
+**STEP 2: DOCUMENT THE CHANGE**
+- Update source documents in `/docs/` first: functional changes in `PRD.md`, technical/architectural in `TECH_SPEC.md`.
+- Log the rationale in `/docs/DECISION_LOG.md` (ADR format).
+
+**STEP 3: TRIGGER RE-PLANNING**
+- Inform the user that source docs are updated and the Core Engine will reconcile the plan.
+- Invoke the `100-engine.mdc` re-planning logic: diff `/docs` vs `/project/plan.json`, identify new/obsolete/modified tasks, update plan and task files.
+
+**STEP 4: SYNCHRONIZE EXTERNAL MEMORY (Optional)**
+- If the project uses external memory (e.g. env `EXTERNAL_MEMORY=true`), push the updated DECISION_LOG as configured.
+
+**STEP 5: COMMUNICATE & RESUME**
+- Report a concise summary of plan changes (e.g. "+3 new tasks, -1 obsolete").
+- Activate the next high-priority task from `todo/` and resume the task loop.

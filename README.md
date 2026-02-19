@@ -78,7 +78,6 @@ Full index: **[docs/README.md](docs/README.md)**.
 - **Features** — [docs/features/](docs/features/): Exhaustive gameplay and UI (mining, upgrades, crew & planets, research, events, quests, prestige & progression, UI & settings).
 - **Data** — [docs/data/](docs/data/): Schemas for save format, upgrades, events, research, achievements, progression, balance & config, planet affinity.
 - **Reference** — [docs/reference/](docs/reference/): Formulas and tables (progression curve, research, planets).
-- **Ideas** — [docs/ideas/backlog.md](docs/ideas/backlog.md): Backlog and future features.
 - **AI / Cursor** — Project rules for assistants live in `.cursor/rules/` (stellar-miner-project.mdc, typescript-conventions.mdc).
 
 ## Implemented improvements

@@ -55,5 +55,124 @@ function onAchievementsClick(): void {
 function onSettingsClick(): void {
   openSettings();
 }
-
 </script>
+
+<style scoped>
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.settings-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.settings-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+.settings-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.info-btn-wrap {
+  position: relative;
+}
+
+.info-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.info-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+.info-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.achievements-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.achievements-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+.achievements-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.info-update-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.info-update-badge--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (max-width: 360px) {
+  .settings-btn,
+  .info-btn,
+  .achievements-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+</style>

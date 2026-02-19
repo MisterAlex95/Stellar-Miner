@@ -42,3 +42,60 @@ onUnmounted(() => {
   window.removeEventListener('offline', updateOffline);
 });
 </script>
+
+<style scoped>
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: var(--bg-dark);
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.offline-banner[hidden] {
+  display: none;
+}
+
+header {
+  margin-bottom: 2rem;
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-row > div {
+  flex: 1;
+  text-align: center;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+@media (min-width: 361px) and (max-width: 767px) {
+  header {
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  header :deep(h1) {
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+  }
+
+  .subtitle {
+    font-size: 0.7rem;
+  }
+}
+</style>

@@ -323,3 +323,413 @@ watch(
   { flush: 'post' }
 );
 </script>
+
+<style scoped>
+.planets-hint {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+:deep(.housing-section .housing-hint) {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+.planet-list {
+  margin-bottom: 0.75rem;
+}
+
+.planet-system {
+  margin-bottom: 1rem;
+}
+
+.planet-system:last-child {
+  margin-bottom: 0;
+}
+
+.planet-system-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  text-align: left;
+}
+
+.planet-system-header:hover {
+  background: var(--bg-card);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.planet-system-header:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.planet-system-toggle-icon {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  transition: transform 0.2s;
+}
+
+.planet-system-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.planet-system-planets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+.planet-system--collapsed .planet-system-planets {
+  display: none;
+}
+
+@media (max-width: 360px) {
+  .planet-system-planets {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.planet-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  align-items: stretch;
+}
+
+.planet-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 360px) {
+  .planet-card {
+    padding: 0.75rem;
+    min-height: 80px;
+  }
+}
+
+.planet-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.planet-card-visual {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  display: block;
+  cursor: pointer;
+  background: transparent;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  overflow: visible;
+}
+
+.planet-card-visual:hover {
+  transform: scale(1.12);
+  filter: brightness(1.15);
+}
+
+.planet-card-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.planet-card-name-block {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.planet-card-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 0;
+}
+
+.planet-card-system-name {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  min-width: 0;
+}
+
+.planet-card-info {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: help;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.planet-card-info:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.planet-card-info-wrap {
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.planet-card-slots {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  min-height: 1.25em;
+}
+
+.planet-slot-value {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.planet-card-production {
+  font-size: 0.8rem;
+  color: var(--success);
+  min-height: 1.25em;
+  display: flex;
+  align-items: center;
+}
+
+.planet-card-production--zero {
+  color: var(--text-dim);
+}
+
+.planet-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.add-slot-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.add-slot-btn:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.add-slot-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buy-planet-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.buy-planet-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg-dark);
+  border-color: var(--accent);
+}
+
+.buy-planet-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.buy-planet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 360px) {
+  .buy-planet-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+.housing-empty {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0 0 0.5rem 0;
+}
+
+.housing-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.housing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.housing-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.housing-planet-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.build-housing-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.build-housing-btn:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.build-housing-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.expedition-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.expedition-new-system-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.expedition-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.expedition-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.expedition-cancel-btn {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.expedition-cancel-btn:hover {
+  background: var(--bg-input);
+  color: var(--text);
+}
+
+.expedition-progress-bar-wrap {
+  height: 8px;
+  background: var(--bg-panel);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.expedition-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #e69500);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+  min-width: 0;
+}
+
+.expedition-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+</style>

@@ -4,7 +4,9 @@ import { createPresentationPort } from './presentation/presentationPortImpl.js';
 import { startStarfield } from './presentation/canvas/StarfieldCanvas.js';
 import { mountVueApp } from './presentation/main.js';
 import { initPresentation } from './presentation/initPresentation.js';
-import { switchTab, getTabsSnapshot } from './presentation/mount/tabs.js';
+import { switchTab } from './presentation/tabs.js';
+import { getTabsSnapshot } from './application/tabsSnapshot.js';
+import { hasNewInstallableUpgrade } from './presentation/lib/dashboardHelpers.js';
 import {
   getOrCreateSession,
   setSession,
@@ -165,7 +167,7 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
       stats: getStatsSnapshot(),
       quest: getQuestSnapshot(),
       combo: getComboSnapshot(),
-      tabs: getTabsSnapshot(),
+      tabs: getTabsSnapshot(hasNewInstallableUpgrade()),
       progression: getProgressionSnapshot(),
     };
   }
@@ -194,7 +196,7 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
     stats: getStatsSnapshot(),
     quest: getQuestSnapshot(),
     combo: getComboSnapshot(),
-    tabs: getTabsSnapshot(),
+    tabs: getTabsSnapshot(hasNewInstallableUpgrade()),
     progression: getProgressionSnapshot(),
   };
 }
@@ -227,8 +229,8 @@ function createRefreshViews(): () => void {
 async function init(): Promise<void> {
   setPresentationPort(createPresentationPort());
   mountVueApp();
-  const legacyRoot = getPresentationPort().getLegacyRoot();
-  if (!legacyRoot) throw new Error('legacy-root not found after Vue mount');
+  const mainContentRoot = getPresentationPort().getMainContentRoot();
+  if (!mainContentRoot) throw new Error('main-content root not found after Vue mount');
   const session = await getOrCreateSession();
   setSession(session);
   loadStatsHistory();

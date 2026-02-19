@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { t, tParam, strings, applyTranslations } from './strings.js';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { t, tParam, strings } from './strings.js';
 import { setSettings, getSettings } from './gameState.js';
 import type { Settings } from '../settings.js';
 
@@ -31,18 +31,5 @@ describe('strings', () => {
 
   it('strings export has keys', () => {
     expect(strings.appTitle).toBe('STELLAR MINER');
-  });
-
-  it('applyTranslations does not throw when document undefined', () => {
-    applyTranslations();
-  });
-
-  it('applyTranslations updates elements when document has data-i18n', () => {
-    const el = { textContent: '', getAttribute: () => 'appTitle', setAttribute: vi.fn() };
-    vi.stubGlobal('document', {
-      querySelectorAll: () => [el, { ...el, getAttribute: () => null }],
-    });
-    applyTranslations();
-    expect(el.textContent).toBe('STELLAR MINER');
   });
 });

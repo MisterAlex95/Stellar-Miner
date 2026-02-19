@@ -13,7 +13,7 @@ import {
   switchTab,
   getInitialTab,
   replaceTabState,
-} from './mount/tabs.js';
+} from './tabs.js';
 import { useBootstrap } from './composables/useBootstrap.js';
 
 /** Updates appUI store so InfoModal and HeaderActions show version and update badge (Vue-driven). */
@@ -27,9 +27,9 @@ export function initPresentation(): void {
   if (!pinia) return;
   const store = useAppUIStore(pinia);
   const app = store.appRoot;
-  const legacyRoot = store.legacyRoot;
-  const legacyPanels = store.legacyPanels;
-  if (!app || !legacyRoot || !legacyPanels) return;
+  const mainContentRoot = store.mainContentRoot;
+  const panelsRoot = store.panelsRoot;
+  if (!app || !mainContentRoot || !panelsRoot) return;
 
   const bootstrap = useBootstrap();
   bootstrap.applyAll();

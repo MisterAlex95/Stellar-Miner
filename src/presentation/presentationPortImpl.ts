@@ -121,9 +121,9 @@ function getAppRoot(): HTMLElement | null {
   return pinia ? useAppUIStore(pinia).appRoot : null;
 }
 
-function getLegacyRoot(): HTMLElement | null {
+function getMainContentRoot(): HTMLElement | null {
   const pinia = getPinia();
-  return pinia ? useAppUIStore(pinia).legacyRoot : null;
+  return pinia ? useAppUIStore(pinia).mainContentRoot : null;
 }
 
 function getMineZoneElement(): HTMLElement | null {
@@ -142,7 +142,7 @@ export function createPresentationPort(): PresentationPort {
     showFloatingReward: toasts.showFloatingReward,
     getQuestClaimAnchor,
     getAppRoot,
-    getLegacyRoot,
+    getMainContentRoot,
     getMineZoneElement,
     showFloatingCoin: toasts.showFloatingCoin,
     showSuperLuckyToast: toasts.showSuperLuckyToast,

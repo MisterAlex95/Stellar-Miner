@@ -62,4 +62,71 @@ const valueClass = isDashboard
 .stat-chip--primary .stat-chip-value {
   font-weight: 600;
 }
+
+/* Dashboard theme */
+.dashboard-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  position: relative;
+}
+
+.dashboard-stat-icon {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.75rem;
+  font-size: 0.75rem;
+  opacity: 0.5;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.dashboard-stat-icon--rate {
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+.dashboard-stat--coins {
+  grid-column: 1 / -1;
+  background: linear-gradient(145deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.06) 100%);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.dashboard-stat--run .dashboard-stat-value {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.dashboard-stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.dashboard-stat-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dashboard-stat-value--primary {
+  font-size: 1.35rem;
+  color: var(--accent);
+  text-shadow: 0 0 20px var(--accent-glow);
+}
+
+.dashboard-stat-value--run {
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 500;
+  color: var(--text);
+}
 </style>

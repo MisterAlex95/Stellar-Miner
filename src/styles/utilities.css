@@ -1,3 +1,12 @@
+/* Tooltip anchor: used by useTooltip for hover tooltips */
+.btn-tooltip-wrap {
+  display: inline-block;
+}
+
+.btn-tooltip-wrap:has(button:disabled) {
+  cursor: not-allowed;
+}
+
 /* Empty states: icon + short text when a list is empty */
 .empty-state {
   display: flex;

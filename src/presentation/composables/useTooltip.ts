@@ -1,6 +1,6 @@
 /**
  * Global hover tooltip: single floating tooltip for .btn-tooltip-wrap and .crew-capacity-segment.
- * Uses document-level delegation so it works for both Vue and legacy DOM (e.g. upgrade cards).
+ * Uses document-level delegation so it works for any DOM (e.g. upgrade cards).
  */
 import { ref, onMounted, onUnmounted } from 'vue';
 

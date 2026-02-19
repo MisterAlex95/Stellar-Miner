@@ -22,3 +22,11 @@ import UpgradeCard from '../components/UpgradeCard.vue';
 const { cards, emptyText } = useUpgradeList();
 const { onUpgradeClick } = useUpgradeActions();
 </script>
+
+<style scoped>
+.upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+</style>

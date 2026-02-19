@@ -55,3 +55,78 @@ function closeChartHelpModal(): void {
   closeOverlay(CHART_HELP_OVERLAY_ID, CHART_HELP_OPEN_CLASS);
 }
 </script>
+
+<style scoped>
+.chart-help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.chart-help-overlay--open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.chart-help-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.chart-help-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.chart-help-modal-title {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chart-help-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chart-help-close:hover {
+  color: var(--text);
+  background: var(--bg-card);
+}
+
+.chart-help-modal-body {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+</style>

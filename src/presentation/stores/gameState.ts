@@ -28,10 +28,8 @@ import type { ComboSnapshot } from '../../application/comboSnapshot.js';
 export type { ComboSnapshot };
 
 /** Tab visibility and badges (from progression/unlocks). */
-export type TabsSnapshot = {
-  visible: Record<string, boolean>;
-  badges: Record<string, boolean>;
-};
+import type { TabsSnapshot } from '../../application/tabsSnapshot.js';
+export type { TabsSnapshot };
 
 /** Section locked/unlocked by progression (sectionId -> unlocked). */
 import type { ProgressionSnapshot } from '../../application/progressionSnapshot.js';
@@ -115,7 +113,7 @@ const defaultProgression: ProgressionSnapshot = {
 };
 
 export const useGameStateStore = defineStore('gameState', {
-  state: (): GameStateSnapshot => ({
+  state: (): GameStateSnapshot & { hydratedPanels: string[] } => ({
     activeTab: 'mine',
     layout: 'tabs',
     coins: 0,
@@ -129,8 +127,12 @@ export const useGameStateStore = defineStore('gameState', {
     combo: { ...defaultCombo },
     tabs: { ...defaultTabs },
     progression: { ...defaultProgression },
+    hydratedPanels: [],
   }),
   actions: {
+    markPanelHydrated(panelId: string): void {
+      if (!this.hydratedPanels.includes(panelId)) this.hydratedPanels.push(panelId);
+    },
     setSnapshot(payload: GameStateSnapshot): void {
       this.activeTab = payload.activeTab;
       this.layout = payload.layout;

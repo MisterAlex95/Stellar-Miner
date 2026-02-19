@@ -135,7 +135,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { t } from '../application/strings.js';
 import { useGameStateStore } from './stores/gameState.js';
-import { switchTab, pushTabState, VALID_TAB_IDS, HISTORY_STATE_KEY, type TabId } from './mount/tabs.js';
+import { switchTab, pushTabState, VALID_TAB_IDS, HISTORY_STATE_KEY, type TabId } from './tabs.js';
 
 const TAB_LABELS: Record<TabId, string> = {
   mine: 'tabMine',
@@ -288,3 +288,62 @@ onUnmounted(() => {
   scrollObserver = null;
 });
 </script>
+
+<style scoped>
+.keyboard-hint {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25em 0.35em;
+  line-height: 1.4;
+  user-select: none;
+}
+
+.keyboard-hint--below-tabs {
+  margin: 0.35rem 0 1rem 0;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .keyboard-hint {
+    display: none;
+  }
+}
+
+.keyboard-hint-text {
+  color: var(--text-dim);
+}
+
+.keyboard-hint-sep {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35em;
+  height: 1.35em;
+  padding: 0 0.25em;
+  font-size: 0.7em;
+  font-weight: 600;
+  font-family: 'Exo 2', sans-serif;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+.key--space {
+  min-width: 2.4em;
+  font-size: 0.6em;
+  letter-spacing: 0.02em;
+}
+</style>

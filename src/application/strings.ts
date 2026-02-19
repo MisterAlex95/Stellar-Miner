@@ -30,20 +30,3 @@ export function tParam(key: keyof typeof stringsEn, params: Record<string, strin
 
 /** For backward compatibility: same keys as stringsEn. */
 export const strings = stringsEn as Record<string, string>;
-
-/** Update all elements with data-i18n attribute. Call on mount and when language changes. */
-export function applyTranslations(): void {
-  if (typeof document === 'undefined') return;
-  document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
-    const key = el.getAttribute('data-i18n');
-    if (key && key in stringsEn) el.textContent = t(key as keyof typeof stringsEn);
-  });
-  document.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => {
-    const key = el.getAttribute('data-i18n-title');
-    if (key && key in stringsEn) el.title = t(key as keyof typeof stringsEn);
-  });
-  document.querySelectorAll<HTMLElement>('[data-i18n-aria-label]').forEach((el) => {
-    const key = el.getAttribute('data-i18n-aria-label');
-    if (key && key in stringsEn) el.setAttribute('aria-label', t(key as keyof typeof stringsEn));
-  });
-}

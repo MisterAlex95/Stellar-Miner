@@ -316,3 +316,346 @@ onUnmounted(() => {
   unsubSaveSuccess?.();
 });
 </script>
+
+<style scoped>
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.settings-overlay--open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.settings-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-header h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  margin: 0;
+}
+
+.settings-close {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.settings-close:hover {
+  color: var(--text);
+  background: var(--bg-card);
+}
+
+.settings-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settings-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-group-title {
+  margin: 0 0 0.15rem 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.settings-group:not(:first-child) .settings-group-title {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.settings-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.settings-option > label:not(.settings-toggle) {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.settings-option select {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.settings-option select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.settings-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings-achievements {
+  margin-top: 0.5rem;
+}
+
+.achievements-toggle-btn {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.achievements-toggle-btn:hover {
+  background: var(--bg-panel);
+  border-color: var(--accent);
+}
+
+.achievements-list {
+  display: none;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.achievements-list--open {
+  display: block;
+}
+
+.achievement-item {
+  font-size: 0.8rem;
+  padding: 0.25rem 0;
+  color: var(--text-dim);
+}
+
+.achievement-item--unlocked {
+  color: var(--success);
+}
+
+.achievement-item--locked {
+  color: var(--muted);
+}
+
+.settings-version-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.settings-version-label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.settings-version-value {
+  font-size: 0.9rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--text);
+}
+
+.changelog-toggle-btn {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.changelog-toggle-btn:hover {
+  background: var(--bg-card);
+  border-color: var(--accent);
+}
+
+.changelog-list {
+  display: none;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.changelog-list--open {
+  display: block;
+}
+
+.changelog-entry {
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.changelog-entry:last-child {
+  margin-bottom: 0;
+}
+
+.changelog-entry-header {
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+
+.changelog-date {
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.changelog-changes {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.changelog-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.settings-save-export .settings-save-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.settings-export-btn,
+.settings-import-btn {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.settings-export-btn:hover,
+.settings-import-btn:hover {
+  background: var(--bg-panel);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.settings-import-file {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-last-saved {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.settings-reset {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.reset-btn {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.reset-btn:hover {
+  background: rgba(220, 38, 38, 0.15);
+  color: #f87171;
+  border-color: #dc2626;
+}
+
+.reset-btn:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}
+</style>

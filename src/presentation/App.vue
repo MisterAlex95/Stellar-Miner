@@ -1,11 +1,11 @@
 <template>
   <div ref="appWrapperRef" class="app-wrapper vue-shell">
     <AppHeader />
-    <div ref="legacyRootRef" id="legacy-root">
+    <div ref="mainContentRef" id="main-content">
       <StatsBlock />
     </div>
     <AppTabs v-show="store.layout === 'tabs'" />
-    <div ref="legacyPanelsRef" id="legacy-panels">
+    <div ref="panelsRef" id="panels">
       <PanelsShell />
     </div>
     <SettingsModal />
@@ -59,8 +59,8 @@ import { useChartHelpTrigger } from './composables/useChartHelpTrigger.js';
 const store = useGameStateStore();
 const appUI = useAppUIStore();
 const appWrapperRef = ref<HTMLElement | null>(null);
-const legacyRootRef = ref<HTMLElement | null>(null);
-const legacyPanelsRef = ref<HTMLElement | null>(null);
+const mainContentRef = ref<HTMLElement | null>(null);
+const panelsRef = ref<HTMLElement | null>(null);
 
 function syncAppAttributes(): void {
   const app = appUI.appRoot;
@@ -72,14 +72,14 @@ function syncAppAttributes(): void {
 
 onMounted(() => {
   appUI.setAppRoot(appWrapperRef.value?.parentElement ?? null);
-  appUI.setLegacyRoot(legacyRootRef.value ?? null);
-  appUI.setLegacyPanels(legacyPanelsRef.value ?? null);
+  appUI.setMainContentRoot(mainContentRef.value ?? null);
+  appUI.setPanelsRoot(panelsRef.value ?? null);
   syncAppAttributes();
 });
 onBeforeUnmount(() => {
   appUI.setAppRoot(null);
-  appUI.setLegacyRoot(null);
-  appUI.setLegacyPanels(null);
+  appUI.setMainContentRoot(null);
+  appUI.setPanelsRoot(null);
 });
 watch(
   () => [store.activeTab, store.layout],

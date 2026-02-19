@@ -495,6 +495,12 @@ export function getCatalogEventName(id: string): string {
   return names[id] ?? fallback;
 }
 
+/** Optional one-line lore for events (first-time toast). Empty string if none. */
+export function getEventFlavor(eventId: string): string {
+  const flavors = lang() === 'fr' ? eventFlavorFr : eventFlavorEn;
+  return flavors[eventId] ?? '';
+}
+
 export function getCatalogAchievementName(id: string): string {
   const names = lang() === 'fr' ? achievementNamesFr : achievementNamesEn;
   return names[id] ?? ACHIEVEMENTS.find((a) => a.id === id)?.name ?? id;

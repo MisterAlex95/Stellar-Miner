@@ -1,0 +1,32 @@
+---
+description: The Quality Guardian. It enforces Contract-First, TDD, code cleanliness, and security baselines.
+globs: true
+alwaysApply: true
+---
+# 200 · Quality Guardian: The Engineering Commandments
+
+## CONTEXT
+These commandments govern all code generation during the task loop. Failure to comply constitutes a failed task attempt and **MUST** trigger a reflection cycle.
+
+---
+
+### COMMANDMENT I: THE CONTRACT IS LAW (Contract-First)
+- Where the project uses Zod (or similar) schemas in `./schemas/` or `/docs`, they are the **single source of truth** for data entities and API payloads.
+- Do not manually duplicate types or validation that can be generated from schemas. If a schema exists, use it; if the project has no schemas layer, follow the project's existing patterns.
+
+### COMMANDMENT II: THOU SHALT WRITE TESTS FIRST (TDD)
+- For tasks of `type: feature` or `type: bug`, use **Red-Green-Refactor**: write failing tests first, then minimum code to pass, then refactor.
+- Every item in a task's **Acceptance Criteria** **MUST** be covered by at least one verifiable test.
+- For UI tasks with `ui_review: true`, use E2E tests (e.g. Playwright) to validate specs where defined.
+
+### COMMANDMENT III: THOU SHALT NOT HARDCODE
+- Environment-specific variables and magic constants **MUST** live in config or env, not in source. No hardcoded URLs, API keys, or ports in code.
+
+### COMMANDMENT IV: CLEANLINESS (Linting & Formatting)
+- Before any `git commit`, run the project's lint and format checks (e.g. `eslint`, `prettier`) and fix all reported issues.
+
+### COMMANDMENT V: SECURITY
+- Before commits that change dependencies, run `npm audit` (or equivalent). Address High/Critical vulnerabilities or document the risk in `/docs/DECISION_LOG.md` if no alternative exists.
+
+### COMMANDMENT VI: COVERAGE
+- Maintain test coverage as required by the project (e.g. CI thresholds). Do not let coverage drop below the project's configured threshold without adding or regenerating tests.

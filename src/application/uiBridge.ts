@@ -22,8 +22,8 @@ export interface PresentationPort {
   getQuestClaimAnchor(): HTMLElement | null;
   /** #app root element (Vue sets via store). */
   getAppRoot(): HTMLElement | null;
-  /** Legacy root container (Vue sets via store). */
-  getLegacyRoot(): HTMLElement | null;
+  /** Main content root container (Vue sets via store). */
+  getMainContentRoot(): HTMLElement | null;
   /** Mine zone element (Vue sets via store). */
   getMineZoneElement(): HTMLElement | null;
   showFloatingCoin(
@@ -115,7 +115,7 @@ const defaultPort: PresentationPort = {
   showFloatingReward: noopNumEl,
   getQuestClaimAnchor: () => null,
   getAppRoot: () => null,
-  getLegacyRoot: () => null,
+  getMainContentRoot: () => null,
   getMineZoneElement: () => null,
   showFloatingCoin: noopNumXY,
   showSuperLuckyToast: noopNum,

@@ -79,3 +79,88 @@ watch(
   }
 );
 </script>
+
+<style scoped>
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 101;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.intro-overlay--open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.intro-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  padding: 1.5rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+
+.intro-modal h2 {
+  margin: 0 0 0.75rem 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.intro-modal p {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.intro-progress-wrap {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.intro-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #fbbf24);
+  border-radius: 3px;
+  transition: width 0.1s linear;
+}
+
+.intro-got-it {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--accent);
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.intro-got-it:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.35);
+  border-color: #fbbf24;
+}
+
+.intro-got-it:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+</style>

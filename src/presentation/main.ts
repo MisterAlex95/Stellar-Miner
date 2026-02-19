@@ -1,5 +1,5 @@
 /**
- * Vue app bootstrap. Mounted from game.ts before legacy mount runs.
+ * Vue app bootstrap. Mounted from game.ts at init.
  */
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';

@@ -37,6 +37,6 @@ This folder is the single source for Stellar Miner documentation: architecture, 
 - **[reference/research-formulas.md](reference/research-formulas.md)** — Research: success chance, progress duration, full node catalog table.
 - **[reference/planets-formulas.md](reference/planets-formulas.md)** — Planets: expedition cost, duration, death chance, slots, housing, planet names.
 
-## Ideas
+## Lore
 
-- **[ideas/backlog.md](ideas/backlog.md)** — Backlog of gameplay ideas (future features), proposed improvements, narrative/QOL ideas, crew future ideas.
+- **[lore.md](lore.md)** — Where and how lore/narrative text is used (events, achievements, first-seen tooltips, codex, quests, planets, prestige), data sources, and guidelines.

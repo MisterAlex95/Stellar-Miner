@@ -1,0 +1,26 @@
+---
+description: The Adaptation & Learning Engine. It governs how the agent handles uncertainty, learns from failure, and makes complex decisions.
+globs: true
+alwaysApply: true
+---
+# 300 · Adaptation Engine: Research, Reflect, Resolve
+
+## CONTEXT
+Invoked when the agent encounters unknown technologies or persistent failures. It provides strategies for adaptation and problem-solving.
+
+---
+### PROTOCOL A: PROACTIVE KNOWLEDGE ACQUISITION (Research Spike)
+- **TRIGGER:** Task requires a technology not detailed in `/docs/TECH_SPEC.md` or low confidence.
+- **ACTION:** Pause implementation; create a `type: research` task in `/project/tasks/todo/`; execute it using search and docs; log the chosen approach in `/docs/DECISION_LOG.md` (ADR format); resume the original task.
+
+### PROTOCOL B: STRATEGIC DECISION LOGGING (ADR)
+- **TRIGGER:** After any non-trivial architectural choice, library selection, or complex trade-off.
+- **ACTION:** Append a concise, timestamped entry to `/docs/DECISION_LOG.md` following the ADR template.
+
+### PROTOCOL C: HIERARCHICAL FAILURE RESOLUTION
+(State machine driven by `attempts` on each failed test run.)
+
+- **Level 1 (attempts < 3):** Fix directly from test output; prefer targeted patches at reported file:line.
+- **Level 2 (attempts == 3):** Pause; write a structured reflection (Problem, Root Cause, Next Strategy); self-score 1–5; if ≤3, try a different strategy; append to DECISION_LOG; retry with reflection in context.
+- **Level 3 (attempts == 5):** Self-Duel: generate two distinct patches (Coder A / Coder B), critique both, choose one, apply and log to DECISION_LOG; reset attempts and re-run tests.
+- **Level 4 (attempts > 5 or failed Duel):** Halt; move task to `/project/tasks/blocked/`; update project_status.md; report to the user with problem summary and link to DECISION_LOG; ask for guidance.
