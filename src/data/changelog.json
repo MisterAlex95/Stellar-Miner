@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.3",
+    "date": "2026-02",
+    "changes": [
+      "Modules panel: \"Next recommended\" hint (cheapest/best production gain or first not owned) using existing catalog and dashboard helpers."
+    ]
+  },
+  {
     "version": "0.5.2",
     "date": "2026-02",
     "changes": [

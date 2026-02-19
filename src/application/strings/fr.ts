@@ -100,6 +100,7 @@ export const stringsFr: Record<StringKey, string> = {
   planets: 'Planètes',
   emptyPlanetsText: 'Pas encore de planètes. Lancez une expédition ci-dessous pour en découvrir une.',
   emptyUpgradesText: 'Gagnez 30 pièces pour débloquer les modules.',
+  nextRecommended: 'Prochaine recommandation : {{name}}',
   planetsHint: 'Plus de planètes = +4 % production chacune. Envoyez une expédition (pièces + crew ; risque de mort) pour en découvrir. Ajoutez des emplacements ou construisez de l’habitat (+2 capacité crew par module).',
   planetsRules: 'Vous commencez avec une planète. Chaque planète a un nombre limité d’emplacements pour les modules (et l’habitat).\n\n- Chaque planète en plus donne +4 % de production (cumulable).\n- Pour avoir une nouvelle planète : envoyez une expédition. Elle coûte des pièces et du crew ; chaque astronaute a un risque de mourir. Si au moins un survit, vous découvrez la planète. Les pilotes réduisent la durée d’expédition.\n- Ajoutez des emplacements à une planète (coût en pièces) ou construisez de l’habitat : chaque module d’habitat utilise 1 emplacement et ajoute +2 à votre capacité d’équipage totale.',
   housing: 'Habitat',

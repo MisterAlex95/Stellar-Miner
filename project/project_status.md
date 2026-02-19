@@ -20,7 +20,7 @@
 | todo | 0 |
 | in_progress | 0 |
 | blocked | 0 |
-| done | 2 |
+| done | 3 |
 
 ---
 
@@ -28,7 +28,7 @@
 
 | ID | Title |
 |:---|:---|
-| T-3 | Generate Tasks from IDEA.md |
+| T-12 | Add next upgrade hint |
 
 ---
 

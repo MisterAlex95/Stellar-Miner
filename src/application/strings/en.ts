@@ -101,6 +101,7 @@ export const stringsEn = {
   planets: 'Planets',
   emptyPlanetsText: 'No planets yet. Launch an expedition below to discover one.',
   emptyUpgradesText: 'Earn 30 coins to unlock modules.',
+  nextRecommended: 'Next recommended: {{name}}',
   planetsHint: 'More planets = +4% production each. Send an expedition (costs coins + crew; some may die) to discover one. Add slots or build housing (+2 crew capacity per module).',
   planetsRules: 'You start with one planet. Each planet has a limited number of slots for modules (and housing).\n\n- Each extra planet gives +4% production (stacking).\n- To get a new planet: send an expedition. It costs coins and crew; each astronaut has a chance to die. If at least one survives, you discover the planet. Pilots reduce expedition duration.\n- Add slots to a planet (costs coins) or build housing there: each housing module uses 1 slot and adds +2 to your total crew capacity.',
   housing: 'Housing',

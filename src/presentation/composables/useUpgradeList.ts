@@ -20,7 +20,12 @@ import {
   type InstallUninstallRange,
 } from '../../application/upgradeHelpers.js';
 import { getUpgradeCardState, type UpgradeCardState } from '../../application/upgradeCardState.js';
-import { t } from '../../application/strings.js';
+import { getCatalogUpgradeName } from '../../application/i18nCatalogs.js';
+import { t, tParam } from '../../application/strings.js';
+import {
+  getBestNextAffordableUpgrade,
+  getBestNextUpgradeGoalWithState,
+} from '../lib/dashboardHelpers.js';
 
 export type UpgradeCardItem = {
   state: UpgradeCardState;
@@ -82,5 +87,20 @@ export function useUpgradeList() {
 
   const emptyText = t('emptyUpgradesText');
 
-  return { cards, emptyText };
+  const nextRecommendedText = computed<string | null>(() => {
+    void store.coins;
+    void store.production;
+    const affordable = getBestNextAffordableUpgrade();
+    if (affordable) {
+      const name = getCatalogUpgradeName(affordable.def.id);
+      return tParam('nextRecommended', { name: `${name} · ${affordable.cost}` });
+    }
+    const goal = getBestNextUpgradeGoalWithState();
+    if (goal) {
+      return tParam('nextRecommended', { name: goal.name });
+    }
+    return null;
+  });
+
+  return { cards, emptyText, nextRecommendedText };
 }
