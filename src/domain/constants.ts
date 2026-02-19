@@ -53,6 +53,7 @@ const B = balance as {
   housingCostGrowth: number;
   astronautBaseCost: number;
   astronautCostGrowth: number;
+  crewRetrainBaseCost?: number;
   expeditionTiers?: Array<{
     id: string;
     deathChanceMultiplier: number;
@@ -308,4 +309,9 @@ export const ASTRONAUT_BASE_COST = B.astronautBaseCost;
 
 export function getAstronautCost(currentCount: number): Decimal {
   return new Decimal(B.astronautBaseCost).mul(Decimal.pow(B.astronautCostGrowth, currentCount)).floor();
+}
+
+/** Flat coin cost to retrain one crew from one role to another. */
+export function getRetrainCost(): Decimal {
+  return new Decimal(B.crewRetrainBaseCost ?? 1500).floor();
 }

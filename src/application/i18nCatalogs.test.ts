@@ -5,6 +5,7 @@ import {
   getCatalogUpgradeDesc,
   getCatalogResearchName,
   getCatalogResearchDesc,
+  getCatalogResearchLore,
   getCatalogEventName,
   getEventFlavor,
   getCatalogAchievementName,
@@ -49,6 +50,12 @@ describe('i18nCatalogs', () => {
     expect(getCatalogResearchDesc('mining-theory')).toBeDefined();
   });
 
+  it('getCatalogResearchLore returns lore when present or empty', () => {
+    expect(getCatalogResearchLore('mining-theory')).toContain('belt');
+    expect(getCatalogResearchLore('heavy-equipment')).toContain('rigs');
+    expect(getCatalogResearchLore('survey-systems')).toContain('map');
+  });
+
   it('getCatalogEventName returns name', () => {
     expect(getCatalogEventName('meteor-storm')).toBeDefined();
   });
@@ -71,12 +78,14 @@ describe('i18nCatalogs', () => {
     expect(getCatalogComboName(1.0)).toBeDefined();
   });
 
-  it('getCatalogPlanetName returns name by index', () => {
-    expect(getCatalogPlanetName(0)).toBeDefined();
+  it('getCatalogPlanetName returns procedural name by index', () => {
+    const name = getCatalogPlanetName(0);
+    expect(name).toBeDefined();
+    expect(name).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
   });
 
-  it('getCatalogPlanetNameById parses planet-N', () => {
-    expect(getCatalogPlanetNameById('planet-1')).toBeDefined();
+  it('getCatalogPlanetNameById returns same procedural name as getCatalogPlanetName(index)', () => {
+    expect(getCatalogPlanetNameById('planet-1')).toBe(getCatalogPlanetName(0));
   });
 
   it('getCatalogUpgradeGroupLabel returns label or key', () => {

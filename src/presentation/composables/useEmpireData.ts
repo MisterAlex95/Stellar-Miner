@@ -15,6 +15,7 @@ import { formatNumber } from '../../application/format.js';
 import { getAssignedAstronauts } from '../../application/crewHelpers.js';
 import {
   getUnlockedCrewRoles,
+  isCrewRetrainUnlocked,
   getResearchHousingCapacityBonus,
   getEffectiveUsedSlots,
   hasEffectiveFreeSlot,
@@ -22,6 +23,7 @@ import {
 import { getPrestigeProductionPercent } from '../../application/handlersPrestige.js';
 import {
   getAstronautCost,
+  getRetrainCost,
   getMaxAstronauts,
   CREW_ROLES,
   PRESTIGE_COIN_THRESHOLD,
@@ -109,6 +111,9 @@ export interface CrewVm {
   veteranCount: number;
   totalCrew: number;
   maxCrew: number;
+  retrainCostStr: string;
+  retrainCanAfford: boolean;
+  retrainUnlocked: boolean;
 }
 
 export interface PlanetCardVm {
@@ -261,6 +266,11 @@ export function useEmpireData() {
       };
     });
 
+    const retrainCost = getRetrainCost();
+    const retrainCostStr = formatNumber(retrainCost, settings.compactNumbers);
+    const retrainCanAfford = player.coins.gte(retrainCost);
+    const retrainUnlocked = isCrewRetrainUnlocked();
+
     return {
       capacityPct,
       segments,
@@ -272,6 +282,9 @@ export function useEmpireData() {
       veteranCount: player.veteranCount,
       totalCrew,
       maxCrew,
+      retrainCostStr,
+      retrainCanAfford,
+      retrainUnlocked,
     };
   });
 

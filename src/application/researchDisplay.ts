@@ -21,7 +21,7 @@ import {
   type ResearchNode,
 } from './research.js';
 import { t, tParam, type StringKey } from './strings.js';
-import { getCatalogResearchName, getCatalogResearchDesc, getCatalogUpgradeName } from './i18nCatalogs.js';
+import { getCatalogResearchName, getCatalogResearchDesc, getCatalogResearchLore, getCatalogUpgradeName } from './i18nCatalogs.js';
 import type { CrewJobRole } from '../domain/constants.js';
 import { RESEARCH_PITY_FAILURES } from '../domain/constants.js';
 
@@ -138,6 +138,8 @@ export type ResearchNodeDisplayData = {
   pathTitle: string;
   name: string;
   desc: string;
+  /** Optional short lore line (en/fr). Empty if none. */
+  lore: string;
   levelLabel: number;
   icon: string;
   /** Sprite cell index for icons.png (order = tree rows). Use for ResearchIcon spriteIndex. */
@@ -204,6 +206,7 @@ export function getResearchNodeDisplayData(
     pathTitle,
     name: getCatalogResearchName(node.id),
     desc: getCatalogResearchDesc(node.id),
+    lore: getCatalogResearchLore(node.id),
     levelLabel: node.row + 1,
     icon: getResearchIcon(node),
     iconSpriteIndex: getResearchSpriteIndexById(node.id),

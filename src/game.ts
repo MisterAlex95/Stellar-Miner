@@ -48,6 +48,7 @@ import { wireRefreshSubscribers, wireEventBusToRefresh } from './application/ref
 import { createThrottledRun } from './application/runIfDue.js';
 import { withErrorBoundary } from './application/errorBoundary.js';
 import { getPresentationPort } from './application/uiBridge.js';
+import { syncI18nLocale } from './application/i18n.js';
 import { isPanelHydrated } from './application/lazyPanels.js';
 import { PANEL_IDS, getPanelElementId, type PanelId } from './application/panelConfig.js';
 import { updateGameStateBridge, getGameStateBridge } from './presentation/gameStateBridge.js';
@@ -237,6 +238,7 @@ async function init(): Promise<void> {
   if (!mainContentRoot) throw new Error('main-content root not found after Vue mount');
   const session = await getOrCreateSession();
   setSession(session);
+  syncI18nLocale();
   checkCodexUnlocks();
   loadStatsHistory();
   wireRefreshSubscribers(withErrorBoundary(createRefreshViews()));

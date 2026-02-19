@@ -23,6 +23,7 @@
           "crewFreeUpgrades": { "type": "array", "items": { "type": "string" } },
           "crewReduction": { "type": "object", "additionalProperties": { "type": "number" } },
           "unlocksCrewRole": { "type": "string" },
+          "unlocksCrewRetrain": { "type": "boolean" },
           "expeditionDurationPercent": { "type": "number" },
           "expeditionDeathChancePercent": { "type": "number" },
           "housingCapacityBonus": { "type": "number" }
@@ -31,7 +32,8 @@
       "row": { "type": "number" },
       "col": { "type": "number" },
       "researchDataCost": { "type": "number" },
-      "secret": { "type": "boolean" }
+      "secret": { "type": "boolean" },
+      "lore": { "type": "string" }
     }
   }
 }

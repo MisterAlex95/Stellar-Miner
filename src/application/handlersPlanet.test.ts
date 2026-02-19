@@ -16,8 +16,10 @@ import {
   handleAddSlot,
   handleHireAstronaut,
   handleBuildHousing,
+  handleRetrainCrew,
 } from './handlersPlanet.js';
-import { getNewPlanetCost } from '../domain/constants.js';
+import { getNewPlanetCost, getRetrainCost } from '../domain/constants.js';
+import * as research from './research.js';
 
 vi.mock('../presentation/lib/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
 vi.mock('../presentation/toasts/index.js', () => ({ showMiniMilestoneToast: vi.fn() }));
@@ -31,6 +33,7 @@ vi.mock('./research.js', () => ({
   getResearchExpeditionDeathChancePercent: () => 0,
   getResearchHousingCapacityBonus: () => 0,
   addResearchData: () => {},
+  isCrewRetrainUnlocked: vi.fn(() => true),
 }));
 
 describe('handlersPlanet', () => {
@@ -203,6 +206,54 @@ describe('handlersPlanet', () => {
       handleBuildHousing(planet.id);
 
       expect(planet.housingCount).toBe(beforeHousing + 1);
+    });
+  });
+
+  describe('handleRetrainCrew', () => {
+    it('retrains one crew from miner to scientist and spends cost', () => {
+      const session = getSession();
+      const player = session.player;
+      player.addCoins(10000);
+      player.hireAstronaut(100, 'miner');
+      player.hireAstronaut(150, 'miner');
+      expect(player.crewByRole.miner).toBe(2);
+      expect(player.crewByRole.scientist).toBe(0);
+      const cost = getRetrainCost();
+      const coinsBefore = player.coins.value.toNumber();
+
+      handleRetrainCrew('miner', 'scientist');
+
+      expect(player.crewByRole.miner).toBe(1);
+      expect(player.crewByRole.scientist).toBe(1);
+      expect(player.astronautCount).toBe(2);
+      expect(player.coins.value.toNumber()).toBe(coinsBefore - cost.toNumber());
+    });
+
+    it('does nothing when fromRole has no crew', () => {
+      const session = getSession();
+      const player = session.player;
+      player.addCoins(10000);
+      expect(player.crewByRole.miner).toBe(0);
+
+      handleRetrainCrew('miner', 'scientist');
+
+      expect(player.crewByRole.miner).toBe(0);
+      expect(player.crewByRole.scientist).toBe(0);
+    });
+
+    it('does nothing when crew retrain is not unlocked by research', () => {
+      vi.mocked(research.isCrewRetrainUnlocked).mockReturnValue(false);
+      const session = getSession();
+      const player = session.player;
+      player.addCoins(10000);
+      player.hireAstronaut(100, 'miner');
+      expect(player.crewByRole.miner).toBe(1);
+
+      handleRetrainCrew('miner', 'scientist');
+
+      expect(player.crewByRole.miner).toBe(1);
+      expect(player.crewByRole.scientist).toBe(0);
+      vi.mocked(research.isCrewRetrainUnlocked).mockReturnValue(true);
     });
   });
 });

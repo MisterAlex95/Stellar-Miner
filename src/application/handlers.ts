@@ -16,6 +16,7 @@ export {
   handleAddSlot,
   handleBuildHousing,
   handleHireAstronaut,
+  handleRetrainCrew,
 } from './handlersPlanet.js';
 export { handleClaimQuest } from './handlersQuest.js';
 export {

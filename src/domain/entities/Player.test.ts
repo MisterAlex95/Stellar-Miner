@@ -216,6 +216,44 @@ describe('Player', () => {
     expect(p.astronautCount).toBe(2);
   });
 
+  it('retrainCrew returns false when fromRole equals toRole', () => {
+    const p = Player.create('p1');
+    p.addCoins(5000);
+    p.hireAstronaut(100, 'miner');
+    expect(p.retrainCrew('miner', 'miner', 1500)).toBe(false);
+    expect(p.crewByRole.miner).toBe(1);
+  });
+
+  it('retrainCrew returns false when no crew in fromRole', () => {
+    const p = Player.create('p1');
+    p.addCoins(5000);
+    expect(p.retrainCrew('miner', 'scientist', 1500)).toBe(false);
+  });
+
+  it('retrainCrew returns false when insufficient coins', () => {
+    const p = Player.create('p1');
+    p.addCoins(5000);
+    p.hireAstronaut(100, 'miner');
+    expect(p.retrainCrew('miner', 'scientist', 10000)).toBe(false);
+    expect(p.crewByRole.miner).toBe(1);
+    expect(p.crewByRole.scientist).toBe(0);
+  });
+
+  it('retrainCrew moves one crew from fromRole to toRole and spends cost', () => {
+    const p = Player.create('p1');
+    p.addCoins(5000);
+    p.hireAstronaut(100, 'miner');
+    p.hireAstronaut(150, 'miner');
+    expect(p.crewByRole.miner).toBe(2);
+    expect(p.crewByRole.scientist).toBe(0);
+    const ok = p.retrainCrew('miner', 'scientist', 1500);
+    expect(ok).toBe(true);
+    expect(p.coins.value.toNumber()).toBe(5000 - 100 - 150 - 1500);
+    expect(p.crewByRole.miner).toBe(1);
+    expect(p.crewByRole.scientist).toBe(1);
+    expect(p.astronautCount).toBe(2);
+  });
+
   it('spendAstronauts returns true when count is 0 or negative', () => {
     const p = Player.create('p1');
     expect(p.spendAstronauts(0)).toBe(true);

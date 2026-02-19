@@ -70,6 +70,50 @@
       <div v-if="crew && crew.veteranCount > 0" class="crew-veterans" aria-live="polite">
         {{ tParam('crewVeterans', { n: String(crew.veteranCount) }) }}
       </div>
+      <div v-if="crew && crew.totalCrew > 0 && crew.retrainUnlocked" class="crew-retrain-wrap">
+        <p class="crew-retrain-label">{{ t('crewRetrainLabel') }}</p>
+        <div class="crew-retrain-row">
+          <label class="crew-retrain-from-label">{{ t('crewRetrainFrom') }}</label>
+          <select
+            v-model="retrainFrom"
+            class="crew-retrain-select"
+            :aria-label="t('crewRetrainFrom')"
+          >
+            <option value="">—</option>
+            <option
+              v-for="card in crew.roleCards.filter((c) => c.count > 0 && c.unlocked)"
+              :key="'from-' + card.role"
+              :value="card.role"
+            >
+              {{ card.label }} ({{ card.count }})
+            </option>
+          </select>
+          <label class="crew-retrain-to-label">{{ t('crewRetrainTo') }}</label>
+          <select
+            v-model="retrainTo"
+            class="crew-retrain-select"
+            :aria-label="t('crewRetrainTo')"
+          >
+            <option value="">—</option>
+            <option
+              v-for="card in crew.roleCards.filter((c) => c.unlocked)"
+              :key="'to-' + card.role"
+              :value="card.role"
+            >
+              {{ card.label }}
+            </option>
+          </select>
+          <button
+            type="button"
+            class="crew-retrain-btn"
+            :disabled="!canRetrain"
+            :title="retrainBtnTitle"
+            @click="handleRetrain"
+          >
+            {{ tParam('crewRetrainBtn', { cost: crew.retrainCostStr }) }}
+          </button>
+        </div>
+      </div>
     </EmpireSection>
 
     <EmpireSection
@@ -254,6 +298,7 @@ import { t, tParam } from '../../application/strings.js';
 import {
   handlePrestige as doPrestige,
   handleHireAstronaut,
+  handleRetrainCrew,
   handleAddSlot as doAddSlot,
   handleBuildHousing as doBuildHousing,
   handleCancelExpedition,
@@ -270,6 +315,8 @@ const { crew, planetSystems, prestige, expedition, unlockedBlocks } = useEmpireD
 
 const planetListRef = ref<HTMLElement | null>(null);
 const collapsedSystems = ref<Set<number>>(new Set());
+const retrainFrom = ref<CrewRole | ''>('');
+const retrainTo = ref<CrewRole | ''>('');
 
 const planetSummary = computed(() => {
   const n = planetSystems.value?.flatMap((s) => s.planets).length ?? 0;
@@ -283,6 +330,25 @@ const expeditionTooltip = computed(() => {
     ? tParam('sendExpeditionTooltip', { n: exp.astronautsRequired, cost: exp.costStr })
     : tParam('needForExpedition', { cost: exp.costStr, n: exp.astronautsRequired });
 });
+
+const canRetrain = computed(() => {
+  const c = crew.value;
+  if (!c || !retrainFrom.value || !retrainTo.value) return false;
+  if (retrainFrom.value === retrainTo.value) return false;
+  const fromCard = c.roleCards.find((r) => r.role === retrainFrom.value);
+  if (!fromCard || fromCard.count < 1) return false;
+  return c.retrainCanAfford;
+});
+
+const retrainBtnTitle = computed(() => {
+  if (!canRetrain.value) return '';
+  return tParam('crewRetrainBtn', { cost: crew.value?.retrainCostStr ?? '' });
+});
+
+function handleRetrain(): void {
+  if (!retrainFrom.value || !retrainTo.value || retrainFrom.value === retrainTo.value) return;
+  handleRetrainCrew(retrainFrom.value, retrainTo.value);
+}
 
 function toggleSystem(systemIndex: number): void {
   const next = new Set(collapsedSystems.value);
@@ -731,5 +797,65 @@ watch(
   font-size: 0.8rem;
   color: var(--text-dim);
   margin: 0;
+}
+
+.crew-retrain-wrap {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.crew-retrain-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 0 0 0.35rem 0;
+}
+
+.crew-retrain-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+
+.crew-retrain-from-label,
+.crew-retrain-to-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.crew-retrain-select {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text);
+  min-width: 6rem;
+}
+
+.crew-retrain-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.crew-retrain-btn:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.crew-retrain-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

@@ -162,6 +162,21 @@ export class Player {
   }
 
   /**
+   * Retrain one crew from fromRole to toRole at the given coin cost.
+   * Crew count is unchanged; only the role changes. Returns true if retrain was applied.
+   */
+  retrainCrew(fromRole: CrewRole, toRole: CrewRole, cost: DecimalSource): boolean {
+    if (fromRole === toRole) return false;
+    const fromCount = this.crewByRole[fromRole] ?? 0;
+    if (fromCount < 1) return false;
+    if (!this.coins.gte(cost)) return false;
+    this.spendCoins(cost);
+    (this as { crewByRole: CrewByRole }).crewByRole[fromRole] = fromCount - 1;
+    (this as { crewByRole: CrewByRole }).crewByRole[toRole] = (this.crewByRole[toRole] ?? 0) + 1;
+    return true;
+  }
+
+  /**
    * Assign crew to equipment (when buying an upgrade that costs crew).
    * Takes only from the astronaut role (not miners/scientists/etc). Returns true if enough free astronauts.
    */

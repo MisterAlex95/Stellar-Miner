@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.17",
+    "date": "2026-02",
+    "changes": [
+      "Crew retrain: spend coins to retrain one crew from one role to another (miner, scientist, pilot, medic, engineer); cost and UI in Empire panel."
+    ]
+  },
+  {
+    "version": "0.5.16",
+    "date": "2026-02",
+    "changes": [
+      "Research node lore: optional short lore line per node (schema + i18n en/fr); shown in list, 3D tooltip and detail modal."
+    ]
+  },
+  {
     "version": "0.5.15",
     "date": "2026-02",
     "changes": [

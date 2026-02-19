@@ -31,6 +31,7 @@ import {
   addResearchInProgress,
   removeResearchInProgress,
   getUnlockedCrewRoles,
+  isCrewRetrainUnlocked,
   getModifierCrewEntries,
   getCrewFreedByUnlockingNode,
   RESEARCH_STORAGE_KEY,
@@ -107,6 +108,13 @@ describe('research', () => {
     expect(getUnlockedCrewRoles()).toContain('miner');
     storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['mining-theory', 'survey-systems']);
     expect(getUnlockedCrewRoles()).toContain('scientist');
+  });
+
+  it('isCrewRetrainUnlocked returns true when crew-retraining is unlocked', () => {
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['efficiency']);
+    expect(isCrewRetrainUnlocked()).toBe(false);
+    storage[RESEARCH_STORAGE_KEY] = JSON.stringify(['efficiency', 'crew-retraining']);
+    expect(isCrewRetrainUnlocked()).toBe(true);
   });
 
   it('getModifierCrewEntries and getCrewFreedByUnlockingNode', () => {

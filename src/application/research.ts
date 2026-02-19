@@ -65,6 +65,8 @@ export type ResearchModifiers = {
   crewReduction?: Record<string, number>;
   /** Crew job role unlocked when this node is unlocked (e.g. "miner" → can hire Miners). */
   unlocksCrewRole?: CrewJobRole;
+  /** When true, unlocks crew retrain (spend coins to change one crew role to another). */
+  unlocksCrewRetrain?: boolean;
   /** Expedition duration modifier: negative = faster (e.g. -5 => 5% shorter). */
   expeditionDurationPercent?: number;
   /** Expedition death chance modifier: negative = safer (e.g. -3 => 3% less). */
@@ -92,6 +94,8 @@ export type ResearchNode = {
   researchDataCost?: number;
   /** Optional: hidden until prerequisites are visible (side branch). */
   secret?: boolean;
+  /** Optional: short lore or flavour line (en/fr via i18n). */
+  lore?: string;
 };
 
 export const RESEARCH_CATALOG: ResearchNode[] = researchData as ResearchNode[];
@@ -225,6 +229,14 @@ export function getUnlockedCrewRoles(): CrewJobRole[] {
     }
   }
   return roles;
+}
+
+/** True when any unlocked research node has unlocksCrewRetrain (enables retrain crew UI and handler). */
+export function isCrewRetrainUnlocked(): boolean {
+  const unlocked = loadUnlocked();
+  return RESEARCH_CATALOG.some(
+    (node) => unlocked.includes(node.id) && node.modifiers.unlocksCrewRetrain === true
+  );
 }
 
 /** Branches: when all node ids in a branch are unlocked, grant bonus. */
@@ -691,6 +703,7 @@ export function attemptResearch(
       };
       mods.push(tParam('researchUnlocksJob', { role: t(roleKeys[node.modifiers.unlocksCrewRole]) }));
     }
+    if (node.modifiers.unlocksCrewRetrain) mods.push(t('researchUnlocksCrewRetrain'));
     const slotEntries = getModifierSlotEntries(node);
     if (slotEntries.length) {
       mods.push(

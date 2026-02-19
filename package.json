@@ -1,6 +1,6 @@
 {
   "name": "stellar-miner",
-  "version": "0.5.15",
+  "version": "0.5.17",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -44,6 +44,7 @@
     "break_infinity.js": "^2.2.0",
     "pinia": "^3.0.4",
     "three": "^0.182.0",
-    "vue": "^3.5.28"
+    "vue": "^3.5.28",
+    "vue-i18n": "^11.2.8"
   }
 }

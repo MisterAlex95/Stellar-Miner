@@ -21,6 +21,7 @@
     </div>
     <div class="research-card-info-block">
       <p class="research-card-desc">{{ data.desc }}</p>
+      <p v-if="data.lore" class="research-card-lore">{{ data.lore }}</p>
       <p v-if="data.modText && data.modText !== '—'" class="research-card-mods research-card-mods-preview">
         {{ t('researchEffectsLabel') }} {{ data.modText }}
       </p>
@@ -345,6 +346,14 @@ function onCancelProgress(): void {
   margin: 0 0 0.35rem 0;
   line-height: 1.35;
   opacity: 0.95;
+}
+
+.research-card-lore {
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--muted);
+  margin: 0 0 0.3rem 0;
+  line-height: 1.3;
 }
 
 .research-card-mods,

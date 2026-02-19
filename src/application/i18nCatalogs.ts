@@ -6,6 +6,7 @@ import { getSettings } from './gameState.js';
 import { UPGRADE_CATALOG, EVENT_CATALOG } from './catalogs.js';
 import { RESEARCH_CATALOG } from './research.js';
 import { ACHIEVEMENTS } from './achievements.js';
+import { generatePlanetName } from '../domain/constants.js';
 
 type Lang = 'en' | 'fr';
 
@@ -161,6 +162,47 @@ const researchDescsEn: Record<string, string> = {
   'architect': 'Design reality itself. Ultimate research.',
   'transcendence': 'Beyond matter. Pure potential.',
   'omega-theory': 'The final equation. All bonuses combined.',
+};
+
+const researchLoreEn: Record<string, string> = {
+  'mining-theory': 'The first equation that made the belt feel like home.',
+  'heavy-equipment': 'The rigs don’t care about the cold. Neither do we.',
+  'automation': 'First shift we trusted the bots. By the third we forgot they were there.',
+  'survey-systems': 'The maps said empty. The scans said paydirt.',
+  'basic-refining': 'Waste not. The belt has a long memory.',
+  'orbital-engineering': 'From up here the rock looks like a promise.',
+  'deep-extraction': 'What we pull from the core doesn’t always have a name.',
+  'ai-assist': 'It suggested the next click. We stopped asking why.',
+  'efficiency': 'Every joule counted. So did every second.',
+  'precision-drilling': 'Miss by a metre and you miss the vein. We didn’t miss.',
+  'catalytic-cracking': 'The reaction was supposed to be stable. It was. We weren’t.',
+  'quantum-mining': 'The manual said “observe the collapse”. We observed. We collapsed.',
+  'void-tech': 'Not quite nothing. Not quite something. Exactly enough.',
+  'stellar-harvester': 'We took a piece of the star. It didn’t mind. We did.',
+  'neural-boost': 'The crew dreamed in sync. The drills dreamed with them.',
+  'refinery-core': 'One stream in. Everything out. No questions.',
+  'sensor-arrays': 'We saw the ore before we saw the rock.',
+  'plasma-smelting': 'The slag had a voice. We turned the heat up.',
+  'exo-forging': 'The alloy wasn’t from here. Neither were we, after.',
+  'dimensional-mining': 'The other side had a “Do not disturb” sign. We disturbed.',
+  'plasma-catalysis': 'Faster than light. Slower than regret.',
+  'nexus-research': 'One equation to rule the board. We wrote it.',
+  'quantum-sensors': 'We knew where the vein was before we looked. We looked anyway.',
+  'singularity-drill': 'We don’t talk about what we pulled out of that hole.',
+  'void-forge': 'We made something from nothing. Then we made nothing from something.',
+  'chrono-extraction': 'The ore was there yesterday. We made sure.',
+  'exo-core': 'Reality accepted the new rules. We didn’t give it a choice.',
+  'reality-anchor': 'Something had to hold. We held.',
+  'multiverse-tap': 'The other us sent a thank-you note. We didn’t open it.',
+  'neural-network': 'One mind. Many drills. Zero sleep.',
+  'omega-refinery': 'Nothing wasted. Not even the silence.',
+  'stellar-engine': 'We borrowed a star. The interest was steep.',
+  'infinity-loop': 'It fed itself. We just watched.',
+  'cosmic-mind': 'We knew what the belt was thinking. It knew we knew.',
+  'singularity-core': 'One point. Everything. Everywhere.',
+  'architect': 'Some say they still hear the equations, whispering.',
+  'transcendence': 'We left the drills behind. They didn’t need us anymore.',
+  'omega-theory': 'The last equation. The belt went quiet.',
 };
 
 const researchDescsFr: Record<string, string> = {
@@ -458,9 +500,6 @@ const comboNamesFr: Record<string, string> = {
   combo: 'Combo',
 };
 
-const planetNamesEn = ['Titan', 'Nova Prime', 'Dust Haven', 'Iron Vein', 'Crimson Drift', 'Frost Ring', 'Solar Forge', "Void's Edge", 'Stellar Rest', 'Last Light'];
-const planetNamesFr = ['Titan', 'Nova Prime', 'Dust Haven', 'Iron Vein', 'Crimson Drift', 'Frost Ring', 'Forge solaire', 'Bord du vide', 'Repos stellaire', 'Dernière lueur'];
-
 const upgradeGroupLabelsEn: Record<string, string> = { Early: 'Early', Mid: 'Mid', Late: 'Late' };
 const upgradeGroupLabelsFr: Record<string, string> = { Early: 'Début', Mid: 'Milieu', Late: 'Fin' };
 
@@ -519,6 +558,47 @@ const researchNamesFr: Record<string, string> = {
   'omega-theory': 'Théorie Oméga',
 };
 
+const researchLoreFr: Record<string, string> = {
+  'mining-theory': 'La première équation qui a fait de la ceinture un chez-soi.',
+  'heavy-equipment': 'Les rigs s’en foutent du froid. Nous aussi.',
+  'automation': 'Premier shift on a fait confiance aux bots. Au troisième on avait oublié.',
+  'survey-systems': 'Les cartes disaient vide. Les scans disaient jackpot.',
+  'basic-refining': 'Rien ne se perd. La ceinture a la mémoire longue.',
+  'orbital-engineering': 'D’ici-haut le caillou ressemble à une promesse.',
+  'deep-extraction': 'Ce qu’on sort du noyau n’a pas toujours de nom.',
+  'ai-assist': 'Il suggérait le prochain clic. On a arrêté de demander pourquoi.',
+  'efficiency': 'Chaque joule comptait. Chaque seconde aussi.',
+  'precision-drilling': 'Un mètre à côté et tu rates la veine. On n’a pas raté.',
+  'catalytic-cracking': 'La réaction devait être stable. Elle l’était. Nous pas.',
+  'quantum-mining': 'Le manuel disait « observez l’effondrement ». On a observé.',
+  'void-tech': 'Pas tout à fait rien. Pas tout à fait quelque chose. Juste ce qu’il fallait.',
+  'stellar-harvester': 'On a pris un morceau de l’étoile. Elle n’a pas protesté. Nous si.',
+  'neural-boost': 'L’équipage rêvait en sync. Les foreuses avec.',
+  'refinery-core': 'Un flux entrant. Tout en sort. Pas de questions.',
+  'sensor-arrays': 'On voyait le minerai avant la roche.',
+  'plasma-smelting': 'La scorie avait une voix. On a monté le chauffage.',
+  'exo-forging': 'L’alliage ne venait pas d’ici. Nous non plus, après.',
+  'dimensional-mining': 'L’autre côté avait un « Ne pas déranger ». On a dérangé.',
+  'plasma-catalysis': 'Plus rapide que la lumière. Plus lent que le regret.',
+  'nexus-research': 'Une équation pour régner sur le plateau. On l’a écrite.',
+  'quantum-sensors': 'On savait où était la veine avant de regarder. On a regardé quand même.',
+  'singularity-drill': 'On ne parle pas de ce qu’on a sorti de ce trou.',
+  'void-forge': 'On a fait quelque chose à partir de rien. Puis rien à partir de quelque chose.',
+  'chrono-extraction': 'Le minerai était là hier. On s’en est assurés.',
+  'exo-core': 'La réalité a accepté les nouvelles règles. On ne lui a pas laissé le choix.',
+  'reality-anchor': 'Il fallait que quelque chose tienne. On a tenu.',
+  'multiverse-tap': 'L’autre nous a envoyé un mot de remerciement. On ne l’a pas ouvert.',
+  'neural-network': 'Un esprit. Beaucoup de foreuses. Zéro sommeil.',
+  'omega-refinery': 'Rien de gaspillé. Même pas le silence.',
+  'stellar-engine': 'On a emprunté une étoile. Les intérêts étaient salés.',
+  'infinity-loop': 'Ça se nourrissait tout seul. On regardait.',
+  'cosmic-mind': 'On savait ce que la ceinture pensait. Elle savait qu’on savait.',
+  'singularity-core': 'Un point. Tout. Partout.',
+  'architect': 'Certains disent qu’ils entendent encore les équations, chuchoter.',
+  'transcendence': 'On a laissé les foreuses. Elles n’avaient plus besoin de nous.',
+  'omega-theory': 'La dernière équation. La ceinture s’est tue.',
+};
+
 export function getCatalogResearchName(id: string): string {
   const names = lang() === 'fr' ? researchNamesFr : researchNamesEn;
   return names[id] ?? RESEARCH_CATALOG.find((n) => n.id === id)?.name ?? id;
@@ -527,6 +607,12 @@ export function getCatalogResearchName(id: string): string {
 export function getCatalogResearchDesc(id: string): string {
   const descs = lang() === 'fr' ? researchDescsFr : researchDescsEn;
   return descs[id] ?? RESEARCH_CATALOG.find((n) => n.id === id)?.description ?? '';
+}
+
+/** Optional short lore line per research node (en/fr). Empty string if none. */
+export function getCatalogResearchLore(id: string): string {
+  const lores = lang() === 'fr' ? researchLoreFr : researchLoreEn;
+  return lores[id] ?? RESEARCH_CATALOG.find((n) => n.id === id)?.lore ?? '';
 }
 
 export function getCatalogEventName(id: string): string {
@@ -568,15 +654,15 @@ export function getCatalogComboName(mult: number): string {
   return names.combo ?? 'Combo';
 }
 
+/** Planet names are procedural (deterministic from id). */
 export function getCatalogPlanetName(index: number): string {
-  const names = lang() === 'fr' ? planetNamesFr : planetNamesEn;
-  return names[index] ?? (lang() === 'fr' ? `Planète ${index + 1}` : `Planet ${index + 1}`);
+  return generatePlanetName(`planet-${index + 1}`);
 }
 
 export function getCatalogPlanetNameById(planetId: string): string {
   const match = planetId.match(/^planet-(\d+)$/);
-  const index = match ? parseInt(match[1], 10) - 1 : 0;
-  return getCatalogPlanetName(Math.max(0, index));
+  const id = match ? match[0] : 'planet-1';
+  return generatePlanetName(id);
 }
 
 export function getCatalogUpgradeGroupLabel(labelKey: string): string {

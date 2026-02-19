@@ -1,31 +1,19 @@
 /**
- * Centralized UI strings for i18n. Use t(key) in presentation layer.
- * Language from settings (en | fr).
+ * Centralized UI strings for i18n. Use t(key) in presentation and application layer.
+ * Delegates to vue-i18n (see application/i18n.ts).
  */
-import { getSettings } from './gameState.js';
+import { i18n } from './i18n.js';
 import { stringsEn } from './strings/en.js';
-import { stringsFr } from './strings/fr.js';
 
 export type { StringKey } from './strings/en.js';
 
-const translations: Record<'en' | 'fr', Record<keyof typeof stringsEn, string>> = {
-  en: stringsEn,
-  fr: stringsFr,
-};
-
 export function t(key: keyof typeof stringsEn): string {
-  const lang = getSettings().language ?? 'en';
-  const bundle = translations[lang] ?? translations.en;
-  return bundle[key] ?? stringsEn[key] ?? key;
+  return i18n.global.t(key as string) as string;
 }
 
-/** Replace {{key}} placeholders in the translation for key. */
+/** Replace {key} placeholders (vue-i18n interpolation). */
 export function tParam(key: keyof typeof stringsEn, params: Record<string, string | number>): string {
-  let s = t(key);
-  for (const [k, v] of Object.entries(params)) {
-    s = s.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
-  }
-  return s;
+  return i18n.global.t(key as string, params as Record<string, unknown>) as string;
 }
 
 /** For backward compatibility: same keys as stringsEn. */

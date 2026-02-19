@@ -7,11 +7,11 @@ import {
   clearExpedition,
   setExpeditionInProgress,
 } from './gameState.js';
-import { getMaxAstronauts, getAstronautCost, RESEARCH_DATA_PER_EXPEDITION_SUCCESS, type CrewRole } from '../domain/constants.js';
+import { getMaxAstronauts, getAstronautCost, getRetrainCost, RESEARCH_DATA_PER_EXPEDITION_SUCCESS, type CrewRole } from '../domain/constants.js';
 import type { ExpeditionComposition } from '../domain/constants.js';
 import type { ExpeditionTierId } from '../domain/constants.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
-import { hasEffectiveFreeSlot, getResearchExpeditionDurationPercent, getResearchExpeditionDeathChancePercent, getResearchHousingCapacityBonus, addResearchData } from './research.js';
+import { hasEffectiveFreeSlot, isCrewRetrainUnlocked, getResearchExpeditionDurationPercent, getResearchExpeditionDeathChancePercent, getResearchHousingCapacityBonus, addResearchData } from './research.js';
 import { emit } from './eventBus.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
@@ -177,5 +177,16 @@ export function handleHireAstronaut(role: CrewRole = 'astronaut'): void {
     }
     tryShowNarrator('first_astronaut');
   }
+  refreshAfterPlanetAction({ achievements: true });
+}
+
+/** Retrain one crew member from fromRole to toRole at coin cost. Crew count unchanged. Requires research unlock. */
+export function handleRetrainCrew(fromRole: CrewRole, toRole: CrewRole): void {
+  if (!isCrewRetrainUnlocked()) return;
+  const session = getSession();
+  if (!session) return;
+  const player = session.player;
+  const cost = getRetrainCost();
+  if (!player.retrainCrew(fromRole, toRole, cost)) return;
   refreshAfterPlanetAction({ achievements: true });
 }

@@ -239,6 +239,7 @@ import {
   updateLastSavedIndicator,
   openResetConfirmModal,
 } from '../../application/handlers.js';
+import { syncI18nLocale } from '../../application/i18n.js';
 import { useAppUIStore } from '../stores/appUI.js';
 import { handleExportSave, handleImportSave } from '../../application/handlers.js';
 
@@ -259,6 +260,7 @@ function onLanguageChange(e: Event): void {
   const v = (e.target as HTMLSelectElement).value as Settings['language'];
   settings.language = v;
   pushToGameState();
+  syncI18nLocale();
 }
 function onStarfieldSpeedChange(e: Event): void {
   settings.starfieldSpeed = Number((e.target as HTMLSelectElement).value);

@@ -19,6 +19,7 @@
         {{ hoveredDisplay.name }}
       </p>
       <p class="research-tree-3d-tooltip-desc">{{ hoveredDisplay.desc }}</p>
+      <p v-if="hoveredDisplay.lore" class="research-tree-3d-tooltip-lore">{{ hoveredDisplay.lore }}</p>
       <p v-if="hoveredDisplay.modText && hoveredDisplay.modText !== '—'" class="research-tree-3d-tooltip-mods">
         {{ t('researchEffectsLabel') }} {{ hoveredDisplay.modText }}
       </p>
@@ -311,6 +312,14 @@ onBeforeUnmount(() => {
   font-size: 0.75rem;
   color: var(--text-dim);
   line-height: 1.35;
+}
+
+.research-tree-3d-tooltip-lore {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--muted);
+  line-height: 1.3;
 }
 
 .research-tree-3d-tooltip-done {

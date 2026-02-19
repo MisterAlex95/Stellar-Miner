@@ -4,6 +4,7 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { setPinia } from './piniaInstance.js';
+import { i18n } from '../application/i18n.js';
 import App from './App.vue';
 import DataToolApp from './DataToolApp.vue';
 
@@ -14,6 +15,7 @@ export function mountVueApp(): void {
   setPinia(pinia);
   const app = createApp(App);
   app.use(pinia);
+  app.use(i18n);
   app.mount(appEl);
 }
 
