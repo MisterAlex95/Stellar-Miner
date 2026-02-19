@@ -1,4 +1,10 @@
 @layer components {
+  .next-milestone {
+    @apply text-center text-foreground-muted;
+    font-size: 0.8rem;
+    margin: -0.5rem 0 1rem 0;
+  }
+
   .btn-tooltip-wrap {
     @apply inline-block;
   }

@@ -106,22 +106,25 @@ watch(
   border-radius: 16px;
   width: 100%;
   max-width: 420px;
-  padding: 1.5rem;
+  padding: 1.75rem;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
 }
 
 .intro-modal h2 {
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 1rem 0;
   font-family: 'Orbitron', sans-serif;
   font-size: 1.1rem;
   color: var(--accent);
 }
 
 .intro-modal p {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1.25rem 0;
   font-size: 0.9rem;
   color: var(--text-dim);
-  line-height: 1.5;
+  line-height: 1.65;
+  text-align: left;
+  text-indent: 0;
+  white-space: pre-line;
 }
 
 .intro-progress-wrap {
