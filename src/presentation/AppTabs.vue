@@ -17,7 +17,8 @@
         :title="tabLabel(tabId)"
         @click="goToTab(tabId)"
       >
-        <span>{{ tabLabel(tabId) }}</span>
+        <TabIcon :tab-id="tabId" />
+        <span class="app-tab-label">{{ tabLabel(tabId) }}</span>
       </button>
     </div>
     <div
@@ -57,7 +58,8 @@
           :class="{ 'app-tabs-menu-item--active': activeTab === tabId, 'app-tabs-menu-item--has-action': store.tabs.badges[tabId] }"
           @click="goToTab(tabId); menuOpen = false"
         >
-          {{ tabLabel(tabId) }}
+          <TabIcon :tab-id="tabId" />
+          <span class="app-tab-label">{{ tabLabel(tabId) }}</span>
         </button>
       </div>
     </div>
@@ -83,7 +85,8 @@
       :aria-selected="activeTab === tabId"
       @click="goToTab(tabId)"
     >
-      <span>{{ tabLabel(tabId) }}</span>
+      <TabIcon :tab-id="tabId" />
+      <span class="app-tab-label">{{ tabLabel(tabId) }}</span>
     </button>
     <div
       ref="appTabsBottomMoreWrapRef"
@@ -123,7 +126,8 @@
           :class="{ 'app-tabs-bottom-menu-item--active': activeTab === tabId, 'app-tabs-bottom-menu-item--has-action': store.tabs.badges[tabId] }"
           @click="goToTab(tabId); bottomMenuOpen = false"
         >
-          {{ tabLabel(tabId) }}
+          <TabIcon :tab-id="tabId" />
+          <span class="app-tab-label">{{ tabLabel(tabId) }}</span>
         </button>
       </div>
     </div>
@@ -136,6 +140,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { t } from '../application/strings.js';
 import { useGameStateStore } from './stores/gameState.js';
 import { switchTab, pushTabState, VALID_TAB_IDS, HISTORY_STATE_KEY, type TabId } from './tabs.js';
+import TabIcon from './components/TabIcon.vue';
 
 const TAB_LABELS: Record<TabId, string> = {
   mine: 'tabMine',

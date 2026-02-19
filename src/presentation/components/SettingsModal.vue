@@ -73,6 +73,17 @@
             </label>
           </div>
           <div class="settings-option">
+            <label class="settings-toggle">
+              <input
+                id="setting-show-tab-labels"
+                type="checkbox"
+                :checked="settings.showTabLabels"
+                @change="onShowTabLabelsChange"
+              >
+              <span>{{ t('showTabLabels') }}</span>
+            </label>
+          </div>
+          <div class="settings-option">
             <label for="setting-theme">{{ t('theme') }}</label>
             <select
               id="setting-theme"
@@ -293,6 +304,10 @@ function onReducedMotionChange(e: Event): void {
 }
 function onShowStoryToastsChange(e: Event): void {
   settings.showStoryToasts = (e.target as HTMLInputElement).checked;
+  pushToGameState();
+}
+function onShowTabLabelsChange(e: Event): void {
+  settings.showTabLabels = (e.target as HTMLInputElement).checked;
   pushToGameState();
 }
 

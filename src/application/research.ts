@@ -3,6 +3,7 @@
  * each attempt has a success chance; on failure coins are lost. Nodes grant modifiers (+% production, +% click, slot-free upgrades).
  */
 import researchData from '../data/research.json';
+import researchIconMappingData from '../data/researchIconMapping.json';
 import { getUpgradeUsesSlot, UPGRADE_CATALOG } from './catalogs.js';
 import {
   SCIENTIST_RESEARCH_SUCCESS_PER_SCIENTIST,
@@ -536,21 +537,39 @@ export function getResearchTiers(): ResearchTierGroup[] {
   return result;
 }
 
-/** For each gap between rows, returns segments to draw: parent index in row above, child index in row below. */
-export function getResearchBranchSegments(): { fromIdx: number; toIdx: number }[][] {
+const RESEARCH_ICON_MAPPING: Record<string, number> =
+  researchIconMappingData && typeof researchIconMappingData === 'object' && 'mapping' in researchIconMappingData
+    ? (researchIconMappingData as { mapping: Record<string, number> }).mapping
+    : {};
+
+/** Sprite index for research node. Uses src/data/researchIconMapping.json if present, else catalog order. Same for list, 3D tree and hover. */
+export function getResearchSpriteIndexById(nodeId: string): number {
+  const fromMapping = RESEARCH_ICON_MAPPING[nodeId];
+  if (typeof fromMapping === 'number' && fromMapping >= 0) return fromMapping;
+  const idx = RESEARCH_CATALOG.findIndex((n) => n.id === nodeId);
+  return idx >= 0 ? idx : 0;
+}
+
+/** One segment: from (fromRow, fromIdx) to (toRow, toIdx). Used so every prerequisite gets a line even across multiple rows. */
+export type ResearchBranchSegment = { fromRow: number; fromIdx: number; toRow: number; toIdx: number };
+
+/** All segments to draw: each prerequisite → child gets a segment, no matter how many rows apart. */
+export function getResearchBranchSegments(): ResearchBranchSegment[] {
   const rows = getResearchTreeRows();
-  const out: { fromIdx: number; toIdx: number }[][] = [];
-  for (let r = 0; r < rows.length - 1; r++) {
-    const parentRow = rows[r];
-    const childRow = rows[r + 1];
-    const segments: { fromIdx: number; toIdx: number }[] = [];
+  const out: ResearchBranchSegment[] = [];
+  for (let toRow = 1; toRow < rows.length; toRow++) {
+    const childRow = rows[toRow];
     childRow.forEach((child, toIdx) => {
       for (const prereqId of child.prerequisites) {
-        const fromIdx = parentRow.findIndex((n) => n.id === prereqId);
-        if (fromIdx >= 0) segments.push({ fromIdx, toIdx });
+        for (let fromRow = 0; fromRow < toRow; fromRow++) {
+          const fromIdx = rows[fromRow].findIndex((n) => n.id === prereqId);
+          if (fromIdx >= 0) {
+            out.push({ fromRow, fromIdx, toRow, toIdx });
+            break;
+          }
+        }
       }
     });
-    out.push(segments);
   }
   return out;
 }

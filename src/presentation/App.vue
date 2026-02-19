@@ -55,6 +55,7 @@ import { useGameStateStore } from './stores/gameState.js';
 import { useAppUIStore } from './stores/appUI.js';
 import { useGlobalKeyboard } from './composables/useGlobalKeyboard.js';
 import { useChartHelpTrigger } from './composables/useChartHelpTrigger.js';
+import { settingsStore } from '../application/gameState.js';
 
 const store = useGameStateStore();
 const appUI = useAppUIStore();
@@ -67,16 +68,22 @@ function syncAppAttributes(): void {
   if (app) {
     app.setAttribute('data-active-tab', store.activeTab);
     app.setAttribute('data-layout', store.layout);
+    const s = settingsStore.get();
+    app.setAttribute('data-show-tab-labels', s.showTabLabels ? 'true' : 'false');
   }
 }
+
+let unsubSettings: (() => void) | null = null;
 
 onMounted(() => {
   appUI.setAppRoot(appWrapperRef.value?.parentElement ?? null);
   appUI.setMainContentRoot(mainContentRef.value ?? null);
   appUI.setPanelsRoot(panelsRef.value ?? null);
   syncAppAttributes();
+  unsubSettings = settingsStore.subscribe(() => syncAppAttributes());
 });
 onBeforeUnmount(() => {
+  unsubSettings?.();
   appUI.setAppRoot(null);
   appUI.setMainContentRoot(null);
   appUI.setPanelsRoot(null);

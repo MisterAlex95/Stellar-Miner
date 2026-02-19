@@ -48,6 +48,10 @@
     @apply whitespace-nowrap overflow-hidden text-ellipsis;
   }
 
+  #app[data-show-tab-labels="false"] .app-tab-label {
+    @apply hidden;
+  }
+
   .app-tab-key {
     @apply inline-flex items-center justify-center min-w-[1.25em] h-[1.25em] px-0.5 text-xs font-bold shrink-0 text-foreground-muted bg-black/25 border border-border rounded;
   }
@@ -95,7 +99,7 @@
   }
 
   .app-tabs-menu-item {
-    @apply block w-full text-left font-display text-sm font-semibold tracking-wide py-2 px-3 rounded border-none bg-transparent text-foreground-muted cursor-pointer transition-colors duration-200;
+    @apply flex items-center gap-2 w-full text-left font-display text-sm font-semibold tracking-wide py-2 px-3 rounded border-none bg-transparent text-foreground-muted cursor-pointer transition-colors duration-200;
   }
   .app-tabs-menu-item:hover {
     @apply bg-card text-foreground;
@@ -307,7 +311,7 @@
     @apply !hidden;
   }
   .app-tabs-bottom-menu-item {
-    @apply block w-full text-left font-display text-sm font-semibold tracking-wide py-2 px-3 rounded border-none bg-transparent text-foreground-muted cursor-pointer transition-colors duration-200;
+    @apply flex items-center gap-2 w-full text-left font-display text-sm font-semibold tracking-wide py-2 px-3 rounded border-none bg-transparent text-foreground-muted cursor-pointer transition-colors duration-200;
   }
   .app-tabs-bottom-menu-item:hover {
     @apply bg-card text-foreground;

@@ -29,6 +29,7 @@ describe('settings', () => {
       soundEnabled: true,
       language: 'en',
       showStoryToasts: true,
+      showTabLabels: true,
     });
   });
 
@@ -49,6 +50,7 @@ describe('settings', () => {
       soundEnabled: true,
       language: 'en',
       showStoryToasts: true,
+      showTabLabels: true,
     });
     vi.stubGlobal('localStorage', orig);
   });
@@ -83,6 +85,7 @@ describe('settings', () => {
       soundEnabled: true,
       language: 'en',
       showStoryToasts: true,
+      showTabLabels: true,
     });
   });
 
@@ -100,6 +103,7 @@ describe('settings', () => {
       soundEnabled: true,
       language: 'en',
       showStoryToasts: true,
+      showTabLabels: true,
     });
     const raw = storage['stellar-miner-settings'];
     expect(raw).toBeDefined();
@@ -125,6 +129,7 @@ describe('settings', () => {
         soundEnabled: true,
         language: 'en',
         showStoryToasts: true,
+        showTabLabels: true,
       })
     ).not.toThrow();
     vi.stubGlobal('localStorage', orig);
@@ -150,6 +155,7 @@ describe('settings', () => {
         soundEnabled: true,
         language: 'en',
         showStoryToasts: true,
+        showTabLabels: true,
       })
     ).not.toThrow();
   });

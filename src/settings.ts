@@ -18,6 +18,8 @@ export type Settings = {
   language: Language;
   /** When true, event toasts show optional flavor/story line. */
   showStoryToasts: boolean;
+  /** When false, tab bar shows icons only (no text labels). */
+  showTabLabels: boolean;
 };
 
 const DEFAULTS: Settings = {
@@ -33,6 +35,7 @@ const DEFAULTS: Settings = {
   soundEnabled: true,
   language: 'en',
   showStoryToasts: true,
+  showTabLabels: true,
 };
 
 export function loadSettings(): Settings {

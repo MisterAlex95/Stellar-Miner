@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.15",
+    "date": "2026-02",
+    "changes": [
+      "Research tree 3D view: PoE-style visualization with three.js (nodes, edges, pan/zoom); List / 3D tree toggle in Research panel; click node to attempt."
+    ]
+  },
+  {
     "version": "0.5.14",
     "date": "2026-02",
     "changes": [

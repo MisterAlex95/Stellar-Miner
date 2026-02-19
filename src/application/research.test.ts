@@ -217,9 +217,14 @@ describe('research', () => {
     expect(rows.length).toBeGreaterThan(0);
   });
 
-  it('getResearchBranchSegments returns segments', () => {
+  it('getResearchBranchSegments returns segments from every prerequisite', () => {
     const segs = getResearchBranchSegments();
     expect(Array.isArray(segs)).toBe(true);
+    const withFromTo = segs as { fromRow: number; fromIdx: number; toRow: number; toIdx: number }[];
+    if (withFromTo.length > 0) {
+      expect(withFromTo[0]).toHaveProperty('fromRow');
+      expect(withFromTo[0]).toHaveProperty('toRow');
+    }
   });
 
   it('getUnlockPathIds returns empty for unknown or no prereqs', () => {

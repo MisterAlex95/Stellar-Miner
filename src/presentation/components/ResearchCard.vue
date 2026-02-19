@@ -11,6 +11,12 @@
     @mouseenter="$emit('pathHighlight', data.unlockPathIds)"
   >
     <div class="research-card-header">
+      <ResearchIcon
+        :name="data.icon"
+        :node-id="data.node.id"
+        :size="20"
+        class="research-card-icon"
+      />
       <span class="research-card-name">{{ data.name }}</span>
     </div>
     <div class="research-card-info-block">
@@ -78,6 +84,7 @@ import { computed, ref, watch, nextTick } from 'vue';
 import { storeToRefs } from 'pinia';
 import { t, tParam } from '../../application/strings.js';
 import type { ResearchNodeDisplayData } from '../../application/researchDisplay.js';
+import ResearchIcon from './ResearchIcon.vue';
 import { useAppUIStore } from '../stores/appUI.js';
 import { getPresentationPort } from '../../application/uiBridge.js';
 
@@ -299,6 +306,12 @@ function onCancelProgress(): void {
   padding-bottom: 0.45rem;
   margin-bottom: 0.25rem;
   border-bottom: 1px solid rgba(42, 47, 61, 0.5);
+}
+
+.research-card-icon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
 .research-card-level {

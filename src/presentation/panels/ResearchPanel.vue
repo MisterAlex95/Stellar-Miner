@@ -3,7 +3,34 @@
     class="research-list"
     @mouseenter="clearPathHighlight"
   >
-    <div class="research-tree" role="tree" :aria-label="t('research') + ' tree'">
+    <div class="research-view-toggle">
+      <button
+        type="button"
+        class="research-view-toggle-btn"
+        :class="{ 'research-view-toggle-btn--active': viewMode === 'list' }"
+        :aria-pressed="viewMode === 'list'"
+        aria-label="List view"
+        @click="viewMode = 'list'"
+      >
+        {{ t('researchViewList') }}
+      </button>
+      <button
+        type="button"
+        class="research-view-toggle-btn"
+        :class="{ 'research-view-toggle-btn--active': viewMode === '3d' }"
+        :aria-pressed="viewMode === '3d'"
+        aria-label="3D tree view"
+        @click="viewMode = '3d'"
+      >
+        {{ t('researchView3D') }}
+      </button>
+    </div>
+    <div
+      v-show="viewMode === 'list'"
+      class="research-tree"
+      role="tree"
+      :aria-label="t('research') + ' tree'"
+    >
       <div
         v-for="tierVm in tiers"
         :key="tierVm.tier"
@@ -43,6 +70,7 @@
         </div>
       </div>
     </div>
+    <ResearchTree3D v-if="viewMode === '3d'" />
   </div>
 </template>
 
@@ -53,10 +81,12 @@ import { startResearchWithProgress } from '../../application/handlers.js';
 import { useResearchCollapsed } from '../composables/useResearchCollapsed.js';
 import { useResearchTiers } from '../composables/useResearchTiers.js';
 import ResearchCard from '../components/ResearchCard.vue';
+import ResearchTree3D from '../components/ResearchTree3D.vue';
 
 const { collapsedTiers, toggleTier } = useResearchCollapsed();
 const { tiers } = useResearchTiers(collapsedTiers);
 
+const viewMode = ref<'list' | '3d'>('list');
 const pathHighlightIds = ref<Set<string>>(new Set());
 
 function isPathHighlighted(nodeId: string): boolean {
@@ -79,6 +109,34 @@ function onAttempt(id: string, cardEl: HTMLElement): void {
 <style scoped>
 .research-list {
   display: block;
+}
+
+.research-view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.research-view-toggle-btn {
+  padding: 0.35rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: rgba(42, 47, 61, 0.4);
+  border: 1px solid rgba(42, 47, 61, 0.6);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.research-view-toggle-btn:hover {
+  color: var(--text);
+  background: rgba(42, 47, 61, 0.6);
+}
+
+.research-view-toggle-btn--active {
+  color: var(--text);
+  background: rgba(42, 47, 61, 0.8);
+  border-color: rgba(42, 47, 61, 0.9);
 }
 
 .research-tree {

@@ -7,7 +7,8 @@ describe('strings', () => {
   beforeEach(() => {
     setSettings({ theme: 'dark', language: 'en', starfieldSpeed: 1, showOrbitLines: true,
       clickParticles: true, compactNumbers: true, spaceKeyRepeat: true, layout: 'tabs',
-      pauseWhenBackground: false, soundEnabled: true, reducedMotion: false, showStoryToasts: true });
+      pauseWhenBackground: false, soundEnabled: true, reducedMotion: false, showStoryToasts: true,
+      showTabLabels: true });
   });
 
   it('t returns string for known key', () => {

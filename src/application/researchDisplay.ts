@@ -17,6 +17,7 @@ import {
   getResearchFailureCount,
   getResearchData,
   getRecommendedResearchNodeIds,
+  getResearchSpriteIndexById,
   type ResearchNode,
 } from './research.js';
 import { t, tParam, type StringKey } from './strings.js';
@@ -55,6 +56,68 @@ export function modifierText(node: ResearchNode): string {
   return parts.length > 0 ? parts.join(', ') : '—';
 }
 
+/** Explicit icon per research id (overrides heuristic). */
+const RESEARCH_ICON_BY_ID: Record<string, string> = {
+  'mining-theory': 'miner',
+  'heavy-equipment': 'production',
+  'automation': 'click',
+  'survey-systems': 'scientist',
+  'basic-refining': 'medic',
+  'orbital-engineering': 'pilot',
+  'deep-extraction': 'production',
+  'ai-assist': 'neural',
+  'efficiency': 'engineer',
+  'precision-drilling': 'production',
+  'catalytic-cracking': 'refining',
+  'quantum-mining': 'production',
+  'void-tech': 'neural',
+  'stellar-harvester': 'production',
+  'neural-boost': 'neural',
+  'refinery-core': 'refining',
+  'sensor-arrays': 'expedition',
+  'plasma-smelting': 'refining',
+  'exo-forging': 'refining',
+  'dimensional-mining': 'production',
+  'plasma-catalysis': 'refining',
+  'nexus-research': 'neural',
+  'quantum-sensors': 'expedition',
+  'singularity-drill': 'production',
+  'void-forge': 'neural',
+  'chrono-extraction': 'production',
+  'exo-core': 'refining',
+  'reality-anchor': 'production',
+  'multiverse-tap': 'production',
+  'neural-network': 'neural',
+  'omega-refinery': 'refining',
+  'stellar-engine': 'production',
+  'infinity-loop': 'production',
+  'cosmic-mind': 'neural',
+  'singularity-core': 'production',
+  'architect': 'research',
+  'transcendence': 'neural',
+  'omega-theory': 'secret',
+};
+
+/** Icon key for a research node (used with ResearchIcon SVG component and 3D textures). */
+export function getResearchIcon(node: ResearchNode): string {
+  const explicit = RESEARCH_ICON_BY_ID[node.id];
+  if (explicit) return explicit;
+  const m = node.modifiers;
+  if (m.unlocksCrewRole) {
+    const roles: string[] = ['miner', 'scientist', 'pilot', 'medic', 'engineer'];
+    if (roles.includes(m.unlocksCrewRole)) return m.unlocksCrewRole;
+  }
+  if (m.expeditionDurationPercent !== undefined || m.expeditionDeathChancePercent !== undefined) return 'expedition';
+  const prod = m.productionPercent ?? 0;
+  const click = m.clickPercent ?? 0;
+  if (click > prod && click >= 10) return 'click';
+  if (prod >= 15 && click < 8) return 'production';
+  if (node.id.includes('refin') || node.id.includes('catalys') || node.id.includes('smelt') || node.id.includes('forge')) return 'refining';
+  if (node.id.includes('neural') || node.id.includes('ai-') || node.id.includes('void') || node.id.includes('quantum')) return 'neural';
+  if (node.secret) return 'secret';
+  return 'research';
+}
+
 export type ResearchNodeDisplayData = {
   node: ResearchNode;
   done: boolean;
@@ -76,6 +139,9 @@ export type ResearchNodeDisplayData = {
   name: string;
   desc: string;
   levelLabel: number;
+  icon: string;
+  /** Sprite cell index for icons.png (order = tree rows). Use for ResearchIcon spriteIndex. */
+  iconSpriteIndex: number;
 };
 
 export function getResearchNodeDisplayData(
@@ -139,5 +205,7 @@ export function getResearchNodeDisplayData(
     name: getCatalogResearchName(node.id),
     desc: getCatalogResearchDesc(node.id),
     levelLabel: node.row + 1,
+    icon: getResearchIcon(node),
+    iconSpriteIndex: getResearchSpriteIndexById(node.id),
   };
 }
