@@ -5,9 +5,11 @@ import { formatNumber } from '../../application/format.js';
 import { getSettings } from '../../application/gameState.js';
 import { DAILY_BONUS_COINS } from '../../application/catalogs.js';
 import { t, tParam } from '../../application/strings.js';
-import { getCatalogEventName } from '../../application/i18nCatalogs.js';
+import { getCatalogEventName, getEventFlavor } from '../../application/i18nCatalogs.js';
 import type { GameEvent } from '../../domain/entities/GameEvent.js';
 import { showToast } from './showToast.js';
+
+export type ShowEventToastOptions = { firstTime?: boolean };
 import {
   showFloatingReward as showFloatingRewardImpl,
   showFloatingCoinFixed as showFloatingCoinFixedImpl,
@@ -21,14 +23,17 @@ export function showMiniMilestoneToast(message: string): void {
   showToast(message, 'milestone', { duration: 3000 });
 }
 
-export function showEventToast(gameEvent: GameEvent): void {
+export function showEventToast(gameEvent: GameEvent, options?: ShowEventToastOptions): void {
   const isNegative = gameEvent.effect.multiplier < 1;
   const name = getCatalogEventName(gameEvent.id);
   const multStr = `×${gameEvent.effect.multiplier}`;
   const durationSec = gameEvent.effect.durationMs / 1000;
-  const message = `${name} — ${multStr} production for ${durationSec}s`;
+  let message = `${name} — ${multStr} production for ${durationSec}s`;
+  const flavor = getEventFlavor(gameEvent.id);
+  if (flavor) message += `\n${flavor}`;
   const variant = isNegative ? 'negative' : 'event-positive';
-  showToast(message, variant, { duration: isNegative ? 5000 : 4000 });
+  const duration = options?.firstTime ? (isNegative ? 6500 : 5500) : isNegative ? 5000 : 4000;
+  showToast(message, variant, { duration });
 }
 
 export function showOfflineToast(coins: number, capped?: boolean, hours?: number): void {

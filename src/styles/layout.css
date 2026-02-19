@@ -1,9 +1,173 @@
-/* Stats: no sticky on Mine tab (StatsBlock handles its own sticky/compact) */
-#app[data-active-tab="mine"] .stats {
-  position: static;
+/* Layout and shell: Tailwind @layer components (theme via @apply) */
+@layer components {
+  #app[data-active-tab="mine"] .stats {
+    @apply static;
+  }
+
+  .app-tabs {
+    @apply flex gap-1 mb-4 p-1 relative overflow-visible bg-card rounded-md border border-border;
+  }
+
+  .app-tabs-scroll {
+    @apply flex gap-1 flex-1 min-w-0 overflow-x-auto overflow-y-hidden flex-nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .app-tabs-scroll::-webkit-scrollbar {
+    height: 4px;
+  }
+  .app-tabs-scroll::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+  .app-tabs-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--text-dim);
+  }
+
+  .app-tab {
+    @apply flex-1 min-w-0 inline-flex items-center justify-center gap-[0.35em] py-2 px-1.5 border-none rounded-sm cursor-pointer transition-colors duration-200 font-display text-sm font-semibold tracking-wide text-foreground-muted bg-transparent;
+  }
+  .app-tab:hover {
+    @apply text-foreground bg-surface;
+  }
+  .app-tab--active {
+    @apply bg-primary text-background;
+  }
+  .app-tab--active .app-tab-key {
+    @apply text-background bg-white/25 border-white/40;
+  }
+  .app-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .app-tab > span:not(.app-tab-key) {
+    @apply whitespace-nowrap overflow-hidden text-ellipsis;
+  }
+
+  .app-tab-key {
+    @apply inline-flex items-center justify-center min-w-[1.25em] h-[1.25em] px-0.5 text-xs font-bold shrink-0 text-foreground-muted bg-black/25 border border-border rounded;
+  }
+
+  .app-tab--has-action:not(.app-tab--active) {
+    @apply text-success;
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+  }
+  .app-tab--has-action:not(.app-tab--active):hover {
+    @apply text-success;
+  }
+
+  .app-tabs-more-wrap {
+    @apply hidden shrink-0 relative overflow-visible;
+  }
+  .app-tabs-more-wrap--empty {
+    @apply !hidden;
+  }
+
+  .app-tab-more {
+    @apply min-w-10 text-lg leading-none py-2 px-2;
+  }
+  .app-tab-more--active,
+  .app-tab-more--active:hover {
+    @apply bg-primary text-background;
+  }
+  .app-tab-more--has-action.app-tab-more--active .app-tab-more-dots,
+  .app-tab-more--has-action.app-tab-more--expanded .app-tab-more-dots {
+    @apply text-success;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  }
+  .app-tab-more--has-action:not(.app-tab-more--active):not(.app-tab-more--expanded),
+  .app-tab-more--has-action:not(.app-tab-more--active):not(.app-tab-more--expanded):hover {
+    @apply text-success;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+  }
+
+  .app-tabs-menu {
+    @apply absolute top-full right-0 mt-1 min-w-40 p-1.5 flex flex-col gap-0.5 bg-surface border border-border rounded-sm z-40;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  .app-tabs-menu[hidden] {
+    @apply !hidden;
+  }
+
+  .app-tabs-menu-item {
+    @apply block w-full text-left font-display text-sm font-semibold tracking-wide py-2 px-3 rounded border-none bg-transparent text-foreground-muted cursor-pointer transition-colors duration-200;
+  }
+  .app-tabs-menu-item:hover {
+    @apply bg-card text-foreground;
+  }
+  .app-tabs-menu-item--active {
+    background: rgba(245, 158, 11, 0.2);
+    @apply text-primary border border-primary/40;
+  }
+  .app-tabs-menu-item--active:hover {
+    background: rgba(245, 158, 11, 0.3);
+    @apply text-primary;
+  }
+  .app-tabs-menu-item--has-action:not(.app-tabs-menu-item--active) {
+    @apply text-success;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+  }
+  .app-tabs-menu-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .app-tabs-menu-item {
+    @apply hidden;
+  }
+
+  .app-tabs-bottom {
+    @apply hidden;
+  }
+
+  .app-tab-panel {
+    @apply hidden;
+  }
+  .app-tab-panel--active {
+    @apply block;
+  }
+  .app-tab-panel .quest-section,
+  .app-tab-panel .dashboard-section,
+  .app-tab-panel .prestige-section,
+  .app-tab-panel .crew-section,
+  .app-tab-panel .planets-section,
+  .app-tab-panel .housing-section,
+  .app-tab-panel .research-section,
+  .app-tab-panel .upgrades-section,
+  .app-tab-panel .statistics-section {
+    @apply mb-6;
+  }
+  #app[data-layout="one-page"] .app-tab-panel {
+    @apply block;
+  }
+  #app[data-layout="one-page"] .quest-section,
+  #app[data-layout="one-page"] .dashboard-section,
+  #app[data-layout="one-page"] .prestige-section,
+  #app[data-layout="one-page"] .crew-section,
+  #app[data-layout="one-page"] .planets-section,
+  #app[data-layout="one-page"] .research-section,
+  #app[data-layout="one-page"] .upgrades-section,
+  #app[data-layout="one-page"] .statistics-section {
+    @apply mb-7;
+  }
+  #app[data-layout="one-page"] .planets-section,
+  #app[data-layout="one-page"] .prestige-section {
+    @apply border-t border-border pt-4 mt-1;
+  }
+  .app-tab-panel .mine-zone {
+    @apply mb-6;
+  }
+  #app[data-layout="tabs"] .gameplay-block-body {
+    @apply max-h-none overflow-visible;
+  }
+  #app[data-layout="one-page"] .gameplay-block-body {
+    @apply overflow-y-auto overflow-x-hidden;
+    max-height: min(65vh, 520px);
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
-/* App container responsive */
+/* Responsive: #app padding */
 @media (max-width: 360px) {
   #app {
     padding: 0.5rem;
@@ -11,559 +175,153 @@
     padding-right: max(0.5rem, env(safe-area-inset-right));
   }
 }
-
 @media (min-width: 361px) and (max-width: 767px) {
   #app {
-    padding: 1rem;
+    @apply p-4;
   }
 }
-
 @media (min-width: 768px) and (max-width: 1023px) {
   #app {
-    max-width: 720px;
-    padding: 1.5rem 2rem;
+    @apply max-w-[720px] px-8 py-6;
   }
 }
-
 @media (min-width: 1024px) {
   #app {
-    max-width: 640px;
-    padding: 2rem;
+    @apply max-w-[640px] p-8;
   }
 }
 
-/* Tabs: scroll in inner wrap so dropdown menu is not clipped */
-.app-tabs {
-  display: flex;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
-  padding: 0.25rem;
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  overflow: visible;
-  position: relative;
-}
-
-.app-tabs-scroll {
-  display: flex;
-  gap: 0.25rem;
-  flex: 1 1 0;
-  min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-.app-tabs-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-.app-tabs-scroll::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 2px;
-}
-.app-tabs-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
-}
-
-.app-tab {
-  flex: 1 1 0;
-  min-width: 0;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 0.5rem 0.4rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35em;
-}
-
-.app-tab-key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.25em;
-  height: 1.25em;
-  padding: 0 0.2em;
-  font-size: 0.75em;
-  font-weight: 700;
-  color: var(--text-dim);
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-
-.app-tab--active .app-tab-key {
-  color: var(--bg-dark);
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-.app-tab:hover {
-  color: var(--text);
-  background: var(--bg-panel);
-}
-
-.app-tab--active {
-  background: var(--accent);
-  color: var(--bg-dark);
-}
-
-.app-tab:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.app-tabs-scroll {
-  flex-wrap: nowrap;
-}
-
-.app-tab > span:not(.app-tab-key) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.app-tab-key {
-  flex-shrink: 0;
-}
-
-/* Tab has something to do: highlight text (no extra element, so no layout shift) */
-.app-tab--has-action:not(.app-tab--active) {
-  color: var(--success);
-  text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
-}
-
-.app-tab--has-action:not(.app-tab--active):hover {
-  color: var(--success);
-}
-
-/* "More" menu: hidden by default (wide screens show all tabs) */
-.app-tabs-more-wrap {
-  display: none;
-  flex-shrink: 0;
-  position: relative;
-  overflow: visible;
-}
-
-/* Hide ⋯ when dropdown would be empty (no unlocked tabs in overflow) */
-.app-tabs-more-wrap--empty {
-  display: none !important;
-}
-
-.app-tab-more {
-  min-width: 2.5rem;
-  font-size: 1.1rem;
-  line-height: 1;
-  padding: 0.5rem 0.5rem;
-}
-
-.app-tab-more--active {
-  background: var(--accent);
-  color: var(--bg-dark);
-}
-
-.app-tab-more--active:hover {
-  background: var(--accent);
-  color: var(--bg-dark);
-}
-
-/* Orange background when selected; only the dots in green when a tab in the menu has a potential action */
-.app-tab-more--has-action.app-tab-more--active .app-tab-more-dots,
-.app-tab-more--has-action.app-tab-more--expanded .app-tab-more-dots {
-  color: var(--success);
-  text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
-}
-
-/* ⋯ green when a tab in the overflow menu has a potential action (menu closed, active tab visible) */
-.app-tab-more--has-action:not(.app-tab-more--active):not(.app-tab-more--expanded) {
-  color: var(--success);
-  text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
-}
-
-.app-tab-more--has-action:not(.app-tab-more--active):not(.app-tab-more--expanded):hover {
-  color: var(--success);
-}
-
-.app-tabs-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.25rem;
-  min-width: 10rem;
-  padding: 0.35rem;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.app-tabs-menu[hidden] {
-  display: none !important;
-}
-
-.app-tabs-menu-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 0.5rem 0.75rem;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.app-tabs-menu-item:hover {
-  background: var(--bg-card);
-  color: var(--text);
-}
-
-.app-tabs-menu-item--active {
-  background: rgba(245, 158, 11, 0.2);
-  color: var(--accent);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-}
-
-.app-tabs-menu-item--active:hover {
-  background: rgba(245, 158, 11, 0.3);
-  color: var(--accent);
-}
-
-.app-tabs-menu-item--has-action:not(.app-tabs-menu-item--active) {
-  color: var(--success);
-  text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
-}
-
-.app-tabs-menu-item:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Menu items: show only when their tab is hidden (same breakpoints as below).
-   Order follows tab order: Dashboard, Empire, Research, Upgrades, Stats. */
-.app-tabs-menu-item {
-  display: none;
-}
-
+/* Tabs overflow: show menu items when tab is hidden */
 @media (max-width: 620px) {
   .app-tabs-menu-item[data-tab="stats"] {
-    display: block;
+    @apply block;
   }
-}
-
-@media (max-width: 520px) {
-  .app-tabs-menu-item[data-tab="upgrades"] {
-    display: block;
-  }
-}
-
-@media (max-width: 440px) {
-  .app-tabs-menu-item[data-tab="research"] {
-    display: block;
-  }
-}
-
-@media (max-width: 360px) {
-  .app-tabs-menu-item[data-tab="empire"] {
-    display: block;
-  }
-}
-
-@media (max-width: 320px) {
-  .app-tabs-menu-item[data-tab="dashboard"] {
-    display: block;
-  }
-}
-
-/* Progressive: hide tabs from the right as width shrinks (Stats → Upgrades → Research → Empire → Dashboard) */
-@media (max-width: 620px) {
   .app-tab[data-tab="stats"] {
-    display: none !important;
+    @apply !hidden;
   }
   .app-tabs-more-wrap {
-    display: block !important;
+    @apply !block;
   }
 }
-
 @media (max-width: 520px) {
+  .app-tabs-menu-item[data-tab="upgrades"] {
+    @apply block;
+  }
   .app-tab[data-tab="upgrades"] {
-    display: none !important;
+    @apply !hidden;
   }
 }
-
 @media (max-width: 440px) {
+  .app-tabs-menu-item[data-tab="research"] {
+    @apply block;
+  }
   .app-tab[data-tab="research"] {
-    display: none !important;
+    @apply !hidden;
   }
 }
-
 @media (max-width: 360px) {
+  .app-tabs-menu-item[data-tab="empire"] {
+    @apply block;
+  }
   .app-tab[data-tab="empire"] {
-    display: none !important;
+    @apply !hidden;
   }
 }
-
 @media (max-width: 320px) {
+  .app-tabs-menu-item[data-tab="dashboard"] {
+    @apply block;
+  }
   .app-tab[data-tab="dashboard"] {
-    display: none !important;
+    @apply !hidden;
   }
   .app-tab[data-tab="mine"] {
-    flex: 1 1 auto;
-    min-width: 0;
+    @apply flex-1 min-w-0;
   }
 }
 
-/* Bottom nav: only on small screens for thumb-friendly Mine / Empire / More */
-.app-tabs-bottom {
-  display: none;
-}
-
+/* Bottom nav @ 480px */
 @media (max-width: 480px) {
-  /* Hide top tabs and keyboard hint when bottom nav is shown */
   .app-tabs,
   #keyboard-hint,
   .keyboard-hint.keyboard-hint--below-tabs {
-    display: none !important;
+    @apply !hidden;
   }
-
   .app-tabs-bottom {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    padding: 0.5rem;
+    @apply flex fixed bottom-0 left-0 right-0 z-50 p-2 gap-2 items-center bg-card border-t border-border;
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-    gap: 0.5rem;
-    background: var(--bg-card);
-    border-top: 1px solid var(--border);
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-    align-items: center;
   }
-
   .app-tab-bottom {
-    flex: 1;
-    min-height: 48px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    padding: 0.6rem 0.5rem;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: var(--bg-panel);
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    @apply flex-1 min-h-12 font-display text-base font-semibold tracking-wide py-2.5 px-2.5 border-none rounded-sm cursor-pointer transition-colors duration-200 bg-surface text-foreground-muted;
   }
-
   .app-tab-bottom:hover {
-    background: var(--bg-dark);
-    color: var(--text);
+    @apply bg-background text-foreground;
   }
-
   .app-tab-bottom--active {
-    background: var(--accent);
-    color: var(--bg-dark);
+    @apply bg-primary text-background;
   }
-
   .app-tab-bottom-more {
-    flex: 0 0 auto;
-    min-width: 3rem;
+    @apply shrink-0 min-w-12;
   }
-
   .app-tab-bottom-more--active {
-    background: var(--accent);
-    color: var(--bg-dark);
+    @apply bg-primary text-background;
   }
-
-  /* Orange background when selected; only the dots in green when a tab has a potential action */
   .app-tab-bottom-more--has-action.app-tab-bottom-more--active .app-tab-more-dots,
   .app-tab-bottom-more--has-action.app-tab-bottom-more--expanded .app-tab-more-dots {
-    color: var(--success);
+    @apply text-success;
     text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
   }
-
-  /* Bottom ⋯ green when an item in the menu has a potential action (menu closed) */
-  .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active):not(.app-tab-bottom-more--expanded) {
-    color: var(--success);
-    text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
-  }
-
+  .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active):not(.app-tab-bottom-more--expanded),
   .app-tab-bottom-more--has-action:not(.app-tab-bottom-more--active):not(.app-tab-bottom-more--expanded):hover {
-    color: var(--success);
-  }
-
-  .app-tab-bottom--has-action:not(.app-tab-bottom--active) {
-    color: var(--success);
+    @apply text-success;
     text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
   }
-
-  .app-tab-bottom--has-action:not(.app-tab-bottom--active):hover {
-    color: var(--success);
+  .app-tab-bottom--has-action:not(.app-tab-bottom--active) {
+    @apply text-success;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
   }
-
+  .app-tab-bottom--has-action:not(.app-tab-bottom--active):hover {
+    @apply text-success;
+  }
   .app-tab-bottom:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
-
   .app-tabs-bottom-more-wrap {
-    position: relative;
-    flex-shrink: 0;
+    @apply relative shrink-0;
   }
-
   .app-tabs-bottom-more-wrap--empty {
-    display: none !important;
+    @apply !hidden;
   }
-
   .app-tabs-bottom-menu {
-    position: absolute;
-    bottom: 100%;
-    right: 0;
-    margin-bottom: 0.25rem;
-    min-width: 10rem;
-    padding: 0.35rem;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    @apply absolute bottom-full right-0 mb-1 min-w-40 p-1.5 flex flex-col gap-0.5 bg-surface border border-border rounded-sm z-[51];
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    z-index: 51;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
   }
-
   .app-tabs-bottom-menu[hidden] {
-    display: none !important;
+    @apply !hidden;
   }
-
   .app-tabs-bottom-menu-item {
-    display: block;
-    width: 100%;
-    text-align: left;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    padding: 0.5rem 0.75rem;
-    border: none;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    @apply block w-full text-left font-display text-sm font-semibold tracking-wide py-2 px-3 rounded border-none bg-transparent text-foreground-muted cursor-pointer transition-colors duration-200;
   }
-
   .app-tabs-bottom-menu-item:hover {
-    background: var(--bg-card);
-    color: var(--text);
+    @apply bg-card text-foreground;
   }
-
   .app-tabs-bottom-menu-item--active {
     background: rgba(245, 158, 11, 0.2);
-    color: var(--accent);
-    border: 1px solid rgba(245, 158, 11, 0.4);
+    @apply text-primary border border-primary/40;
   }
-
   .app-tabs-bottom-menu-item--has-action:not(.app-tabs-bottom-menu-item--active) {
-    color: var(--success);
+    @apply text-success;
     text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
   }
-
   .app-tabs-bottom-menu-item--has-action:not(.app-tabs-bottom-menu-item--active):hover {
-    color: var(--success);
-    background: var(--bg-card);
+    @apply text-success bg-card;
   }
-
   .app-tabs-bottom-menu-item:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
-
-  /* Spacer so content is not hidden behind fixed bottom nav */
   #app {
     padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
-}
-
-.app-tab-panel {
-  display: none;
-}
-
-.app-tab-panel--active {
-  display: block;
-}
-
-.app-tab-panel .quest-section,
-.app-tab-panel .dashboard-section,
-.app-tab-panel .prestige-section,
-.app-tab-panel .crew-section,
-.app-tab-panel .planets-section,
-.app-tab-panel .housing-section,
-.app-tab-panel .research-section,
-.app-tab-panel .upgrades-section,
-.app-tab-panel .statistics-section {
-  margin-bottom: 1.5rem;
-}
-
-/* One-page layout: show all panels (no tab switching) */
-#app[data-layout="one-page"] .app-tab-panel {
-  display: block;
-}
-
-/* One-page layout: more separation between blocks */
-#app[data-layout="one-page"] .quest-section,
-#app[data-layout="one-page"] .dashboard-section,
-#app[data-layout="one-page"] .prestige-section,
-#app[data-layout="one-page"] .crew-section,
-#app[data-layout="one-page"] .planets-section,
-#app[data-layout="one-page"] .research-section,
-#app[data-layout="one-page"] .upgrades-section,
-#app[data-layout="one-page"] .statistics-section {
-  margin-bottom: 1.75rem;
-}
-
-#app[data-layout="one-page"] .planets-section,
-#app[data-layout="one-page"] .prestige-section {
-  border-top: 1px solid var(--border);
-  padding-top: 1rem;
-  margin-top: 0.25rem;
-}
-
-.app-tab-panel .mine-zone {
-  margin-bottom: 1.5rem;
-}
-
-/* Tab layout: body content flows normally, page scrolls */
-#app[data-layout="tabs"] .gameplay-block-body {
-  max-height: none;
-  overflow: visible;
-}
-
-/* One-page layout: only the inner body of each section scrolls (header stays fixed) */
-#app[data-layout="one-page"] .gameplay-block-body {
-  max-height: min(65vh, 520px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
 }

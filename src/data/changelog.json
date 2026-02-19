@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.2",
+    "date": "2026-02",
+    "changes": [
+      "Tailwind CSS v4 integrated: @tailwindcss/vite, @theme design tokens (colors, fonts, radius), global styles in @layer base, layout and utilities in @layer components; base.css removed."
+    ]
+  },
+  {
+    "version": "0.5.1",
+    "date": "2026-02",
+    "changes": [
+      "Events: first time an event type is seen, toast shows one-line effect plus optional lore (from i18n catalogs); event types seen tracked in save (discoveredEventIds)."
+    ]
+  },
+  {
     "version": "0.5.0",
     "date": "2026-02",
     "changes": [

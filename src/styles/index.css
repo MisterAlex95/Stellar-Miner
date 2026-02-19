@@ -1,6 +1,119 @@
-/* Stellar Miner — split styles entry point */
+@import "tailwindcss";
+
+/* Theme tokens: wire Tailwind utilities to CSS variables (theme switching stays in variables.css) */
+@theme {
+  --color-background: var(--bg-dark);
+  --color-surface: var(--bg-panel);
+  --color-card: var(--bg-card);
+  --color-border: var(--border);
+  --color-foreground: var(--text);
+  --color-foreground-muted: var(--text-dim);
+  --color-primary: var(--accent);
+  --color-success: var(--success);
+  --color-muted: var(--muted);
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Exo 2', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-panel: 0 4px 24px rgba(0, 0, 0, 0.25);
+}
+
 @import './variables.css';
-@import './base.css';
+@import './theme.css';
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  button:disabled,
+  [role="button"]:disabled,
+  .add-slot-btn:disabled,
+  .build-housing-btn:disabled,
+  .buy-planet-btn:disabled,
+  .hire-astronaut-btn:disabled,
+  .prestige-btn:disabled,
+  .quest-claim-btn:disabled,
+  .research-attempt-btn:disabled,
+  .upgrade-btn:disabled {
+    @apply cursor-not-allowed text-foreground-muted;
+  }
+
+  .quest-claim-btn,
+  .prestige-btn,
+  .hire-astronaut-btn,
+  .add-slot-btn,
+  .build-housing-btn,
+  .buy-planet-btn,
+  .upgrade-btn,
+  .research-attempt-btn {
+    @apply min-h-[44px] py-2;
+  }
+
+  html {
+    @apply overflow-x-hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply m-0 min-h-screen text-foreground font-body font-normal overflow-x-hidden;
+    min-height: 100dvh;
+    background: var(--bg-dark);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, var(--accent-glow), transparent),
+      radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.06), transparent),
+      radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.04), transparent);
+  }
+
+  #starfield-canvas {
+    @apply fixed inset-0 -z-[1] pointer-events-none block;
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+  }
+
+  canvas {
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+  }
+
+  #app {
+    @apply relative z-0 max-w-[560px] mx-auto;
+    padding: 1.5rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  h1 {
+    @apply font-display font-extrabold text-primary m-0;
+    font-size: 1.75rem;
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 24px var(--accent-glow);
+  }
+
+  .subtitle {
+    @apply text-sm text-foreground-muted mt-1;
+  }
+
+  #app.app--shake {
+    animation: app-shake 0.4s ease-out;
+  }
+}
+
+@keyframes app-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-4px, 2px); }
+  40% { transform: translate(3px, -3px); }
+  60% { transform: translate(-2px, 2px); }
+  80% { transform: translate(2px, -1px); }
+}
+
 @import './layout.css';
 @import './utilities.css';
-@import './theme.css';

@@ -244,6 +244,46 @@ const eventNamesFr: Record<string, string> = {
   'ion-storm': 'Tempête ionique',
 };
 
+const eventFlavorEn: Record<string, string> = {
+  'meteor-storm': 'The belt rains ore—strike while the sky burns.',
+  'solar-flare': 'Radiation spike from the star. Ride it while it lasts.',
+  'rich-vein': 'Sensors light up. A mother lode; the crew whoops over the comms.',
+  'void-bonus': 'A rare calm patch in the void. Steady, quiet yield.',
+  'lucky-strike': 'Sometimes the belt just gives. Today the dice roll your way.',
+  'asteroid-rush': 'A wave of rock sweeps through. The harvest is good for as long as it lasts.',
+  'solar-wind': 'Steady push from the star. Nothing fancy—just a bit more throughput.',
+  'comet-tail': 'Ices and dust in the wake. Processors and extractors love the extra feedstock.',
+  'nebula-bloom': 'Strange particles drift through. The gear hums a little happier.',
+  'mining-bonanza': 'Everything aligns: ore, gear, and crew. The kind of run the old hands tell stories about.',
+  'dust-storm': 'Grit in the gears and static on the screens. Output drops until it blows past.',
+  'solar-eclipse': 'The star slips behind something big. Power and morale dip in the dim.',
+  'equipment-malfunction': 'Something blew—overload or bad luck. Reduced output until the bots patch it.',
+  'power-drain': 'Systems are sucking juice; running on fumes for a bit.',
+  'communications-blackout': 'No telemetry, no sync with Mission Control. We go blind until the link comes back.',
+  'debris-field': 'Navigating junk and old wreckage. Slower going, fewer clean passes.',
+  'ion-storm': 'Electromagnetic hell. Systems stutter; we ride it out and hope nothing fries.',
+};
+
+const eventFlavorFr: Record<string, string> = {
+  'meteor-storm': "La ceinture pleut du minerai—frappez tant que le ciel brûle.",
+  'solar-flare': "Pic de radiation de l'étoile. Profitez-en tant que ça dure.",
+  'rich-vein': "Les capteurs s'allument. Un filon mère; l'équipage exulte sur les comms.",
+  'void-bonus': 'Une rare accalmie dans le vide. Rendement stable et silencieux.',
+  'lucky-strike': "Parfois la ceinture donne. Aujourd'hui les dés roulent pour vous.",
+  'asteroid-rush': 'Une vague de roche déferle. La moisson est bonne tant que ça dure.',
+  'solar-wind': "Poussée régulière de l'étoile. Rien de fou—un peu plus de débit.",
+  'comet-tail': 'Glaces et poussière dans le sillage. Les processeurs adorent la matière en plus.',
+  'nebula-bloom': "Des particules étranges dérivent. L'équipement ronronne un peu plus.",
+  'mining-bonanza': "Tout s'aligne: minerai, équipement, équipage. Le genre de run dont on parle.",
+  'dust-storm': "Grains dans les engrenages et neige sur les écrans. Baisse de rendement jusqu'à ce que ça passe.",
+  'solar-eclipse': "L'étoile passe derrière quelque chose de gros. Énergie et moral en baisse.",
+  'equipment-malfunction': "Quelque chose a lâché—surcharge ou malchance. Rendement réduit jusqu'au dépannage.",
+  'power-drain': 'Les systèmes pompent le jus; on tourne sur les réserves un moment.',
+  'communications-blackout': "Plus de télémétrie, plus de sync avec le centre. On est aveugles jusqu'au retour du lien.",
+  'debris-field': "Navigation dans les débris et l'épave. Moins vite, moins de passes propres.",
+  'ion-storm': 'Enfer électromagnétique. Les systèmes hoquettent; on tient bon et on espère que rien ne grille.',
+};
+
 const achievementNamesEn: Record<string, string> = {
   'first-click': 'First steps',
   'clicks-100': 'Clicker',

@@ -16,7 +16,7 @@ export interface PresentationPort {
   showMilestoneToast(coins: number): void;
   showPrestigeMilestoneToast(level: number, pct?: number): void;
   showQuestStreakToast(streak: number, mult: number): void;
-  showEventToast(gameEvent: GameEvent): void;
+  showEventToast(gameEvent: GameEvent, options?: { firstTime?: boolean }): void;
   showFloatingReward(amount: number, anchor: HTMLElement): void;
   /** Quest claim button element for floating reward (Vue sets via store). */
   getQuestClaimAnchor(): HTMLElement | null;
@@ -98,7 +98,7 @@ function noopNumNum(_n: number, _m: number): void {}
 function noopNumEl(_a: number, _e: HTMLElement): void {}
 function noopNumXY(_a: number, _x: number, _y: number, _o?: unknown): void {}
 function noopStrStrOpt(_m: string, _v: string, _o?: unknown): void {}
-function noopEvent(_e: GameEvent): void {}
+function noopEvent(_e: GameEvent, _o?: { firstTime?: boolean }): void {}
 function noopStrStrOpt2(_id: string, _cls: string, _o?: unknown): void {}
 function noopStrStr(_: string, __: string, _gain?: string): void {}
 function noopStrArr(_: string[]): void {}

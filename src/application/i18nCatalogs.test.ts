@@ -6,6 +6,7 @@ import {
   getCatalogResearchName,
   getCatalogResearchDesc,
   getCatalogEventName,
+  getEventFlavor,
   getCatalogAchievementName,
   getCatalogComboName,
   getCatalogPlanetName,
@@ -48,6 +49,15 @@ describe('i18nCatalogs', () => {
 
   it('getCatalogEventName returns name', () => {
     expect(getCatalogEventName('meteor-storm')).toBeDefined();
+  });
+
+  it('getEventFlavor returns lore for known event id', () => {
+    expect(getEventFlavor('meteor-storm')).toContain('belt rains ore');
+    expect(getEventFlavor('solar-flare')).toBeDefined();
+  });
+
+  it('getEventFlavor returns empty string for unknown id', () => {
+    expect(getEventFlavor('unknown-event-id')).toBe('');
   });
 
   it('getCatalogAchievementName returns name', () => {

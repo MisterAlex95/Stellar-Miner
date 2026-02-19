@@ -631,23 +631,24 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   }
 }
 
-/* Gameplay blocks (sections) */
-.gameplay-block--locked {
+/* Gameplay blocks (sections). :deep() so Empire panel (EmpireSection inside EmpirePanel) gets same styles. */
+:deep(.gameplay-block--locked) {
   display: none !important;
 }
 
-.gameplay-block--unlocked {
+:deep(.gameplay-block--unlocked) {
   display: block;
 }
 
-.prestige-section,
-.crew-section,
-.quest-section,
-.planets-section,
-.housing-section,
-.research-section,
-.upgrades-section,
-.statistics-section {
+/* :deep() so Empire panel sections (crew, planets, prestige) get same style when rendered inside EmpirePanel.vue */
+:deep(.prestige-section),
+:deep(.crew-section),
+:deep(.quest-section),
+:deep(.planets-section),
+:deep(.housing-section),
+:deep(.research-section),
+:deep(.upgrades-section),
+:deep(.statistics-section) {
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -656,7 +657,7 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   box-shadow: var(--panel-shadow);
 }
 
-.gameplay-block-header {
+:deep(.gameplay-block-header) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -666,14 +667,14 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   user-select: none;
 }
 
-.gameplay-block-header-actions {
+:deep(.gameplay-block-header-actions) {
   display: flex;
   align-items: center;
   gap: 0.25rem;
   flex-shrink: 0;
 }
 
-.gameplay-block-rules-btn {
+:deep(.gameplay-block-rules-btn) {
   width: 1.5rem;
   height: 1.5rem;
   padding: 0;
@@ -691,50 +692,50 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   transition: background 0.2s, color 0.2s;
 }
 
-.gameplay-block-rules-btn:hover {
+:deep(.gameplay-block-rules-btn:hover) {
   background: var(--accent);
   color: var(--bg);
 }
 
-.gameplay-block .gameplay-block-header h2 {
+:deep(.gameplay-block .gameplay-block-header h2) {
   margin-bottom: 0;
   flex: 1;
   min-width: 0;
 }
 
-.gameplay-block-summary {
+:deep(.gameplay-block-summary) {
   font-size: 0.75rem;
   color: var(--text-dim);
   margin-left: 0.35rem;
   flex-shrink: 0;
 }
 
-.gameplay-block-summary:empty {
+:deep(.gameplay-block-summary:empty) {
   display: none;
 }
 
-.gameplay-block--collapsed .gameplay-block-summary:not(:empty) {
+:deep(.gameplay-block--collapsed .gameplay-block-summary:not(:empty)) {
   font-weight: 600;
   color: var(--text);
 }
 
-.gameplay-block-body {
+:deep(.gameplay-block-body) {
   margin-top: 0.5rem;
 }
 
-.crew-hint,
-.planets-hint,
-.prestige-hint,
-.research-hint,
-.upgrades-hint {
+:deep(.crew-hint),
+:deep(.planets-hint),
+:deep(.prestige-hint),
+:deep(.research-hint),
+:deep(.upgrades-hint) {
   white-space: pre-line;
 }
 
-.gameplay-block--collapsed .gameplay-block-body {
+:deep(.gameplay-block--collapsed .gameplay-block-body) {
   display: none;
 }
 
-.gameplay-block-toggle {
+:deep(.gameplay-block-toggle) {
   flex-shrink: 0;
   width: 2rem;
   height: 2rem;
@@ -750,35 +751,35 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   transition: background 0.2s, color 0.2s;
 }
 
-.gameplay-block-toggle:hover {
+:deep(.gameplay-block-toggle:hover) {
   background: var(--bg-card);
   color: var(--text);
 }
 
-.gameplay-block-toggle:focus-visible {
+:deep(.gameplay-block-toggle:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.gameplay-block-toggle-icon {
+:deep(.gameplay-block-toggle-icon) {
   display: inline-block;
   font-size: 0.65rem;
   line-height: 1;
   transition: transform 0.2s ease;
 }
 
-.gameplay-block--collapsed .gameplay-block-toggle-icon {
+:deep(.gameplay-block--collapsed .gameplay-block-toggle-icon) {
   transform: rotate(-90deg);
 }
 
-.crew-section h2,
-.planets-section h2,
-.housing-section h2,
-.research-section h2,
-.upgrades-section h2,
-.prestige-section h2,
-.quest-section h2,
-.statistics-section h2 {
+:deep(.crew-section h2),
+:deep(.planets-section h2),
+:deep(.housing-section h2),
+:deep(.research-section h2),
+:deep(.upgrades-section h2),
+:deep(.prestige-section h2),
+:deep(.quest-section h2),
+:deep(.statistics-section h2) {
   font-family: 'Orbitron', sans-serif;
   font-size: 1rem;
   font-weight: 600;
@@ -790,14 +791,14 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   margin-bottom: 0.5rem;
 }
 
-.crew-section h2::after,
-.planets-section h2::after,
-.housing-section h2::after,
-.research-section h2::after,
-.upgrades-section h2::after,
-.prestige-section h2::after,
-.quest-section h2::after,
-.statistics-section h2::after {
+:deep(.crew-section h2::after),
+:deep(.planets-section h2::after),
+:deep(.housing-section h2::after),
+:deep(.research-section h2::after),
+:deep(.upgrades-section h2::after),
+:deep(.prestige-section h2::after),
+:deep(.quest-section h2::after),
+:deep(.statistics-section h2::after) {
   content: '';
   display: block;
   position: absolute;
@@ -808,20 +809,20 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   background: var(--accent);
 }
 
-.prestige-hint {
+:deep(.prestige-hint) {
   font-size: 0.85rem;
   color: var(--text-dim);
   margin: 0 0 0.75rem 0;
   line-height: 1.5;
 }
 
-.prestige-status {
+:deep(.prestige-status) {
   font-size: 0.85rem;
   color: var(--text);
   margin-bottom: 0.75rem;
 }
 
-.prestige-btn {
+:deep(.prestige-btn) {
   font-family: 'Exo 2', sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
@@ -834,22 +835,22 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
-.prestige-btn:hover:not(:disabled) {
+:deep(.prestige-btn:hover:not(:disabled)) {
   background: rgba(245, 158, 11, 0.25);
   box-shadow: 0 0 16px var(--accent-glow);
 }
 
-.prestige-btn:disabled {
+:deep(.prestige-btn:disabled) {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.prestige-btn:focus-visible {
+:deep(.prestige-btn:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.prestige-btn--just-unlocked {
+:deep(.prestige-btn--just-unlocked) {
   animation: prestige-just-unlocked 1.5s ease-out;
 }
 
@@ -859,28 +860,28 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   100% { box-shadow: 0 0 16px var(--accent-glow); }
 }
 
-.crew-hint {
+:deep(.crew-hint) {
   font-size: 0.85rem;
   color: var(--text-dim);
   margin: 0 0 0.75rem 0;
   line-height: 1.5;
 }
 
-.research-hint {
+:deep(.research-hint) {
   font-size: 0.8rem;
   color: var(--text-dim);
   margin: 0 0 0.75rem 0;
   line-height: 1.5;
 }
 
-.upgrades-hint {
+:deep(.upgrades-hint) {
   font-size: 0.8rem;
   color: var(--text-dim);
   margin: 0 0 1rem 0;
   line-height: 1.5;
 }
 
-.crew-capacity-wrap {
+:deep(.crew-capacity-wrap) {
   height: 8px;
   background: var(--bg-card);
   border-radius: 4px;
@@ -888,7 +889,7 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   margin-bottom: 0.5rem;
 }
 
-.crew-capacity-fill {
+:deep(.crew-capacity-fill) {
   height: 100%;
   width: 0%;
   display: flex;
@@ -898,7 +899,7 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   position: relative;
 }
 
-.crew-capacity-fill::after {
+:deep(.crew-capacity-fill::after) {
   content: '';
   position: absolute;
   inset: 0;
@@ -916,60 +917,60 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   pointer-events: none;
 }
 
-.crew-capacity-segment {
+:deep(.crew-capacity-segment) {
   height: 100%;
   min-width: 0;
   transition: width 0.25s ease-out;
 }
 
-.crew-capacity-segment--astronaut {
+:deep(.crew-capacity-segment--astronaut) {
   background: var(--crew-astronaut);
 }
 
-.crew-capacity-segment--astronaut:first-child {
+:deep(.crew-capacity-segment--astronaut:first-child) {
   border-radius: 4px 0 0 4px;
 }
 
-.crew-capacity-segment--miner {
+:deep(.crew-capacity-segment--miner) {
   background: var(--crew-miner);
 }
 
-.crew-capacity-segment--scientist {
+:deep(.crew-capacity-segment--scientist) {
   background: var(--crew-scientist);
 }
 
-.crew-capacity-segment--pilot {
+:deep(.crew-capacity-segment--pilot) {
   background: var(--crew-pilot);
 }
 
-.crew-capacity-segment--medic {
+:deep(.crew-capacity-segment--medic) {
   background: var(--crew-medic);
 }
 
-.crew-capacity-segment--engineer {
+:deep(.crew-capacity-segment--engineer) {
   background: var(--crew-engineer);
 }
 
-.crew-capacity-segment--equipment {
+:deep(.crew-capacity-segment--equipment) {
   background: var(--crew-equipment);
 }
 
-.crew-capacity-segment--free {
+:deep(.crew-capacity-segment--free) {
   background: var(--crew-free);
 }
 
-.crew-capacity-segment--free:last-child {
+:deep(.crew-capacity-segment--free:last-child) {
   border-radius: 0 4px 4px 0;
 }
 
-.crew-summary {
+:deep(.crew-summary) {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text);
   margin: 0 0 0.75rem 0;
 }
 
-.crew-role-cards {
+:deep(.crew-role-cards) {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.75rem;
@@ -977,12 +978,12 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
 }
 
 @media (min-width: 520px) {
-  .crew-role-cards {
+  :deep(.crew-role-cards) {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-.crew-role-card {
+:deep(.crew-role-card) {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -992,46 +993,46 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   gap: 0.5rem;
 }
 
-.crew-role-card--astronaut {
+:deep(.crew-role-card--astronaut) {
   border-left: 3px solid var(--crew-astronaut);
 }
 
-.crew-role-card--miner,
-.crew-role-card--scientist,
-.crew-role-card--pilot,
-.crew-role-card--medic,
-.crew-role-card--engineer {
+:deep(.crew-role-card--miner),
+:deep(.crew-role-card--scientist),
+:deep(.crew-role-card--pilot),
+:deep(.crew-role-card--medic),
+:deep(.crew-role-card--engineer) {
   display: none;
 }
 
-.crew-role-card--miner.crew-role-card--unlocked,
-.crew-role-card--scientist.crew-role-card--unlocked,
-.crew-role-card--pilot.crew-role-card--unlocked,
-.crew-role-card--medic.crew-role-card--unlocked,
-.crew-role-card--engineer.crew-role-card--unlocked {
+:deep(.crew-role-card--miner.crew-role-card--unlocked),
+:deep(.crew-role-card--scientist.crew-role-card--unlocked),
+:deep(.crew-role-card--pilot.crew-role-card--unlocked),
+:deep(.crew-role-card--medic.crew-role-card--unlocked),
+:deep(.crew-role-card--engineer.crew-role-card--unlocked) {
   display: flex;
 }
 
-.crew-role-card--miner { border-left: 3px solid var(--crew-miner); }
-.crew-role-card--scientist { border-left: 3px solid var(--crew-scientist); }
-.crew-role-card--pilot { border-left: 3px solid var(--crew-pilot); }
-.crew-role-card--medic { border-left: 3px solid var(--crew-medic); }
-.crew-role-card--engineer { border-left: 3px solid var(--crew-engineer); }
+:deep(.crew-role-card--miner) { border-left: 3px solid var(--crew-miner); }
+:deep(.crew-role-card--scientist) { border-left: 3px solid var(--crew-scientist); }
+:deep(.crew-role-card--pilot) { border-left: 3px solid var(--crew-pilot); }
+:deep(.crew-role-card--medic) { border-left: 3px solid var(--crew-medic); }
+:deep(.crew-role-card--engineer) { border-left: 3px solid var(--crew-engineer); }
 
-.crew-role-card-header {
+:deep(.crew-role-card-header) {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem;
 }
 
-.crew-role-card-name {
+:deep(.crew-role-card-name) {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text);
 }
 
-.crew-role-card-count {
+:deep(.crew-role-card-count) {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-dim);
@@ -1039,20 +1040,20 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   text-align: right;
 }
 
-.crew-role-card-effect {
+:deep(.crew-role-card-effect) {
   font-size: 0.8rem;
   color: var(--text-dim);
   line-height: 1.35;
   min-height: 1.2em;
 }
 
-.crew-role-card :deep(.btn-tooltip-wrap) {
+:deep(.crew-role-card .btn-tooltip-wrap) {
   display: block;
   min-width: 0;
   margin-top: auto;
 }
 
-.crew-in-modules {
+:deep(.crew-in-modules) {
   font-size: 0.85rem;
   color: var(--text-dim);
   background: var(--bg-card);
@@ -1063,19 +1064,19 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   line-height: 1.35;
 }
 
-.crew-veterans {
+:deep(.crew-veterans) {
   font-size: 0.8rem;
   color: var(--text-dim);
   margin: 0 0 0.5rem 0;
   line-height: 1.35;
 }
 
-.crew-veterans:not([style*="display: none"]) {
+:deep(.crew-veterans:not([style*="display: none"])) {
   color: var(--accent);
   font-weight: 500;
 }
 
-.hire-astronaut-btn {
+:deep(.hire-astronaut-btn) {
   font-family: 'Exo 2', sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
@@ -1091,106 +1092,106 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   gap: 0.4rem;
 }
 
-.hire-astronaut-btn:hover:not(:disabled) {
+:deep(.hire-astronaut-btn:hover:not(:disabled)) {
   transform: translateY(-1px);
 }
 
-.hire-astronaut-btn:active:not(:disabled) {
+:deep(.hire-astronaut-btn:active:not(:disabled)) {
   transform: translateY(0);
 }
 
-.hire-astronaut-btn--astronaut {
+:deep(.hire-astronaut-btn--astronaut) {
   border-color: var(--crew-astronaut);
   background: var(--crew-astronaut-bg);
   color: var(--crew-astronaut);
 }
 
-.hire-astronaut-btn--astronaut:hover:not(:disabled) {
+:deep(.hire-astronaut-btn--astronaut:hover:not(:disabled)) {
   background: rgba(148, 163, 184, 0.22);
   box-shadow: 0 0 14px rgba(148, 163, 184, 0.3);
 }
 
-.hire-astronaut-btn--miner {
+:deep(.hire-astronaut-btn--miner) {
   border-color: var(--crew-miner);
   background: var(--crew-miner-bg);
   color: var(--crew-miner);
 }
 
-.hire-astronaut-btn--miner:hover:not(:disabled) {
+:deep(.hire-astronaut-btn--miner:hover:not(:disabled)) {
   background: rgba(245, 158, 11, 0.22);
   box-shadow: 0 0 14px rgba(245, 158, 11, 0.3);
 }
 
-.hire-astronaut-btn--scientist {
+:deep(.hire-astronaut-btn--scientist) {
   border-color: var(--crew-scientist);
   background: var(--crew-scientist-bg);
   color: var(--crew-scientist);
 }
 
-.hire-astronaut-btn--scientist:hover:not(:disabled) {
+:deep(.hire-astronaut-btn--scientist:hover:not(:disabled)) {
   background: rgba(56, 189, 248, 0.22);
   box-shadow: 0 0 14px rgba(56, 189, 248, 0.3);
 }
 
-.hire-astronaut-btn--pilot {
+:deep(.hire-astronaut-btn--pilot) {
   border-color: var(--crew-pilot);
   background: var(--crew-pilot-bg);
   color: var(--crew-pilot);
 }
 
-.hire-astronaut-btn--pilot:hover:not(:disabled) {
+:deep(.hire-astronaut-btn--pilot:hover:not(:disabled)) {
   background: rgba(167, 139, 250, 0.22);
   box-shadow: 0 0 14px rgba(167, 139, 250, 0.3);
 }
 
-.hire-astronaut-btn--medic {
+:deep(.hire-astronaut-btn--medic) {
   border-color: var(--crew-medic);
   background: var(--crew-medic-bg);
   color: var(--crew-medic);
 }
 
-.hire-astronaut-btn--medic:hover:not(:disabled) {
+:deep(.hire-astronaut-btn--medic:hover:not(:disabled)) {
   background: rgba(16, 185, 129, 0.22);
   box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
 }
 
-.hire-astronaut-btn--engineer {
+:deep(.hire-astronaut-btn--engineer) {
   border-color: var(--crew-engineer);
   background: var(--crew-engineer-bg);
   color: var(--crew-engineer);
 }
 
-.hire-astronaut-btn--engineer:hover:not(:disabled) {
+:deep(.hire-astronaut-btn--engineer:hover:not(:disabled)) {
   background: rgba(249, 115, 22, 0.22);
   box-shadow: 0 0 14px rgba(249, 115, 22, 0.3);
 }
 
-.hire-astronaut-btn:disabled {
+:deep(.hire-astronaut-btn:disabled) {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
 }
 
-.hire-astronaut-btn .crew-btn-role {
+:deep(.hire-astronaut-btn .crew-btn-role) {
   font-weight: 600;
 }
 
-.hire-astronaut-btn .crew-btn-sep {
+:deep(.hire-astronaut-btn .crew-btn-sep) {
   opacity: 0.85;
   font-weight: 400;
 }
 
-.hire-astronaut-btn .crew-btn-cost {
+:deep(.hire-astronaut-btn .crew-btn-cost) {
   font-weight: 600;
 }
 
-.hire-astronaut-btn .crew-btn-icon {
+:deep(.hire-astronaut-btn .crew-btn-icon) {
   font-size: 1.1em;
   line-height: 1;
   flex-shrink: 0;
 }
 
-.hire-astronaut-btn:focus-visible {
+:deep(.hire-astronaut-btn:focus-visible) {
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
@@ -1332,31 +1333,34 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
 
 .info-btn:active,
 .settings-btn:active,
-.prestige-btn:active:not(:disabled),
-.hire-astronaut-btn:active:not(:disabled),
-.buy-planet-btn:active:not(:disabled),
-.add-slot-btn:active:not(:disabled),
-.build-housing-btn:active:not(:disabled),
+:deep(.prestige-btn:active:not(:disabled)),
+:deep(.hire-astronaut-btn:active:not(:disabled)),
+:deep(.buy-planet-btn:active:not(:disabled)),
+:deep(.add-slot-btn:active:not(:disabled)),
+:deep(.build-housing-btn:active:not(:disabled)),
 .research-attempt-btn:active:not(:disabled) {
   transform: scale(0.98);
 }
 
 @media (max-width: 360px) {
   .quest-section,
-  .prestige-section {
+  :deep(.prestige-section),
+  :deep(.crew-section),
+  :deep(.planets-section) {
     padding: 0.6rem 0.75rem;
     margin-bottom: 0.75rem;
   }
 
   .quest-section h2,
-  .prestige-section h2,
-  .crew-section h2 {
+  :deep(.prestige-section h2),
+  :deep(.crew-section h2),
+  :deep(.planets-section h2) {
     font-size: 0.85rem;
   }
 
   .quest-claim-btn,
-  .prestige-btn,
-  .hire-astronaut-btn {
+  :deep(.prestige-btn),
+  :deep(.hire-astronaut-btn) {
     padding: 0.5rem 0.8rem;
     font-size: 0.8rem;
     min-height: 44px;
@@ -1365,9 +1369,9 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
 
 @media (min-width: 361px) and (max-width: 767px) {
   .quest-claim-btn,
-  .prestige-btn,
-  .add-slot-btn,
-  .buy-planet-btn {
+  :deep(.prestige-btn),
+  :deep(.add-slot-btn),
+  :deep(.buy-planet-btn) {
     min-height: 44px;
   }
 }

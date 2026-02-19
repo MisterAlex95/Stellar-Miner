@@ -1,4 +1,4 @@
-import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered, addDiscoveredEvent } from './gameState.js';
+import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered, addDiscoveredEvent, getDiscoveredEventIds } from './gameState.js';
 import { getEventMultiplier } from './gameState.js';
 import { getResearchProductionMultiplier } from './research.js';
 import { getEventPoolForRun } from './catalogs.js';
@@ -18,10 +18,11 @@ function refreshAfterDebugAction(): void {
 export function triggerRandomEvent(): void {
   const pool = getEventPoolForRun(getRunStats().runEventsTriggered);
   const event = pool[Math.floor(Math.random() * pool.length)];
+  const firstTime = !getDiscoveredEventIds().includes(event.id);
   pushActiveEventInstance({ event, endsAt: Date.now() + event.effect.durationMs });
   incrementRunEventsTriggered();
   addDiscoveredEvent(event.id);
-  getPresentationPort().showEventToast(event);
+  getPresentationPort().showEventToast(event, { firstTime });
   notifyRefresh();
 }
 

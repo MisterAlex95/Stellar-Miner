@@ -45,6 +45,7 @@ const toastStore = useToastStore();
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: pre-line;
 }
 
 .event-toast--visible {
