@@ -156,8 +156,9 @@ export function clearEverUnlockedUpgradeTiers(): void {
   localStorage.removeItem(EVER_UNLOCKED_TIERS_KEY);
 }
 
-export const EVENT_CATALOG: GameEvent[] = (eventsData as { id: string; name: string; effect: { multiplier: number; durationMs: number } }[]).map(
-  (e) => new GameEvent(e.id, e.name, new EventEffect(e.effect.multiplier, e.effect.durationMs))
+type RawEvent = { id: string; name: string; effect: { multiplier: number; durationMs: number }; flavor?: string };
+export const EVENT_CATALOG: GameEvent[] = (eventsData as RawEvent[]).map(
+  (e) => new GameEvent(e.id, e.name, new EventEffect(e.effect.multiplier, e.effect.durationMs), e.flavor)
 );
 
 /** Events available for this run: only positive until EVENT_NEGATIVE_UNLOCK_AFTER triggers. */
@@ -173,6 +174,9 @@ export const COMBO_MIN_CLICKS = C.minClicks;
 export const COMBO_MULT_PER_LEVEL = C.multPerLevel;
 export const COMBO_MAX_MULT = C.maxMult;
 
+const COMBO_THRESHOLDS: number[] = (C as { thresholds?: number[] }).thresholds ?? [];
+const COMBO_MULTS: number[] = (C as { mults?: number[] }).mults ?? [];
+
 export const COMBO_NAMES: { minMult: number; name: string }[] = C.names;
 
 export function getComboName(mult: number): string {
@@ -182,11 +186,25 @@ export function getComboName(mult: number): string {
   return 'Combo';
 }
 
+/** Combo multiplier for a given click count in window. Uses thresholds when configured, else linear formula. */
+export function getComboMultFromCount(count: number): number {
+  if (count < COMBO_MIN_CLICKS) return 1;
+  if (COMBO_THRESHOLDS.length > 0 && COMBO_MULTS.length === COMBO_THRESHOLDS.length) {
+    for (let i = COMBO_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (count >= COMBO_THRESHOLDS[i]) return COMBO_MULTS[i];
+    }
+    return 1;
+  }
+  return Math.min(
+    COMBO_MAX_MULT,
+    1 + (count - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL
+  );
+}
+
 /** Current combo multiplier from recent timestamps (same formula as handleMineClick). Used for production display so click rate reflects combo. */
 export function getCurrentComboMultiplier(timestamps: number[], nowMs: number): number {
   const recent = timestamps.filter((t) => t > nowMs - COMBO_WINDOW_MS);
-  if (recent.length < COMBO_MIN_CLICKS) return 1;
-  return Math.min(COMBO_MAX_MULT, 1 + (recent.length - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL);
+  return getComboMultFromCount(recent.length);
 }
 
 export const LUCKY_CLICK_CHANCE = L.luckyClickChance;

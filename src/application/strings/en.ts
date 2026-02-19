@@ -122,6 +122,7 @@ export const stringsEn = {
   errorOccurred: 'Something went wrong. Please try again.',
   offlineIndicator: 'You are offline. Progress may not be saved.',
   reducedMotion: 'Reduce motion',
+  showStoryToasts: 'Event story toasts (flavor text)',
   theme: 'Theme',
   themeLight: 'Light',
   themeDark: 'Dark',

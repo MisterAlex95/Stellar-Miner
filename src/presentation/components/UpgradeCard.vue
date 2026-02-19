@@ -645,6 +645,35 @@ onUnmounted(() => {
 
 .upgrade-affinity-chip {
   cursor: default;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.upgrade-affinity-chip.upgrade-choose-planet-type--rocky {
+  background: rgba(107, 114, 128, 0.3);
+  color: #9ca3af;
+}
+
+.upgrade-affinity-chip.upgrade-choose-planet-type--desert {
+  background: rgba(217, 119, 6, 0.25);
+  color: #fcd34d;
+}
+
+.upgrade-affinity-chip.upgrade-choose-planet-type--ice {
+  background: rgba(96, 165, 250, 0.25);
+  color: #93c5fd;
+}
+
+.upgrade-affinity-chip.upgrade-choose-planet-type--volcanic {
+  background: rgba(234, 88, 12, 0.25);
+  color: #fdba74;
+}
+
+.upgrade-affinity-chip.upgrade-choose-planet-type--gas {
+  background: rgba(139, 92, 246, 0.25);
+  color: #c4b5fd;
 }
 
 .upgrade-actions {

@@ -15,8 +15,7 @@ import {
   LAST_DAILY_BONUS_KEY,
   DAILY_BONUS_COINS,
   COMBO_WINDOW_MS,
-  COMBO_MIN_CLICKS,
-  COMBO_MULT_PER_LEVEL,
+  getComboMultFromCount,
   COMBO_MAX_MULT,
   LUCKY_CLICK_CHANCE,
   LUCKY_MIN,
@@ -72,10 +71,7 @@ export function handleMineClick(e?: MouseEvent): void {
   setClickTimestamps(clickTimestamps);
 
   const comboCount = clickTimestamps.length;
-  const comboMult =
-    comboCount >= COMBO_MIN_CLICKS
-      ? Math.min(COMBO_MAX_MULT, 1 + (comboCount - COMBO_MIN_CLICKS + 1) * COMBO_MULT_PER_LEVEL)
-      : 1;
+  const comboMult = getComboMultFromCount(comboCount);
   if (comboMult >= COMBO_MAX_MULT && typeof localStorage !== 'undefined') {
     localStorage.setItem(COMBO_MASTER_KEY, '1');
   }

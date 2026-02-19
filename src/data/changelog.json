@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.5",
+    "date": "2026-02",
+    "changes": [
+      "Event flavor text: optional flavor field in events data, shown in toasts when 'Event story toasts' setting is on; Settings toggle added."
+    ]
+  },
+  {
+    "version": "0.5.4",
+    "date": "2026-02",
+    "changes": [
+      "Combo decay indicator: remaining time (e.g. 1.2s) next to combo; updates in real time from game loop."
+    ]
+  },
+  {
     "version": "0.5.3",
     "date": "2026-02",
     "changes": [

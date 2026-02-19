@@ -4,6 +4,7 @@ import {
   getUnlockedUpgradeTiers,
   getUpgradeUsesSlot,
   getComboName,
+  getComboMultFromCount,
   getEventPoolForRun,
   EVENT_NEGATIVE_UNLOCK_AFTER,
   UPGRADE_CATALOG,
@@ -53,6 +54,17 @@ describe('catalogs', () => {
 
   it('getComboName returns Combo when mult below lowest', () => {
     expect(getComboName(1.0)).toBe('Combo');
+  });
+
+  it('getComboMultFromCount uses thresholds: each tier requires more clicks', () => {
+    expect(getComboMultFromCount(5)).toBe(1);
+    expect(getComboMultFromCount(6)).toBe(1.06);
+    expect(getComboMultFromCount(8)).toBe(1.15);
+    expect(getComboMultFromCount(11)).toBe(1.25);
+    expect(getComboMultFromCount(15)).toBe(1.35);
+    expect(getComboMultFromCount(20)).toBe(1.45);
+    expect(getComboMultFromCount(26)).toBe(1.55);
+    expect(getComboMultFromCount(30)).toBe(1.55);
   });
 
   it('EVENT_CATALOG has events', () => {

@@ -16,6 +16,8 @@ export type Settings = {
   theme: ThemeMode;
   soundEnabled: boolean;
   language: Language;
+  /** When true, event toasts show optional flavor/story line. */
+  showStoryToasts: boolean;
 };
 
 const DEFAULTS: Settings = {
@@ -30,6 +32,7 @@ const DEFAULTS: Settings = {
   theme: 'dark',
   soundEnabled: true,
   language: 'en',
+  showStoryToasts: true,
 };
 
 export function loadSettings(): Settings {

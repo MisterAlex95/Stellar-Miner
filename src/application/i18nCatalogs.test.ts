@@ -28,6 +28,7 @@ describe('i18nCatalogs', () => {
       pauseWhenBackground: false,
       soundEnabled: true,
       reducedMotion: false,
+      showStoryToasts: true,
     });
   });
 
@@ -94,6 +95,7 @@ describe('i18nCatalogs', () => {
       pauseWhenBackground: false,
       soundEnabled: true,
       reducedMotion: false,
+      showStoryToasts: true,
     });
     expect(getCatalogUpgradeName('mining-robot')).toBe('Robot minier');
     expect(getCatalogComboName(1.2)).toBeDefined();

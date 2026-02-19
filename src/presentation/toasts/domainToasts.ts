@@ -29,8 +29,11 @@ export function showEventToast(gameEvent: GameEvent, options?: ShowEventToastOpt
   const multStr = `×${gameEvent.effect.multiplier}`;
   const durationSec = gameEvent.effect.durationMs / 1000;
   let message = `${name} — ${multStr} production for ${durationSec}s`;
-  const flavor = getEventFlavor(gameEvent.id);
-  if (flavor) message += `\n${flavor}`;
+  const settings = getSettings();
+  if (settings.showStoryToasts) {
+    const flavor = gameEvent.flavor ?? getEventFlavor(gameEvent.id);
+    if (flavor) message += `\n${flavor}`;
+  }
   const variant = isNegative ? 'negative' : 'event-positive';
   const duration = options?.firstTime ? (isNegative ? 6500 : 5500) : isNegative ? 5000 : 4000;
   showToast(message, variant, { duration });

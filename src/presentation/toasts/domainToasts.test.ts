@@ -12,6 +12,7 @@ describe('domainToasts', () => {
     setSettings({
       ...getSettings(),
       language: 'en',
+      showStoryToasts: true,
     });
     vi.mocked(showToast).mockClear();
   });
@@ -50,5 +51,16 @@ describe('domainToasts', () => {
     const [, variant, options] = vi.mocked(showToast).mock.calls[0];
     expect(variant).toBe('negative');
     expect(options?.duration).toBe(5000);
+  });
+
+  it('showEventToast omits flavor when showStoryToasts is false', () => {
+    setSettings({ ...getSettings(), showStoryToasts: false });
+    const event = new GameEvent('meteor-storm', 'Meteor Storm', new EventEffect(2, 35000));
+    showEventToast(event);
+    expect(showToast).toHaveBeenCalledTimes(1);
+    const [message] = vi.mocked(showToast).mock.calls[0];
+    expect(message).toContain('Meteor Storm');
+    expect(message).not.toContain('belt rains ore');
+    expect(message).not.toMatch(/\n/);
   });
 });

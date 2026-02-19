@@ -154,6 +154,17 @@
               <span>{{ t('reducedMotion') }}</span>
             </label>
           </div>
+          <div class="settings-option">
+            <label class="settings-toggle">
+              <input
+                id="setting-story-toasts"
+                type="checkbox"
+                :checked="settings.showStoryToasts"
+                @change="onShowStoryToastsChange"
+              >
+              <span>{{ t('showStoryToasts') }}</span>
+            </label>
+          </div>
         </div>
         <div class="settings-group">
           <h3 class="settings-group-title">{{ t('settingsGroupSaveData') }}</h3>
@@ -278,6 +289,10 @@ function onSoundEnabledChange(e: Event): void {
 }
 function onReducedMotionChange(e: Event): void {
   settings.reducedMotion = (e.target as HTMLInputElement).checked;
+  pushToGameState();
+}
+function onShowStoryToastsChange(e: Event): void {
+  settings.showStoryToasts = (e.target as HTMLInputElement).checked;
   pushToGameState();
 }
 

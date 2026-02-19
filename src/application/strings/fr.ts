@@ -121,6 +121,7 @@ export const stringsFr: Record<StringKey, string> = {
   errorOccurred: 'Une erreur est survenue. Veuillez réessayer.',
   offlineIndicator: 'Vous êtes hors ligne. La progression peut ne pas être enregistrée.',
   reducedMotion: 'Réduire les animations',
+  showStoryToasts: 'Toasts d’événements avec texte narratif',
   theme: 'Thème',
   themeLight: 'Clair',
   themeDark: 'Sombre',

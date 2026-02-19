@@ -17,10 +17,10 @@
 | Status | Count |
 |:---|:---:|
 | backlog | 31 |
-| todo | 0 |
+| todo | 2 |
 | in_progress | 0 |
 | blocked | 0 |
-| done | 3 |
+| done | 5 |
 
 ---
 
@@ -28,13 +28,15 @@
 
 | ID | Title |
 |:---|:---|
-| T-12 | Add next upgrade hint |
+| T-15 | Add event flavor text |
 
 ---
 
 ## Upcoming Queue (Next 3)
 
-*No tasks in todo; next up would be from backlog (T-2, T-4, …).*
+| ID | Title |
+|:---|:---|
+| T-16 | Add Codex or Archive |
 
 ---
 

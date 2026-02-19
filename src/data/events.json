@@ -1,6 +1,6 @@
 [
-  {"id":"meteor-storm","name":"Meteor Storm","effect":{"multiplier":2,"durationMs":35000}},
-  {"id":"solar-flare","name":"Solar Flare","effect":{"multiplier":1.5,"durationMs":50000}},
+  {"id":"meteor-storm","name":"Meteor Storm","effect":{"multiplier":2,"durationMs":35000},"flavor":"The belt rains ore; your rigs work overtime."},
+  {"id":"solar-flare","name":"Solar Flare","effect":{"multiplier":1.5,"durationMs":50000},"flavor":"Charged particles boost reactor output."},
   {"id":"rich-vein","name":"Rich Vein","effect":{"multiplier":2.5,"durationMs":25000}},
   {"id":"void-bonus","name":"Void Bonus","effect":{"multiplier":1.25,"durationMs":70000}},
   {"id":"lucky-strike","name":"Lucky Strike","effect":{"multiplier":2.8,"durationMs":18000}},
