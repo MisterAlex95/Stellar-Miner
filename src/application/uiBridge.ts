@@ -11,7 +11,7 @@ export interface OpenOverlayOptions {
 }
 
 export interface PresentationPort {
-  showAchievementToast(name: string): void;
+  showAchievementToast(name: string, flavor?: string): void;
   showMiniMilestoneToast(message: string): void;
   showMilestoneToast(coins: number): void;
   showPrestigeMilestoneToast(level: number, pct?: number): void;
@@ -107,7 +107,7 @@ function noopResearchProgress(_id: string, _data: unknown, _cb?: () => void): vo
 function noopUpgradeProgress(_key: string, _data: unknown, _cb?: () => void): void {}
 
 const defaultPort: PresentationPort = {
-  showAchievementToast: noopStr,
+  showAchievementToast: (name: string, _flavor?: string) => noopStr(name),
   showMiniMilestoneToast: noopStr,
   showMilestoneToast: noopNum,
   showPrestigeMilestoneToast: noopNumNum,

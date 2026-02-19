@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.12",
+    "date": "2026-02",
+    "changes": [
+      "Docs: Mermaid diagrams for layered architecture, upgrade-purchase flow, reactive UI flow (overview.md), and save/load data flow (save-format.md)."
+    ]
+  },
+  {
+    "version": "0.5.11",
+    "date": "2026-02",
+    "changes": [
+      "Achievement flavor text: optional flavor/story per achievement (achievements.json); unlock toast shows name and flavor when present."
+    ]
+  },
+  {
     "version": "0.5.10",
     "date": "2026-02",
     "changes": [

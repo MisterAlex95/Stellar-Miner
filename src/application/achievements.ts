@@ -7,9 +7,9 @@ import { getPresentationPort } from './uiBridge.js';
 import { checkCodexUnlocks } from './codex.js';
 import achievementsData from '../data/achievements.json';
 
-export type Achievement = { id: string; name: string; check: () => boolean; secret?: boolean };
+export type Achievement = { id: string; name: string; check: () => boolean; secret?: boolean; flavor?: string };
 
-type AchievementDef = { id: string; name: string; type: string; value: number; secret?: boolean };
+type AchievementDef = { id: string; name: string; type: string; value: number; secret?: boolean; flavor?: string };
 
 function buildCheck(def: AchievementDef): () => boolean {
   const session = () => getSession();
@@ -50,6 +50,7 @@ export const ACHIEVEMENTS: Achievement[] = (achievementsData as AchievementDef[]
   name: def.name,
   check: buildCheck(def),
   secret: def.secret === true,
+  flavor: def.flavor,
 }));
 
 export function getTotalClicksEver(): number {
@@ -86,7 +87,7 @@ export function unlockAchievement(id: string): void {
   set.add(id);
   if (typeof localStorage !== 'undefined') localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify([...set]));
   const a = ACHIEVEMENTS.find((x) => x.id === id);
-  if (a) getPresentationPort().showAchievementToast(a.name);
+  if (a) getPresentationPort().showAchievementToast(a.name, a.flavor);
   checkCodexUnlocks();
 }
 

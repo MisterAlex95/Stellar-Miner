@@ -96,6 +96,33 @@ Events that occur in the domain and can trigger side effects.
 └───────────────────────┘
 ```
 
+**Mermaid (for viewers that support it):**
+
+```mermaid
+flowchart TB
+  subgraph Presentation["Presentation"]
+    UI["UI / Vue panels, toasts, canvases"]
+  end
+  subgraph Application["Application"]
+    Handlers["Handlers"]
+    GameState["gameState"]
+    EventBus["eventBus"]
+  end
+  subgraph Domain["Domain"]
+    Entities["Entities"]
+    Services["Domain services"]
+  end
+  subgraph Infrastructure["Infrastructure"]
+    SaveLoad["SaveLoadService"]
+  end
+  UI --> Handlers
+  Handlers --> GameState
+  Handlers --> Services
+  Services --> Entities
+  GameState --> SaveLoad
+  SaveLoad -.-> GameState
+```
+
 **Modules (src):**
 
 - **domain/** — Entities, value objects, aggregates, events, domain services; **bigNumber** for large-number math (break_infinity).
@@ -117,6 +144,29 @@ Events that occur in the domain and can trigger side effects.
    - Update player **ProductionRate**.
 4. **Infrastructure** (optional): persist player state.
 
+**User journey (Mermaid):**
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant UI
+  participant Handlers
+  participant UpgradeService
+  participant Player
+  participant EventBus
+  participant SaveLoad
+
+  User->>UI: Click "Buy Mining Robot"
+  UI->>Handlers: buyUpgrade(upgradeId)
+  Handlers->>UpgradeService: purchaseUpgrade(playerId, upgradeId)
+  UpgradeService->>Player: canAfford? spendCoins()
+  UpgradeService->>Player: addUpgrade, setProductionRate
+  UpgradeService->>EventBus: emit(upgrade_purchased)
+  EventBus->>SaveLoad: (on interval) persist session
+  Handlers->>UI: notifyRefresh()
+  UI->>User: UI updates (coins, production)
+```
+
 ---
 
 ## 9. Reactive UI Flow
@@ -127,6 +177,31 @@ State changes trigger UI refresh through a batched pipeline:
 2. **Refresh signal** (`refreshSignal.ts`) — `notifyRefresh()` schedules listeners for the next `requestAnimationFrame`; multiple rapid calls coalesce into one.
 3. **Subscribers** (`refreshSubscribers.ts`) — `sessionStore` and domain events (upgrade_purchased, prestige, quest_claimed, planet_bought, astronaut_hired) call `notifyRefresh()`; `subscribeRefresh(refreshViews)` runs the full refresh.
 4. **Refresh views** (`game.ts`) — `createRefreshViews()` runs `saveSession`, `updateStats`, and renders only **hydrated** panels (see below).
+
+**Reactive UI flow (Mermaid):**
+
+```mermaid
+flowchart LR
+  subgraph Sources["State & events"]
+    Session["sessionStore"]
+    Events["eventBus"]
+  end
+  subgraph Signal["Refresh signal"]
+    Notify["notifyRefresh()"]
+    RAF["requestAnimationFrame"]
+  end
+  subgraph Views["Refresh views"]
+    Save["saveSession"]
+    Stats["updateStats"]
+    Panels["hydrated panels only"]
+  end
+  Session --> Notify
+  Events --> Notify
+  Notify --> RAF
+  RAF --> Save
+  RAF --> Stats
+  RAF --> Panels
+```
 
 **Lazy loading** — Tab panels (upgrades, empire, research, dashboard, stats) render only when the user first switches to that tab. `lazyPanels.ts` tracks `hydratedPanels`; `switchTab` calls `markPanelHydrated(id)` and renders the panel; `createRefreshViews` skips non-hydrated panels to avoid unnecessary DOM work.
 

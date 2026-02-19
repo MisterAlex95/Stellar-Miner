@@ -4,7 +4,7 @@ This folder is the single source for Stellar Miner documentation: architecture, 
 
 ## Architecture
 
-- **[architecture/overview.md](architecture/overview.md)** — Domain-Driven Design (DDD): domains, entities, value objects, aggregates, services, layered architecture, code references, reactive UI flow, game rules summary.
+- **[architecture/overview.md](architecture/overview.md)** — Domain-Driven Design (DDD): domains, entities, value objects, aggregates, services, layered architecture, code references, reactive UI flow, game rules summary. Includes **Mermaid diagrams** for layered architecture, upgrade-purchase flow, and reactive UI flow.
 - **[architecture/vue-migration-plan.md](architecture/vue-migration-plan.md)** — Incremental plan to migrate the presentation layer to Vue 3 (phases 0–7). Includes a presentation inventory mapping panels and areas to vanilla files for migration order.
 
 ## Features
@@ -22,7 +22,7 @@ This folder is the single source for Stellar Miner documentation: architecture, 
 ## Data
 
 - **[data/README.md](data/README.md)** — Data files and save format with schemas:
-  - [Save format](data/save-format.md)
+  - [Save format](data/save-format.md) (includes Mermaid save/load data flow)
   - [Modules schema](data/modules-schema.md)
   - [Events schema](data/events-schema.md)
   - [Research schema](data/research-schema.md)

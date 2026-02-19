@@ -140,7 +140,17 @@ describe('achievements', () => {
     const showAchievementToast = vi.fn();
     setPresentationPort({ ...getDefaultPresentationPort(), showAchievementToast });
     unlockAchievement('first-click');
-    expect(showAchievementToast).toHaveBeenCalledWith('First steps');
+    expect(showAchievementToast).toHaveBeenCalledWith('First steps', undefined);
+  });
+
+  it('unlockAchievement passes flavor to toast when achievement has flavor', () => {
+    const showAchievementToast = vi.fn();
+    setPresentationPort({ ...getDefaultPresentationPort(), showAchievementToast });
+    unlockAchievement('prestige-10');
+    expect(showAchievementToast).toHaveBeenCalledWith(
+      'Legend',
+      'Your name is spoken in every port on the belt.'
+    );
   });
 
   it('buildCheck default returns false for unknown type', () => {

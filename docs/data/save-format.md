@@ -2,6 +2,34 @@
 
 The game persists the current session to localStorage and supports export/import. The payload shape is defined in `src/infrastructure/SaveLoadService.ts` and deserialized in `src/application/sessionSerialization.ts`.
 
+## Save/load data flow
+
+```mermaid
+flowchart LR
+  subgraph Runtime["Runtime"]
+    GS["GameSession"]
+  end
+  subgraph SaveLoadService["SaveLoadService"]
+    Serialize["serialize"]
+    Validate["isSavedSession"]
+    Deserialize["deserializeSession"]
+  end
+  subgraph Storage["Storage"]
+    LS["localStorage"]
+    Export["export file"]
+  end
+
+  GS -->|"save (every 3s)"| Serialize
+  Serialize --> SavedSession["SavedSession payload"]
+  SavedSession --> LS
+  SavedSession --> Export
+
+  LS -->|"load / import"| Validate
+  Export --> Validate
+  Validate -->|"valid"| Deserialize
+  Deserialize -->|"injected from application"| GS
+```
+
 ## Version and validation
 
 - **SAVE_VERSION**: `1` (constant in SaveLoadService).

@@ -15,9 +15,11 @@ import {
   showFloatingCoinFixed as showFloatingCoinFixedImpl,
 } from '../lib/floatingFeedback.js';
 
-export function showAchievementToast(name: string): void {
+export function showAchievementToast(name: string, flavor?: string): void {
   triggerAchievementCelebration();
-  showToast(tParam('achievementToast', { name }), 'achievement', { duration: 4000 });
+  let message = tParam('achievementToast', { name });
+  if (flavor) message += `\n${flavor}`;
+  showToast(message, 'achievement', { duration: flavor ? 5000 : 4000 });
 }
 
 function triggerAchievementCelebration(): void {
