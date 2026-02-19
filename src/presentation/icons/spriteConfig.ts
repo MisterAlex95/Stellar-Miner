@@ -6,7 +6,8 @@ import type { ResearchIconKey } from './researchIcons.js';
 
 export const SPRITE_COLS = 14;
 export const SPRITE_ROWS = 8;
-export const SPRITE_URL = '/icons/icons.png';
+/** Use BASE_URL so the sprite works on GitHub Pages (e.g. /Stellar-Miner/icons/icons.png). */
+export const SPRITE_URL = `${import.meta.env.BASE_URL}icons/icons.png`;
 
 /** Map research icon key → sprite cell index (row-major, 0-based). Chosen to match sheet content. */
 const KEY_TO_INDEX: Record<ResearchIconKey, number> = {
