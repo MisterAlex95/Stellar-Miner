@@ -10,6 +10,7 @@ const SHORTCUTS: { tab: string; labelKey: StringKey }[] = [
   { tab: 'upgrades', labelKey: 'tabUpgrades' },
   { tab: 'research', labelKey: 'tabResearch' },
   { tab: 'stats', labelKey: 'tabStats' },
+  { tab: 'archive', labelKey: 'codexTitle' },
 ];
 
 /** Reactive shortcut items for dashboard. Recomputes when session/unlocked changes. */
@@ -26,6 +27,7 @@ export function useDashboardShortcuts() {
       if (sc.tab === 'upgrades') return unlocked.has('upgrades');
       if (sc.tab === 'research') return unlocked.has('research');
       if (sc.tab === 'stats') return unlocked.has('upgrades');
+      if (sc.tab === 'archive') return unlocked.has('upgrades');
       return true;
     }).map((sc) => ({ tab: sc.tab, label: t(sc.labelKey) }));
   });
