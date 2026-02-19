@@ -94,6 +94,7 @@ export type SavedSession = {
   runStats?: SavedRunStats;
   discoveredEventIds?: string[];
   codexUnlocks?: Array<{ id: string; at: number }>;
+  narratorShown?: string[];
   expedition?: SavedExpedition;
   /** Unlocked research node ids (restored on import so click/production modifiers work). */
   unlockedResearch?: string[];
@@ -169,7 +170,7 @@ export class SaveLoadService implements ISaveLoadService {
   async save(
     session: GameSession,
     runStats?: SavedRunStats,
-    options?: { discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; expedition?: SavedExpedition | null }
+    options?: { discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; narratorShown?: string[]; expedition?: SavedExpedition | null }
   ): Promise<void> {
     if (typeof performance !== 'undefined' && performance.mark) performance.mark('save-start');
     const payload = this.serialize(session, runStats, options);
@@ -200,7 +201,7 @@ export class SaveLoadService implements ISaveLoadService {
     emit('save_success', undefined);
   }
 
-  async load(): Promise<{ session: GameSession; runStats?: SavedRunStats; discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; expedition?: SavedExpedition } | null> {
+  async load(): Promise<{ session: GameSession; runStats?: SavedRunStats; discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; narratorShown?: string[]; expedition?: SavedExpedition } | null> {
     if (typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -231,6 +232,9 @@ export class SaveLoadService implements ISaveLoadService {
             return null;
           })
           .filter((r): r is { id: string; at: number } => r !== null)
+      : undefined;
+    const narratorShown = Array.isArray(data.narratorShown)
+      ? (data.narratorShown as string[]).filter((id) => typeof id === 'string')
       : undefined;
     const expedition =
       data.expedition &&
@@ -289,7 +293,7 @@ export class SaveLoadService implements ISaveLoadService {
         this.lastOfflineWasCapped = elapsed > FULL_CAP_OFFLINE_MS;
       }
     }
-    return { session, runStats, discoveredEventIds, codexUnlocks, expedition };
+    return { session, runStats, discoveredEventIds, codexUnlocks, narratorShown, expedition };
   }
 
   clearProgress(): void {
@@ -306,7 +310,7 @@ export class SaveLoadService implements ISaveLoadService {
   /** Export current session as JSON string (for copy/download). Optionally include runStats and extras (e.g. codexUnlocks). */
   exportSession(
     session: GameSession,
-    options?: { runStats?: SavedRunStats; discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; expedition?: SavedExpedition | null }
+    options?: { runStats?: SavedRunStats; discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; narratorShown?: string[]; expedition?: SavedExpedition | null }
   ): string {
     return JSON.stringify(this.serialize(session, options?.runStats, options));
   }
@@ -349,7 +353,7 @@ export class SaveLoadService implements ISaveLoadService {
   private serialize(
     session: GameSession,
     runStats?: SavedRunStats,
-    options?: { discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; expedition?: SavedExpedition | null }
+    options?: { discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; narratorShown?: string[]; expedition?: SavedExpedition | null }
   ): SavedSession {
     const payload: SavedSession = {
       version: SAVE_VERSION,
@@ -422,6 +426,9 @@ export class SaveLoadService implements ISaveLoadService {
     }
     if (options?.codexUnlocks && options.codexUnlocks.length > 0) {
       payload.codexUnlocks = options.codexUnlocks;
+    }
+    if (options?.narratorShown && options.narratorShown.length > 0) {
+      payload.narratorShown = options.narratorShown;
     }
     if (options?.expedition) payload.expedition = options.expedition;
     const unlockedResearch = this.getUnlockedResearch();

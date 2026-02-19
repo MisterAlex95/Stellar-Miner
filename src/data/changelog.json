@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.14",
+    "date": "2026-02",
+    "changes": [
+      "Narrator/ship log: one-off toasts on milestones (first 1M coins, first prestige, Legend achievement) from narrator.json; narratorShown persisted in save."
+    ]
+  },
+  {
+    "version": "0.5.13",
+    "date": "2026-02",
+    "changes": [
+      "Event recurrence: less frequent defaults (5 min between events, 1 min first delay, 2 min after load); tests for recurrence constants."
+    ]
+  },
+  {
     "version": "0.5.12",
     "date": "2026-02",
     "changes": [

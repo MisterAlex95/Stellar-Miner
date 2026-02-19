@@ -30,6 +30,7 @@ import { emit } from './eventBus.js';
 import { t, tParam } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPrestigeLore } from './prestigeLore.js';
+import { tryShowNarrator } from './narrator.js';
 
 const PRESTIGE_REWARDS_LIST_MAX_LEVEL = 15;
 const PRESTIGE_MILESTONE_LEVELS = [2, 5, 10, 20];
@@ -135,6 +136,7 @@ export function confirmPrestige(): void {
       localStorage.setItem(key, '1');
       ui.showMiniMilestoneToast(t('firstPrestigeToast'));
     }
+    tryShowNarrator('first_prestige');
   }
   emit('prestige', { level: newPlayer.prestigeLevel });
   const newPct = Math.round(getPrestigeProductionPercent(newPlayer));

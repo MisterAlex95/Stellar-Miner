@@ -30,8 +30,10 @@ import { PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL } from '../domain/constants.js';
 import { getQuestProgress } from './quests.js';
 import { incrementTotalClicksEver, checkAchievements, unlockAchievement } from './achievements.js';
 import { checkAndShowMilestones } from './milestones.js';
+import { checkPlayTimeNarrators } from './narrator.js';
 import { getPresentationPort } from './uiBridge.js';
 import { getResearchClickMultiplier } from './research.js';
+import { tryShowNarrator } from './narrator.js';
 
 const SHAKE_DURATION_MS = 400;
 
@@ -84,6 +86,7 @@ export function handleMineClick(e?: MouseEvent): void {
         session.player.addCoins(DAILY_BONUS_COINS);
         addRunCoins(DAILY_BONUS_COINS);
         getPresentationPort().showDailyBonusToast();
+        tryShowNarrator('first_daily_bonus');
       }
       localStorage.setItem(LAST_DAILY_BONUS_KEY, today);
     }
@@ -134,6 +137,7 @@ export function handleMineClick(e?: MouseEvent): void {
   if (superLucky || isCritical) triggerShake();
   ui.updateComboIndicator();
   checkAndShowMilestones();
+  checkPlayTimeNarrators();
   checkAchievements();
   refreshAfterMine();
   const progress = getQuestProgress();

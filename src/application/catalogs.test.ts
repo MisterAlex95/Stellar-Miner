@@ -10,6 +10,9 @@ import {
   UPGRADE_CATALOG,
   EVENT_CATALOG,
   COMBO_NAMES,
+  EVENT_INTERVAL_MS,
+  FIRST_EVENT_DELAY_MS,
+  MIN_EVENT_DELAY_MS,
 } from './catalogs.js';
 import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 
@@ -83,5 +86,14 @@ describe('catalogs', () => {
     expect(pool).toEqual(EVENT_CATALOG);
     const poolAbove = getEventPoolForRun(EVENT_NEGATIVE_UNLOCK_AFTER + 1);
     expect(poolAbove).toEqual(EVENT_CATALOG);
+  });
+
+  it('event recurrence constants are positive and less-frequent defaults', () => {
+    expect(EVENT_INTERVAL_MS).toBeGreaterThan(0);
+    expect(FIRST_EVENT_DELAY_MS).toBeGreaterThan(0);
+    expect(MIN_EVENT_DELAY_MS).toBeGreaterThan(0);
+    expect(EVENT_INTERVAL_MS).toBeGreaterThanOrEqual(240_000);
+    expect(FIRST_EVENT_DELAY_MS).toBeGreaterThanOrEqual(45_000);
+    expect(MIN_EVENT_DELAY_MS).toBeGreaterThanOrEqual(90_000);
   });
 });

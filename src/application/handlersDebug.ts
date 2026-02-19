@@ -8,6 +8,7 @@ import { t } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkCodexUnlocks } from './codex.js';
+import { tryShowNarrator } from './narrator.js';
 import { Planet } from '../domain/entities/Planet.js';
 import { generatePlanetName } from '../domain/constants.js';
 
@@ -17,7 +18,9 @@ function refreshAfterDebugAction(): void {
 }
 
 export function triggerRandomEvent(): void {
-  const pool = getEventPoolForRun(getRunStats().runEventsTriggered);
+  const runStats = getRunStats();
+  if (runStats.runEventsTriggered === 0) tryShowNarrator('first_event');
+  const pool = getEventPoolForRun(runStats.runEventsTriggered);
   const event = pool[Math.floor(Math.random() * pool.length)];
   const firstTime = !getDiscoveredEventIds().includes(event.id);
   pushActiveEventInstance({ event, endsAt: Date.now() + event.effect.durationMs });

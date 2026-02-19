@@ -457,12 +457,17 @@ describe('SaveLoadService', () => {
       composition: { miner: 2, scientist: 0, pilot: 0 },
       durationMs: 10000,
     };
-    await service.save(session, runStats, { discoveredEventIds: ['e1'], expedition });
+    await service.save(session, runStats, {
+      discoveredEventIds: ['e1'],
+      narratorShown: ['coins_1m'],
+      expedition,
+    });
     const raw = storage['stellar-miner-session'];
     expect(raw).toBeDefined();
     const data = JSON.parse(raw);
     expect(data.runStats).toEqual(runStats);
     expect(data.discoveredEventIds).toEqual(['e1']);
+    expect(data.narratorShown).toEqual(['coins_1m']);
     expect(data.expedition).toEqual(expedition);
   });
 
@@ -482,11 +487,16 @@ describe('SaveLoadService', () => {
       composition: { miner: 1, scientist: 0, pilot: 0 },
       durationMs: 5000,
     };
-    await service.save(session, runStats, { discoveredEventIds: ['evt-a', 'evt-b'], expedition });
+    await service.save(session, runStats, {
+      discoveredEventIds: ['evt-a', 'evt-b'],
+      narratorShown: ['first_prestige'],
+      expedition,
+    });
     const loaded = await service.load();
     expect(loaded).not.toBeNull();
     expect(loaded!.runStats).toEqual(runStats);
     expect(loaded!.discoveredEventIds).toEqual(['evt-a', 'evt-b']);
+    expect(loaded!.narratorShown).toEqual(['first_prestige']);
     expect(loaded!.expedition).toEqual(expedition);
   });
 });

@@ -16,6 +16,7 @@ import { getPlanetType, getPlanetTypeMultiplier } from './planetAffinity.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
 import { t, tParam } from './strings.js';
+import { tryShowNarrator } from './narrator.js';
 
 function refreshAfterUpgrade(opts: { flashId?: string } = {}): void {
   notifyRefresh();
@@ -102,6 +103,7 @@ export function handleUpgradeBuy(upgradeId: string, planetId?: string): UpgradeB
       localStorage.setItem(key, '1');
       getPresentationPort().showMiniMilestoneToast(t('firstUpgradeToast'));
     }
+    tryShowNarrator('first_upgrade');
   }
   refreshAfterUpgrade({ flashId: upgradeId });
   return { bought: true, durations: [durationMs] };

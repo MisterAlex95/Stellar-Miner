@@ -18,6 +18,7 @@ import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
 import { checkCodexUnlocks } from './codex.js';
 import { getDiscoveryFlavorForPlanetName } from './discoveryFlavor.js';
+import { tryShowNarrator } from './narrator.js';
 import { t, tParam } from './strings.js';
 
 function refreshAfterPlanetAction(opts: { achievements?: boolean } = {}): void {
@@ -38,6 +39,7 @@ export function handleBuyNewPlanet(): void {
   const durationMs = planetService.getExpeditionDurationMs(player, 'medium', result.composition.pilot ?? 0, getResearchExpeditionDurationPercent());
   const endsAt = Date.now() + durationMs;
   setExpeditionInProgress(endsAt, result.composition, durationMs, 'medium');
+  if (player.planets.length === 0) tryShowNarrator('first_expedition_launch');
   refreshAfterPlanetAction();
 }
 
@@ -53,6 +55,7 @@ export function handleLaunchExpeditionFromModal(tierId: ExpeditionTierId, compos
   const durationMs = planetService.getExpeditionDurationMs(player, tierId, result.composition.pilot ?? 0, getResearchExpeditionDurationPercent());
   const endsAt = Date.now() + durationMs;
   setExpeditionInProgress(endsAt, result.composition, durationMs, tierId);
+  if (player.planets.length === 0) tryShowNarrator('first_expedition_launch');
   refreshAfterPlanetAction();
 }
 
@@ -105,6 +108,7 @@ export function completeExpeditionIfDue(): void {
         localStorage.setItem(key, '1');
         ui.showMiniMilestoneToast(t('firstNewPlanetToast'));
       }
+      tryShowNarrator('first_planet');
     }
   } else {
     ui.showMiniMilestoneToast(tParam('expeditionFailed', { n: outcome.totalSent }));
@@ -171,6 +175,7 @@ export function handleHireAstronaut(role: CrewRole = 'astronaut'): void {
       localStorage.setItem(key, '1');
       getPresentationPort().showMiniMilestoneToast(t('firstAstronautToast'));
     }
+    tryShowNarrator('first_astronaut');
   }
   refreshAfterPlanetAction({ achievements: true });
 }

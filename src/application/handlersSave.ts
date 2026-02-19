@@ -5,9 +5,11 @@ import {
   setRunStatsFromPayload,
   getDiscoveredEventIds,
   getCodexUnlocksWithTime,
+  getNarratorShown,
   getExpeditionForSave,
   setExpeditionFromPayload,
   setCodexUnlocks,
+  setNarratorShown,
   saveLoad,
   type SavedExpedition,
 } from './gameState.js';
@@ -15,7 +17,7 @@ import {
 function getSavePayload(): {
   session: ReturnType<typeof getSession>;
   runStats: ReturnType<typeof getRunStats>;
-  extras: { discoveredEventIds: string[]; codexUnlocks: Array<{ id: string; at: number }>; expedition: SavedExpedition | null };
+  extras: { discoveredEventIds: string[]; codexUnlocks: Array<{ id: string; at: number }>; narratorShown: string[]; expedition: SavedExpedition | null };
 } {
   return {
     session: getSession(),
@@ -23,6 +25,7 @@ function getSavePayload(): {
     extras: {
       discoveredEventIds: getDiscoveredEventIds(),
       codexUnlocks: getCodexUnlocksWithTime(),
+      narratorShown: getNarratorShown(),
       expedition: getExpeditionForSave(),
     },
   };
@@ -49,9 +52,9 @@ export function handleExportSave(): void {
 }
 
 export async function handleImportSave(json: string): Promise<boolean> {
-  let parsed: { codexUnlocks?: unknown } | null = null;
+  let parsed: { codexUnlocks?: unknown; narratorShown?: unknown } | null = null;
   try {
-    parsed = JSON.parse(json) as { codexUnlocks?: unknown };
+    parsed = JSON.parse(json) as { codexUnlocks?: unknown; narratorShown?: unknown };
   } catch {
     // importSession will fail too
   }
@@ -71,6 +74,9 @@ export async function handleImportSave(json: string): Promise<boolean> {
       })
       .filter((r): r is { id: string; at: number } => r !== null);
     setCodexUnlocks(normalized);
+  }
+  if (Array.isArray(parsed?.narratorShown)) {
+    setNarratorShown((parsed.narratorShown as string[]).filter((id) => typeof id === 'string'));
   }
   const { runStats, extras } = getSavePayload();
   await saveLoad.save(session, runStats, extras);

@@ -3,6 +3,7 @@ import {
   attemptResearch,
   canAttemptResearch,
   getCrewFreedByUnlockingNode,
+  getUnlockedResearch,
   addResearchInProgress,
   removeResearchInProgress,
   isResearchInProgress,
@@ -11,6 +12,7 @@ import {
   getResearchDurationMs,
   RESEARCH_CATALOG,
 } from './research.js';
+import { tryShowNarrator } from './narrator.js';
 import { getCatalogUpgradeName } from './i18nCatalogs.js';
 import { t, tParam } from './strings.js';
 import { getPresentationPort } from './uiBridge.js';
@@ -57,6 +59,7 @@ export function handleResearchAttempt(id: string, options?: { coinsAlreadySpent?
   const result = attemptResearch(id, spendCoins, getUpgradeDisplayLine, scientistCount);
 
   if (result.success) {
+    if (getUnlockedResearch().length === 1) tryShowNarrator('first_research_node');
     const node = RESEARCH_CATALOG.find((n) => n.id === id);
     let needsCrewRefresh = false;
     if (node) {

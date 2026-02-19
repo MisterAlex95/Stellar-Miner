@@ -72,6 +72,9 @@ let discoveredEventIds: string[] = [];
 export type CodexUnlockRecord = { id: string; at: number };
 let codexUnlocks: CodexUnlockRecord[] = [];
 
+/** Narrator trigger IDs already shown (persisted with save). One-off ship/mission toasts. */
+let narratorShown: string[] = [];
+
 let expeditionEndsAt: number | null = null;
 let expeditionComposition: ExpeditionComposition | null = null;
 let expeditionDurationMs = 0;
@@ -294,6 +297,19 @@ export function addCodexUnlock(entryId: string): void {
   codexUnlocks = [...codexUnlocks, { id: entryId, at: Date.now() }];
 }
 
+export function getNarratorShown(): string[] {
+  return [...narratorShown];
+}
+
+export function setNarratorShown(ids: string[]): void {
+  narratorShown = Array.isArray(ids) ? ids.filter((id) => typeof id === 'string') : [];
+}
+
+export function addNarratorShown(triggerId: string): void {
+  if (typeof triggerId !== 'string' || narratorShown.includes(triggerId)) return;
+  narratorShown = [...narratorShown, triggerId];
+}
+
 export function updateRunMaxComboMult(mult: number): void {
   if (mult > runStats.runMaxComboMult) runStats.runMaxComboMult = mult;
 }
@@ -415,6 +431,7 @@ export async function getOrCreateSession(): Promise<GameSession> {
     setRunStatsFromPayload(result.runStats ?? null);
     setDiscoveredEventIds(result.discoveredEventIds ?? []);
     setCodexUnlocks(result.codexUnlocks ?? []);
+    setNarratorShown(result.narratorShown ?? []);
     setExpeditionFromPayload(result.expedition ?? null);
     return result.session;
   }
@@ -423,5 +440,6 @@ export async function getOrCreateSession(): Promise<GameSession> {
   setRunStatsFromPayload(null);
   setDiscoveredEventIds([]);
   setCodexUnlocks([]);
+  setNarratorShown([]);
   return new GameSession('session-1', player);
 }
