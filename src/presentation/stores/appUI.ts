@@ -40,6 +40,9 @@ export const useAppUIStore = defineStore('appUI', {
     prestigeConfirmDesc: '',
     prestigeConfirmAfter: '',
     prestigeConfirmGainEstimate: '' as string,
+    /** Prestige chapter (lore): e.g. "Prestige 5 — Veteran of the Belt", optional quote. */
+    prestigeConfirmChapterTitle: '' as string,
+    prestigeConfirmChapterQuote: '' as string,
     /** Prestige rewards modal: list item strings (level 1, then 2..max). */
     prestigeRewardsLevels: [] as string[],
     /** Last saved indicator text (settings modal). Set by port when opening settings or on save. */
@@ -142,10 +145,18 @@ export const useAppUIStore = defineStore('appUI', {
     setQuestClaimedFlash(value: boolean): void {
       this.questClaimedFlash = value;
     },
-    setPrestigeConfirmContent(desc: string, after: string, gainEstimate?: string): void {
+    setPrestigeConfirmContent(
+      desc: string,
+      after: string,
+      gainEstimate?: string,
+      chapterTitle?: string,
+      chapterQuote?: string
+    ): void {
       this.prestigeConfirmDesc = desc;
       this.prestigeConfirmAfter = after;
       this.prestigeConfirmGainEstimate = gainEstimate ?? '';
+      this.prestigeConfirmChapterTitle = chapterTitle ?? '';
+      this.prestigeConfirmChapterQuote = chapterQuote ?? '';
     },
     setPrestigeRewardsContent(levels: string[]): void {
       this.prestigeRewardsLevels = levels;

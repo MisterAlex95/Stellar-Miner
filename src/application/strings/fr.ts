@@ -218,6 +218,7 @@ export const stringsFr: Record<StringKey, string> = {
   criticalToastFormat: 'CRITIQUE ! +{{coins}} ⬡',
   prestigeMilestoneToastFormat: 'Niveau prestige {{level}} ! +{{pct}} % de production pour toujours',
   prestigeCompleteToast: 'Prestige ! +{{pct}} % production pour toujours.',
+  prestigeCompleteToastWithChapter: 'Prestige {{level}} — {{chapter}} ! +{{pct}} % production pour toujours.',
   crewStatFormat: 'Équipage : {{n}} astronaute(s) disponible(s)',
   crewStatDetail: '{{assigned}} sur l’équipement · {{total}} au total',
   crewStatByJob: '{{miners}} mineurs, {{scientists}} scientifiques, {{pilots}} pilotes',

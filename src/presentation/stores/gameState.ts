@@ -73,6 +73,7 @@ const defaultStats: StatsSnapshot = {
   productionLive: false,
   nextMilestoneText: '',
   nextMilestoneVisible: false,
+  nextMilestonePct: 0,
   activeEventsHtml: '',
   activeEventsVisible: false,
   nextEventPct: 0,

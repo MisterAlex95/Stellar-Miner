@@ -2,6 +2,7 @@
   {"id":"lore-first-click","category":"achievement","title":"First Steps","body":"Every empire begins with a single tap. The belt holds infinite ore for those willing to dig.","unlockCondition":{"type":"achievement","id":"first-click"}},
   {"id":"lore-automation","category":"achievement","title":"Automation","body":"The first module marks the turn from miner to operator. Production never sleeps.","unlockCondition":{"type":"achievement","id":"first-upgrade"}},
   {"id":"lore-clicker","category":"achievement","title":"Clicker","body":"A hundred taps. The rig remembers every one.","unlockCondition":{"type":"achievement","id":"clicks-100"}},
+  {"id":"lore-dedicated-miner","category":"achievement","title":"Dedicated Miner","body":"A thousand clicks. The belt has felt your dedication.","unlockCondition":{"type":"achievement","id":"clicks-1k"}},
   {"id":"lore-expansion","category":"achievement","title":"Expansion","body":"Ten modules online. The operation scales.","unlockCondition":{"type":"achievement","id":"upgrades-10"}},
   {"id":"lore-first-astronaut","category":"achievement","title":"Crew Recruit","body":"The first hire. Someone has to watch the rigs.","unlockCondition":{"type":"achievement","id":"first-astronaut"}},
   {"id":"lore-empire","category":"achievement","title":"Empire","body":"Ten worlds under one banner. The belt has felt your presence.","unlockCondition":{"type":"achievement","id":"planets-10"}},

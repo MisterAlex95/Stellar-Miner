@@ -29,6 +29,7 @@ import { checkCodexUnlocks } from './codex.js';
 import { emit } from './eventBus.js';
 import { t, tParam } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
+import { getPrestigeLore } from './prestigeLore.js';
 
 const PRESTIGE_REWARDS_LIST_MAX_LEVEL = 15;
 const PRESTIGE_MILESTONE_LEVELS = [2, 5, 10, 20];
@@ -72,7 +73,10 @@ export function openPrestigeConfirmModal(): void {
       researchPct: Math.round(researchPct),
       totalPct,
     });
-    getPresentationPort().setPrestigeConfirmContent(desc, after, gainEstimate);
+    const lore = getPrestigeLore(nextLevel);
+    const hasChapter = lore.title !== `Prestige ${nextLevel}`;
+    const chapterTitle = hasChapter ? `Prestige ${nextLevel} — ${lore.title}` : undefined;
+    getPresentationPort().setPrestigeConfirmContent(desc, after, gainEstimate, chapterTitle, lore.quote);
   }
   getPresentationPort().openOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open', {
     focusId: 'prestige-confirm-cancel',
@@ -134,7 +138,16 @@ export function confirmPrestige(): void {
   }
   emit('prestige', { level: newPlayer.prestigeLevel });
   const newPct = Math.round(getPrestigeProductionPercent(newPlayer));
-  ui.showMiniMilestoneToast(tParam('prestigeCompleteToast', { pct: newPct }));
+  const lore = getPrestigeLore(newPlayer.prestigeLevel);
+  const toastMsg =
+    lore.title !== `Prestige ${newPlayer.prestigeLevel}`
+      ? tParam('prestigeCompleteToastWithChapter', {
+          level: newPlayer.prestigeLevel,
+          chapter: lore.title,
+          pct: newPct,
+        })
+      : tParam('prestigeCompleteToast', { pct: newPct });
+  ui.showMiniMilestoneToast(toastMsg);
   if (PRESTIGE_MILESTONE_LEVELS.includes(newPlayer.prestigeLevel)) {
     ui.showPrestigeMilestoneToast(newPlayer.prestigeLevel, newPct);
   }

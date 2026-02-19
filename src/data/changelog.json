@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.10",
+    "date": "2026-02",
+    "changes": [
+      "UI/UX: next-milestone progress bar in stats, subtle pulse on tab badges with action, achievement-unlock celebration flash, theme-aware accent border on gameplay blocks (reduced motion respected)."
+    ]
+  },
+  {
+    "version": "0.5.9",
+    "date": "2026-02",
+    "changes": [
+      "Prestige chapters: lore titles and quotes per level (prestigeLore.json), shown on prestige confirm modal and on success toast."
+    ]
+  },
+  {
     "version": "0.5.8",
     "date": "2026-02",
     "changes": [

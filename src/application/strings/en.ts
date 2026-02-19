@@ -219,6 +219,7 @@ export const stringsEn = {
   criticalToastFormat: 'CRITICAL! +{{coins}} ⬡',
   prestigeMilestoneToastFormat: 'Prestige level {{level}}! +{{pct}}% production forever',
   prestigeCompleteToast: 'Prestige! +{{pct}}% production forever.',
+  prestigeCompleteToastWithChapter: 'Prestige {{level}} — {{chapter}}! +{{pct}}% production forever.',
   crewStatFormat: 'Crew: {{n}} astronaut(s) available',
   crewStatDetail: '{{assigned}} on equipment · {{total}} total',
   crewStatByJob: '{{miners}} miners, {{scientists}} scientists, {{pilots}} pilots',

@@ -16,7 +16,20 @@ import {
 } from '../lib/floatingFeedback.js';
 
 export function showAchievementToast(name: string): void {
+  triggerAchievementCelebration();
   showToast(tParam('achievementToast', { name }), 'achievement', { duration: 4000 });
+}
+
+function triggerAchievementCelebration(): void {
+  if (typeof document === 'undefined') return;
+  const root = document.getElementById('app') ?? document.body;
+  root.classList.add('achievement-unlock-celebration');
+  const remove = (): void => {
+    root.classList.remove('achievement-unlock-celebration');
+    root.removeEventListener('animationend', remove);
+  };
+  root.addEventListener('animationend', remove);
+  setTimeout(remove, 700);
 }
 
 export function showMiniMilestoneToast(message: string): void {

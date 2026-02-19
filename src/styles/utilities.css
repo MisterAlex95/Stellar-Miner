@@ -1,8 +1,18 @@
 @layer components {
+  .next-milestone-wrap {
+    margin: -0.5rem 0 0.5rem 0;
+  }
+  .next-milestone-bar {
+    @apply h-1 rounded-full overflow-hidden bg-black/15;
+    margin-bottom: 0.35rem;
+  }
+  .next-milestone-bar-fill {
+    @apply h-full rounded-full bg-primary transition-[width] duration-500;
+  }
   .next-milestone {
     @apply text-center text-foreground-muted;
     font-size: 0.8rem;
-    margin: -0.5rem 0 1rem 0;
+    margin: 0;
   }
 
   .btn-tooltip-wrap {
@@ -30,6 +40,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .app-tab--has-action,
+  .app-tab-bottom--has-action {
+    animation: none !important;
+  }
   .stat-card--bump,
   .upgrade-card--just-bought,
   .float-coin,
@@ -61,6 +75,10 @@
   }
 }
 
+html[data-reduced-motion="true"] .app-tab--has-action,
+html[data-reduced-motion="true"] .app-tab-bottom--has-action {
+  animation: none !important;
+}
 html[data-reduced-motion="true"] .stat-card--bump,
 html[data-reduced-motion="true"] .upgrade-card--just-bought,
 html[data-reduced-motion="true"] .float-coin,
@@ -88,4 +106,27 @@ html[data-reduced-motion="true"] .float-reward {
 html[data-reduced-motion="true"] .combo-indicator--fading {
   animation: none;
   opacity: 0.8;
+}
+
+/* Achievement unlock: short celebratory flash (respects reduced motion) */
+#app.achievement-unlock-celebration::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(245, 158, 11, 0.35), transparent 60%);
+  animation: achievement-flash 0.6s ease-out forwards;
+}
+@keyframes achievement-flash {
+  0% { opacity: 0; }
+  25% { opacity: 1; }
+  100% { opacity: 0; }
+}
+html[data-reduced-motion="true"] #app.achievement-unlock-celebration::before,
+@media (prefers-reduced-motion: reduce) {
+  #app.achievement-unlock-celebration::before {
+    animation: none;
+    opacity: 0.4;
+  }
 }

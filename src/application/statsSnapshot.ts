@@ -48,6 +48,8 @@ export type StatsSnapshot = {
   productionLive: boolean;
   nextMilestoneText: string;
   nextMilestoneVisible: boolean;
+  /** 0–100 progress toward next progression milestone (coins / threshold). */
+  nextMilestonePct: number;
   activeEventsHtml: string;
   activeEventsVisible: boolean;
   nextEventPct: number;
@@ -98,6 +100,7 @@ export function getStatsSnapshot(): StatsSnapshot {
     productionLive: false,
     nextMilestoneText: '',
     nextMilestoneVisible: false,
+    nextMilestonePct: 0,
     activeEventsHtml: '',
     activeEventsVisible: false,
     nextEventPct: 0,
@@ -187,11 +190,14 @@ export function getStatsSnapshot(): StatsSnapshot {
 
   let nextMilestoneText = '';
   let nextMilestoneVisible = false;
+  let nextMilestonePct = 0;
   const milestone = getNextMilestone(session);
   let coinsPerSecondFromClicksForMilestone = 0;
   if (milestone) {
     nextMilestoneVisible = true;
-    const remaining = new Decimal(milestone.coinsNeeded).sub(session.player.coins.value);
+    const coins = session.player.coins.value;
+    nextMilestonePct = Math.min(100, Math.max(0, coins.div(milestone.coinsNeeded).mul(100).toNumber()));
+    const remaining = new Decimal(milestone.coinsNeeded).sub(coins);
     const remainingFormatted = remaining.lte(0) ? formatNumber(0, settings.compactNumbers) : formatNumber(remaining, settings.compactNumbers);
     const titleKey = ('progression' + milestone.block.id.charAt(0).toUpperCase() + milestone.block.id.slice(1) + 'Title') as StringKey;
     nextMilestoneText = tParam('nextMilestoneFormat', { remaining: remainingFormatted, title: t(titleKey) });
@@ -274,6 +280,7 @@ export function getStatsSnapshot(): StatsSnapshot {
     productionLive: effectiveRate.gt(0),
     nextMilestoneText,
     nextMilestoneVisible,
+    nextMilestonePct,
     activeEventsHtml,
     activeEventsVisible: active.length > 0,
     nextEventPct,

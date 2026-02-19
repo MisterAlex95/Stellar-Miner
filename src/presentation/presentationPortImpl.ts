@@ -24,9 +24,15 @@ function flashUpgradeCard(upgradeId: string): void {
   }
 }
 
-function setPrestigeConfirmContent(desc: string, after: string, gainEstimate?: string): void {
+function setPrestigeConfirmContent(
+  desc: string,
+  after: string,
+  gainEstimate?: string,
+  chapterTitle?: string,
+  chapterQuote?: string
+): void {
   const pinia = getPinia();
-  if (pinia) useAppUIStore(pinia).setPrestigeConfirmContent(desc, after, gainEstimate);
+  if (pinia) useAppUIStore(pinia).setPrestigeConfirmContent(desc, after, gainEstimate, chapterTitle, chapterQuote);
 }
 
 function setPrestigeRewardsContent(levels: string[]): void {

@@ -42,8 +42,8 @@ export interface PresentationPort {
   openOverlay(overlayId: string, openClass: string, options?: OpenOverlayOptions): void;
   closeOverlay(overlayId: string, openClass: string): void;
   addQuestClaimedAnimation(): void;
-  /** Set prestige confirm modal content before opening (Vue reads from store). gainEstimate = breakdown of bonus after reset. */
-  setPrestigeConfirmContent(desc: string, after: string, gainEstimate?: string): void;
+  /** Set prestige confirm modal content before opening (Vue reads from store). gainEstimate = breakdown of bonus after reset; chapterTitle/quote = lore for this level. */
+  setPrestigeConfirmContent(desc: string, after: string, gainEstimate?: string, chapterTitle?: string, chapterQuote?: string): void;
   /** Set prestige rewards modal list content before opening (Vue reads from store). */
   setPrestigeRewardsContent(levels: string[]): void;
   /** Set last saved indicator text (settings modal). */
@@ -129,7 +129,7 @@ const defaultPort: PresentationPort = {
   openOverlay: noopStrStrOpt2,
   closeOverlay: noopStrStrOpt2,
   addQuestClaimedAnimation: noop,
-  setPrestigeConfirmContent: noopStrStr,
+  setPrestigeConfirmContent: (_d: string, _a: string, _g?: string, _ct?: string, _cq?: string) => {},
   setPrestigeRewardsContent: noopStrArr,
   setLastSavedText: noopStr,
   setResearchProgress: noopResearchProgress,

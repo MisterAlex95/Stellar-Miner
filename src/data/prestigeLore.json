@@ -1,0 +1,13 @@
+[
+  { "level": 1, "title": "Rebirth", "quote": "Every empire begins with a single coin." },
+  { "level": 2, "title": "Second Wind", "quote": "The belt remembers." },
+  { "level": 3, "title": "Rising Star", "quote": "Three runs, three lessons." },
+  { "level": 4, "title": "Steady Hand", "quote": "Mining is patience and momentum." },
+  { "level": 5, "title": "Veteran of the Belt", "quote": "You've seen the cycle. You choose it." },
+  { "level": 10, "title": "Legend", "quote": "Stories spread faster than light in the colonies." },
+  { "level": 15, "title": "Ascendant", "quote": "The void holds no fear for those who reset." },
+  { "level": 20, "title": "Unbroken", "quote": "Twenty runs. Twenty new beginnings." },
+  { "level": 25, "title": "Void Walker", "quote": "Between the stars, only the persistent remain." },
+  { "level": 50, "title": "Eternal Miner", "quote": "Coins come and go. The grind is forever." },
+  { "level": 100, "title": "Centurion", "quote": "One hundred prestiges. One purpose." }
+]

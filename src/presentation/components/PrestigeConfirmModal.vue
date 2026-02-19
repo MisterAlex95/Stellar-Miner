@@ -12,6 +12,10 @@
       aria-describedby="prestige-confirm-desc"
     >
       <h2 id="prestige-confirm-title">{{ t('prestigeConfirmTitle') }}</h2>
+      <p v-if="appUI.prestigeConfirmChapterTitle" id="prestige-confirm-chapter" class="prestige-confirm-chapter">
+        {{ appUI.prestigeConfirmChapterTitle }}
+      </p>
+      <p v-if="appUI.prestigeConfirmChapterQuote" class="prestige-confirm-quote">"{{ appUI.prestigeConfirmChapterQuote }}"</p>
       <p id="prestige-confirm-desc">{{ appUI.prestigeConfirmDesc }}</p>
       <p id="prestige-confirm-after" class="prestige-confirm-after">{{ appUI.prestigeConfirmAfter }}</p>
       <p v-if="appUI.prestigeConfirmGainEstimate" id="prestige-confirm-gain" class="prestige-confirm-gain">
@@ -83,6 +87,20 @@ const appUI = storeToRefs(useAppUIStore());
   font-family: 'Orbitron', sans-serif;
   font-size: 1.1rem;
   color: var(--text);
+}
+
+.prestige-confirm-chapter {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.prestige-confirm-quote {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-dim);
 }
 
 .prestige-confirm-modal p {

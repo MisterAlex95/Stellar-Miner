@@ -1,6 +1,6 @@
 {
   "name": "stellar-miner",
-  "version": "0.5.8",
+  "version": "0.5.10",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -17,10 +17,7 @@
     "kanban": "cd kanban && npm run dev",
     "cpm:report": "python3 scripts/report.py",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "task-driven": "tsx scripts/task-detector/run.ts",
-    "task-driven:prompt": "tsx scripts/task-detector/run.ts --output .task-driven-prompt.txt",
-    "task-driven:watch": "tsx scripts/task-detector/run.ts --watch --output .task-driven-prompt.txt"
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

@@ -157,14 +157,28 @@
     aria-hidden="true"
     :style="spacerStyle"
   />
-  <p
-    id="next-milestone"
-    class="next-milestone"
-    aria-live="polite"
-    :style="store.stats.nextMilestoneVisible ? '' : { display: 'none' }"
+  <div
+    v-if="store.stats.nextMilestoneVisible"
+    class="next-milestone-wrap"
+    aria-hidden="true"
   >
-    {{ store.stats.nextMilestoneText }}
-  </p>
+    <div
+      class="next-milestone-bar"
+      role="presentation"
+    >
+      <div
+        class="next-milestone-bar-fill"
+        :style="{ width: Math.min(100, store.stats.nextMilestonePct) + '%' }"
+      />
+    </div>
+    <p
+      id="next-milestone"
+      class="next-milestone"
+      aria-live="polite"
+    >
+      {{ store.stats.nextMilestoneText }}
+    </p>
+  </div>
   <div
     :id="toastContainerId"
     class="event-toasts"

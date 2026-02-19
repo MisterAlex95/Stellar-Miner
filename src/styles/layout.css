@@ -1,4 +1,8 @@
 /* Layout and shell: Tailwind @layer components (theme via @apply) */
+@keyframes tab-badge-pulse {
+  0%, 100% { opacity: 1; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+  50% { opacity: 0.85; text-shadow: 0 0 14px rgba(34, 197, 94, 0.6); }
+}
 @layer components {
   #app[data-active-tab="mine"] .stats {
     @apply static;
@@ -51,6 +55,7 @@
   .app-tab--has-action:not(.app-tab--active) {
     @apply text-success;
     text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+    animation: tab-badge-pulse 2s ease-in-out infinite;
   }
   .app-tab--has-action:not(.app-tab--active):hover {
     @apply text-success;
@@ -279,6 +284,7 @@
   .app-tab-bottom--has-action:not(.app-tab-bottom--active) {
     @apply text-success;
     text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+    animation: tab-badge-pulse 2s ease-in-out infinite;
   }
   .app-tab-bottom--has-action:not(.app-tab-bottom--active):hover {
     @apply text-success;
