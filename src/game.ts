@@ -1,8 +1,11 @@
 import './styles/index.css';
+import { mountVueApp, mountDataToolApp } from './presentation/main.js';
+
+const isDataTool = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tool') === 'data';
+
 import { setPresentationPort } from './application/uiBridge.js';
 import { createPresentationPort } from './presentation/presentationPortImpl.js';
 import { startStarfield } from './presentation/canvas/StarfieldCanvas.js';
-import { mountVueApp } from './presentation/main.js';
 import { initPresentation } from './presentation/initPresentation.js';
 import { switchTab } from './presentation/tabs.js';
 import { getTabsSnapshot } from './application/tabsSnapshot.js';
@@ -258,4 +261,8 @@ async function init(): Promise<void> {
   setInterval(saveSession, SAVE_INTERVAL_MS);
 }
 
-init();
+if (isDataTool) {
+  mountDataToolApp();
+} else {
+  init();
+}

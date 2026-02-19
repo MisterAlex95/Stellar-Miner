@@ -16,7 +16,7 @@ export type GetUnlockedResearch = () => string[];
 
 export const SAVE_VERSION = 1;
 
-const STORAGE_KEY = 'stellar-miner-session';
+export const SESSION_STORAGE_KEY = 'stellar-miner-session';
 export const LAST_SAVE_KEY = 'stellar-miner-last-save';
 const PROGRESSION_KEY = 'stellar-miner-progression';
 const STATS_STORAGE_KEY = 'stellar-miner-stats';
@@ -177,12 +177,12 @@ export class SaveLoadService implements ISaveLoadService {
     if (typeof localStorage === 'undefined') return;
     const now = Date.now();
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload));
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       emit('save_failed', { error: err });
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload));
       } catch {
         emit('save_failed', { error: 'retry failed' });
       }
@@ -203,7 +203,7 @@ export class SaveLoadService implements ISaveLoadService {
 
   async load(): Promise<{ session: GameSession; runStats?: SavedRunStats; discoveredEventIds?: string[]; codexUnlocks?: Array<{ id: string; at: number }>; narratorShown?: string[]; expedition?: SavedExpedition } | null> {
     if (typeof localStorage === 'undefined') return null;
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
     if (!raw) return null;
     let data: unknown;
     try {
@@ -298,7 +298,7 @@ export class SaveLoadService implements ISaveLoadService {
 
   clearProgress(): void {
     if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(SESSION_STORAGE_KEY);
       localStorage.removeItem(LAST_SAVE_KEY);
       localStorage.removeItem(PROGRESSION_KEY);
       localStorage.removeItem(STATS_STORAGE_KEY);
