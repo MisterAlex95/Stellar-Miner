@@ -130,14 +130,12 @@ const charts = computed((): ChartSpec[] => {
         const planetType = planetTypes[t];
         const { stroke, fill } = planetStyles[t % planetStyles.length];
         list.push({
-          title: `${planetType.charAt(0).toUpperCase() + planetType.slice(1)} (coins/s)`,
+          title: `${planetType.charAt(0).toUpperCase() + planetType.slice(1)} (affinity)`,
           values: modulesList.map((m: unknown) => {
-            if (!m || typeof m !== 'object') return 0;
-            const obj = m as { id?: string; coinsPerSecond?: number };
-            const cps = typeof obj.coinsPerSecond === 'number' ? obj.coinsPerSecond : 0;
+            if (!m || typeof m !== 'object') return 1;
+            const obj = m as { id?: string };
             const byUpgrade = obj.id ? affinity[obj.id] : undefined;
-            const mult = byUpgrade && typeof byUpgrade[planetType] === 'number' ? byUpgrade[planetType] : 1;
-            return cps * mult;
+            return byUpgrade && typeof byUpgrade[planetType] === 'number' ? byUpgrade[planetType] : 1;
           }),
           colorStroke: stroke,
           colorFill: fill,
@@ -159,9 +157,16 @@ const maxLength = computed(() => Math.max(...charts.value.map((c) => c.values.le
 const tooltipLabel = computed(() => {
   const i = hoveredIndex.value;
   if (i == null) return '';
-  if (props.dataKey === 'modules' && Array.isArray(props.data) && props.data[i]) {
-    const m = props.data[i] as { name?: string; id?: string };
-    return m?.name ?? m?.id ?? `Module ${i}`;
+  if (props.dataKey === 'modules') {
+    const list = Array.isArray(props.data)
+      ? props.data
+      : (props.data && typeof props.data === 'object' && 'modules' in props.data)
+        ? (props.data as { modules: unknown[] }).modules
+        : null;
+    if (list && list[i]) {
+      const m = list[i] as { name?: string; id?: string };
+      return m?.name ?? m?.id ?? `Module ${i}`;
+    }
   }
   return `Index ${i}`;
 });

@@ -1,0 +1,16 @@
+{
+  "validTypes": [
+    "totalClicks",
+    "upgradesCount",
+    "astronautsCount",
+    "prestigeLevel",
+    "planetsCount",
+    "totalCoinsEver",
+    "questStreak",
+    "questClaimed",
+    "comboMaster",
+    "totalSlotsGreaterThan",
+    "researchNodesUnlocked",
+    "shootingStarClicked"
+  ]
+}

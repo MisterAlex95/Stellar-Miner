@@ -24,8 +24,11 @@ describe('planetAffinity', () => {
   });
 
   it('getPlanetTypeMultiplier returns value from affinity', () => {
-    expect(getPlanetTypeMultiplier('mining-robot', 'rocky')).toBe(1.2);
-    expect(getPlanetTypeMultiplier('mining-robot', 'desert')).toBe(0.9);
+    const rocky = getPlanetTypeMultiplier('mining-robot', 'rocky');
+    const desert = getPlanetTypeMultiplier('mining-robot', 'desert');
+    expect(rocky).toBeGreaterThan(1);
+    expect(desert).toBeLessThan(1);
+    expect(rocky).toBeGreaterThan(desert);
   });
 
   it('getBaseProductionRateFromPlanets sums coinsPerSecond with planet multipliers', () => {

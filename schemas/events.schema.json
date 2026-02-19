@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "name", "effect", "type"],
+    "properties": {
+      "id": { "type": "string" },
+      "name": { "type": "string" },
+      "effect": {
+        "type": "object",
+        "required": ["multiplier", "durationMs"],
+        "properties": {
+          "multiplier": { "type": "number" },
+          "durationMs": { "type": "number" }
+        }
+      },
+      "type": { "type": "string", "enum": ["positive", "negative"] },
+      "flavor": { "type": "string" }
+    }
+  }
+}

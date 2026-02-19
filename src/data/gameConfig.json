@@ -70,7 +70,8 @@
   "upgradeGroups": [
     { "label": "Early", "minTier": 1, "maxTier": 3 },
     { "label": "Mid", "minTier": 4, "maxTier": 6 },
-    { "label": "Late", "minTier": 7, "maxTier": 10 }
+    { "label": "Late", "minTier": 7, "maxTier": 10 },
+    { "label": "Endgame", "minTier": 11, "maxTier": 15 }
   ],
   "questGeneration": {
     "typeWeights": [0.22, 0.48, 0.68, 0.82, 0.88, 0.93, 0.97, 1],

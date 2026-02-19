@@ -1,0 +1,5 @@
+{
+  "slotFreeUpgrades": "array<string moduleId>",
+  "crewFreeUpgrades": "array<string moduleId>",
+  "crewReduction": "object<moduleId, number>"
+}

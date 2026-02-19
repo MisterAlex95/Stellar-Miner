@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["planetTypes", "modules"],
+  "properties": {
+    "planetTypes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "modules": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/module" }
+    }
+  },
+  "definitions": {
+    "affinity": {
+      "type": "object",
+      "required": ["rocky", "desert", "ice", "volcanic", "gas"],
+      "additionalProperties": false,
+      "properties": {
+        "rocky": { "type": "number" },
+        "desert": { "type": "number" },
+        "ice": { "type": "number" },
+        "volcanic": { "type": "number" },
+        "gas": { "type": "number" }
+      }
+    },
+    "module": {
+      "type": "object",
+      "required": ["id", "name", "description", "cost", "coinsPerSecond", "tier", "requiredAstronauts"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "cost": { "type": "number" },
+        "coinsPerSecond": { "type": "number" },
+        "tier": { "type": "number" },
+        "requiredAstronauts": { "type": "number" },
+        "usesSlot": { "type": "boolean" },
+        "affinity": { "$ref": "#/definitions/affinity" }
+      }
+    }
+  }
+}
