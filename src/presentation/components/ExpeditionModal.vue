@@ -29,13 +29,10 @@
       </div>
       <div class="expedition-modal-body">
         <div class="expedition-modal-cost-wrap">
-          <p class="expedition-modal-cost">
-            {{ costFormattedForType }}
-          </p>
+          <span class="expedition-modal-cost">{{ costFormattedForType }}</span>
           <span
+            v-if="expedition.isNewSystem"
             class="expedition-new-system"
-            :class="{ 'expedition-new-system--visible': expedition.isNewSystem }"
-            :aria-hidden="!expedition.isNewSystem"
             :title="expedition.newSystemTitle"
           >
             {{ expedition.newSystemText }}
@@ -147,6 +144,8 @@
             >
               <span class="expedition-tier-badge" :class="'expedition-tier-badge--' + tier.id">{{ tier.titleText }}</span>
               <span class="expedition-tier-stat-line">{{ tParam('expeditionTierDuration', { sec: String(tier.durationSec) }) }} · {{ tParam('expeditionTierRisk', { pct: String(tier.deathPct) }) }}</span>
+              <span v-if="tier.estimatedCoinsStr" class="expedition-tier-estimate">{{ tier.estimatedCoinsStr }}</span>
+              <span v-if="tier.rescuedRangeStr" class="expedition-tier-rescued">{{ tier.rescuedRangeStr }}</span>
             </button>
           </div>
         </template>
@@ -227,6 +226,8 @@ import {
   getExpeditionTiers,
   getExpeditionTypes,
   getExpeditionDeathChanceWithMedics,
+  getMiningExpeditionCoins,
+  getRescueCrewRange,
   CREW_ROLES,
   generatePlanetName,
   type CrewRole,
@@ -352,11 +353,19 @@ const tierCards = computed(() => {
     const visualSeed = destinationSeed(id);
     const planetType = getPlanetType(destinationName);
     const typeLabel = planetType.charAt(0).toUpperCase() + planetType.slice(1);
+    const minerCount = exp.composition.miner ?? 0;
+    const estimatedCoinsStr =
+      typeId === 'mining' && session
+        ? '~' + formatNumber(getMiningExpeditionCoins(session.player.effectiveProductionRate, durationMs, id, minerCount).toNumber(), getSettings().compactNumbers) + ' ⬡'
+        : undefined;
+    const rescueRange = typeId === 'rescue' ? getRescueCrewRange(id) : null;
+    const rescuedRangeStr = rescueRange ? tParam('expeditionRescueRange', { min: String(rescueRange.min), max: String(rescueRange.max) }) : undefined;
     return {
       id,
       selected,
       deathPct,
       durationSec,
+      durationMs,
       destinationName,
       visualSeed,
       planetType,
@@ -364,6 +373,8 @@ const tierCards = computed(() => {
       titleText: t(TIER_KEYS[id] ?? 'expeditionTierMedium'),
       descText: t(TIER_DESC_KEYS[id] ?? 'expeditionTierMediumDesc'),
       extraSlot: tier.extraSlot ?? false,
+      estimatedCoinsStr,
+      rescuedRangeStr,
     };
   });
 });
@@ -542,39 +553,30 @@ function handleLaunch(): void {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
 }
 
 .expedition-modal-cost {
-  margin: 0;
-  padding: 0.6rem 1rem;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text);
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
+  color: var(--accent);
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
   border: 1px solid var(--border);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .expedition-new-system {
-  display: none;
-  padding: 0.4rem 0.75rem;
-  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: #c4b5fd;
   background: rgba(139, 92, 246, 0.25);
   border: 1px solid rgba(139, 92, 246, 0.5);
-  border-radius: 8px;
-}
-
-.expedition-new-system--visible {
-  display: inline-block;
+  border-radius: 6px;
 }
 
 .expedition-modal-type-title {
@@ -649,10 +651,10 @@ function handleLaunch(): void {
 }
 
 .expedition-tier-card--compact {
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   padding: 0.75rem 0.5rem;
   min-height: auto;
 }
@@ -664,6 +666,15 @@ function handleLaunch(): void {
 
 .expedition-tier-card--compact .expedition-tier-badge {
   margin-bottom: 0;
+}
+
+.expedition-tier-estimate,
+.expedition-tier-rescued {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 0.25rem;
 }
 
 .expedition-tier-card {

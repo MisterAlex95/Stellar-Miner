@@ -79,10 +79,16 @@ const B = balance as {
   miningDurationMediumMs?: number;
   miningDurationHardMs?: number;
   miningCoinMultiplier?: number;
+  miningBonusPerMiner?: number;
+  miningTierMultiplierEasy?: number;
+  miningTierMultiplierMedium?: number;
+  miningTierMultiplierHard?: number;
   miningResearchData?: number;
   rescueExpeditionCostMultiplier?: number;
   rescueCrewMin?: number;
   rescueCrewMax?: number;
+  rescueCrewTierDeltaEasy?: number;
+  rescueCrewTierDeltaHard?: number;
   rescueResearchData?: number;
 };
 
@@ -165,18 +171,46 @@ export function getResearchDataForExpeditionSuccess(typeId: ExpeditionTypeId | s
   return 0;
 }
 
-/** Coins earned on successful Mining expedition: productionRate * durationSec * multiplier. */
-export function getMiningExpeditionCoins(productionRateValue: Decimal, durationMs: number): Decimal {
-  const mult = B.miningCoinMultiplier ?? 2.5;
+/** Coins earned on successful Mining expedition: productionRate * durationSec * baseMultiplier * tierMultiplier * (1 + minerBonus * minerCount). */
+export function getMiningExpeditionCoins(
+  productionRateValue: Decimal,
+  durationMs: number,
+  tierId?: ExpeditionTierId | string,
+  minerCount: number = 0
+): Decimal {
+  const baseMult = B.miningCoinMultiplier ?? 2.5;
+  const minerBonus = B.miningBonusPerMiner ?? 0.08;
+  const tierMults: Record<string, number> = {
+    easy: B.miningTierMultiplierEasy ?? 0.85,
+    medium: B.miningTierMultiplierMedium ?? 1,
+    hard: B.miningTierMultiplierHard ?? 1.25,
+  };
+  const tier = tierId ? getExpeditionTier(tierId) : undefined;
+  const tierMult = tier ? (tierMults[tier.id] ?? 1) : 1;
+  const minerMult = 1 + minerCount * minerBonus;
   const sec = durationMs / 1000;
-  return productionRateValue.mul(sec).mul(mult).floor();
+  return productionRateValue.mul(sec).mul(baseMult).mul(tierMult).mul(minerMult).floor();
 }
 
-/** Rescued crew count on successful Rescue expedition (random in [min, max]). */
-export function getRescueCrewCount(roll: () => number): number {
-  const min = B.rescueCrewMin ?? 1;
-  const max = B.rescueCrewMax ?? 2;
-  return min + Math.floor(roll() * (max - min + 1));
+/** Min and max crew rescued on successful Rescue expedition (for UI display). Depends on tier: easy = fewer, hard = more. */
+export function getRescueCrewRange(tierId?: ExpeditionTierId | string): { min: number; max: number } {
+  const baseMin = B.rescueCrewMin ?? 1;
+  const baseMax = B.rescueCrewMax ?? 2;
+  const deltaEasy = B.rescueCrewTierDeltaEasy ?? 0;
+  const deltaHard = B.rescueCrewTierDeltaHard ?? 0;
+  const tier = tierId ? getExpeditionTier(tierId) : undefined;
+  const delta = tier?.id === 'easy' ? deltaEasy : tier?.id === 'hard' ? deltaHard : 0;
+  return {
+    min: Math.max(0, baseMin + delta),
+    max: Math.max(0, baseMax + delta),
+  };
+}
+
+/** Rescued crew count on successful Rescue expedition (random in [min, max] for the given tier). */
+export function getRescueCrewCount(roll: () => number, tierId?: ExpeditionTierId | string): number {
+  const { min, max } = getRescueCrewRange(tierId);
+  const range = Math.max(0, max - min + 1);
+  return min + Math.floor(roll() * range);
 }
 
 /** Cost in coins to launch an expedition to discover a new planet. Scales with count. When current solar system is full (4 planets per system), next expedition costs more (new system). */

@@ -155,14 +155,20 @@ export class PlanetService {
 
     if (success && typeId === 'mining') {
       player.addAstronauts(survivors, 'astronaut');
-      const coins = getMiningExpeditionCoins(player.effectiveProductionRate, durationMs > 0 ? durationMs : 60000);
+      const minerCount = composition.miner ?? 0;
+      const coins = getMiningExpeditionCoins(
+        player.effectiveProductionRate,
+        durationMs > 0 ? durationMs : 60000,
+        tierId,
+        minerCount
+      );
       player.addCoins(coins);
       return { success: true, totalSent, survivors, deaths, coinsEarned: coins };
     }
 
     if (success && typeId === 'rescue') {
       player.addAstronauts(survivors, 'astronaut');
-      const rescued = getRescueCrewCount(roll);
+      const rescued = getRescueCrewCount(roll, tierId);
       return { success: true, totalSent, survivors, deaths, rescuedCrew: rescued };
     }
 
