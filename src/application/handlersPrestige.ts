@@ -31,8 +31,8 @@ import { t, tParam } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
 import { getPrestigeLore } from './prestigeLore.js';
 import { tryShowNarrator } from './narrator.js';
+import { getPrestigeRunModifiers } from './catalogs.js';
 
-const PRESTIGE_REWARDS_LIST_MAX_LEVEL = 15;
 const PRESTIGE_MILESTONE_LEVELS = [2, 5, 10, 20];
 
 function refreshAfterPrestige(): void {
@@ -88,32 +88,18 @@ export function closePrestigeConfirmModal(): void {
   getPresentationPort().closeOverlay('prestige-confirm-overlay', 'prestige-confirm-overlay--open');
 }
 
-export function openPrestigeRewardsModal(): void {
-  const levels: string[] = [t('prestigeReward1')];
-  for (let level = 2; level <= PRESTIGE_REWARDS_LIST_MAX_LEVEL; level++) {
-    const prod = Math.round(level * PRESTIGE_BONUS_PER_LEVEL * 100);
-    const click = Math.round((level - 1) * PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL);
-    levels.push(tParam('prestigeRewardLevelFormat', { level, prod, click }));
-  }
-  getPresentationPort().setPrestigeRewardsContent(levels);
-  getPresentationPort().openOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open', {
-    focusId: 'prestige-rewards-close',
-  });
-}
-
-export function closePrestigeRewardsModal(): void {
-  getPresentationPort().closeOverlay('prestige-rewards-overlay', 'prestige-rewards-overlay--open');
-}
-
-export function confirmPrestige(): void {
+/** @param prestigeRunChoiceId - Optional choice id from prestige modal; applied as run bonus for the new run. */
+export function confirmPrestige(prestigeRunChoiceId: string | null = null): void {
   const session = getSession();
   if (!session) return;
   if (!session.player.coins.gte(PRESTIGE_COIN_THRESHOLD)) return;
   closePrestigeConfirmModal();
+  const runModifiers = getPrestigeRunModifiers(prestigeRunChoiceId);
   const newPlayer = Player.createAfterPrestige(
     session.player,
     session.player.planets.length,
-    getUnlockedResearch().length
+    getUnlockedResearch().length,
+    runModifiers
   );
   setSession(new GameSession(session.id, newPlayer, []));
   setActiveEventInstances([]);

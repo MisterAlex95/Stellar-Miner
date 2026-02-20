@@ -78,4 +78,13 @@ describe('handlersPrestige', () => {
     confirmPrestige();
     expect(notifyRefresh).toHaveBeenCalled();
   });
+
+  it('applies prestige run choice when confirmPrestige(choiceId) is called', () => {
+    confirmPrestige('production-bonus');
+    const sessionAfter = getSession();
+    expect(sessionAfter.player.prestigeRunChoiceId).toBe('production-bonus');
+    expect(sessionAfter.player.prestigeRunProductionMult).toBe(1.1);
+    expect(sessionAfter.player.prestigeRunClickMult).toBe(1);
+    expect(sessionAfter.player.prestigeRunExpeditionDurationPercent === 0).toBe(true);
+  });
 });

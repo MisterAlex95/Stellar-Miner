@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.25",
+    "date": "2026-02",
+    "changes": [
+      "Prestige run choices: on prestige, pick one run bonus (e.g. +10% click, +10% production, or +15% expedition speed) for the new run; choice is applied and persisted until next prestige."
+    ]
+  },
+  {
     "version": "0.5.24",
     "date": "2026-02",
     "changes": [

@@ -8,7 +8,7 @@
       @click="onPanelClick"
     >
       <div class="debug-panel-header">
-        <span>{{ t('debug') }}</span>
+        <span class="debug-panel-title">{{ t('debug') }} <span class="debug-badge">DEV</span></span>
         <button
           type="button"
           class="debug-close"
@@ -33,56 +33,21 @@
           </div>
         </div>
         <div class="debug-section">
+          <span class="debug-section-label">Coins</span>
+          <div class="debug-actions debug-actions--coins">
+            <button type="button" class="debug-btn" data-debug="coins-1k">+1K</button>
+            <button type="button" class="debug-btn" data-debug="coins-50k">+50K</button>
+            <button type="button" class="debug-btn" data-debug="coins-5m">+5M</button>
+          </div>
+        </div>
+        <div class="debug-section">
+          <span class="debug-section-label">Debug</span>
           <div class="debug-actions">
-            <button
-              type="button"
-              class="debug-btn"
-              data-debug="coins-1k"
-            >
-              +1K coins
-            </button>
-            <button
-              type="button"
-              class="debug-btn"
-              data-debug="coins-50k"
-            >
-              +50K coins
-            </button>
-            <button
-              type="button"
-              class="debug-btn"
-              data-debug="trigger-event"
-            >
-              {{ t('debugTriggerEvent') }}
-            </button>
-            <button
-              type="button"
-              class="debug-btn"
-              data-debug="spawn-event"
-            >
-              {{ t('debugSpawnPlus') }}
-            </button>
-            <button
-              type="button"
-              class="debug-btn"
-              data-debug="clear-events"
-            >
-              {{ t('debugClearEvents') }}
-            </button>
-            <button
-              type="button"
-              class="debug-btn"
-              data-debug="add-planet"
-            >
-              {{ t('debugAddPlanet') }}
-            </button>
-            <button
-              type="button"
-              class="debug-btn"
-              data-debug="open-balance"
-            >
-              {{ t('debugOpenBalance') }}
-            </button>
+            <button type="button" class="debug-btn" data-debug="trigger-event">{{ t('debugTriggerEvent') }}</button>
+            <button type="button" class="debug-btn" data-debug="clear-events">{{ t('debugClearEvents') }}</button>
+            <button type="button" class="debug-btn" data-debug="add-planet">{{ t('debugAddPlanet') }}</button>
+            <button type="button" class="debug-btn" data-debug="copy-save">{{ t('debugCopySave') }}</button>
+            <button type="button" class="debug-btn" data-debug="open-balance">{{ t('debugOpenBalance') }}</button>
           </div>
         </div>
       </div>
@@ -152,6 +117,23 @@ function onPanelClick(e: MouseEvent): void {
   color: var(--text-dim);
 }
 
+.debug-panel-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.debug-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: var(--border);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .debug-close {
   width: 28px;
   height: 28px;
@@ -182,6 +164,14 @@ function onPanelClick(e: MouseEvent): void {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.debug-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .debug-row {

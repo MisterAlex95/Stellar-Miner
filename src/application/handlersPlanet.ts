@@ -38,7 +38,15 @@ export function handleBuyNewPlanet(): void {
   if (!planetService.canLaunchExpedition(player, null, 'scout')) return;
   const result = planetService.startExpedition(player, null, 'medium', 'scout');
   if (!result.started) return;
-  const durationMs = planetService.getExpeditionDurationMs(player, 'medium', result.composition.pilot ?? 0, getResearchExpeditionDurationPercent(), 'scout');
+  const researchDurationPercent =
+    getResearchExpeditionDurationPercent() + player.prestigeRunExpeditionDurationPercent;
+  const durationMs = planetService.getExpeditionDurationMs(
+    player,
+    'medium',
+    result.composition.pilot ?? 0,
+    researchDurationPercent,
+    'scout'
+  );
   const endsAt = Date.now() + durationMs;
   setExpeditionInProgress(endsAt, result.composition, durationMs, 'medium', 'scout');
   if (player.planets.length === 0) tryShowNarrator('first_expedition_launch');
@@ -54,7 +62,15 @@ export function handleLaunchExpeditionFromModal(tierId: ExpeditionTierId, compos
   if (!planetService.canLaunchExpedition(player, composition, typeId)) return;
   const result = planetService.startExpedition(player, composition, tierId, typeId);
   if (!result.started) return;
-  const durationMs = planetService.getExpeditionDurationMs(player, tierId, result.composition.pilot ?? 0, getResearchExpeditionDurationPercent(), typeId);
+  const researchDurationPercent =
+    getResearchExpeditionDurationPercent() + player.prestigeRunExpeditionDurationPercent;
+  const durationMs = planetService.getExpeditionDurationMs(
+    player,
+    tierId,
+    result.composition.pilot ?? 0,
+    researchDurationPercent,
+    typeId
+  );
   const endsAt = Date.now() + durationMs;
   setExpeditionInProgress(endsAt, result.composition, durationMs, tierId, typeId);
   if (player.planets.length === 0) tryShowNarrator('first_expedition_launch');

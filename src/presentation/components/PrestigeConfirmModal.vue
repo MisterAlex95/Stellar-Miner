@@ -21,6 +21,20 @@
       <p v-if="appUI.prestigeConfirmGainEstimate" id="prestige-confirm-gain" class="prestige-confirm-gain">
         {{ appUI.prestigeConfirmGainEstimate }}
       </p>
+      <p class="prestige-confirm-run-bonus-title">{{ t('prestigeRunBonusTitle') }}</p>
+      <div class="prestige-confirm-choices" role="group" aria-label="Run bonus">
+        <button
+          v-for="choice in prestigeChoices"
+          :key="choice.id"
+          type="button"
+          class="prestige-confirm-choice"
+          :class="{ 'prestige-confirm-choice--selected': selectedChoiceId === choice.id }"
+          @click="selectedChoiceId = choice.id"
+        >
+          <span class="prestige-confirm-choice-label">{{ t(choice.labelKey) }}</span>
+          <span v-if="choice.flavorKey" class="prestige-confirm-choice-flavor">{{ t(choice.flavorKey) }}</span>
+        </button>
+      </div>
       <div class="prestige-confirm-actions">
         <button
           id="prestige-confirm-cancel"
@@ -34,7 +48,7 @@
           id="prestige-confirm-do"
           type="button"
           class="prestige-confirm-do"
-          @click="confirmPrestige"
+          @click="doConfirm"
         >
           {{ t('prestige') }}
         </button>
@@ -44,12 +58,20 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { t } from '../../application/strings.js';
 import { closePrestigeConfirmModal, confirmPrestige } from '../../application/handlers.js';
+import { PRESTIGE_CHOICES } from '../../application/catalogs.js';
 import { useAppUIStore } from '../stores/appUI.js';
 
 const appUI = storeToRefs(useAppUIStore());
+const prestigeChoices = PRESTIGE_CHOICES;
+const selectedChoiceId = ref<string | null>(PRESTIGE_CHOICES[0]?.id ?? null);
+
+function doConfirm(): void {
+  confirmPrestige(selectedChoiceId.value);
+}
 </script>
 
 <style scoped>
@@ -78,8 +100,12 @@ const appUI = storeToRefs(useAppUIStore());
   border-radius: 16px;
   width: 100%;
   max-width: 360px;
+  max-height: min(85vh, 640px);
   padding: 1.5rem;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .prestige-confirm-modal h2 {
@@ -125,6 +151,58 @@ const appUI = storeToRefs(useAppUIStore());
   color: var(--success, #22c55e);
   font-weight: 700;
   font-size: 0.95rem;
+}
+
+.prestige-confirm-run-bonus-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.prestige-confirm-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.prestige-confirm-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.prestige-confirm-choice:hover {
+  border-color: var(--accent);
+  background: var(--bg-panel);
+}
+
+.prestige-confirm-choice--selected {
+  border-color: var(--accent);
+  background: rgba(245, 158, 11, 0.15);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.prestige-confirm-choice-label {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.prestige-confirm-choice-flavor {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
 }
 
 .prestige-confirm-actions {

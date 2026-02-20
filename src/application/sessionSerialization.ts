@@ -16,7 +16,7 @@ import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
 import { generatePlanetName } from '../domain/constants.js';
 import { toDecimal } from '../domain/bigNumber.js';
-import { getUpgradeUsesSlot, EVENT_CATALOG } from './catalogs.js';
+import { getUpgradeUsesSlot, EVENT_CATALOG, getPrestigeRunModifiers } from './catalogs.js';
 import { getBaseProductionRateFromPlanets } from './planetAffinity.js';
 import { getEffectiveRequiredAstronauts } from './research.js';
 import type { SavedSession, SavedUpgrade, SavedUninstallingUpgrade } from '../infrastructure/SaveLoadService.js';
@@ -102,6 +102,8 @@ export function deserializeSession(data: SavedSession): GameSession {
     planets.reduce((sum, p) => sum + p.upgrades.reduce((s, u) => s + getEffectiveRequiredAstronauts(u.id), 0), 0);
   const prestigePlanetBonus = player.prestigePlanetBonus ?? 0;
   const prestigeResearchBonus = player.prestigeResearchBonus ?? 0;
+  const prestigeRunChoiceId = player.prestigeRunChoiceId ?? null;
+  const runModifiers = getPrestigeRunModifiers(prestigeRunChoiceId);
   const newPlayer = new Player(
     player.id,
     Coins.from(player.coins),
@@ -114,7 +116,8 @@ export function deserializeSession(data: SavedSession): GameSession {
     veteranCount,
     crewAssignedToEquipment,
     prestigePlanetBonus,
-    prestigeResearchBonus
+    prestigeResearchBonus,
+    runModifiers
   );
   const activeEvents = data.activeEvents.map((e) => {
     const catalogEvent = EVENT_CATALOG.find((ev) => ev.id === e.id);

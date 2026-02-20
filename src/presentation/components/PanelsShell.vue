@@ -874,6 +874,13 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
   100% { box-shadow: 0 0 16px var(--accent-glow); }
 }
 
+:deep(.prestige-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 :deep(.crew-hint) {
   font-size: 0.85rem;
   color: var(--text-dim);

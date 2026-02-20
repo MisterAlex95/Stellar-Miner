@@ -1,9 +1,8 @@
-import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered, addDiscoveredEvent, getDiscoveredEventIds, setPendingChoiceEvent } from './gameState.js';
+import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered, addDiscoveredEvent, getDiscoveredEventIds, setPendingChoiceEvent, getRunStats } from './gameState.js';
 import { getEventMultiplier } from './gameState.js';
 import { getResearchProductionMultiplier } from './research.js';
 import { getSetBonusMultiplier } from './moduleSetBonuses.js';
 import { getEventPoolForRun, CHOICE_EVENT_CATALOG, CHOICE_EVENT_CHANCE } from './catalogs.js';
-import { getRunStats } from './gameState.js';
 import { pushActiveEventInstance } from './gameState.js';
 import { t } from './strings.js';
 import { notifyRefresh } from './refreshSignal.js';
@@ -13,6 +12,7 @@ import { tryShowNarrator } from './narrator.js';
 import { canShowChoiceEvent } from './handlersEventChoice.js';
 import { Planet } from '../domain/entities/Planet.js';
 import { generatePlanetName } from '../domain/constants.js';
+import { handleExportSave } from './handlersSave.js';
 
 function refreshAfterDebugAction(): void {
   notifyRefresh();
@@ -88,6 +88,11 @@ export function updateDebugPanel(): void {
   const nextEventIn = Math.max(0, Math.ceil((nextEventAt - now) / 1000));
   const activeCount = getActiveEventInstances().filter((a) => a.endsAt > now).length;
 
+  const runStats = getRunStats();
+  const runDurationMs = runStats ? Math.max(0, now - runStats.runStartTime) : 0;
+  const runDurationSec = Math.floor(runDurationMs / 1000);
+  const runDurationStr = runDurationSec < 60 ? `${runDurationSec}s` : runDurationSec < 3600 ? `${Math.floor(runDurationSec / 60)}m` : `${Math.floor(runDurationSec / 3600)}h ${Math.floor((runDurationSec % 3600) / 60)}m`;
+
   const rateNum = effectiveRate.toNumber();
   const coinsNum = player.coins.value.toNumber();
   const baseNum = player.productionRate.value.toNumber();
@@ -99,6 +104,7 @@ export function updateDebugPanel(): void {
     { label: t('debugPrestigeLevel'), value: String(player.prestigeLevel) },
     { label: t('debugPlanets'), value: String(player.planets.length) },
     { label: t('debugUpgradesTotal'), value: String(player.upgrades.length) },
+    { label: t('debugRunDuration'), value: runDurationStr },
     { label: t('debugNextEventIn'), value: `${nextEventIn}s` },
     { label: t('debugActiveEvents'), value: String(activeCount) },
   ];
@@ -113,12 +119,16 @@ export function handleDebugAction(action: string): void {
     }
     return;
   }
+  if (action === 'copy-save') {
+    handleExportSave();
+    return;
+  }
   const session = getSession();
   if (!session) return;
   if (action === 'coins-1k') session.player.addCoins(1000);
   else if (action === 'coins-50k') session.player.addCoins(50_000);
+  else if (action === 'coins-5m') session.player.addCoins(5_000_000);
   else if (action === 'trigger-event') triggerRandomEvent();
-  else if (action === 'spawn-event') triggerRandomEvent();
   else if (action === 'clear-events') setActiveEventInstances([]);
   else if (action === 'add-planet') {
     const n = session.player.planets.length + 1;

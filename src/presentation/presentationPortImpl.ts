@@ -40,11 +40,6 @@ function setPrestigeConfirmContent(
   if (pinia) useAppUIStore(pinia).setPrestigeConfirmContent(desc, after, gainEstimate, chapterTitle, chapterQuote);
 }
 
-function setPrestigeRewardsContent(levels: string[]): void {
-  const pinia = getPinia();
-  if (pinia) useAppUIStore(pinia).setPrestigeRewardsContent(levels);
-}
-
 function setLastSavedText(text: string): void {
   const pinia = getPinia();
   if (pinia) useAppUIStore(pinia).setLastSavedText(text);
@@ -212,7 +207,6 @@ export function createPresentationPort(): PresentationPort {
     closeOverlay,
     addQuestClaimedAnimation,
     setPrestigeConfirmContent,
-    setPrestigeRewardsContent,
     setLastSavedText,
     setResearchProgress,
     cancelResearchProgress,

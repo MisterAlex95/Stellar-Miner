@@ -87,6 +87,8 @@ export type SavedSession = {
     prestigeLevel: number;
     prestigePlanetBonus?: number;
     prestigeResearchBonus?: number;
+    /** Prestige run choice id for this run (optional run bonus). */
+    prestigeRunChoiceId?: string | null;
     totalCoinsEver: number | string;
     astronautCount?: number;
     crewByRole?: SavedCrewByRole;
@@ -417,6 +419,7 @@ export class SaveLoadService implements ISaveLoadService {
         prestigeLevel: session.player.prestigeLevel,
         prestigePlanetBonus: session.player.prestigePlanetBonus,
         prestigeResearchBonus: session.player.prestigeResearchBonus,
+        prestigeRunChoiceId: session.player.prestigeRunChoiceId ?? undefined,
         totalCoinsEver: session.player.totalCoinsEver.toString(),
         astronautCount: session.player.astronautCount,
         crewByRole: session.player.crewByRole,

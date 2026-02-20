@@ -6,9 +6,12 @@ import {
   getComboName,
   getComboMultFromCount,
   getEventPoolForRun,
+  getPrestigeRunModifiers,
+  getPrestigeChoiceById,
   EVENT_NEGATIVE_UNLOCK_AFTER,
   UPGRADE_CATALOG,
   EVENT_CATALOG,
+  PRESTIGE_CHOICES,
   COMBO_NAMES,
   EVENT_INTERVAL_MS,
   FIRST_EVENT_DELAY_MS,
@@ -96,5 +99,36 @@ describe('catalogs', () => {
     expect(EVENT_INTERVAL_MS).toBeGreaterThanOrEqual(240_000);
     expect(FIRST_EVENT_DELAY_MS).toBeGreaterThanOrEqual(45_000);
     expect(MIN_EVENT_DELAY_MS).toBeGreaterThanOrEqual(90_000);
+  });
+
+  it('PRESTIGE_CHOICES has at least one choice with modifiers', () => {
+    expect(PRESTIGE_CHOICES.length).toBeGreaterThan(0);
+    const first = PRESTIGE_CHOICES[0];
+    expect(first.id).toBeDefined();
+    expect(first.labelKey).toBeDefined();
+    expect(first.modifiers).toBeDefined();
+  });
+
+  it('getPrestigeRunModifiers returns default when choiceId is null', () => {
+    const mods = getPrestigeRunModifiers(null);
+    expect(mods.choiceId).toBeNull();
+    expect(mods.productionMult).toBe(1);
+    expect(mods.clickMult).toBe(1);
+    expect(mods.expeditionDurationPercent).toBe(0);
+  });
+
+  it('getPrestigeRunModifiers returns modifiers for known choice id', () => {
+    const mods = getPrestigeRunModifiers('production-bonus');
+    expect(mods.choiceId).toBe('production-bonus');
+    expect(mods.productionMult).toBe(1.1);
+    expect(mods.clickMult).toBe(1);
+    expect(mods.expeditionDurationPercent).toBe(0);
+  });
+
+  it('getPrestigeChoiceById returns choice by id', () => {
+    const c = getPrestigeChoiceById('expedition-speed');
+    expect(c).toBeDefined();
+    expect(c!.id).toBe('expedition-speed');
+    expect(c!.modifiers.expeditionSpeedPercent).toBe(15);
   });
 });

@@ -51,6 +51,15 @@ export class Player {
   /** Expedition survivors; give production bonus, lost on prestige. */
   public readonly veteranCount: number;
 
+  /** Prestige run choice id (for UI display). Null when no choice or legacy save. */
+  public readonly prestigeRunChoiceId: string | null;
+  /** Run production multiplier from prestige choice (1 = no bonus). Applied in effectiveProductionRate. */
+  public readonly prestigeRunProductionMult: number;
+  /** Run click reward multiplier from prestige choice (1 = no bonus). */
+  public readonly prestigeRunClickMult: number;
+  /** Run expedition duration percent modifier (negative = faster). Added to research percent when computing duration. */
+  public readonly prestigeRunExpeditionDurationPercent: number;
+
   constructor(
     public readonly id: string,
     public coins: Coins,
@@ -63,8 +72,23 @@ export class Player {
     veteranCount: number = 0,
     crewAssignedToEquipment: number = 0,
     public readonly prestigePlanetBonus: number = 0,
-    public readonly prestigeResearchBonus: number = 0
+    public readonly prestigeResearchBonus: number = 0,
+    runModifiers: {
+      choiceId: string | null;
+      productionMult: number;
+      clickMult: number;
+      expeditionDurationPercent: number;
+    } = {
+      choiceId: null,
+      productionMult: 1,
+      clickMult: 1,
+      expeditionDurationPercent: 0,
+    }
   ) {
+    this.prestigeRunChoiceId = runModifiers.choiceId ?? null;
+    this.prestigeRunProductionMult = runModifiers.productionMult;
+    this.prestigeRunClickMult = runModifiers.clickMult;
+    this.prestigeRunExpeditionDurationPercent = runModifiers.expeditionDurationPercent;
     this.planets = planets ? [...planets] : [];
     this.totalCoinsEver = toDecimal(totalCoinsEver);
     if (typeof crewByRoleOrAstronautCount === 'object' && crewByRoleOrAstronautCount != null) {
@@ -149,7 +173,7 @@ export class Player {
           ? 1 + MORALE_BONUS_WHEN_COMFORTABLE
           : 1 - MORALE_MALUS_WHEN_OVERCROWDED;
     return this.productionRate.value.mul(
-      planetBonus * prestigeBonus * minerBonus * otherCrewBonus * veteranBonus * morale
+      planetBonus * prestigeBonus * minerBonus * otherCrewBonus * veteranBonus * morale * this.prestigeRunProductionMult
     );
   }
 
@@ -254,11 +278,23 @@ export class Player {
   /**
    * Returns a fresh player after prestige: one empty planet, 0 coins, 0 crew, 0 veterans, prestige level +1.
    * Banks planet bonus (planetsAtPrestige - 1) and research bonus (researchNodesAtPrestige) into permanent bonuses.
+   * runModifiers: optional run bonuses from prestige choice (choiceId for UI, productionMult, clickMult, expeditionDurationPercent).
    */
   static createAfterPrestige(
     oldPlayer: Player,
     planetsAtPrestige: number,
-    researchNodesAtPrestige: number
+    researchNodesAtPrestige: number,
+    runModifiers: {
+      choiceId: string | null;
+      productionMult: number;
+      clickMult: number;
+      expeditionDurationPercent: number;
+    } = {
+      choiceId: null,
+      productionMult: 1,
+      clickMult: 1,
+      expeditionDurationPercent: 0,
+    }
   ): Player {
     const firstPlanetName = generatePlanetName(`planet-1-${Date.now()}-${Math.random()}`);
     const newPlanetBonus = oldPlayer.prestigePlanetBonus + Math.max(0, planetsAtPrestige - 1);
@@ -275,7 +311,13 @@ export class Player {
       0,
       0,
       newPlanetBonus,
-      newResearchBonus
+      newResearchBonus,
+      {
+        choiceId: runModifiers.choiceId,
+        productionMult: runModifiers.productionMult,
+        clickMult: runModifiers.clickMult,
+        expeditionDurationPercent: runModifiers.expeditionDurationPercent,
+      }
     );
   }
 

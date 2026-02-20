@@ -106,9 +106,13 @@ export function handleMineClick(e?: MouseEvent): void {
   const prestigeClickMult = prestigeLevel >= 2 ? 1 + (prestigeLevel - 1) * (PRESTIGE_CLICK_BONUS_PERCENT_PER_LEVEL / 100) : 1;
   const rewardResearchMult = prestigeLevel >= 1 ? researchClickMult : 1;
   const rewardPrestigeMult = prestigeLevel >= 2 ? prestigeClickMult : 1;
+  const runClickMult = session.player.prestigeRunClickMult;
   const baseWithComboAndCriticalForReward = baseCoins * effectiveComboMult * (isCritical ? 2 : 1);
-  const coinsExactForDisplay = Math.max(1, baseCoins * comboMult * (isCritical ? 2 : 1) * researchClickMult * prestigeClickMult);
-  const coins = Math.max(1, Math.round(baseWithComboAndCriticalForReward * rewardResearchMult * rewardPrestigeMult));
+  const coinsExactForDisplay = Math.max(
+    1,
+    baseCoins * comboMult * (isCritical ? 2 : 1) * researchClickMult * prestigeClickMult * runClickMult
+  );
+  const coins = Math.max(1, Math.round(baseWithComboAndCriticalForReward * rewardResearchMult * rewardPrestigeMult * runClickMult));
 
   session.player.addCoins(coins);
   addRunCoins(coins);

@@ -164,6 +164,25 @@ describe('Player', () => {
     expect(after.totalCoinsEver.eq(p.totalCoinsEver)).toBe(true);
   });
 
+  it('effectiveProductionRate applies prestige run production multiplier', () => {
+    const p = new Player(
+      'p1',
+      new Coins(0),
+      new ProductionRate(100),
+      [Planet.create('planet-1', 'Titan')],
+      [],
+      0,
+      0,
+      undefined,
+      0,
+      0,
+      0,
+      0,
+      { choiceId: null, productionMult: 1.1, clickMult: 1, expeditionDurationPercent: 0 }
+    );
+    expect(p.effectiveProductionRate.toNumber()).toBe(110);
+  });
+
   it('effectiveProductionRate applies overcrowding malus when crew exceeds cap', () => {
     const p = new Player(
       'p1',

@@ -13,7 +13,6 @@
     <AchievementsModal />
     <ResetConfirmModal />
     <PrestigeConfirmModal />
-    <PrestigeRewardsModal />
     <EventsHintModal />
     <ChartHelpModal />
     <SectionRulesModal />
@@ -24,7 +23,7 @@
     <IntroModal />
     <ToastContainer />
     <FloatingFeedback />
-    <DebugPanel />
+    <DebugPanel v-if="isDev" />
     <GlobalTooltip />
   </div>
 </template>
@@ -40,7 +39,6 @@ import InfoModal from './components/InfoModal.vue';
 import AchievementsModal from './components/AchievementsModal.vue';
 import ResetConfirmModal from './components/ResetConfirmModal.vue';
 import PrestigeConfirmModal from './components/PrestigeConfirmModal.vue';
-import PrestigeRewardsModal from './components/PrestigeRewardsModal.vue';
 import EventsHintModal from './components/EventsHintModal.vue';
 import ChartHelpModal from './components/ChartHelpModal.vue';
 import SectionRulesModal from './components/SectionRulesModal.vue';
@@ -59,6 +57,7 @@ import { useGlobalKeyboard } from './composables/useGlobalKeyboard.js';
 import { useChartHelpTrigger } from './composables/useChartHelpTrigger.js';
 import { settingsStore } from '../application/gameState.js';
 
+const isDev = import.meta.env.DEV;
 const store = useGameStateStore();
 const appUI = useAppUIStore();
 const appWrapperRef = ref<HTMLElement | null>(null);

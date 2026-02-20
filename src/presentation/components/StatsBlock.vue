@@ -66,7 +66,11 @@
     <div
       id="production-stat-card"
       class="stat-card stat-card--production"
-      :class="{ 'stat-card--live': store.stats.productionLive }"
+      :class="{
+        'stat-card--live': store.stats.productionLive,
+        'stat-card--production-positive': store.stats.productionEventModifier === 'positive',
+        'stat-card--production-negative': store.stats.productionEventModifier === 'negative',
+      }"
       :title="t('productionTitle')"
     >
       <div class="stat-label">
@@ -351,6 +355,15 @@ onUnmounted(() => {
 
 .stat-card--production {
   overflow-y: auto;
+  transition: box-shadow 0.25s ease;
+}
+
+.stat-card--production-positive {
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35), 0 0 12px rgba(34, 197, 94, 0.15);
+}
+
+.stat-card--production-negative {
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35), 0 0 12px rgba(239, 68, 68, 0.12);
 }
 
 .stat-card--coins {

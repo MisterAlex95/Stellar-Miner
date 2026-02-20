@@ -47,6 +47,8 @@ export type StatsSnapshot = {
   productionBreakdown: string;
   productionBreakdownVisible: boolean;
   productionLive: boolean;
+  /** When an event is active: 'positive' (mult > 1), 'negative' (mult < 1), or null (no event / mult === 1). */
+  productionEventModifier: 'positive' | 'negative' | null;
   nextMilestoneText: string;
   nextMilestoneVisible: boolean;
   /** 0–100 progress toward next progression milestone (coins / threshold). */
@@ -99,6 +101,7 @@ export function getStatsSnapshot(): StatsSnapshot {
     productionBreakdown: '',
     productionBreakdownVisible: false,
     productionLive: false,
+    productionEventModifier: null,
     nextMilestoneText: '',
     nextMilestoneVisible: false,
     nextMilestonePct: 0,
@@ -235,6 +238,9 @@ export function getStatsSnapshot(): StatsSnapshot {
   const nextEventRowVisible = eventsUnlocked;
   const nextEventLabelVisible = eventsUnlocked && active.length === 0;
 
+  const productionEventModifier: 'positive' | 'negative' | null =
+    eventMult > 1 ? 'positive' : eventMult < 1 ? 'negative' : null;
+
   const formattedCoins = formatNumber(player.coins.value, settings.compactNumbers);
   const productionRateNum = effectiveRate.toNumber();
   const clickRate = getEstimatedClickRate({
@@ -288,6 +294,7 @@ export function getStatsSnapshot(): StatsSnapshot {
     productionBreakdown,
     productionBreakdownVisible: parts.length > 0,
     productionLive: effectiveRate.gt(0),
+    productionEventModifier,
     nextMilestoneText,
     nextMilestoneVisible,
     nextMilestonePct,

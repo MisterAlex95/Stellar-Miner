@@ -1,0 +1,20 @@
+[
+  {
+    "id": "click-bonus",
+    "labelKey": "prestigeChoiceClickBonus",
+    "flavorKey": "prestigeChoiceClickBonusFlavor",
+    "modifiers": { "clickPercent": 10 }
+  },
+  {
+    "id": "production-bonus",
+    "labelKey": "prestigeChoiceProductionBonus",
+    "flavorKey": "prestigeChoiceProductionBonusFlavor",
+    "modifiers": { "productionPercent": 10 }
+  },
+  {
+    "id": "expedition-speed",
+    "labelKey": "prestigeChoiceExpeditionSpeed",
+    "flavorKey": "prestigeChoiceExpeditionSpeedFlavor",
+    "modifiers": { "expeditionSpeedPercent": 15 }
+  }
+]

@@ -9,6 +9,7 @@ import gameConfig from '../data/gameConfig.json';
 import modulesData from '../data/modules.json';
 import eventsData from '../data/events.json';
 import choiceEventsData from '../data/choiceEvents.json';
+import prestigeChoicesData from '../data/prestigeChoices.json';
 
 const MODULES_LIST = (modulesData as { modules: unknown[] }).modules;
 const T = gameConfig.timing;
@@ -212,6 +213,55 @@ export const CHOICE_EVENT_CATALOG: ChoiceEvent[] = (choiceEventsData as RawChoic
 
 export function getChoiceEventById(id: string): ChoiceEvent | undefined {
   return CHOICE_EVENT_CATALOG.find((e) => e.id === id);
+}
+
+/** Prestige run choice: optional bonus for the current run (reset on next prestige). */
+export type PrestigeChoiceModifiers = {
+  productionPercent?: number;
+  clickPercent?: number;
+  /** Positive = faster expeditions (reduces duration by this %). */
+  expeditionSpeedPercent?: number;
+};
+
+export type PrestigeChoiceDef = {
+  id: string;
+  labelKey: string;
+  flavorKey?: string;
+  modifiers: PrestigeChoiceModifiers;
+};
+
+const rawPrestigeChoices = prestigeChoicesData as PrestigeChoiceDef[];
+export const PRESTIGE_CHOICES: PrestigeChoiceDef[] = rawPrestigeChoices;
+
+export function getPrestigeChoiceById(id: string): PrestigeChoiceDef | undefined {
+  return PRESTIGE_CHOICES.find((c) => c.id === id);
+}
+
+/** Run modifiers from a prestige choice id (for Player constructor / createAfterPrestige). Default when id is null or unknown. */
+export function getPrestigeRunModifiers(choiceId: string | null): {
+  choiceId: string | null;
+  productionMult: number;
+  clickMult: number;
+  expeditionDurationPercent: number;
+} {
+  if (!choiceId) {
+    return { choiceId: null, productionMult: 1, clickMult: 1, expeditionDurationPercent: 0 };
+  }
+  const choice = getPrestigeChoiceById(choiceId);
+  if (!choice) {
+    return { choiceId: null, productionMult: 1, clickMult: 1, expeditionDurationPercent: 0 };
+  }
+  const m = choice.modifiers;
+  const productionMult = 1 + (m.productionPercent ?? 0) / 100;
+  const clickMult = 1 + (m.clickPercent ?? 0) / 100;
+  const expeditionSpeedPercent = m.expeditionSpeedPercent ?? 0;
+  const expeditionDurationPercent = expeditionSpeedPercent !== 0 ? -expeditionSpeedPercent : 0;
+  return {
+    choiceId,
+    productionMult,
+    clickMult,
+    expeditionDurationPercent,
+  };
 }
 
 export const UPGRADE_GROUPS: { label: string; minTier: number; maxTier: number }[] = gameConfig.upgradeGroups;

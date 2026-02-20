@@ -284,9 +284,6 @@
             {{ t('prestige') }}
           </button>
         </span>
-        <button type="button" class="prestige-rewards-btn" @click="openPrestigeRewardsModal">
-          {{ t('prestigeRewardsWhatFor') }}
-        </button>
       </div>
     </EmpireSection>
   </div>
@@ -302,7 +299,6 @@ import {
   handleAddSlot as doAddSlot,
   handleBuildHousing as doBuildHousing,
   handleCancelExpedition,
-  openPrestigeRewardsModal,
 } from '../../application/handlers.js';
 import { openExpeditionModal } from '../modals/expedition.js';
 import { openPlanetDetail } from '../modals/planetDetail.js';

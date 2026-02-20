@@ -43,8 +43,6 @@ export const useAppUIStore = defineStore('appUI', {
     /** Prestige chapter (lore): e.g. "Prestige 5 — Veteran of the Belt", optional quote. */
     prestigeConfirmChapterTitle: '' as string,
     prestigeConfirmChapterQuote: '' as string,
-    /** Prestige rewards modal: list item strings (level 1, then 2..max). */
-    prestigeRewardsLevels: [] as string[],
     /** Last saved indicator text (settings modal). Set by port when opening settings or on save. */
     lastSavedText: '',
     /** Chart help modal: title and body set before opening. */
@@ -175,9 +173,6 @@ export const useAppUIStore = defineStore('appUI', {
       this.prestigeConfirmGainEstimate = gainEstimate ?? '';
       this.prestigeConfirmChapterTitle = chapterTitle ?? '';
       this.prestigeConfirmChapterQuote = chapterQuote ?? '';
-    },
-    setPrestigeRewardsContent(levels: string[]): void {
-      this.prestigeRewardsLevels = levels;
     },
     setLastSavedText(text: string): void {
       this.lastSavedText = text;

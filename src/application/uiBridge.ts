@@ -48,8 +48,6 @@ export interface PresentationPort {
   addQuestClaimedAnimation(): void;
   /** Set prestige confirm modal content before opening (Vue reads from store). gainEstimate = breakdown of bonus after reset; chapterTitle/quote = lore for this level. */
   setPrestigeConfirmContent(desc: string, after: string, gainEstimate?: string, chapterTitle?: string, chapterQuote?: string): void;
-  /** Set prestige rewards modal list content before opening (Vue reads from store). */
-  setPrestigeRewardsContent(levels: string[]): void;
   /** Set last saved indicator text (settings modal). */
   setLastSavedText(text: string): void;
   /** Set research progress overlay (Vue shows it). onCancel called when user cancels. */
@@ -111,7 +109,6 @@ function noopStrStrOpt(_m: string, _v: string, _o?: unknown): void {}
 function noopEvent(_e: GameEvent, _o?: { firstTime?: boolean }): void {}
 function noopStrStrOpt2(_id: string, _cls: string, _o?: unknown): void {}
 function noopStrStr(_: string, __: string, _gain?: string): void {}
-function noopStrArr(_: string[]): void {}
 function noopResearchProgress(_id: string, _data: unknown, _cb?: () => void): void {}
 function noopUpgradeProgress(_key: string, _data: unknown, _cb?: () => void): void {}
 
@@ -141,7 +138,6 @@ const defaultPort: PresentationPort = {
   closeOverlay: noopStrStrOpt2,
   addQuestClaimedAnimation: noop,
   setPrestigeConfirmContent: (_d: string, _a: string, _g?: string, _ct?: string, _cq?: string) => {},
-  setPrestigeRewardsContent: noopStrArr,
   setLastSavedText: noopStr,
   setResearchProgress: noopResearchProgress,
   cancelResearchProgress: noopStr,

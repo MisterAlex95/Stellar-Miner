@@ -5,7 +5,6 @@ import {
   handleMineClick,
   closeResetConfirmModal,
   closePrestigeConfirmModal,
-  closePrestigeRewardsModal,
   closeSettings,
 } from '../../application/handlers.js';
 import { closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from '../modals/planetDetail.js';
@@ -42,7 +41,6 @@ function closeChartHelpModal(): void {
 const OVERLAY_CLOSERS: Record<string, () => void> = {
   'reset-confirm-overlay': closeResetConfirmModal,
   'prestige-confirm-overlay': closePrestigeConfirmModal,
-  'prestige-rewards-overlay': closePrestigeRewardsModal,
   'intro-overlay': dismissIntroModal,
   'section-rules-overlay': closeSectionRulesModal,
   'info-overlay': closeInfoModal,
@@ -63,7 +61,7 @@ const OVERLAY_CLOSERS: Record<string, () => void> = {
 export function useGlobalKeyboard(): void {
   function onKeydown(e: KeyboardEvent): void {
     const appUI = useAppUIStore();
-    if (e.key === 'F3') {
+    if (e.key === 'F3' && import.meta.env.DEV) {
       e.preventDefault();
       appUI.toggleDebug();
       return;

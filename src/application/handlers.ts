@@ -22,8 +22,6 @@ export { handleClaimQuest } from './handlersQuest.js';
 export {
   openPrestigeConfirmModal,
   closePrestigeConfirmModal,
-  openPrestigeRewardsModal,
-  closePrestigeRewardsModal,
   confirmPrestige,
   handlePrestige,
 } from './handlersPrestige.js';

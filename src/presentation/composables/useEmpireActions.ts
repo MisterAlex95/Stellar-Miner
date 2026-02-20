@@ -4,7 +4,6 @@ import {
   handleAddSlot,
   handleBuildHousing,
   handleCancelExpedition,
-  openPrestigeRewardsModal,
 } from '../../application/handlers.js';
 import { openExpeditionModal } from '../modals/expedition.js';
 import { openPlanetDetail } from '../modals/planetDetail.js';
@@ -60,13 +59,6 @@ export function onEmpireClick(e: Event): boolean {
     e.preventDefault();
     e.stopPropagation();
     handlePrestige();
-    return true;
-  }
-  const rewardsBtn = target.closest('.prestige-rewards-btn');
-  if (rewardsBtn || target.id === 'prestige-rewards-btn') {
-    e.preventDefault();
-    e.stopPropagation();
-    openPrestigeRewardsModal();
     return true;
   }
   const hireBtn = target.closest('.hire-astronaut-btn');
