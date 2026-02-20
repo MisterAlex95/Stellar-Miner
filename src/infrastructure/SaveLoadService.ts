@@ -70,6 +70,8 @@ export type SavedExpedition = {
   composition: Record<string, number>;
   durationMs: number;
   difficulty?: string;
+  /** Expedition mission type: scout | mining | rescue. Omitted in legacy saves (treated as 'mining'). */
+  type?: string;
 };
 
 export type SavedSession = {

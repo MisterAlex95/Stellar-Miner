@@ -29,13 +29,17 @@ export function openExpeditionModal(): void {
   if (getExpeditionEndsAt() != null) return;
   const player = session.player;
   const required = planetService.getExpeditionAstronautsRequired(player);
-  const cost = planetService.getNewPlanetCost(player);
-  const canAfford = player.coins.gte(cost);
   const hasCrew = player.astronautCount >= required;
-  if (!canAfford || !hasCrew) return;
+  if (!hasCrew) return;
+  const costScout = planetService.getExpeditionCost(player, 'scout');
+  const canAffordAny =
+    player.coins.gte(costScout) ||
+    player.coins.gte(planetService.getExpeditionCost(player, 'mining')) ||
+    player.coins.gte(planetService.getExpeditionCost(player, 'rescue'));
+  if (!canAffordAny) return;
 
   const settings = getSettings();
-  const costFormatted = `${formatNumber(cost.toNumber(), settings.compactNumbers)} ⬡`;
+  const costFormatted = `${formatNumber(costScout.toNumber(), settings.compactNumbers)} ⬡`;
   const isNewSystem = isNextExpeditionNewSystem(player.planets.length);
   const newSystemText = t('expeditionNewSolarSystem');
   const newSystemTitle = t('expeditionNewSolarSystemHint');
@@ -59,6 +63,7 @@ export function openExpeditionModal(): void {
 
   const composition: Record<string, number> = { ...defaultComp };
   const selectedTier: string = 'medium';
+  const selectedType: string = 'scout';
 
   getPresentationPort().setExpeditionData({
     costFormatted,
@@ -68,6 +73,7 @@ export function openExpeditionModal(): void {
     required,
     composition,
     selectedTier,
+    selectedType,
   });
 
   document.body.style.overflow = 'hidden';

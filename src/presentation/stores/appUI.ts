@@ -56,7 +56,7 @@ export const useAppUIStore = defineStore('appUI', {
     upgradeProgress: {} as Record<string, { current: number; total: number; label: string; showCancel: boolean; isUninstall?: boolean }>,
     /** Debug panel: stats rows (label + value). */
     debugStats: [] as { label: string; value: string }[],
-    /** Expedition modal: when set, modal is open; Vue renders tiers and crew from this + getSession(). */
+    /** Expedition modal: when set, modal is open; Vue renders types, tiers and crew from this + getSession(). */
     expedition: null as {
       costFormatted: string;
       isNewSystem: boolean;
@@ -65,6 +65,7 @@ export const useAppUIStore = defineStore('appUI', {
       required: number;
       composition: Record<string, number>;
       selectedTier: string;
+      selectedType: string;
     } | null,
     /** Overlay stack for Escape key: overlayId pushed on open, popped on close. */
     overlayStack: [] as string[],
@@ -214,6 +215,9 @@ export const useAppUIStore = defineStore('appUI', {
     },
     setExpeditionSelectedTier(tier: string): void {
       if (this.expedition) this.expedition.selectedTier = tier;
+    },
+    setExpeditionSelectedType(typeId: string): void {
+      if (this.expedition) this.expedition.selectedType = typeId;
     },
     setExpeditionCrew(role: string, delta: number): void {
       if (!this.expedition) return;

@@ -1,6 +1,6 @@
 {
   "name": "stellar-miner",
-  "version": "0.5.22",
+  "version": "0.5.24",
   "private": true,
   "license": "MIT",
   "type": "module",

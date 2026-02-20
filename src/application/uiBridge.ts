@@ -73,6 +73,7 @@ export interface PresentationPort {
     required: number;
     composition: Record<string, number>;
     selectedTier: string;
+    selectedType: string;
   } | null): void;
   clearExpedition(): void;
   /** Planet detail modal: set view data when opening. Vue clears store when closing. */

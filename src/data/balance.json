@@ -59,5 +59,16 @@
   "prestigeResearchPointsPerPrestige": 1,
   "researchDataPerExpeditionSuccess": 1,
   "researchBranchBonusProductionPercent": 2,
-  "researchBranchBonusClickPercent": 1
+  "researchBranchBonusClickPercent": 1,
+  "miningExpeditionBaseCost": 40000,
+  "miningExpeditionCostGrowth": 1.2,
+  "miningDurationEasyMs": 120000,
+  "miningDurationMediumMs": 300000,
+  "miningDurationHardMs": 600000,
+  "miningCoinMultiplier": 2.5,
+  "miningResearchData": 1,
+  "rescueExpeditionCostMultiplier": 0.5,
+  "rescueCrewMin": 2,
+  "rescueCrewMax": 3,
+  "rescueResearchData": 1
 }

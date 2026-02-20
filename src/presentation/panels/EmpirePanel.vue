@@ -251,7 +251,7 @@
               :title="expeditionTooltip"
               @click="openExpeditionModal"
             >
-              {{ tParam('sendExpeditionBtn', { cost: expedition?.costStr ?? '0', n: String(expedition?.astronautsRequired ?? 0) }) }}
+              {{ t('sendExpeditionBtnLabel') }}
             </button>
           </span>
           <p v-if="expedition?.isNewSystem" class="expedition-new-system-hint" aria-live="polite">
@@ -639,22 +639,25 @@ watch(
 }
 
 .buy-planet-btn {
+  width: 100%;
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
-  color: var(--text);
+  padding: 0.6rem 1rem;
+  min-height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: filter 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 2px 8px var(--accent-glow);
 }
 
 .buy-planet-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: var(--bg-dark);
-  border-color: var(--accent);
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .buy-planet-btn:focus-visible {
@@ -665,13 +668,8 @@ watch(
 .buy-planet-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-@media (max-width: 360px) {
-  .buy-planet-btn {
-    width: 100%;
-    min-height: 44px;
-  }
+  filter: none;
+  transform: none;
 }
 
 .housing-empty {

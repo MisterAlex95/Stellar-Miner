@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.24",
+    "date": "2026-02",
+    "changes": [
+      "Expedition types redesigned: Scout = discover new planet (unchanged cost). Mining = timed mission (2–10 min by tier), return with coins + research data; cost scales separately. Rescue = return with rescued crew (capped by housing); cost 50% of Scout. Cost depends on mission type."
+    ]
+  },
+  {
+    "version": "0.5.23",
+    "date": "2026-02",
+    "changes": [
+      "Expedition types: Scout (fast, low research data), Mining (longer, high data), Rescue (higher risk); type affects duration, death chance, and research data on success."
+    ]
+  },
+  {
     "version": "0.5.22",
     "date": "2026-02",
     "changes": [

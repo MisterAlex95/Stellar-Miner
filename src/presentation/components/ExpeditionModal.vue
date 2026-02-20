@@ -30,7 +30,7 @@
       <div class="expedition-modal-body">
         <div class="expedition-modal-cost-wrap">
           <p class="expedition-modal-cost">
-            {{ expedition.costFormatted }}
+            {{ costFormattedForType }}
           </p>
           <span
             class="expedition-new-system"
@@ -41,63 +41,115 @@
             {{ expedition.newSystemText }}
           </span>
         </div>
-        <h3 class="expedition-modal-dest-title">
-          {{ t('expeditionSelectTier') }}
+        <h3 class="expedition-modal-type-title">
+          {{ t('expeditionSelectType') }}
         </h3>
         <div
-          class="expedition-modal-tiers"
+          class="expedition-modal-types"
           role="group"
-          aria-label="Destination"
+          aria-label="Mission type"
         >
           <button
-            v-for="tier in tierCards"
-            :key="tier.id"
+            v-for="type in typeCards"
+            :key="type.id"
             type="button"
-            class="expedition-tier-card"
-            :class="{ 'expedition-tier-card--selected': tier.selected }"
-            :aria-pressed="tier.selected"
-            @click="selectTier(tier.id)"
+            class="expedition-type-btn"
+            :class="{ 'expedition-type-btn--selected': type.selected }"
+            :aria-pressed="type.selected"
+            :title="type.descText"
+            @click="selectType(type.id)"
           >
-            <div class="expedition-tier-visual-wrap">
-              <canvas
-                class="planet-card-visual expedition-dest-visual"
-                width="72"
-                height="72"
-                :data-planet-id="'expedition-' + tier.id"
-                :data-planet-name="tier.destinationName"
-                :data-planet-visual-seed="tier.visualSeed"
-                aria-hidden="true"
-              />
-            </div>
-            <div class="expedition-tier-content">
-              <span class="expedition-tier-destination">{{ tier.destinationName }}</span>
-              <span
-                class="expedition-tier-type"
-                :class="'expedition-tier-type--' + tier.planetType"
-                :title="tier.typeLabel"
-              >
-                {{ tier.typeLabel }}
-              </span>
-              <span
-                class="expedition-tier-badge"
-                :class="'expedition-tier-badge--' + tier.id"
-              >
-                {{ tier.titleText }}
-              </span>
-              <p class="expedition-tier-desc">
-                {{ tier.descText }}
-              </p>
-              <div class="expedition-tier-stats">
-                <span>{{ tParam('expeditionTierRisk', { pct: String(tier.deathPct) }) }}</span>
-                <span>{{ tParam('expeditionTierDuration', { sec: String(tier.durationSec) }) }}</span>
-              </div>
-              <span
-                v-if="tier.extraSlot"
-                class="expedition-tier-reward"
-              >+1 slot</span>
-            </div>
+            {{ type.titleText }}
           </button>
         </div>
+        <p
+          class="expedition-type-explain"
+          :aria-live="'polite'"
+        >
+          {{ typeExplainText }}
+        </p>
+        <template v-if="isScoutType">
+          <h3 class="expedition-modal-dest-title">
+            {{ t('expeditionSelectTier') }}
+          </h3>
+          <div
+            class="expedition-modal-tiers"
+            role="group"
+            aria-label="Destination"
+          >
+            <button
+              v-for="tier in tierCards"
+              :key="tier.id"
+              type="button"
+              class="expedition-tier-card"
+              :class="{ 'expedition-tier-card--selected': tier.selected }"
+              :aria-pressed="tier.selected"
+              @click="selectTier(tier.id)"
+            >
+              <div class="expedition-tier-visual-wrap">
+                <canvas
+                  class="planet-card-visual expedition-dest-visual"
+                  width="72"
+                  height="72"
+                  :data-planet-id="'expedition-' + tier.id"
+                  :data-planet-name="tier.destinationName"
+                  :data-planet-visual-seed="tier.visualSeed"
+                  aria-hidden="true"
+                />
+              </div>
+              <div class="expedition-tier-content">
+                <span class="expedition-tier-destination">{{ tier.destinationName }}</span>
+                <span
+                  class="expedition-tier-type"
+                  :class="'expedition-tier-type--' + tier.planetType"
+                  :title="tier.typeLabel"
+                >
+                  {{ tier.typeLabel }}
+                </span>
+                <span
+                  class="expedition-tier-badge"
+                  :class="'expedition-tier-badge--' + tier.id"
+                >
+                  {{ tier.titleText }}
+                </span>
+                <p class="expedition-tier-desc">
+                  {{ tier.descText }}
+                </p>
+                <div class="expedition-tier-stats">
+                  <span>{{ tParam('expeditionTierRisk', { pct: String(tier.deathPct) }) }}</span>
+                  <span>{{ tParam('expeditionTierDuration', { sec: String(tier.durationSec) }) }}</span>
+                </div>
+                <span
+                  v-if="tier.extraSlot"
+                  class="expedition-tier-reward"
+                >+1 slot</span>
+              </div>
+            </button>
+          </div>
+        </template>
+        <template v-else>
+          <h3 class="expedition-modal-dest-title">
+            {{ selectedTypeForTiers === 'mining' ? t('expeditionTierDurationOnly') : t('expeditionTierDifficultyOnly') }}
+          </h3>
+          <div
+            class="expedition-modal-tiers expedition-modal-tiers--compact"
+            role="group"
+            :aria-label="selectedTypeForTiers === 'mining' ? t('expeditionTierDurationOnly') : t('expeditionTierDifficultyOnly')"
+          >
+            <button
+              v-for="tier in tierCards"
+              :key="tier.id"
+              type="button"
+              class="expedition-tier-card expedition-tier-card--compact"
+              :class="{ 'expedition-tier-card--selected': tier.selected }"
+              :aria-pressed="tier.selected"
+              @click="selectTier(tier.id)"
+            >
+              <span class="expedition-tier-badge" :class="'expedition-tier-badge--' + tier.id">{{ tier.titleText }}</span>
+              <span class="expedition-tier-stat-line">{{ tParam('expeditionTierDuration', { sec: String(tier.durationSec) }) }} · {{ tParam('expeditionTierRisk', { pct: String(tier.deathPct) }) }}</span>
+            </button>
+          </div>
+        </template>
         <h3 class="expedition-crew-section-title">
           {{ t('crew') }}
         </h3>
@@ -169,14 +221,17 @@ import { useAppUIStore } from '../stores/appUI.js';
 import { closeExpeditionModal } from '../modals/expedition.js';
 import { t, tParam } from '../../application/strings.js';
 import type { StringKey } from '../../application/strings.js';
-import { getSession, planetService } from '../../application/gameState.js';
+import { getSession, getSettings, planetService } from '../../application/gameState.js';
+import { formatNumber } from '../../application/format.js';
 import {
   getExpeditionTiers,
+  getExpeditionTypes,
   getExpeditionDeathChanceWithMedics,
   CREW_ROLES,
   generatePlanetName,
   type CrewRole,
   type CrewJobRole,
+  type ExpeditionTypeId,
 } from '../../domain/constants.js';
 import {
   getUnlockedCrewRoles,
@@ -195,6 +250,21 @@ const TIER_DESC_KEYS: Record<string, StringKey> = {
   easy: 'expeditionTierEasyDesc',
   medium: 'expeditionTierMediumDesc',
   hard: 'expeditionTierHardDesc',
+};
+const TYPE_KEYS: Record<string, StringKey> = {
+  scout: 'expeditionTypeScout',
+  mining: 'expeditionTypeMining',
+  rescue: 'expeditionTypeRescue',
+};
+const TYPE_DESC_KEYS: Record<string, StringKey> = {
+  scout: 'expeditionTypeScoutDesc',
+  mining: 'expeditionTypeMiningDesc',
+  rescue: 'expeditionTypeRescueDesc',
+};
+const TYPE_EXPLAIN_KEYS: Record<string, StringKey> = {
+  scout: 'expeditionTypeScoutExplain',
+  mining: 'expeditionTypeMiningExplain',
+  rescue: 'expeditionTypeRescueExplain',
 };
 const ROLE_KEYS: Record<CrewRole, StringKey> = {
   astronaut: 'crewRoleAstronaut',
@@ -219,24 +289,62 @@ function destinationSeed(tierId: string): number {
 const store = useAppUIStore();
 const { expedition } = storeToRefs(store);
 
+const costFormattedForType = computed(() => {
+  const exp = expedition.value;
+  const session = getSession();
+  if (!exp || !session) return '';
+  const typeId = exp.selectedType && ['scout', 'mining', 'rescue'].includes(exp.selectedType) ? exp.selectedType : 'scout';
+  const cost = planetService.getExpeditionCost(session.player, typeId);
+  const settings = getSettings();
+  return `${formatNumber(cost.toNumber(), settings.compactNumbers)} ⬡`;
+});
+
+const selectedTypeForTiers = computed(() => {
+  const exp = expedition.value;
+  const type = exp?.selectedType;
+  return type && ['scout', 'mining', 'rescue'].includes(type) ? type : 'scout';
+});
+
+const isScoutType = computed(() => selectedTypeForTiers.value === 'scout');
+
+const typeExplainText = computed(() => {
+  const type = selectedTypeForTiers.value;
+  return t(TYPE_EXPLAIN_KEYS[type] ?? 'expeditionTypeScoutExplain');
+});
+
+const typeCards = computed(() => {
+  const exp = expedition.value;
+  if (!exp) return [];
+  const types = getExpeditionTypes();
+  const currentType = exp.selectedType && ['scout', 'mining', 'rescue'].includes(exp.selectedType) ? exp.selectedType : 'scout';
+  return types.map((type) => ({
+    id: type.id,
+    selected: currentType === type.id,
+    titleText: t(TYPE_KEYS[type.id] ?? 'expeditionTypeMining'),
+    descText: t(TYPE_DESC_KEYS[type.id] ?? 'expeditionTypeMiningDesc'),
+  }));
+});
+
 const tierCards = computed(() => {
   const exp = expedition.value;
   if (!exp) return [];
   const session = getSession();
   const tiers = getExpeditionTiers();
   const medicCount = exp.composition.medic ?? 0;
+  const typeId = exp.selectedType && ['scout', 'mining', 'rescue'].includes(exp.selectedType) ? (exp.selectedType as ExpeditionTypeId) : undefined;
   return tiers.map((tier) => {
     const id = tier.id;
     const selected = exp.selectedTier === id;
     const deathPct = Math.round(
-      getExpeditionDeathChanceWithMedics(medicCount, id, getResearchExpeditionDeathChancePercent()) * 100
+      getExpeditionDeathChanceWithMedics(medicCount, id, getResearchExpeditionDeathChancePercent(), typeId) * 100
     );
     const durationMs = session
       ? planetService.getExpeditionDurationMs(
           session.player,
           id,
           exp.composition.pilot ?? 0,
-          getResearchExpeditionDurationPercent()
+          getResearchExpeditionDurationPercent(),
+          typeId
         )
       : 0;
     const durationSec = Math.round(durationMs / 1000);
@@ -288,8 +396,13 @@ const canLaunch = computed(() => {
   const exp = expedition.value;
   if (!exp) return false;
   const total = CREW_ROLES.reduce((s, r) => s + (exp.composition[r] ?? 0), 0);
-  return exp.selectedTier !== '' && total === exp.required;
+  const typeOk = exp.selectedType && ['scout', 'mining', 'rescue'].includes(exp.selectedType);
+  return exp.selectedTier !== '' && typeOk && total === exp.required;
 });
+
+function selectType(typeId: string): void {
+  store.setExpeditionSelectedType(typeId);
+}
 
 function selectTier(tierId: string): void {
   store.setExpeditionSelectedTier(tierId);
@@ -308,6 +421,7 @@ function handleLaunch(): void {
   const exp = expedition.value;
   if (!exp || !canLaunch.value) return;
   const tierId = exp.selectedTier as 'easy' | 'medium' | 'hard';
+  const typeId = (exp.selectedType && ['scout', 'mining', 'rescue'].includes(exp.selectedType) ? exp.selectedType : 'scout') as ExpeditionTypeId;
   const composition = {
     astronaut: exp.composition.astronaut ?? 0,
     miner: exp.composition.miner ?? 0,
@@ -316,7 +430,7 @@ function handleLaunch(): void {
     medic: exp.composition.medic ?? 0,
     engineer: exp.composition.engineer ?? 0,
   };
-  handleLaunchExpeditionFromModal(tierId, composition);
+  handleLaunchExpeditionFromModal(tierId, composition, typeId);
   store.clearExpedition();
   closeExpeditionModal();
 }
@@ -463,6 +577,56 @@ function handleLaunch(): void {
   display: inline-block;
 }
 
+.expedition-modal-type-title {
+  margin: 0 0 0.6rem 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.expedition-modal-types {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.expedition-type-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.expedition-type-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: var(--bg-panel);
+}
+
+.expedition-type-btn--selected {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.08) 100%);
+}
+
+.expedition-type-explain {
+  margin: 0 0 1rem 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
 .expedition-modal-dest-title {
   margin: 0 0 0.85rem 0;
   font-family: 'Orbitron', sans-serif;
@@ -478,6 +642,28 @@ function handleLaunch(): void {
   grid-template-columns: repeat(3, 1fr);
   gap: 0.85rem;
   margin-bottom: 1.5rem;
+}
+
+.expedition-modal-tiers--compact {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.expedition-tier-card--compact {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+  min-height: auto;
+}
+
+.expedition-tier-card--compact .expedition-tier-stat-line {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.expedition-tier-card--compact .expedition-tier-badge {
+  margin-bottom: 0;
 }
 
 .expedition-tier-card {

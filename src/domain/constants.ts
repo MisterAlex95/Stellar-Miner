@@ -73,6 +73,17 @@ const B = balance as {
   researchDataPerExpeditionSuccess?: number;
   researchBranchBonusProductionPercent?: number;
   researchBranchBonusClickPercent?: number;
+  miningExpeditionBaseCost?: number;
+  miningExpeditionCostGrowth?: number;
+  miningDurationEasyMs?: number;
+  miningDurationMediumMs?: number;
+  miningDurationHardMs?: number;
+  miningCoinMultiplier?: number;
+  miningResearchData?: number;
+  rescueExpeditionCostMultiplier?: number;
+  rescueCrewMin?: number;
+  rescueCrewMax?: number;
+  rescueResearchData?: number;
 };
 
 export type ExpeditionTierId = 'easy' | 'medium' | 'hard';
@@ -89,6 +100,83 @@ export function getExpeditionTiers(): Array<{ id: string; deathChanceMultiplier:
 
 export function getExpeditionTier(tierId: ExpeditionTierId | string): { id: string; deathChanceMultiplier: number; durationMultiplier: number; extraSlot?: boolean } | undefined {
   return EXPEDITION_TIERS.find((t) => t.id === tierId);
+}
+
+/** Expedition mission type: Scout = new planet, Mining = timed mission for coins+data, Rescue = recover crew. */
+export type ExpeditionTypeId = 'scout' | 'mining' | 'rescue';
+
+export type ExpeditionOutcomeKind = 'planet' | 'coins' | 'crew';
+
+export type ExpeditionTypeConfig = {
+  id: ExpeditionTypeId;
+  outcome: ExpeditionOutcomeKind;
+  durationMultiplier: number;
+  deathChanceMultiplier: number;
+};
+
+const EXPEDITION_TYPES: ExpeditionTypeConfig[] = [
+  { id: 'scout', outcome: 'planet', durationMultiplier: 0.8, deathChanceMultiplier: 0.9 },
+  { id: 'mining', outcome: 'coins', durationMultiplier: 1, deathChanceMultiplier: 1 },
+  { id: 'rescue', outcome: 'crew', durationMultiplier: 1, deathChanceMultiplier: 0.85 },
+];
+
+export function getExpeditionTypes(): ExpeditionTypeConfig[] {
+  return [...EXPEDITION_TYPES];
+}
+
+export function getExpeditionType(typeId: ExpeditionTypeId | string): ExpeditionTypeConfig | undefined {
+  return EXPEDITION_TYPES.find((t) => t.id === typeId);
+}
+
+/** Cost in coins to launch an expedition. Depends on type: Scout = new planet cost, Mining/Rescue = type-specific. */
+export function getExpeditionCost(planetCount: number, typeId: ExpeditionTypeId | string): Decimal {
+  if (typeId === 'scout') return getNewPlanetCost(planetCount);
+  if (typeId === 'mining') {
+    const base = B.miningExpeditionBaseCost ?? 40000;
+    const growth = B.miningExpeditionCostGrowth ?? 1.2;
+    return new Decimal(base).mul(planetCount + 1).mul(Decimal.pow(growth, planetCount)).floor();
+  }
+  if (typeId === 'rescue') {
+    const mult = B.rescueExpeditionCostMultiplier ?? 0.5;
+    return getNewPlanetCost(planetCount).mul(mult).floor();
+  }
+  return getNewPlanetCost(planetCount);
+}
+
+/** Mining expedition duration is fixed by tier (no planet count). */
+export function getMiningExpeditionDurationMs(tierId: ExpeditionTierId | string, pilotCount: number = 0, researchDurationPercent: number = 0): number {
+  const tier = getExpeditionTier(tierId);
+  const byTier: Record<string, number> = {
+    easy: B.miningDurationEasyMs ?? 120000,
+    medium: B.miningDurationMediumMs ?? 300000,
+    hard: B.miningDurationHardMs ?? 600000,
+  };
+  const baseMs = tier ? (byTier[tier.id] ?? byTier.medium) : byTier.medium;
+  const pilotReduction = Math.min(pilotCount * (B.pilotExpeditionDurationReductionPerPilot ?? 0.08), 0.5);
+  const researchMult = 1 + researchDurationPercent / 100;
+  return Math.max(1000, Math.round(baseMs * (1 - pilotReduction) * researchMult));
+}
+
+/** Research data on expedition success by type. */
+export function getResearchDataForExpeditionSuccess(typeId: ExpeditionTypeId | string): number {
+  if (typeId === 'mining') return B.miningResearchData ?? 1;
+  if (typeId === 'scout') return B.researchDataPerExpeditionSuccess ?? 1;
+  if (typeId === 'rescue') return B.rescueResearchData ?? 1;
+  return 0;
+}
+
+/** Coins earned on successful Mining expedition: productionRate * durationSec * multiplier. */
+export function getMiningExpeditionCoins(productionRateValue: Decimal, durationMs: number): Decimal {
+  const mult = B.miningCoinMultiplier ?? 2.5;
+  const sec = durationMs / 1000;
+  return productionRateValue.mul(sec).mul(mult).floor();
+}
+
+/** Rescued crew count on successful Rescue expedition (random in [min, max]). */
+export function getRescueCrewCount(roll: () => number): number {
+  const min = B.rescueCrewMin ?? 1;
+  const max = B.rescueCrewMax ?? 2;
+  return min + Math.floor(roll() * (max - min + 1));
 }
 
 /** Cost in coins to launch an expedition to discover a new planet. Scales with count. When current solar system is full (4 planets per system), next expedition costs more (new system). */
@@ -122,22 +210,26 @@ export function getExpeditionAstronautsRequired(planetCount: number): number {
 const PILOT_DURATION_REDUCTION = B.pilotExpeditionDurationReductionPerPilot ?? 0.08;
 const PILOT_DURATION_MAX_REDUCTION = 0.5;
 
-/** Expedition duration in ms (takes longer as you have more planets). Optional tierId applies duration multiplier. Pilots reduce duration (e.g. 8% per pilot, max 50%). researchDurationPercent: from research (negative = faster). */
+/** Expedition duration in ms. Mining uses fixed tier duration; Scout/Rescue use planet-based formula with tier+type multipliers. */
 export function getExpeditionDurationMs(
   planetCount: number,
   tierId?: ExpeditionTierId | string,
   pilotCount: number = 0,
-  researchDurationPercent: number = 0
+  researchDurationPercent: number = 0,
+  typeId?: ExpeditionTypeId | string
 ): number {
+  if (typeId === 'mining') return getMiningExpeditionDurationMs(tierId ?? 'medium', pilotCount, researchDurationPercent);
   const base = B.expeditionDurationBaseMs ?? 20000;
   const perPlanet = B.expeditionDurationPerPlanetMs ?? 8000;
   const raw = base + planetCount * perPlanet;
   const tier = tierId ? getExpeditionTier(tierId) : undefined;
-  const mult = tier?.durationMultiplier ?? 1;
+  const tierMult = tier?.durationMultiplier ?? 1;
+  const type = typeId ? getExpeditionType(typeId) : undefined;
+  const typeMult = type?.durationMultiplier ?? 1;
   const pilotReduction = Math.min(pilotCount * PILOT_DURATION_REDUCTION, PILOT_DURATION_MAX_REDUCTION);
   const durationMult = 1 - pilotReduction;
   const researchMult = 1 + researchDurationPercent / 100;
-  return Math.max(1000, Math.round(raw * mult * durationMult * researchMult));
+  return Math.max(1000, Math.round(raw * tierMult * typeMult * durationMult * researchMult));
 }
 
 export const PILOT_EXPEDITION_DURATION_REDUCTION_PCT = Math.round(PILOT_DURATION_REDUCTION * 100);
@@ -151,20 +243,23 @@ export const EXPEDITION_MIN_DEATH_CHANCE = B.expeditionMinDeathChance ?? 0.05;
 /** Death chance reduction per medic in expedition (0–1). E.g. 0.02 = 2% less per medic. */
 const MEDIC_DEATH_REDUCTION = B.expeditionMedicDeathChanceReductionPerMedic ?? 0.02;
 
-/** Effective expedition death chance given number of medics. Optional tierId applies death chance multiplier. researchDeathChancePercent: from research (negative = safer). */
+/** Effective expedition death chance given number of medics. Optional tierId and typeId apply multipliers. researchDeathChancePercent: from research (negative = safer). */
 export function getExpeditionDeathChanceWithMedics(
   medicCount: number,
   tierId?: ExpeditionTierId | string,
-  researchDeathChancePercent: number = 0
+  researchDeathChancePercent: number = 0,
+  typeId?: ExpeditionTypeId | string
 ): number {
   const base = Math.max(
     EXPEDITION_MIN_DEATH_CHANCE,
     EXPEDITION_DEATH_CHANCE - medicCount * MEDIC_DEATH_REDUCTION
   );
   const tier = tierId ? getExpeditionTier(tierId) : undefined;
-  const mult = tier?.deathChanceMultiplier ?? 1;
+  const tierMult = tier?.deathChanceMultiplier ?? 1;
+  const type = typeId ? getExpeditionType(typeId) : undefined;
+  const typeMult = type?.deathChanceMultiplier ?? 1;
   const researchMult = 1 + researchDeathChancePercent / 100;
-  return Math.min(1, Math.max(EXPEDITION_MIN_DEATH_CHANCE, base * mult * researchMult));
+  return Math.min(1, Math.max(EXPEDITION_MIN_DEATH_CHANCE, base * tierMult * typeMult * researchMult));
 }
 
 /** Production bonus per planet (e.g. 0.05 = +5% per extra planet). First planet is base, each additional adds this. */

@@ -15,6 +15,12 @@ import {
   ASTRONAUT_PRODUCTION_BONUS,
   getAstronautCost,
   getMaxAstronauts,
+  getExpeditionTypes,
+  getExpeditionType,
+  getExpeditionCost,
+  getResearchDataForExpeditionSuccess,
+  getExpeditionDurationMs,
+  getExpeditionDeathChanceWithMedics,
 } from './constants.js';
 
 describe('constants', () => {
@@ -103,5 +109,42 @@ describe('constants', () => {
     expect(getMaxAstronauts(2)).toBe(4);
     expect(getMaxAstronauts(3)).toBe(6);
     expect(getMaxAstronauts(5)).toBe(10);
+  });
+
+  it('getExpeditionTypes returns scout, mining, rescue with outcome and multipliers', () => {
+    const types = getExpeditionTypes();
+    expect(types.map((t) => t.id)).toEqual(['scout', 'mining', 'rescue']);
+    expect(types.map((t) => t.outcome)).toEqual(['planet', 'coins', 'crew']);
+    const scout = getExpeditionType('scout');
+    expect(scout?.durationMultiplier).toBe(0.8);
+    expect(scout?.deathChanceMultiplier).toBe(0.9);
+    const rescue = getExpeditionType('rescue');
+    expect(rescue?.deathChanceMultiplier).toBe(0.85);
+  });
+
+  it('getResearchDataForExpeditionSuccess: scout=1, mining=1, rescue=1', () => {
+    expect(getResearchDataForExpeditionSuccess('scout')).toBe(1);
+    expect(getResearchDataForExpeditionSuccess('mining')).toBe(1);
+    expect(getResearchDataForExpeditionSuccess('rescue')).toBe(1);
+  });
+
+  it('getExpeditionCost: scout = new planet cost, mining and rescue are type-specific', () => {
+    const scoutCost = getExpeditionCost(0, 'scout').toNumber();
+    expect(scoutCost).toBe(120000);
+    const miningCost = getExpeditionCost(1, 'mining').toNumber();
+    expect(miningCost).toBeLessThan(getNewPlanetCost(1).toNumber());
+    const rescueCost = getExpeditionCost(2, 'rescue').toNumber();
+    expect(rescueCost).toBe(getNewPlanetCost(2).mul(0.5).floor().toNumber());
+  });
+
+  it('getExpeditionDurationMs: scout uses planet formula with mult, mining uses fixed tier duration', () => {
+    const baseMs = getExpeditionDurationMs(0, 'medium', 0, 0);
+    const scoutMs = getExpeditionDurationMs(0, 'medium', 0, 0, 'scout');
+    expect(scoutMs).toBeLessThan(baseMs);
+    const miningMs = getExpeditionDurationMs(0, 'medium', 0, 0, 'mining');
+    expect(miningMs).toBe(300000);
+    const baseDeath = getExpeditionDeathChanceWithMedics(0, 'medium', 0);
+    const rescueDeath = getExpeditionDeathChanceWithMedics(0, 'medium', 0, 'rescue');
+    expect(rescueDeath).toBeLessThan(baseDeath);
   });
 });

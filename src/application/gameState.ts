@@ -38,6 +38,7 @@ export type SavedExpedition = {
   composition: ExpeditionComposition;
   durationMs: number;
   difficulty?: string;
+  type?: string;
 };
 
 export type RunStats = {
@@ -86,6 +87,7 @@ let expeditionEndsAt: number | null = null;
 let expeditionComposition: ExpeditionComposition | null = null;
 let expeditionDurationMs = 0;
 let expeditionDifficulty: string | null = null;
+let expeditionType: string | null = null;
 
 let _saveLoadInstance: SaveLoadService | null = null;
 function getSaveLoadInstance(): SaveLoadService {
@@ -390,16 +392,22 @@ export function getExpeditionDifficulty(): string | null {
   return expeditionDifficulty;
 }
 
+export function getExpeditionType(): string | null {
+  return expeditionType;
+}
+
 export function setExpeditionInProgress(
   endsAt: number,
   composition: ExpeditionComposition,
   durationMs: number,
-  difficulty?: string
+  difficulty?: string,
+  typeId?: string
 ): void {
   expeditionEndsAt = endsAt;
   expeditionComposition = { ...composition };
   expeditionDurationMs = durationMs;
   expeditionDifficulty = difficulty ?? null;
+  expeditionType = typeId ?? null;
 }
 
 export function clearExpedition(): void {
@@ -407,6 +415,7 @@ export function clearExpedition(): void {
   expeditionComposition = null;
   expeditionDurationMs = 0;
   expeditionDifficulty = null;
+  expeditionType = null;
 }
 
 export function getExpeditionForSave(): SavedExpedition | null {
@@ -416,11 +425,12 @@ export function getExpeditionForSave(): SavedExpedition | null {
     composition: { ...expeditionComposition },
     durationMs: expeditionDurationMs,
     ...(expeditionDifficulty ? { difficulty: expeditionDifficulty } : {}),
+    ...(expeditionType ? { type: expeditionType } : {}),
   };
 }
 
 export function setExpeditionFromPayload(
-  payload: { endsAt: number; composition: Record<string, number>; durationMs: number; difficulty?: string } | null | undefined
+  payload: { endsAt: number; composition: Record<string, number>; durationMs: number; difficulty?: string; type?: string } | null | undefined
 ): void {
   if (!payload) {
     clearExpedition();
@@ -433,6 +443,7 @@ export function setExpeditionFromPayload(
   ) as ExpeditionComposition;
   expeditionDurationMs = payload.durationMs;
   expeditionDifficulty = typeof payload.difficulty === 'string' ? payload.difficulty : null;
+  expeditionType = typeof payload.type === 'string' ? payload.type : null;
 }
 
 export function getEventContext(): { activeEventIds: string[] } {

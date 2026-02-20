@@ -4,12 +4,13 @@ import {
   getExpeditionEndsAt,
   getExpeditionComposition,
   getExpeditionDifficulty,
+  getExpeditionType,
+  getExpeditionDurationMs,
   clearExpedition,
   setExpeditionInProgress,
 } from './gameState.js';
-import { getMaxAstronauts, getAstronautCost, getRetrainCost, RESEARCH_DATA_PER_EXPEDITION_SUCCESS, type CrewRole } from '../domain/constants.js';
-import type { ExpeditionComposition } from '../domain/constants.js';
-import type { ExpeditionTierId } from '../domain/constants.js';
+import { getMaxAstronauts, getAstronautCost, getRetrainCost, getResearchDataForExpeditionSuccess, type CrewRole } from '../domain/constants.js';
+import type { ExpeditionComposition, ExpeditionTierId, ExpeditionTypeId } from '../domain/constants.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { hasEffectiveFreeSlot, isCrewRetrainUnlocked, getResearchExpeditionDurationPercent, getResearchExpeditionDeathChancePercent, getResearchHousingCapacityBonus, addResearchData } from './research.js';
 import { emit } from './eventBus.js';
@@ -28,34 +29,34 @@ function refreshAfterPlanetAction(opts: { achievements?: boolean } = {}): void {
   checkCodexUnlocks();
 }
 
-/** Launch expedition with default composition and medium tier (e.g. for tests or programmatic launch). */
+/** Launch Scout expedition (discover new planet) with default composition and medium tier. */
 export function handleBuyNewPlanet(): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
   if (getExpeditionEndsAt() !== null) return;
-  if (!planetService.canLaunchExpedition(player)) return;
-  const result = planetService.startExpedition(player, null, 'medium');
+  if (!planetService.canLaunchExpedition(player, null, 'scout')) return;
+  const result = planetService.startExpedition(player, null, 'medium', 'scout');
   if (!result.started) return;
-  const durationMs = planetService.getExpeditionDurationMs(player, 'medium', result.composition.pilot ?? 0, getResearchExpeditionDurationPercent());
+  const durationMs = planetService.getExpeditionDurationMs(player, 'medium', result.composition.pilot ?? 0, getResearchExpeditionDurationPercent(), 'scout');
   const endsAt = Date.now() + durationMs;
-  setExpeditionInProgress(endsAt, result.composition, durationMs, 'medium');
+  setExpeditionInProgress(endsAt, result.composition, durationMs, 'medium', 'scout');
   if (player.planets.length === 0) tryShowNarrator('first_expedition_launch');
   refreshAfterPlanetAction();
 }
 
-/** Launch expedition from modal: tier + crew composition. */
-export function handleLaunchExpeditionFromModal(tierId: ExpeditionTierId, composition: ExpeditionComposition): void {
+/** Launch expedition from modal: tier + type + crew composition. Cost depends on type. */
+export function handleLaunchExpeditionFromModal(tierId: ExpeditionTierId, composition: ExpeditionComposition, typeId: ExpeditionTypeId = 'scout'): void {
   const session = getSession();
   if (!session) return;
   const player = session.player;
   if (getExpeditionEndsAt() !== null) return;
-  if (!planetService.canLaunchExpedition(player, composition)) return;
-  const result = planetService.startExpedition(player, composition, tierId);
+  if (!planetService.canLaunchExpedition(player, composition, typeId)) return;
+  const result = planetService.startExpedition(player, composition, tierId, typeId);
   if (!result.started) return;
-  const durationMs = planetService.getExpeditionDurationMs(player, tierId, result.composition.pilot ?? 0, getResearchExpeditionDurationPercent());
+  const durationMs = planetService.getExpeditionDurationMs(player, tierId, result.composition.pilot ?? 0, getResearchExpeditionDurationPercent(), typeId);
   const endsAt = Date.now() + durationMs;
-  setExpeditionInProgress(endsAt, result.composition, durationMs, tierId);
+  setExpeditionInProgress(endsAt, result.composition, durationMs, tierId, typeId);
   if (player.planets.length === 0) tryShowNarrator('first_expedition_launch');
   refreshAfterPlanetAction();
 }
@@ -71,35 +72,34 @@ export function completeExpeditionIfDue(): void {
   if (!composition) return;
   const difficulty = getExpeditionDifficulty();
   const tierId = (difficulty === 'easy' || difficulty === 'medium' || difficulty === 'hard' ? difficulty : 'medium') as ExpeditionTierId;
+  const typeRaw = getExpeditionType();
+  const typeId: ExpeditionTypeId = (typeRaw === 'scout' || typeRaw === 'mining' || typeRaw === 'rescue' ? typeRaw : 'scout');
   const player = session.player;
   const wasFirstPlanet = player.planets.length === 1;
+  const durationMs = getExpeditionDurationMs();
   const outcome = planetService.completeExpedition(
     player,
     composition,
     tierId,
     Math.random,
     getResearchExpeditionDeathChancePercent(),
-    getDiscoveryFlavorForPlanetName
+    getDiscoveryFlavorForPlanetName,
+    typeId,
+    durationMs
   );
   clearExpedition();
   const ui = getPresentationPort();
-  if (outcome.success && outcome.planetName) {
-    addResearchData(RESEARCH_DATA_PER_EXPEDITION_SUCCESS);
+
+  if (outcome.success && typeId === 'scout' && outcome.planetName) {
+    addResearchData(getResearchDataForExpeditionSuccess(typeId));
     emit('planet_bought', { planetCount: player.planets.length });
     const lastPlanet = player.planets[player.planets.length - 1];
     const flavor = lastPlanet?.discoveryFlavor ?? '';
     let message: string;
     if (outcome.deaths > 0) {
-      message = tParam('expeditionDiscoveredWithDeaths', {
-        name: outcome.planetName,
-        survivors: outcome.survivors,
-        deaths: outcome.deaths,
-      });
+      message = tParam('expeditionDiscoveredWithDeaths', { name: outcome.planetName, survivors: outcome.survivors, deaths: outcome.deaths });
     } else {
-      message = tParam('expeditionDiscoveredAllReturned', {
-        name: outcome.planetName,
-        survivors: outcome.survivors,
-      });
+      message = tParam('expeditionDiscoveredAllReturned', { name: outcome.planetName, survivors: outcome.survivors });
     }
     if (flavor) message += `\n${flavor}`;
     ui.showMiniMilestoneToast(message);
@@ -111,20 +111,29 @@ export function completeExpeditionIfDue(): void {
       }
     }
     if (wasFirstPlanet && tryShowNarrator('first_planet')) {
-      /* one narrator per completion */
     } else if (outcome.planetName && getPlanetType(outcome.planetName) === 'gas' && tryShowNarrator('first_gas_giant')) {
-      /* one narrator per completion */
     } else if (outcome.deaths > 0) {
       tryShowNarrator('first_expedition_casualties');
     }
-  } else {
+  } else if (outcome.success && typeId === 'mining' && outcome.coinsEarned !== undefined) {
+    addResearchData(getResearchDataForExpeditionSuccess(typeId));
+    const coinsStr = outcome.coinsEarned.toNumber().toLocaleString(undefined, { maximumFractionDigits: 0 });
+    ui.showMiniMilestoneToast(tParam('expeditionMiningSuccess', { coins: coinsStr, survivors: outcome.survivors }));
+  } else if (outcome.success && typeId === 'rescue' && outcome.rescuedCrew !== undefined) {
+    addResearchData(getResearchDataForExpeditionSuccess(typeId));
+    const maxCrew = getMaxAstronauts(player.planets.length, player.planets.reduce((s, p) => s + p.housingCount, 0), getResearchHousingCapacityBonus());
+    const capped = Math.min(outcome.rescuedCrew, Math.max(0, maxCrew - player.astronautCount));
+    if (capped > 0) player.addAstronauts(capped, 'astronaut');
+    ui.showMiniMilestoneToast(tParam('expeditionRescueSuccess', { rescued: capped, survivors: outcome.survivors }));
+  } else if (!outcome.success) {
     tryShowNarrator('first_lost_expedition');
     ui.showMiniMilestoneToast(tParam('expeditionFailed', { n: outcome.totalSent }));
   }
+
   refreshAfterPlanetAction({ achievements: true });
 }
 
-/** Cancel the current expedition: refund coins and crew, no planet discovered. */
+/** Cancel the current expedition: refund coins (cost depends on type) and crew. */
 export function handleCancelExpedition(): void {
   const endsAt = getExpeditionEndsAt();
   if (endsAt == null) return;
@@ -141,7 +150,9 @@ export function handleCancelExpedition(): void {
     return;
   }
   const player = session.player;
-  const cost = planetService.getNewPlanetCost(player);
+  const typeRaw = getExpeditionType();
+  const typeId: ExpeditionTypeId = (typeRaw === 'scout' || typeRaw === 'mining' || typeRaw === 'rescue' ? typeRaw : 'scout');
+  const cost = planetService.getExpeditionCost(player, typeId);
   player.addCoins(cost);
   player.refundCrewByComposition(composition);
   clearExpedition();
