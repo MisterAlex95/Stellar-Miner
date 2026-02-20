@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["requiredCount", "productionBonusPercent"],
+    "properties": {
+      "moduleId": { "type": "string" },
+      "moduleIds": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1
+      },
+      "planetTypes": {
+        "type": "array",
+        "items": { "type": "string", "enum": ["rocky", "desert", "ice", "volcanic", "gas"] }
+      },
+      "requiredCount": { "type": "number", "minimum": 1 },
+      "productionBonusPercent": { "type": "number", "minimum": 0 }
+    },
+    "oneOf": [
+      { "required": ["moduleId"] },
+      { "required": ["moduleIds"] }
+    ]
+  }
+}

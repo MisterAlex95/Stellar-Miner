@@ -2,6 +2,7 @@ import { computed } from 'vue';
 import { getSession, getSettings, getEventMultiplier } from '../../application/gameState.js';
 import { formatNumber } from '../../application/format.js';
 import { getResearchProductionMultiplier } from '../../application/research.js';
+import { getSetBonusMultiplier } from '../../application/moduleSetBonuses.js';
 import { t } from '../../application/strings.js';
 import { useGameStateStore } from '../stores/gameState.js';
 
@@ -20,7 +21,7 @@ export function useDashboardStats() {
     store.production; // reactive dependency
     const s = getSession();
     if (!s) return '';
-    const mult = getEventMultiplier() * getResearchProductionMultiplier();
+    const mult = getEventMultiplier() * getResearchProductionMultiplier() * getSetBonusMultiplier(s.player);
     const effective = s.player.effectiveProductionRate.mul(mult);
     return formatNumber(effective, getSettings().compactNumbers) + '/s';
   });

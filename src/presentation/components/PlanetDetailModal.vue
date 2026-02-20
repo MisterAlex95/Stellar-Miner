@@ -111,6 +111,38 @@
               {{ t('planetDetailNoUpgrades') }}
             </p>
           </div>
+          <div
+            v-if="(planetDetail.activeSetBonuses?.length ?? 0) > 0 || (planetDetail.potentialSetBonuses?.length ?? 0) > 0"
+            class="planet-detail-set-bonuses"
+          >
+            <h4 class="planet-detail-set-bonuses-title">
+              {{ t('planetDetailSetBonuses') }}
+            </h4>
+            <ul
+              v-if="(planetDetail.activeSetBonuses?.length ?? 0) > 0"
+              class="planet-detail-set-list"
+            >
+              <li
+                v-for="(b, idx) in (planetDetail.activeSetBonuses ?? [])"
+                :key="'active-' + idx"
+                class="planet-detail-set-item planet-detail-set-item--active"
+              >
+                {{ b.count }}× {{ b.moduleName }}<template v-if="b.planetTypes?.length"> ({{ formatPlanetTypes(b.planetTypes) }})</template>: +{{ b.bonusPercent }}%
+              </li>
+            </ul>
+            <ul
+              v-if="(planetDetail.potentialSetBonuses?.length ?? 0) > 0"
+              class="planet-detail-set-list"
+            >
+              <li
+                v-for="(b, idx) in (planetDetail.potentialSetBonuses ?? [])"
+                :key="'potential-' + idx"
+                class="planet-detail-set-item planet-detail-set-item--potential"
+              >
+                {{ b.current }}/{{ b.required }} {{ b.moduleName }}<template v-if="b.planetTypes?.length"> ({{ formatPlanetTypes(b.planetTypes) }})</template> (+{{ b.bonusPercent }}%)
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -127,6 +159,10 @@ import { createPlanetScene, type PlanetScene } from '../canvas/planetDetail3D.js
 
 const store = useAppUIStore();
 const { planetDetail } = storeToRefs(store);
+
+function formatPlanetTypes(types: string[]): string {
+  return types.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ');
+}
 
 const threeContainerRef = ref<HTMLElement | null>(null);
 let currentScene: PlanetScene | null = null;
@@ -391,6 +427,48 @@ function handleClose(): void {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.8rem;
+}
+
+.planet-detail-set-bonuses {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.planet-detail-set-bonuses-title {
+  margin: 0 0 0.5rem 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.planet-detail-set-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.planet-detail-set-item {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.planet-detail-set-item--active {
+  background: var(--bg-card);
+  color: var(--success);
+}
+
+.planet-detail-set-item--potential {
+  background: var(--bg-card);
+  color: var(--text-dim);
 }
 
 .planet-detail-upgrade-name {

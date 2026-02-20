@@ -1,6 +1,7 @@
 import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered, addDiscoveredEvent, getDiscoveredEventIds } from './gameState.js';
 import { getEventMultiplier } from './gameState.js';
 import { getResearchProductionMultiplier } from './research.js';
+import { getSetBonusMultiplier } from './moduleSetBonuses.js';
 import { getEventPoolForRun } from './catalogs.js';
 import { getRunStats } from './gameState.js';
 import { pushActiveEventInstance } from './gameState.js';
@@ -52,7 +53,8 @@ export function updateDebugPanel(): void {
   const player = session.player;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
+  const setBonusMult = getSetBonusMultiplier(player);
+  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult * setBonusMult);
   const now = Date.now();
   const nextEventAt = getNextEventAt();
   const nextEventIn = Math.max(0, Math.ceil((nextEventAt - now) / 1000));

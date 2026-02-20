@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.19",
+    "date": "2026-02",
+    "changes": [
+      "Module set bonuses: place N identical modules on a planet for a production bonus; config in data, shown in planet detail."
+    ]
+  },
+  {
     "version": "0.5.18",
     "date": "2026-02",
     "changes": [

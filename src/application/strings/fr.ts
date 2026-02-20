@@ -509,6 +509,7 @@ export const stringsFr: Record<StringKey, string> = {
   planetDetailNoCrew: 'Pas d\'équipage assigné.',
   planetDetailCrewLine: '{n}/{max} assigné(s)',
   planetDetailFirstContact: 'Premier contact',
+  planetDetailSetBonuses: 'Bonus de série',
   discoveryLogTitle: 'Journal des découvertes',
   discoveryLogEmpty: 'Aucune découverte. Envoyez une expédition pour trouver de nouvelles planètes.',
 };

@@ -56,5 +56,12 @@
   { "trigger": "achievement:combo-master", "message": "Mission control: You chained the hits. The rig rewarded the rhythm." },
   { "trigger": "achievement:first-slot", "message": "Comms: More slots than the starter rig. You built room to grow." },
   { "trigger": "achievement:speed-run", "message": "Ship log: Two million, fast. The belt noticed." },
-  { "trigger": "achievement:shooting-star", "message": "Mission control: You caught a shooting star. Some say it brings luck. The logs say you were there." }
+  { "trigger": "achievement:shooting-star", "message": "Mission control: You caught a shooting star. Some say it brings luck. The logs say you were there." },
+  { "trigger": "first_set_bonus", "message": "Ship log: Module set bonus active. Same-type rigs on one world amplify output." },
+  { "trigger": "set_bonus_3", "message": "Comms: Three set bonuses online. The fleet is starting to synergize." },
+  { "trigger": "set_bonus_5", "message": "Mission control: Five set bonuses. Your rigs are talking to each other." },
+  { "trigger": "set_bonus_10", "message": "Ship log: Ten set bonuses across the belt. You have become a set collector." },
+  { "trigger": "set_bonus_15pct", "message": "Comms: Set bonuses now add 15% to output. The numbers don't lie." },
+  { "trigger": "set_bonus_30pct", "message": "Mission control: Thirty percent from set bonuses alone. The operation has found its rhythm." },
+  { "trigger": "set_bonus_50pct", "message": "Ship log: Fifty percent bonus from sets. You have mastered the art of the stack." }
 ]

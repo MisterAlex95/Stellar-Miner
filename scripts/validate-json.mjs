@@ -15,6 +15,8 @@ const pairs = [
   ['schemas/events.schema.json', 'src/data/events.json'],
   ['schemas/achievements.schema.json', 'src/data/achievements.json'],
   ['schemas/research.schema.json', 'src/data/research.json'],
+  ['schemas/moduleSetBonuses.schema.json', 'src/data/moduleSetBonuses.json'],
+  ['schemas/narrator.schema.json', 'src/data/narrator.json'],
 ];
 
 const ajv = new Ajv({ allErrors: true });

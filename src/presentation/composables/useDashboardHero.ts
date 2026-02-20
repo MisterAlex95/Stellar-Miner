@@ -12,6 +12,7 @@ import {
   getResearchProductionMultiplier,
   isResearchInProgress,
 } from '../../application/research.js';
+import { getSetBonusMultiplier } from '../../application/moduleSetBonuses.js';
 import { PRESTIGE_COIN_THRESHOLD } from '../../domain/constants.js';
 import { getCatalogUpgradeName } from '../../application/i18nCatalogs.js';
 import { t, tParam, type StringKey } from '../../application/strings.js';
@@ -48,7 +49,8 @@ export function useDashboardHero() {
     const player = s.player;
     const eventMult = getEventMultiplier();
     const researchMult = getResearchProductionMultiplier();
-    const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
+    const setBonusMult = getSetBonusMultiplier(player);
+    const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult * setBonusMult);
     const questProgress = getQuestProgress();
     const questDone = questProgress?.done ?? false;
     const canPrestige = player.coins.gte(PRESTIGE_COIN_THRESHOLD);

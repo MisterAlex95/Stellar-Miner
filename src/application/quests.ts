@@ -11,6 +11,7 @@ import {
 } from './catalogs.js';
 import { getSession, getQuestState, setQuestState, incrementRunQuestsClaimed, addRunCoins, getRunStats, getPrestigesToday } from './gameState.js';
 import { getResearchProductionMultiplier } from './research.js';
+import { getSetBonusMultiplier } from './moduleSetBonuses.js';
 import { getPresentationPort } from './uiBridge.js';
 import gameConfig from '../data/gameConfig.json';
 import questFlavorData from '../data/questFlavor.json';
@@ -85,7 +86,10 @@ function getAllowableTargets(): {
   const prestigeLevel = session?.player.prestigeLevel ?? 0;
   const currentCoins = session ? session.player.coins.toNumber() : 0;
   const currentProduction = session
-    ? session.player.effectiveProductionRate.mul(getResearchProductionMultiplier()).toNumber()
+    ? session.player.effectiveProductionRate
+        .mul(getResearchProductionMultiplier())
+        .mul(getSetBonusMultiplier(session.player))
+        .toNumber()
     : 0;
   const currentAstronauts = session?.player.astronautCount ?? 0;
   const currentTier1Owned =
@@ -307,7 +311,10 @@ export function getQuestProgress(): { current: number | Decimal; target: number;
   const q = questState.quest;
   let current: number | Decimal = 0;
   if (q.type === 'coins') current = session.player.coins.value;
-  else if (q.type === 'production') current = session.player.effectiveProductionRate.mul(getResearchProductionMultiplier());
+  else if (q.type === 'production')
+    current = session.player.effectiveProductionRate
+      .mul(getResearchProductionMultiplier())
+      .mul(getSetBonusMultiplier(session.player));
   else if (q.type === 'upgrade' && q.targetId)
     current = session.player.upgrades.filter((u) => u.id === q.targetId).length;
   else if (q.type === 'astronauts') current = session.player.astronautCount;

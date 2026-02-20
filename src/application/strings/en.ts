@@ -510,6 +510,7 @@ export const stringsEn = {
   planetDetailNoCrew: 'No crew assigned.',
   planetDetailCrewLine: '{n}/{max} assigned',
   planetDetailFirstContact: 'First contact',
+  planetDetailSetBonuses: 'Set bonuses',
   discoveryLogTitle: 'Discovery log',
   discoveryLogEmpty: 'No discoveries yet. Send an expedition to find new planets.',
 } as const;

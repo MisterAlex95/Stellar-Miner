@@ -28,6 +28,7 @@ import {
   getUnlockedCrewRoles,
   getResearchHousingCapacityBonus,
 } from './research.js';
+import { getSetBonusMultiplier } from './moduleSetBonuses.js';
 import { getEstimatedClickRate } from './productionHelpers.js';
 import { getPrestigeProductionPercent } from './handlersPrestige.js';
 import { t, tParam, type StringKey } from './strings.js';
@@ -114,7 +115,8 @@ export function getStatsSnapshot(): StatsSnapshot {
   const player = session.player;
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
+  const setBonusMult = getSetBonusMultiplier(player);
+  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult * setBonusMult);
   const assignedCrew = getAssignedAstronauts(session);
   const totalCrew = player.astronautCount;
   const freeCrew = totalCrew - assignedCrew;

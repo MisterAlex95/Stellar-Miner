@@ -7,6 +7,7 @@ import { getSession, getSettings } from '../../application/gameState.js';
 import { formatNumber } from '../../application/format.js';
 import { getPlanetEffectiveProduction } from '../../application/productionHelpers.js';
 import { getPlanetType } from '../../application/planetAffinity.js';
+import { getCompletedSetBonusesForPlanet, getPotentialSetBonusesForPlanet } from '../../application/moduleSetBonuses.js';
 import { getEffectiveUsedSlots } from '../../application/research.js';
 import { getPlanetDisplayName, getSolarSystemName, PLANETS_PER_SOLAR_SYSTEM } from '../../application/solarSystems.js';
 import { t, tParam } from '../../application/strings.js';
@@ -80,6 +81,20 @@ export function openPlanetDetail(planetId: string): void {
     ? tParam('planetDetailCrewLine', { n: String(planet.assignedCrew), max: String(planet.maxAssignedCrew) })
     : t('planetDetailNoCrew');
 
+  const activeSetBonuses = getCompletedSetBonusesForPlanet(planet).map((b) => ({
+    moduleName: b.moduleName,
+    count: b.count,
+    bonusPercent: b.bonusPercent,
+    planetTypes: b.planetTypes,
+  }));
+  const potentialSetBonuses = getPotentialSetBonusesForPlanet(planet).map((b) => ({
+    moduleName: b.moduleName,
+    current: b.current,
+    required: b.required,
+    bonusPercent: b.bonusPercent,
+    planetTypes: b.planetTypes,
+  }));
+
   getPresentationPort().setPlanetDetailData({
     planetId: planet.id,
     planetName: planet.name,
@@ -97,6 +112,8 @@ export function openPlanetDetail(planetId: string): void {
     extraLabel,
     upgradeItems: buildUpgradeItems(planet),
     discoveryFlavor: planet.discoveryFlavor,
+    activeSetBonuses,
+    potentialSetBonuses,
   });
 
   openOverlay(PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS, {

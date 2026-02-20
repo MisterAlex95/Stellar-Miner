@@ -1,6 +1,7 @@
 import { Decimal } from '../domain/bigNumber.js';
 import type { GameSession } from '../domain/aggregates/GameSession.js';
 import { getResearchProductionMultiplier } from './research.js';
+import { getSetBonusMultiplier } from './moduleSetBonuses.js';
 import { getPlanetType, getPlanetTypeMultiplier } from './planetAffinity.js';
 import { getCurrentComboMultiplier } from './catalogs.js';
 import { getExpectedCoinsPerClick } from './research.js';
@@ -49,5 +50,6 @@ export function getPlanetEffectiveProduction(
   const planetBase = getPlanetBaseProduction(planet);
   const ratio = planetBase.div(totalBase);
   const researchMult = getResearchProductionMultiplier();
-  return session.player.effectiveProductionRate.mul(ratio).mul(researchMult);
+  const setBonusMult = getSetBonusMultiplier(session.player);
+  return session.player.effectiveProductionRate.mul(ratio).mul(researchMult).mul(setBonusMult);
 }

@@ -9,6 +9,7 @@ import {
   getPrestigeResearchPoints,
   setResearchProgressState,
 } from '../application/research.js';
+import { getSetBonusMultiplier } from '../application/moduleSetBonuses.js';
 
 export type SessionDeserializer = (data: SavedSession) => GameSession;
 export type GetResearchProductionMultiplier = () => number;
@@ -283,9 +284,11 @@ export class SaveLoadService implements ISaveLoadService {
             decay24_48Sec * DECAY_24_48H_AVG_MULT +
             extra48 * DECAY_48H_PLUS_MULT;
         }
+        const setBonusMult = getSetBonusMultiplier(session.player);
         const offlineCoins = session.player.effectiveProductionRate
           .mul(effectiveSeconds)
-          .mul(researchMult);
+          .mul(researchMult)
+          .mul(setBonusMult);
         session.player.addCoins(offlineCoins);
         const n = offlineCoins.toNumber();
         this.lastOfflineCoinsApplied = Number.isFinite(n) ? n : Number.MAX_VALUE;

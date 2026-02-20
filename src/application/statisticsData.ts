@@ -40,6 +40,7 @@ import {
   RESEARCH_CATALOG,
 } from './research.js';
 import { getComboName } from './catalogs.js';
+import { getSetBonusMultiplier } from './moduleSetBonuses.js';
 import { t, tParam } from './strings.js';
 
 /** Which block must be unlocked to show each statistics group. */
@@ -98,7 +99,8 @@ export function computeStatisticsData(
   const now = Date.now();
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult);
+  const setBonusMult = getSetBonusMultiplier(player);
+  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult * setBonusMult);
   const playTime = getPlayTimeStats();
   const sessionStart = getGameStartTime();
   const sessionDurationMs = now - sessionStart;

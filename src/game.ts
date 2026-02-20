@@ -32,6 +32,7 @@ import {
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory, getStatsHistory } from './application/statsHistory.js';
 import { getResearchProductionMultiplier } from './application/research.js';
+import { getSetBonusMultiplier, checkSetBonusNarrator } from './application/moduleSetBonuses.js';
 import { getStatsSnapshot } from './application/statsSnapshot.js';
 import { updateQuestProgressStore } from './application/questProgressStore.js';
 import { getQuestSnapshot } from './application/questSnapshot.js';
@@ -82,7 +83,8 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
   }
   const eventMult = getEventMultiplier();
   const researchMult = getResearchProductionMultiplier();
-  const rateDec = session.player.effectiveProductionRate.mul(eventMult * researchMult);
+  const setBonusMult = getSetBonusMultiplier(session.player);
+  const rateDec = session.player.effectiveProductionRate.mul(eventMult * researchMult * setBonusMult);
   const shouldProduce = !getSettings().pauseWhenBackground || document.visibilityState !== 'hidden';
   if (rateDec.gt(0) && shouldProduce) {
     session.player.addCoins(rateDec.mul(dt));
@@ -94,6 +96,7 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
 
 function runPanelUpdates(nowMs: number): void {
   runQuestIfDue(nowMs, () => true, updateQuestProgressStore);
+  checkSetBonusNarrator();
   // Dashboard, Research, Upgrades: Vue panels watch the bridge and update themselves
   // Empire panel is Vue; combo indicator is driven by bridge
   updateProgressionVisibility();
@@ -193,7 +196,7 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
     activeTab,
     layout: getSettings().layout,
     coins: session.player.coins.toNumber(),
-    production: session.player.effectiveProductionRate.toNumber(),
+    production: session.player.effectiveProductionRate.mul(getSetBonusMultiplier(session.player)).toNumber(),
     planets: planetViews,
     statsHistoryRecent: getStatsHistory('recent'),
     statsHistoryLongTerm: getStatsHistory('longTerm'),

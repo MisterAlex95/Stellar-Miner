@@ -89,6 +89,8 @@ export interface PresentationPort {
     extraLabel: string;
     upgradeItems: { name: string; count: number }[];
     discoveryFlavor?: string;
+    activeSetBonuses: { moduleName: string; count: number; bonusPercent: number; planetTypes?: string[] }[];
+    potentialSetBonuses: { moduleName: string; current: number; required: number; bonusPercent: number; planetTypes?: string[] }[];
   } | null): void;
 }
 
