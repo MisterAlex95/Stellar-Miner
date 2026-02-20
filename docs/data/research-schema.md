@@ -17,6 +17,7 @@
 | modifiers | object | No | See Modifiers below |
 | row | number | Yes | Row in tree (UI layout) |
 | col | number | Yes | Column in tree (UI layout) |
+| branch | string | No | Logical branch: `core`, `crew`, `modules`, or `expeditions`. Used for progression and branch-completion bonuses. |
 | researchDataCost | number | No | Research data required (from expeditions) in addition to coins |
 | secret | boolean | No | If true, optional/side branch (UI can style differently) |
 
@@ -33,6 +34,13 @@
 | expeditionDurationPercent | number | Expedition duration modifier (negative = faster) |
 | expeditionDeathChancePercent | number | Expedition death chance modifier (negative = safer) |
 | housingCapacityBonus | number | Extra max crew capacity (flat +N) |
+
+## Branches
+
+- **core**: Shared root (e.g. Mining Theory). Single node that feeds all branches.
+- **crew**: Unlocks crew roles (miner, scientist, medic, pilot, engineer), housing capacity bonus, crew retrain, crew reduction on modules.
+- **modules**: Production and click %, slot-free/crew-free upgrades, equipment-focused nodes.
+- **expeditions**: Expedition duration and death chance modifiers; future: expedition types (Scout/Mining/Rescue), rewards, new solar systems.
 
 ## Notes
 

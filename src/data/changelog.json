@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.32",
+    "date": "2026-02",
+    "changes": [
+      "Science tree: coherent Crew, Modules, Expeditions branches; new nodes Faster Probes and Survival Training; branch field in schema and data; branch-completion bonuses for Crew and Expeditions."
+    ]
+  },
+  {
     "version": "0.5.31",
     "date": "2026-02",
     "changes": [

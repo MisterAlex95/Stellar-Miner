@@ -86,7 +86,7 @@ import ResearchTree3D from '../components/ResearchTree3D.vue';
 const { collapsedTiers, toggleTier } = useResearchCollapsed();
 const { tiers } = useResearchTiers(collapsedTiers);
 
-const viewMode = ref<'list' | '3d'>('list');
+const viewMode = ref<'list' | '3d'>('3d');
 const pathHighlightIds = ref<Set<string>>(new Set());
 
 function isPathHighlighted(nodeId: string): boolean {

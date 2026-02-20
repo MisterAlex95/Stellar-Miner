@@ -3,7 +3,8 @@
 ## Skill tree
 
 - **Source**: [data/research.json](../../src/data/research.json). Schema: [data/research-schema.md](../data/research-schema.md).
-- Nodes have **id**, **name**, **cost**, **successChance**, **prerequisites** (array of node ids), **row**, **col** (layout), optional **researchDataCost**, **secret**, and **modifiers** (production %, click %, slot-free/crew-free, expedition/housing bonuses).
+- Nodes have **id**, **name**, **cost**, **successChance**, **prerequisites** (array of node ids), **row**, **col** (layout), optional **branch**, **researchDataCost**, **secret**, and **modifiers** (production %, click %, slot-free/crew-free, expedition/housing bonuses).
+- **Branch** (optional): `core` (shared root), `crew`, `modules`, or `expeditions`. Used for logical progression and branch-completion bonuses. **Crew**: professions (miner, scientist, medic, pilot, engineer), housing capacity, crew retrain, crew reduction on modules. **Modules**: production %, click %, slot-free/crew-free upgrades, planet-scale equipment. **Expeditions**: expedition duration and death chance, future expedition types and solar-system unlocks.
 - All **prerequisites** must be unlocked before a node can be attempted. Tree is rendered in the Research tab. **Secret** nodes are optional side branches (styled differently).
 
 ## Success chance

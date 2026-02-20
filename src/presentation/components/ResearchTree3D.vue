@@ -264,11 +264,12 @@ onBeforeUnmount(() => {
 .research-tree-3d {
   position: relative;
   width: 100%;
-  min-height: 320px;
+  min-height: 360px;
   border-radius: 12px;
   overflow: hidden;
-  background: #0c0e12;
-  border: 1px solid rgba(42, 47, 61, 0.8);
+  background: #07090c;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.4);
 }
 
 .research-tree-3d-tooltip {
@@ -369,6 +370,6 @@ onBeforeUnmount(() => {
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 320px;
+  min-height: 360px;
 }
 </style>

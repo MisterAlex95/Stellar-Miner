@@ -121,6 +121,13 @@ const researchNamesEn: Record<string, string> = {
   'architect': 'The Architect',
   'transcendence': 'Transcendence',
   'omega-theory': 'Omega Theory',
+  'faster-probes': 'Faster Probes',
+  'survival-training': 'Survival Training',
+  'crew-quarters': 'Crew Quarters',
+  'veteran-protocols': 'Veteran Protocols',
+  'long-range-comms': 'Long-Range Comms',
+  'field-medics': 'Field Medics',
+  'expedition-ai': 'Expedition AI',
 };
 
 const researchDescsEn: Record<string, string> = {
@@ -162,6 +169,13 @@ const researchDescsEn: Record<string, string> = {
   'architect': 'Design reality itself. Ultimate research.',
   'transcendence': 'Beyond matter. Pure potential.',
   'omega-theory': 'The final equation. All bonuses combined.',
+  'faster-probes': 'Streamlined propulsion and nav. Shorter expedition duration.',
+  'survival-training': 'Crew preparedness. Lower death chance on expeditions.',
+  'crew-quarters': 'Better living space. Increases max crew capacity.',
+  'veteran-protocols': 'Learn from survivors. Extra crew capacity and steady gains.',
+  'long-range-comms': 'Faster signal relay. Expeditions return sooner.',
+  'field-medics': 'Advanced trauma protocols. Safer expeditions.',
+  'expedition-ai': 'AI-assisted mission planning. Faster and safer runs.',
 };
 
 const researchLoreEn: Record<string, string> = {
@@ -244,6 +258,13 @@ const researchDescsFr: Record<string, string> = {
   'architect': 'Concevoir la réalité. Recherche ultime.',
   'transcendence': 'Au-delà de la matière. Potentiel pur.',
   'omega-theory': 'L’équation finale. Tous les bonus combinés.',
+  'faster-probes': 'Propulsion et navigation optimisées. Expéditions plus courtes.',
+  'survival-training': 'Préparation de l’équipage. Moins de risques en expédition.',
+  'crew-quarters': 'Meilleurs quartiers. Augmente la capacité d’équipage max.',
+  'veteran-protocols': 'Apprendre des survivants. Capacité d’équipage et gains stables.',
+  'long-range-comms': 'Relais de signaux plus rapide. Expéditions plus courtes.',
+  'field-medics': 'Protocoles trauma avancés. Expéditions plus sûres.',
+  'expedition-ai': 'Planification de mission assistée par IA. Plus rapide et plus sûr.',
 };
 
 const eventNamesEn: Record<string, string> = {
@@ -640,6 +661,13 @@ const researchNamesFr: Record<string, string> = {
   'architect': 'L’Architecte',
   'transcendence': 'Transcendance',
   'omega-theory': 'Théorie Oméga',
+  'faster-probes': 'Sondes rapides',
+  'survival-training': 'Entraînement à la survie',
+  'crew-quarters': 'Quartiers équipage',
+  'veteran-protocols': 'Protocoles vétérans',
+  'long-range-comms': 'Communications longue portée',
+  'field-medics': 'Médecins de terrain',
+  'expedition-ai': 'IA d’expédition',
 };
 
 const researchLoreFr: Record<string, string> = {

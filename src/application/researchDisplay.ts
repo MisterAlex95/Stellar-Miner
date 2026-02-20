@@ -53,6 +53,13 @@ export function modifierText(node: ResearchNode): string {
         .map(({ id, n }) => tParam('researchUpgradeLessCrew', { name: getCatalogUpgradeName(id), n }))
         .join(', ')
     );
+  if (node.modifiers.expeditionDurationPercent != null)
+    parts.push(tParam('researchExpeditionDurationPercent', { pct: String(node.modifiers.expeditionDurationPercent) }));
+  if (node.modifiers.expeditionDeathChancePercent != null)
+    parts.push(tParam('researchExpeditionDeathChancePercent', { pct: String(node.modifiers.expeditionDeathChancePercent) }));
+  if (node.modifiers.housingCapacityBonus != null)
+    parts.push(tParam('researchHousingCapacityBonus', { n: String(node.modifiers.housingCapacityBonus) }));
+  if (node.modifiers.unlocksCrewRetrain) parts.push(t('researchUnlocksCrewRetrain'));
   return parts.length > 0 ? parts.join(', ') : '—';
 }
 
@@ -96,6 +103,69 @@ const RESEARCH_ICON_BY_ID: Record<string, string> = {
   'architect': 'research',
   'transcendence': 'neural',
   'omega-theory': 'secret',
+  'faster-probes': 'expedition',
+  'survival-training': 'expedition',
+  'crew-quarters': 'production',
+  'veteran-protocols': 'production',
+  'long-range-comms': 'expedition',
+  'field-medics': 'medic',
+  'expedition-ai': 'expedition',
+  'morale-boost': 'production',
+  'cross-training': 'production',
+  'habitat-expansion': 'production',
+  'leadership': 'production',
+  'ergonomics': 'production',
+  'veteran-support': 'production',
+  'specialist-logistics': 'production',
+  'crew-sync': 'production',
+  'fatigue-resistance': 'production',
+  'elite-recruitment': 'production',
+  'solar-optics': 'production',
+  'core-drilling': 'production',
+  'machine-learning': 'neural',
+  'cryo-handling': 'refining',
+  'magma-containment': 'refining',
+  'gas-processing': 'refining',
+  'geo-thermal': 'production',
+  'high-throughput': 'production',
+  'precision-tools': 'production',
+  'thermal-regulation': 'refining',
+  'flux-compression': 'production',
+  'subspace-tap': 'production',
+  'matter-recycler': 'refining',
+  'hyper-drill': 'production',
+  'reality-weave': 'production',
+  'temporal-loop': 'production',
+  'exotic-alloys': 'refining',
+  'quantum-coherence': 'production',
+  'parallel-mining': 'production',
+  'cognitive-grid': 'neural',
+  'omega-catalyst': 'refining',
+  'stellar-tap': 'production',
+  'cascade-reactor': 'production',
+  'cosmic-array': 'neural',
+  'singularity-node': 'production',
+  'void-conduit': 'production',
+  'infinity-core': 'production',
+  'omega-matrix': 'production',
+  'pulse-extraction': 'production',
+  'neural-link': 'neural',
+  'plasma-containment': 'refining',
+  'sensor-fusion': 'expedition',
+  'dark-matter-tap': 'production',
+  'reality-drill': 'production',
+  'signal-boost': 'expedition',
+  'life-support': 'expedition',
+  'nav-computer': 'expedition',
+  'hazard-suits': 'expedition',
+  'deep-range-scans': 'expedition',
+  'rescue-protocols': 'expedition',
+  'mining-protocols': 'expedition',
+  'scout-network': 'expedition',
+  'emergency-beacon': 'expedition',
+  'interstellar-comms': 'expedition',
+  'field-surgery': 'medic',
+  'expedition-mastery': 'expedition',
 };
 
 /** Icon key for a research node (used with ResearchIcon SVG component and 3D textures). */

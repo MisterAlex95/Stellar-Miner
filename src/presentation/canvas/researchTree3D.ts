@@ -1,6 +1,6 @@
 /**
  * Three.js research tree visualization (Path of Exile–style).
- * Orthographic 2.5D view: nodes as glowing orbs, edges as lines, pan and zoom.
+ * Orthographic 2.5D view: nodes as glowing orbs, curved edges, path glow, pan and zoom.
  */
 import * as THREE from 'three';
 import type { ResearchNode } from '../../application/research.js';
@@ -10,19 +10,25 @@ import {
   SPRITE_ROWS,
 } from '../icons/spriteConfig.js';
 
-const NODE_SPACING_X = 2.8;
-const NODE_SPACING_Y = 2.8;
-const NODE_RING_INNER = 0.44;
-const NODE_RING_OUTER = 0.56;
+const NODE_SPACING_X = 1.7;
+const NODE_SPACING_Y = 1.85;
+const NODE_RING_INNER = 0.42;
+const NODE_RING_OUTER = 0.58;
+/** PoE-style: large soft halo behind each node. */
+const NODE_GLOW_OUTER = 0.92;
+const NODE_GLOW_INNER = 0.52;
 const CAMERA_Z = 50;
 const ORTHO_SIZE_BASE = 25;
-/** Vertical extent smaller than horizontal so the tree fills more of the canvas height (less "side" view). */
 const ORTHO_HEIGHT_FACTOR = 0.7;
-const PATH_HIGHLIGHT_COLOR = 0x4ade80;
-const EDGE_DEFAULT = 0x3d4a5c;
-const EDGE_PATH = 0x6ee7b7;
-/** Progress arc on ring (same as list/modal progress fill). */
-const PROGRESS_ARC_COLOR = 0xf59e0b;
+/** Path of Exile palette: teal path glow, gold unlocked, grey locked. */
+const PATH_HIGHLIGHT_COLOR = 0x2dd4bf;
+const PATH_GLOW_COLOR = 0x0d9488;
+const EDGE_DEFAULT = 0x1e3a5f;
+const EDGE_PATH = 0x5eead4;
+const EDGE_CURVE_BULGE = 0.55;
+const EDGE_CURVE_SEGMENTS = 28;
+const TUBE_RADIUS_PATH = 0.12;
+const PROGRESS_ARC_COLOR = 0xfbbf24;
 const NODE_RING_MID = (NODE_RING_INNER + NODE_RING_OUTER) / 2;
 
 /** Per-node state for coloring. */
@@ -55,30 +61,24 @@ export type ResearchTreeScene = {
 };
 
 function nodeColor(state: ResearchNodeState): number {
-  if (state.done) return 0xe8b923; // amber/gold unlocked
-  if (state.canAttempt) return 0x7dd87d; // green available
-  return 0x4a5568; // grey locked
-}
-
-function nodeEmissive(state: ResearchNodeState): number {
-  if (state.done) return 0xc9940e;
-  if (state.canAttempt) return 0x3d8b3d;
-  return 0x1a202c;
+  if (state.done) return 0xe8b923; // PoE amber/gold unlocked
+  if (state.canAttempt) return 0x14b8a6; // teal available
+  return 0x334155; // dark slate locked
 }
 
 /**
  * Create the research tree 3D scene. Nodes are laid out in a grid from getResearchTreeRows;
  * segments define edges between consecutive rows.
  */
-const NODE_DISC_RADIUS = 0.46;
-const NODE_BG_COLOR = 0x252a33;
+const NODE_DISC_RADIUS = 0.4;
+const NODE_BG_COLOR = 0x0f172a;
 
 export function createResearchTreeScene(input: ResearchTreeSceneInput): ResearchTreeScene {
   const { rows, segments, stateById, getSpriteIndexForNode } = input;
   const resolveSpriteIndex = getSpriteIndexForNode ?? (() => 0);
   const textureLoader = new THREE.TextureLoader();
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0c0e12);
+  scene.background = new THREE.Color(0x030712);
 
   const camera = new THREE.OrthographicCamera(
     -ORTHO_SIZE_BASE,
@@ -94,14 +94,15 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
   const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(400, 400);
-  renderer.setClearColor(0x0c0e12, 1);
+  renderer.setClearColor(0x030712, 1);
 
-  /* Build node positions and meshes: each node is a disc showing the logo (icon texture) + ring frame + progress arc */
+  /* Build node positions and meshes: glow halo + disc (icon) + ring frame + progress arc (PoE-style) */
   type NodeEntry = {
     node: ResearchNode;
     rowIdx: number;
     colIdx: number;
     mesh: THREE.Mesh;
+    glowRing: THREE.Mesh;
     ring: THREE.Mesh;
     progressArc: THREE.Line;
     progressArcGeo: THREE.BufferGeometry;
@@ -114,19 +115,62 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
   let progressById: Record<string, ResearchProgressData | null> = {};
 
   const totalRows = rows.length;
+  /** Radial layout: rows on circles; same step per row so spacing is uniform. */
+  const RADIUS_PER_ROW = NODE_SPACING_Y * 0.82;
+  const BRANCH_SECTORS: Record<string, { centerDeg: number; widthDeg: number }> = {
+    core: { centerDeg: 90, widthDeg: 0 },
+    crew: { centerDeg: 180, widthDeg: 58 },
+    modules: { centerDeg: 90, widthDeg: 58 },
+    expeditions: { centerDeg: 0, widthDeg: 58 },
+  };
+
   for (let r = 0; r < totalRows; r++) {
     const row = rows[r];
+    const radius = r === 0 ? 0 : (r + 0.55) * RADIUS_PER_ROW;
+
     for (let c = 0; c < row.length; c++) {
       const node = row[c];
-      const x = c * NODE_SPACING_X - ((row.length - 1) * NODE_SPACING_X) / 2;
-      const y = (totalRows - 1 - r) * NODE_SPACING_Y;
+      let x: number;
+      let y: number;
+      if (r === 0) {
+        x = 0;
+        y = 0;
+      } else {
+        const branch = node.branch ?? 'modules';
+        const sector = BRANCH_SECTORS[branch] ?? BRANCH_SECTORS.modules;
+        const sameBranch = row.filter((n) => (n.branch ?? 'modules') === branch);
+        const idxInBranch = sameBranch.indexOf(node);
+        const countInBranch = sameBranch.length;
+        const halfWidth = sector.widthDeg / 2;
+        const spread = countInBranch > 1 ? (idxInBranch / (countInBranch - 1)) * sector.widthDeg - halfWidth : 0;
+        const angleDeg = sector.centerDeg + spread;
+        const angleRad = (angleDeg * Math.PI) / 180;
+        x = radius * Math.cos(angleRad);
+        y = radius * Math.sin(angleRad);
+      }
       const spriteIndex = resolveSpriteIndex(node.id);
+
+      const state = stateById[node.id] ?? { done: false, canAttempt: false };
+      const ringColor = nodeColor(state);
+
+      const glowGeo = new THREE.RingGeometry(NODE_GLOW_INNER, NODE_GLOW_OUTER, 32);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: ringColor,
+        transparent: true,
+        opacity: 0.38,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const glowRing = new THREE.Mesh(glowGeo, glowMat);
+      glowRing.position.set(x, y, -0.02);
+      glowRing.userData = { nodeId: node.id };
+      scene.add(glowRing);
 
       const discGeo = new THREE.CircleGeometry(NODE_DISC_RADIUS, 32);
       const discMat = new THREE.MeshBasicMaterial({
         color: NODE_BG_COLOR,
         transparent: true,
-        opacity: 0.95,
+        opacity: 0.96,
         side: THREE.DoubleSide,
       });
       const mesh = new THREE.Mesh(discGeo, discMat);
@@ -136,13 +180,11 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
 
       iconMaterialsWithIndex.push({ material: discMat, spriteIndex });
 
-      const state = stateById[node.id] ?? { done: false, canAttempt: false };
-      const ringColor = nodeColor(state);
       const ringGeo = new THREE.RingGeometry(NODE_RING_INNER, NODE_RING_OUTER, 32);
       const ringMat = new THREE.MeshBasicMaterial({
         color: ringColor,
         transparent: true,
-        opacity: 0.85,
+        opacity: 1,
         side: THREE.DoubleSide,
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
@@ -162,7 +204,7 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
       progressArc.visible = false;
       scene.add(progressArc);
 
-      const entry: NodeEntry = { node, rowIdx: r, colIdx: c, mesh, ring, progressArc, progressArcGeo };
+      const entry: NodeEntry = { node, rowIdx: r, colIdx: c, mesh, glowRing, ring, progressArc, progressArcGeo };
       ringColorByState.set(node.id, ringColor);
       nodeEntries.push(entry);
       nodeMeshById.set(node.id, entry);
@@ -207,8 +249,14 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
     }
   });
 
-  /* Edges: line segments from each prerequisite to its child (any row span) */
-  const edgePoints: THREE.Vector3[] = [];
+  /* Curved edges (PoE-style): quadratic bezier from parent to child with perpendicular bulge */
+  function getNodePos(entry: NodeEntry): THREE.Vector3 {
+    return new THREE.Vector3(entry.mesh.position.x, entry.mesh.position.y, entry.mesh.position.z);
+  }
+
+  const edgeCurvePoints: THREE.Vector3[][] = [];
+  const edgeSegmentIds: { fromId: string; toId: string }[] = [];
+
   for (let i = 0; i < segments.length; i++) {
     const { fromRow, fromIdx, toRow, toIdx } = segments[i];
     const parentRow = rows[fromRow];
@@ -220,48 +268,56 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
     const fromEntry = nodeMeshById.get(fromNode.id);
     const toEntry = nodeMeshById.get(toNode.id);
     if (!fromEntry || !toEntry) continue;
-    edgePoints.push(
-      new THREE.Vector3(
-        fromEntry.mesh.position.x,
-        fromEntry.mesh.position.y,
-        fromEntry.mesh.position.z
-      ),
-      new THREE.Vector3(
-        toEntry.mesh.position.x,
-        toEntry.mesh.position.y,
-        toEntry.mesh.position.z
-      )
-    );
+
+    const a = getNodePos(fromEntry);
+    const b = getNodePos(toEntry);
+    const dir = new THREE.Vector3().subVectors(b, a);
+    const len = dir.length();
+    if (len < 0.01) continue;
+    dir.normalize();
+    const start = a.clone().add(dir.clone().multiplyScalar(NODE_GLOW_OUTER));
+    const end = b.clone().sub(dir.clone().multiplyScalar(NODE_GLOW_OUTER));
+    if (start.distanceTo(end) < 0.01) continue;
+
+    const curvePoints = [start, end];
+    edgeCurvePoints.push(curvePoints);
+    edgeSegmentIds.push({ fromId: fromNode.id, toId: toNode.id });
   }
 
   const edgeGeos: THREE.BufferGeometry[] = [];
   const edgeMats: THREE.LineBasicMaterial[] = [];
-  const edgeSegmentIds: { fromId: string; toId: string }[] = [];
-  for (let i = 0; i < edgePoints.length; i += 2) {
-    const a = edgePoints[i];
-    const b = edgePoints[i + 1];
-    const geo = new THREE.BufferGeometry().setFromPoints([a, b]);
+  const edgePathTubes: THREE.Mesh[] = [];
+
+  for (let i = 0; i < edgeCurvePoints.length; i++) {
+    const points = edgeCurvePoints[i];
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
     const mat = new THREE.LineBasicMaterial({ color: EDGE_DEFAULT, linewidth: 1 });
     const line = new THREE.Line(geo, mat);
     scene.add(line);
     edgeGeos.push(geo);
     edgeMats.push(mat);
-  }
-  /* Rebuild edgeSegmentIds in same order as segments/edgePoints */
-  edgeSegmentIds.length = 0;
-  for (let i = 0; i < segments.length; i++) {
-    const { fromRow, fromIdx, toRow, toIdx } = segments[i];
-    const fromNode = rows[fromRow]?.[fromIdx];
-    const toNode = rows[toRow]?.[toIdx];
-    if (fromNode && toNode) edgeSegmentIds.push({ fromId: fromNode.id, toId: toNode.id });
+
+    const curve = new THREE.CatmullRomCurve3(points);
+    const tubeGeo = new THREE.TubeGeometry(curve, 20, TUBE_RADIUS_PATH, 8, false);
+    const tubeMat = new THREE.MeshBasicMaterial({
+      color: PATH_GLOW_COLOR,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const tube = new THREE.Mesh(tubeGeo, tubeMat);
+    tube.visible = false;
+    tube.renderOrder = -2;
+    tube.userData = { edgeIndex: i };
+    scene.add(tube);
+    edgePathTubes.push(tube);
   }
 
-  /* Pan & zoom. Default = max zoom, top of tree slightly below top of canvas. */
-  const sizeX0 = ORTHO_SIZE_BASE / 3;
-  const sizeY0 = (ORTHO_SIZE_BASE * ORTHO_HEIGHT_FACTOR) / 3;
+  /* Pan & zoom. Default centered on base node (origin in radial layout). */
   let panX = 0;
-  let panY = (totalRows - 1) * NODE_SPACING_Y - sizeY0 + 2.5;
-  let zoom = 3;
+  let panY = 0;
+  let zoom = 2.2;
   let canvasW = 400;
   let canvasH = 400;
   let isPointerDown = false;
@@ -392,9 +448,12 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
       const color = nodeColor(state);
       ringColorByState.set(entry.node.id, color);
       const ringMat = entry.ring.material as THREE.MeshBasicMaterial;
+      const glowMat = entry.glowRing.material as THREE.MeshBasicMaterial;
       if (!highlightPathIds.includes(entry.node.id)) {
         ringMat.color.setHex(color);
-        ringMat.opacity = 0.85;
+        ringMat.opacity = 0.9;
+        glowMat.color.setHex(color);
+        glowMat.opacity = 0.22;
       }
     }
   }
@@ -410,13 +469,18 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
     for (const entry of nodeEntries) {
       const inPath = pathSet.has(entry.node.id);
       const ringMat = entry.ring.material as THREE.MeshBasicMaterial;
+      const glowMat = entry.glowRing.material as THREE.MeshBasicMaterial;
       if (inPath) {
         ringMat.color.setHex(PATH_HIGHLIGHT_COLOR);
         ringMat.opacity = 1;
+        glowMat.color.setHex(PATH_HIGHLIGHT_COLOR);
+        glowMat.opacity = 0.4;
       } else {
-        const color = ringColorByState.get(entry.node.id) ?? 0x4a5568;
+        const color = ringColorByState.get(entry.node.id) ?? 0x475569;
         ringMat.color.setHex(color);
-        ringMat.opacity = 0.85;
+        ringMat.opacity = 0.9;
+        glowMat.color.setHex(color);
+        glowMat.opacity = 0.22;
       }
     }
     for (let i = 0; i < edgeSegmentIds.length; i++) {
@@ -425,6 +489,7 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
       const toIdx = highlightPathIds.indexOf(toId);
       const inPath = fromIdx >= 0 && toIdx >= 0 && fromIdx === toIdx - 1;
       edgeMats[i].color.setHex(inPath ? EDGE_PATH : EDGE_DEFAULT);
+      edgePathTubes[i].visible = inPath;
     }
   }
 
@@ -482,6 +547,8 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
     canvas.removeEventListener('wheel', onWheel);
     canvas.removeEventListener('click', onCanvasClick);
     for (const entry of nodeEntries) {
+      entry.glowRing.geometry.dispose();
+      (entry.glowRing.material as THREE.Material).dispose();
       entry.mesh.geometry.dispose();
       (entry.mesh.material as THREE.Material).dispose();
       entry.ring.geometry.dispose();
@@ -492,6 +559,10 @@ export function createResearchTreeScene(input: ResearchTreeSceneInput): Research
     for (const tex of loadedIconTextures) tex.dispose();
     for (const g of edgeGeos) g.dispose();
     for (const m of edgeMats) m.dispose();
+    for (const tube of edgePathTubes) {
+      tube.geometry.dispose();
+      (tube.material as THREE.Material).dispose();
+    }
     renderer.dispose();
   }
 

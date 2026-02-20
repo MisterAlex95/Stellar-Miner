@@ -90,6 +90,8 @@ export type ResearchNode = {
   row: number;
   /** Column index in the row (left to right). */
   col: number;
+  /** Logical branch for progression: core (root), crew, modules, expeditions. Used for branch completion bonuses. */
+  branch?: 'core' | 'crew' | 'modules' | 'expeditions';
   /** Optional: research data cost (from expeditions) in addition to coins. */
   researchDataCost?: number;
   /** Optional: hidden until prerequisites are visible (side branch). */
@@ -239,11 +241,13 @@ export function isCrewRetrainUnlocked(): boolean {
   );
 }
 
-/** Branches: when all node ids in a branch are unlocked, grant bonus. */
+/** Branches: when all node ids in a branch are unlocked, grant bonus. Crew/Modules/Expeditions align with research node branch field. */
 const RESEARCH_BRANCHES: Array<{ nodeIds: string[]; productionPercent?: number; clickPercent?: number }> = [
+  { nodeIds: ['basic-refining', 'crew-quarters', 'orbital-engineering', 'efficiency', 'precision-drilling', 'crew-retraining', 'veteran-protocols'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT },
+  { nodeIds: ['survey-systems', 'faster-probes', 'survival-training', 'long-range-comms', 'field-medics', 'expedition-ai'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT },
   { nodeIds: ['automation', 'ai-assist', 'neural-boost'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT, clickPercent: RESEARCH_BRANCH_BONUS_CLICK_PERCENT },
-  { nodeIds: ['heavy-equipment', 'orbital-engineering', 'quantum-mining'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT },
-  { nodeIds: ['basic-refining', 'catalytic-cracking', 'plasma-smelting'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT },
+  { nodeIds: ['heavy-equipment', 'deep-extraction', 'quantum-mining'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT },
+  { nodeIds: ['catalytic-cracking', 'plasma-smelting', 'plasma-catalysis'], productionPercent: RESEARCH_BRANCH_BONUS_PRODUCTION_PERCENT },
 ];
 
 function getBranchBonusProductionPercent(): number {

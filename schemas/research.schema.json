@@ -3,37 +3,107 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["id", "name", "description", "cost", "successChance", "prerequisites", "modifiers", "row", "col"],
+    "required": [
+      "id",
+      "name",
+      "description",
+      "cost",
+      "successChance",
+      "prerequisites",
+      "modifiers",
+      "row",
+      "col"
+    ],
     "properties": {
-      "id": { "type": "string" },
-      "name": { "type": "string" },
-      "description": { "type": "string" },
-      "cost": { "type": "number" },
-      "successChance": { "type": "number" },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "cost": {
+        "type": "number"
+      },
+      "successChance": {
+        "type": "number"
+      },
       "prerequisites": {
         "type": "array",
-        "items": { "type": "string" }
+        "items": {
+          "type": "string"
+        }
       },
       "modifiers": {
         "type": "object",
         "properties": {
-          "productionPercent": { "type": "number" },
-          "clickPercent": { "type": "number" },
-          "slotFreeUpgrades": { "type": "array", "items": { "type": "string" } },
-          "crewFreeUpgrades": { "type": "array", "items": { "type": "string" } },
-          "crewReduction": { "type": "object", "additionalProperties": { "type": "number" } },
-          "unlocksCrewRole": { "type": "string" },
-          "unlocksCrewRetrain": { "type": "boolean" },
-          "expeditionDurationPercent": { "type": "number" },
-          "expeditionDeathChancePercent": { "type": "number" },
-          "housingCapacityBonus": { "type": "number" }
+          "productionPercent": {
+            "type": "number"
+          },
+          "clickPercent": {
+            "type": "number"
+          },
+          "slotFreeUpgrades": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "crewFreeUpgrades": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "crewReduction": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "unlocksCrewRole": {
+            "type": "string"
+          },
+          "unlocksCrewRetrain": {
+            "type": "boolean"
+          },
+          "expeditionDurationPercent": {
+            "type": "number"
+          },
+          "expeditionDeathChancePercent": {
+            "type": "number"
+          },
+          "housingCapacityBonus": {
+            "type": "number"
+          }
         }
       },
-      "row": { "type": "number" },
-      "col": { "type": "number" },
-      "researchDataCost": { "type": "number" },
-      "secret": { "type": "boolean" },
-      "lore": { "type": "string" }
+      "row": {
+        "type": "number"
+      },
+      "col": {
+        "type": "number"
+      },
+      "researchDataCost": {
+        "type": "number"
+      },
+      "secret": {
+        "type": "boolean"
+      },
+      "lore": {
+        "type": "string"
+      },
+      "branch": {
+        "type": "string",
+        "enum": [
+          "core",
+          "crew",
+          "modules",
+          "expeditions"
+        ]
+      }
     }
   }
 }

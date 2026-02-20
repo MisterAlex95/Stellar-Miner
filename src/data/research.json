@@ -6,21 +6,64 @@
     "cost": 1800,
     "successChance": 0.84,
     "prerequisites": [],
-    "modifiers": { "productionPercent": 5, "unlocksCrewRole": "miner" },
+    "modifiers": {
+      "productionPercent": 5,
+      "unlocksCrewRole": "miner"
+    },
     "row": 0,
     "col": 0,
+    "branch": "core",
     "lore": "The first equation that made the belt feel like home."
+  },
+  {
+    "id": "basic-refining",
+    "name": "Basic Refining",
+    "description": "On-site ore processing. Unlocks Medic role for safer expeditions.",
+    "cost": 4500,
+    "successChance": 0.78,
+    "prerequisites": [
+      "mining-theory"
+    ],
+    "modifiers": {
+      "productionPercent": 4,
+      "unlocksCrewRole": "medic",
+      "expeditionDeathChancePercent": -3
+    },
+    "row": 1,
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "crew-quarters",
+    "name": "Crew Quarters",
+    "description": "Better living space. Increases max crew capacity.",
+    "cost": 4000,
+    "successChance": 0.8,
+    "prerequisites": [
+      "mining-theory"
+    ],
+    "modifiers": {
+      "housingCapacityBonus": 1
+    },
+    "row": 1,
+    "col": 1,
+    "branch": "crew"
   },
   {
     "id": "heavy-equipment",
     "name": "Heavy Equipment",
     "description": "Heavy-duty drills and rigs. More raw output.",
-    "cost": 4500,
+    "cost": 5000,
     "successChance": 0.78,
-    "prerequisites": ["mining-theory"],
-    "modifiers": { "productionPercent": 8 },
+    "prerequisites": [
+      "mining-theory"
+    ],
+    "modifiers": {
+      "productionPercent": 8
+    },
     "row": 1,
-    "col": 0
+    "col": 2,
+    "branch": "modules"
   },
   {
     "id": "automation",
@@ -28,71 +71,95 @@
     "description": "Automated systems. Better click yield.",
     "cost": 4000,
     "successChance": 0.8,
-    "prerequisites": ["mining-theory"],
+    "prerequisites": [
+      "mining-theory"
+    ],
     "modifiers": {
       "productionPercent": 4,
       "clickPercent": 10,
-      "slotFreeUpgrades": ["drill-mk1"]
+      "slotFreeUpgrades": [
+        "drill-mk1"
+      ]
     },
     "row": 1,
-    "col": 1
+    "col": 3,
+    "branch": "modules"
   },
   {
     "id": "survey-systems",
     "name": "Survey Systems",
-    "description": "Prospecting and mapping. Better discovery rates.",
+    "description": "Prospecting and mapping. Faster expeditions; unlocks Scientist.",
     "cost": 4800,
     "successChance": 0.78,
-    "prerequisites": ["mining-theory"],
+    "prerequisites": [
+      "mining-theory"
+    ],
     "modifiers": {
-      "productionPercent": 6,
+      "productionPercent": 4,
       "clickPercent": 5,
       "unlocksCrewRole": "scientist",
       "expeditionDurationPercent": -5
     },
     "row": 1,
-    "col": 2
-  },
-  {
-    "id": "basic-refining",
-    "name": "Basic Refining",
-    "description": "On-site ore processing. Steady production gain.",
-    "cost": 5500,
-    "successChance": 0.76,
-    "prerequisites": ["mining-theory"],
-    "modifiers": {
-      "productionPercent": 7,
-      "unlocksCrewRole": "medic",
-      "expeditionDeathChancePercent": -3
-    },
-    "row": 1,
-    "col": 3
+    "col": 4,
+    "branch": "expeditions"
   },
   {
     "id": "orbital-engineering",
     "name": "Orbital Engineering",
-    "description": "Station and platform tech. Big production boost.",
-    "cost": 18000,
-    "successChance": 0.72,
-    "prerequisites": ["heavy-equipment"],
-    "modifiers": { "productionPercent": 12, "unlocksCrewRole": "pilot" },
+    "description": "Station and platform tech. Unlocks Pilot role.",
+    "cost": 14000,
+    "successChance": 0.74,
+    "prerequisites": [
+      "basic-refining"
+    ],
+    "modifiers": {
+      "productionPercent": 8,
+      "unlocksCrewRole": "pilot"
+    },
     "row": 2,
-    "col": 0
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "efficiency",
+    "name": "Efficiency",
+    "description": "Energy and process optimization. Unlocks Engineer; frees slot for Drill Mk.II.",
+    "cost": 12000,
+    "successChance": 0.75,
+    "prerequisites": [
+      "basic-refining"
+    ],
+    "modifiers": {
+      "productionPercent": 6,
+      "unlocksCrewRole": "engineer",
+      "slotFreeUpgrades": [
+        "drill-mk2"
+      ]
+    },
+    "row": 2,
+    "col": 1,
+    "branch": "crew"
   },
   {
     "id": "deep-extraction",
     "name": "Deep Extraction",
     "description": "Core drilling. Balanced production and click.",
-    "cost": 17000,
-    "successChance": 0.73,
-    "prerequisites": ["heavy-equipment"],
+    "cost": 16000,
+    "successChance": 0.74,
+    "prerequisites": [
+      "heavy-equipment"
+    ],
     "modifiers": {
       "productionPercent": 7,
       "clickPercent": 8,
-      "slotFreeUpgrades": ["asteroid-rig"]
+      "slotFreeUpgrades": [
+        "asteroid-rig"
+      ]
     },
     "row": 2,
-    "col": 1
+    "col": 2,
+    "branch": "modules"
   },
   {
     "id": "ai-assist",
@@ -100,107 +167,122 @@
     "description": "AI-augmented clicks. Strong click bonus.",
     "cost": 15000,
     "successChance": 0.74,
-    "prerequisites": ["automation"],
+    "prerequisites": [
+      "automation"
+    ],
     "modifiers": {
       "productionPercent": 2,
       "clickPercent": 15,
-      "crewFreeUpgrades": ["drill-mk1"]
+      "crewFreeUpgrades": [
+        "drill-mk1"
+      ]
     },
     "row": 2,
-    "col": 2
-  },
-  {
-    "id": "efficiency",
-    "name": "Efficiency",
-    "description": "Energy and process optimization. Production focus.",
-    "cost": 15500,
-    "successChance": 0.73,
-    "prerequisites": ["automation"],
-    "modifiers": {
-      "productionPercent": 10,
-      "slotFreeUpgrades": ["drill-mk2"],
-      "unlocksCrewRole": "engineer"
-    },
-    "row": 2,
-    "col": 3
-  },
-  {
-    "id": "precision-drilling",
-    "name": "Precision Drilling",
-    "description": "Targeted extraction. Less waste, more yield.",
-    "cost": 16500,
-    "successChance": 0.72,
-    "prerequisites": ["survey-systems"],
-    "modifiers": {
-      "productionPercent": 9,
-      "clickPercent": 6,
-      "crewFreeUpgrades": ["asteroid-rig"],
-      "crewReduction": { "orbital-station": 1 },
-      "housingCapacityBonus": 1
-    },
-    "row": 2,
-    "col": 4
-  },
-  {
-    "id": "crew-retraining",
-    "name": "Crew Retraining",
-    "description": "Repurpose personnel. Retrain crew from one role to another at a coin cost.",
-    "cost": 1000000,
-    "successChance": 0.68,
-    "prerequisites": ["efficiency"],
-    "modifiers": { "unlocksCrewRetrain": true },
-    "row": 4,
-    "col": 5
+    "col": 3,
+    "branch": "modules"
   },
   {
     "id": "catalytic-cracking",
     "name": "Catalytic Cracking",
     "description": "Advanced chemistry. Higher throughput.",
-    "cost": 20000,
-    "successChance": 0.71,
-    "prerequisites": ["basic-refining"],
-    "modifiers": { "productionPercent": 11 },
+    "cost": 18000,
+    "successChance": 0.73,
+    "prerequisites": [
+      "heavy-equipment"
+    ],
+    "modifiers": {
+      "productionPercent": 9
+    },
     "row": 2,
-    "col": 5
+    "col": 4,
+    "branch": "modules"
+  },
+  {
+    "id": "faster-probes",
+    "name": "Faster Probes",
+    "description": "Streamlined propulsion and nav. Shorter expedition duration.",
+    "cost": 8000,
+    "successChance": 0.77,
+    "prerequisites": [
+      "survey-systems"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -8
+    },
+    "row": 2,
+    "col": 5,
+    "branch": "expeditions"
+  },
+  {
+    "id": "survival-training",
+    "name": "Survival Training",
+    "description": "Crew preparedness. Lower death chance on expeditions.",
+    "cost": 9000,
+    "successChance": 0.76,
+    "prerequisites": [
+      "survey-systems"
+    ],
+    "modifiers": {
+      "expeditionDeathChancePercent": -5
+    },
+    "row": 2,
+    "col": 6,
+    "branch": "expeditions"
+  },
+  {
+    "id": "precision-drilling",
+    "name": "Precision Drilling",
+    "description": "Targeted extraction. More housing capacity; less crew for Orbital Station.",
+    "cost": 22000,
+    "successChance": 0.72,
+    "prerequisites": [
+      "efficiency"
+    ],
+    "modifiers": {
+      "productionPercent": 5,
+      "housingCapacityBonus": 1,
+      "crewReduction": {
+        "orbital-station": 1
+      }
+    },
+    "row": 3,
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "crew-retraining",
+    "name": "Crew Retraining",
+    "description": "Repurpose personnel. Retrain crew from one role to another at a coin cost.",
+    "cost": 35000,
+    "successChance": 0.7,
+    "prerequisites": [
+      "orbital-engineering"
+    ],
+    "modifiers": {
+      "unlocksCrewRetrain": true
+    },
+    "row": 3,
+    "col": 1,
+    "branch": "crew"
   },
   {
     "id": "quantum-mining",
     "name": "Quantum Mining",
     "description": "Advanced harvesting. Major production.",
-    "cost": 82000,
-    "successChance": 0.65,
-    "prerequisites": ["orbital-engineering"],
-    "modifiers": {
-      "productionPercent": 15,
-      "slotFreeUpgrades": ["deep-core-drill"]
-    },
-    "row": 3,
-    "col": 0
-  },
-  {
-    "id": "void-tech",
-    "name": "Void Tech",
-    "description": "Near-instant processing. Production and click.",
-    "cost": 76000,
-    "successChance": 0.64,
-    "prerequisites": ["orbital-engineering"],
-    "modifiers": { "productionPercent": 9, "clickPercent": 12 },
-    "row": 3,
-    "col": 1
-  },
-  {
-    "id": "stellar-harvester",
-    "name": "Stellar Harvester",
-    "description": "Sector-scale operations. Huge production.",
     "cost": 72000,
     "successChance": 0.66,
-    "prerequisites": ["deep-extraction"],
+    "prerequisites": [
+      "deep-extraction"
+    ],
     "modifiers": {
-      "productionPercent": 14,
-      "crewFreeUpgrades": ["deep-core-drill"]
+      "productionPercent": 12,
+      "slotFreeUpgrades": [
+        "deep-core-drill"
+      ]
     },
     "row": 3,
-    "col": 2
+    "col": 2,
+    "branch": "modules"
   },
   {
     "id": "neural-boost",
@@ -208,277 +290,1445 @@
     "description": "Crew neural interfaces. Click and production.",
     "cost": 68000,
     "successChance": 0.67,
-    "prerequisites": ["ai-assist"],
+    "prerequisites": [
+      "ai-assist"
+    ],
     "modifiers": {
       "productionPercent": 5,
       "clickPercent": 18,
-      "crewFreeUpgrades": ["drill-mk2"]
+      "crewFreeUpgrades": [
+        "drill-mk2"
+      ]
     },
     "row": 3,
-    "col": 3
+    "col": 3,
+    "branch": "modules"
   },
   {
     "id": "refinery-core",
     "name": "Refinery Core",
-    "description": "Ultra-efficient refineries. Production only.",
-    "cost": 80000,
-    "successChance": 0.65,
-    "prerequisites": ["efficiency"],
-    "modifiers": {
-      "productionPercent": 16,
-      "slotFreeUpgrades": ["orbital-station"],
-      "crewFreeUpgrades": ["orbital-station"]
-    },
-    "row": 3,
-    "col": 4
-  },
-  {
-    "id": "sensor-arrays",
-    "name": "Sensor Arrays",
-    "description": "Multi-spectrum detection. Better targeting.",
-    "cost": 75000,
+    "description": "Ultra-efficient refineries. Orbital Station no longer uses slot or crew.",
+    "cost": 78000,
     "successChance": 0.66,
-    "prerequisites": ["precision-drilling"],
+    "prerequisites": [
+      "catalytic-cracking"
+    ],
     "modifiers": {
-      "productionPercent": 10,
-      "clickPercent": 10,
-      "crewReduction": { "orbital-station": 1 }
+      "productionPercent": 14,
+      "slotFreeUpgrades": [
+        "orbital-station"
+      ],
+      "crewFreeUpgrades": [
+        "orbital-station"
+      ]
     },
     "row": 3,
-    "col": 5
+    "col": 4,
+    "branch": "modules"
   },
   {
     "id": "plasma-smelting",
     "name": "Plasma Smelting",
     "description": "Extreme heat processing. Massive output.",
-    "cost": 90000,
-    "successChance": 0.63,
-    "prerequisites": ["catalytic-cracking"],
-    "modifiers": { "productionPercent": 18 },
+    "cost": 88000,
+    "successChance": 0.65,
+    "prerequisites": [
+      "catalytic-cracking"
+    ],
+    "modifiers": {
+      "productionPercent": 16
+    },
     "row": 3,
-    "col": 6
+    "col": 5,
+    "branch": "modules"
+  },
+  {
+    "id": "long-range-comms",
+    "name": "Long-Range Comms",
+    "description": "Faster signal relay. Expeditions return sooner.",
+    "cost": 28000,
+    "successChance": 0.72,
+    "prerequisites": [
+      "faster-probes"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -10
+    },
+    "row": 3,
+    "col": 6,
+    "branch": "expeditions"
+  },
+  {
+    "id": "field-medics",
+    "name": "Field Medics",
+    "description": "Advanced trauma protocols. Safer expeditions.",
+    "cost": 32000,
+    "successChance": 0.71,
+    "prerequisites": [
+      "survival-training"
+    ],
+    "modifiers": {
+      "expeditionDeathChancePercent": -8
+    },
+    "row": 3,
+    "col": 7,
+    "branch": "expeditions"
+  },
+  {
+    "id": "veteran-protocols",
+    "name": "Veteran Protocols",
+    "description": "Learn from survivors. Extra crew capacity and steady gains.",
+    "cost": 95000,
+    "successChance": 0.65,
+    "prerequisites": [
+      "precision-drilling"
+    ],
+    "modifiers": {
+      "productionPercent": 4,
+      "housingCapacityBonus": 1
+    },
+    "row": 4,
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "stellar-harvester",
+    "name": "Stellar Harvester",
+    "description": "Sector-scale operations. Deep Core Drill no longer requires crew.",
+    "cost": 70000,
+    "successChance": 0.66,
+    "prerequisites": [
+      "quantum-mining"
+    ],
+    "modifiers": {
+      "productionPercent": 10,
+      "crewFreeUpgrades": [
+        "deep-core-drill"
+      ]
+    },
+    "row": 4,
+    "col": 2,
+    "branch": "modules"
+  },
+  {
+    "id": "void-tech",
+    "name": "Void Tech",
+    "description": "Near-instant processing. Production and click.",
+    "cost": 74000,
+    "successChance": 0.65,
+    "prerequisites": [
+      "neural-boost"
+    ],
+    "modifiers": {
+      "productionPercent": 8,
+      "clickPercent": 12
+    },
+    "row": 4,
+    "col": 3,
+    "branch": "modules"
+  },
+  {
+    "id": "sensor-arrays",
+    "name": "Sensor Arrays",
+    "description": "Multi-spectrum detection. Less crew for Orbital Station.",
+    "cost": 72000,
+    "successChance": 0.66,
+    "prerequisites": [
+      "refinery-core"
+    ],
+    "modifiers": {
+      "productionPercent": 8,
+      "clickPercent": 8,
+      "crewReduction": {
+        "orbital-station": 1
+      }
+    },
+    "row": 4,
+    "col": 4,
+    "branch": "modules"
   },
   {
     "id": "exo-forging",
     "name": "Exo Forging",
     "description": "Exotic material synthesis. Huge production leap.",
-    "cost": 360000,
-    "successChance": 0.48,
-    "prerequisites": ["refinery-core"],
-    "modifiers": { "productionPercent": 20 },
+    "cost": 340000,
+    "successChance": 0.5,
+    "prerequisites": [
+      "plasma-smelting"
+    ],
+    "modifiers": {
+      "productionPercent": 18
+    },
     "row": 4,
-    "col": 0
+    "col": 5,
+    "branch": "modules"
+  },
+  {
+    "id": "expedition-ai",
+    "name": "Expedition AI",
+    "description": "AI-assisted mission planning. Faster and safer runs.",
+    "cost": 85000,
+    "successChance": 0.64,
+    "prerequisites": [
+      "long-range-comms"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -6,
+      "expeditionDeathChancePercent": -4
+    },
+    "row": 4,
+    "col": 6,
+    "branch": "expeditions"
   },
   {
     "id": "dimensional-mining",
     "name": "Dimensional Mining",
     "description": "Harvest across dimensions. Ultimate production.",
-    "cost": 430000,
-    "successChance": 0.46,
-    "prerequisites": ["quantum-mining", "stellar-harvester"],
-    "modifiers": { "productionPercent": 25 },
-    "row": 4,
-    "col": 1
-  },
-  {
-    "id": "plasma-catalysis",
-    "name": "Plasma Catalysis",
-    "description": "Reaction acceleration. Extreme throughput.",
-    "cost": 470000,
-    "successChance": 0.45,
-    "prerequisites": ["plasma-smelting"],
-    "modifiers": { "productionPercent": 22, "clickPercent": 8 },
-    "row": 4,
-    "col": 2
+    "cost": 400000,
+    "successChance": 0.48,
+    "prerequisites": [
+      "quantum-mining"
+    ],
+    "modifiers": {
+      "productionPercent": 22
+    },
+    "row": 5,
+    "col": 2,
+    "branch": "modules"
   },
   {
     "id": "nexus-research",
     "name": "Nexus Research",
     "description": "Unified theory. Massive all-around bonus.",
-    "cost": 400000,
-    "successChance": 0.46,
-    "prerequisites": ["void-tech", "neural-boost"],
-    "modifiers": { "productionPercent": 14, "clickPercent": 20 },
-    "row": 4,
-    "col": 3
+    "cost": 380000,
+    "successChance": 0.48,
+    "prerequisites": [
+      "void-tech"
+    ],
+    "modifiers": {
+      "productionPercent": 12,
+      "clickPercent": 20
+    },
+    "row": 5,
+    "col": 3,
+    "branch": "modules"
+  },
+  {
+    "id": "plasma-catalysis",
+    "name": "Plasma Catalysis",
+    "description": "Reaction acceleration. Extreme throughput.",
+    "cost": 440000,
+    "successChance": 0.47,
+    "prerequisites": [
+      "plasma-smelting"
+    ],
+    "modifiers": {
+      "productionPercent": 20,
+      "clickPercent": 8
+    },
+    "row": 5,
+    "col": 4,
+    "branch": "modules"
   },
   {
     "id": "quantum-sensors",
     "name": "Quantum Sensors",
     "description": "Entanglement-based detection. Peak efficiency.",
-    "cost": 420000,
+    "cost": 400000,
     "successChance": 0.47,
-    "prerequisites": ["sensor-arrays"],
-    "modifiers": { "productionPercent": 14, "clickPercent": 14 },
-    "row": 4,
-    "col": 4
+    "prerequisites": [
+      "sensor-arrays"
+    ],
+    "modifiers": {
+      "productionPercent": 12,
+      "clickPercent": 14
+    },
+    "row": 5,
+    "col": 5,
+    "branch": "modules"
   },
   {
     "id": "singularity-drill",
     "name": "Singularity Drill",
     "description": "Micro black-hole extraction. Legendary production.",
-    "cost": 1250000,
-    "successChance": 0.42,
-    "prerequisites": ["dimensional-mining"],
-    "modifiers": { "productionPercent": 30 },
-    "researchDataCost": 3,
-    "row": 5,
-    "col": 0
+    "cost": 1200000,
+    "successChance": 0.43,
+    "prerequisites": [
+      "dimensional-mining"
+    ],
+    "modifiers": {
+      "productionPercent": 28
+    },
+    "row": 6,
+    "col": 2,
+    "branch": "modules",
+    "researchDataCost": 3
   },
   {
     "id": "void-forge",
     "name": "Void Forge",
     "description": "Matter from nothing. Reality-bending output.",
-    "cost": 1150000,
-    "successChance": 0.43,
-    "prerequisites": ["nexus-research", "plasma-catalysis"],
-    "modifiers": { "productionPercent": 28, "clickPercent": 10 },
-    "row": 5,
-    "col": 1
+    "cost": 1100000,
+    "successChance": 0.44,
+    "prerequisites": [
+      "nexus-research"
+    ],
+    "modifiers": {
+      "productionPercent": 26,
+      "clickPercent": 10
+    },
+    "row": 6,
+    "col": 3,
+    "branch": "modules"
   },
   {
     "id": "chrono-extraction",
     "name": "Chrono Extraction",
     "description": "Temporal mining. Harvest across time.",
-    "cost": 1350000,
-    "successChance": 0.41,
-    "prerequisites": ["quantum-sensors", "dimensional-mining"],
-    "modifiers": { "productionPercent": 26, "clickPercent": 12 },
-    "row": 5,
-    "col": 2
+    "cost": 1280000,
+    "successChance": 0.42,
+    "prerequisites": [
+      "dimensional-mining"
+    ],
+    "modifiers": {
+      "productionPercent": 24,
+      "clickPercent": 12
+    },
+    "row": 6,
+    "col": 4,
+    "branch": "modules"
   },
   {
     "id": "exo-core",
     "name": "Exo Core",
     "description": "Stable exotic matter. Foundation for endgame.",
-    "cost": 1200000,
-    "successChance": 0.42,
-    "prerequisites": ["exo-forging", "nexus-research"],
-    "modifiers": { "productionPercent": 24, "clickPercent": 10 },
-    "row": 5,
-    "col": 3
+    "cost": 1150000,
+    "successChance": 0.43,
+    "prerequisites": [
+      "exo-forging"
+    ],
+    "modifiers": {
+      "productionPercent": 22,
+      "clickPercent": 10
+    },
+    "row": 6,
+    "col": 5,
+    "branch": "modules"
   },
   {
     "id": "reality-anchor",
     "name": "Reality Anchor",
     "description": "Stabilize unstable yields. Massive gains.",
-    "cost": 3600000,
-    "successChance": 0.38,
-    "prerequisites": ["singularity-drill", "void-forge"],
-    "modifiers": { "productionPercent": 35 },
-    "row": 6,
-    "col": 0
+    "cost": 3400000,
+    "successChance": 0.39,
+    "prerequisites": [
+      "singularity-drill"
+    ],
+    "modifiers": {
+      "productionPercent": 32
+    },
+    "row": 7,
+    "col": 2,
+    "branch": "modules"
   },
   {
     "id": "multiverse-tap",
     "name": "Multiverse Tap",
     "description": "Draw from parallel realities. Ultimate scale.",
-    "cost": 4000000,
-    "successChance": 0.37,
-    "prerequisites": ["chrono-extraction", "singularity-drill"],
-    "modifiers": { "productionPercent": 38, "clickPercent": 10 },
-    "row": 6,
-    "col": 1
+    "cost": 3800000,
+    "successChance": 0.38,
+    "prerequisites": [
+      "chrono-extraction"
+    ],
+    "modifiers": {
+      "productionPercent": 35,
+      "clickPercent": 10
+    },
+    "row": 7,
+    "col": 3,
+    "branch": "modules"
   },
   {
     "id": "neural-network",
     "name": "Neural Network",
     "description": "Crew-wide cognition. Click and production surge.",
-    "cost": 3400000,
-    "successChance": 0.39,
-    "prerequisites": ["exo-core", "void-forge"],
-    "modifiers": { "productionPercent": 22, "clickPercent": 30 },
-    "row": 6,
-    "col": 2
+    "cost": 3200000,
+    "successChance": 0.4,
+    "prerequisites": [
+      "exo-core"
+    ],
+    "modifiers": {
+      "productionPercent": 20,
+      "clickPercent": 30
+    },
+    "row": 7,
+    "col": 4,
+    "branch": "modules"
   },
   {
     "id": "omega-refinery",
     "name": "Omega Refinery",
     "description": "Final-stage processing. Nothing wasted.",
-    "cost": 3800000,
-    "successChance": 0.38,
-    "prerequisites": ["exo-core", "plasma-catalysis"],
-    "modifiers": { "productionPercent": 36 },
-    "row": 6,
-    "col": 3
+    "cost": 3600000,
+    "successChance": 0.39,
+    "prerequisites": [
+      "exo-core"
+    ],
+    "modifiers": {
+      "productionPercent": 34
+    },
+    "row": 7,
+    "col": 5,
+    "branch": "modules"
   },
   {
     "id": "stellar-engine",
     "name": "Stellar Engine",
     "description": "Harness star power. God-tier production.",
-    "cost": 11000000,
-    "successChance": 0.34,
-    "prerequisites": ["reality-anchor", "omega-refinery"],
-    "modifiers": { "productionPercent": 45 },
-    "row": 7,
-    "col": 0
+    "cost": 10500000,
+    "successChance": 0.35,
+    "prerequisites": [
+      "reality-anchor"
+    ],
+    "modifiers": {
+      "productionPercent": 42
+    },
+    "row": 8,
+    "col": 2,
+    "branch": "modules"
   },
   {
     "id": "infinity-loop",
     "name": "Infinity Loop",
     "description": "Self-sustaining cascade. Exponential growth.",
-    "cost": 12000000,
-    "successChance": 0.33,
-    "prerequisites": ["multiverse-tap", "reality-anchor"],
-    "modifiers": { "productionPercent": 48, "clickPercent": 15 },
-    "row": 7,
-    "col": 1
+    "cost": 11500000,
+    "successChance": 0.34,
+    "prerequisites": [
+      "multiverse-tap"
+    ],
+    "modifiers": {
+      "productionPercent": 45,
+      "clickPercent": 12
+    },
+    "row": 8,
+    "col": 3,
+    "branch": "modules"
   },
   {
     "id": "cosmic-mind",
     "name": "Cosmic Mind",
     "description": "Transcendent awareness. All bonuses maximized.",
-    "cost": 10000000,
-    "successChance": 0.35,
-    "prerequisites": ["neural-network", "multiverse-tap"],
-    "modifiers": { "productionPercent": 26, "clickPercent": 40 },
-    "row": 7,
-    "col": 2
+    "cost": 9800000,
+    "successChance": 0.36,
+    "prerequisites": [
+      "neural-network"
+    ],
+    "modifiers": {
+      "productionPercent": 24,
+      "clickPercent": 38
+    },
+    "row": 8,
+    "col": 4,
+    "branch": "modules"
   },
   {
     "id": "singularity-core",
     "name": "Singularity Core",
     "description": "Unified field tech. Peak everything.",
-    "cost": 11200000,
-    "successChance": 0.34,
-    "prerequisites": ["omega-refinery", "multiverse-tap"],
-    "modifiers": { "productionPercent": 42, "clickPercent": 18 },
-    "row": 7,
-    "col": 3
+    "cost": 10800000,
+    "successChance": 0.35,
+    "prerequisites": [
+      "omega-refinery"
+    ],
+    "modifiers": {
+      "productionPercent": 40,
+      "clickPercent": 18
+    },
+    "row": 8,
+    "col": 5,
+    "branch": "modules"
   },
   {
     "id": "architect",
     "name": "The Architect",
     "description": "Design reality itself. Ultimate research.",
-    "cost": 40000000,
-    "successChance": 0.28,
-    "prerequisites": ["stellar-engine", "infinity-loop"],
-    "modifiers": { "productionPercent": 55 },
-    "researchDataCost": 5,
-    "row": 8,
-    "col": 0
+    "cost": 38000000,
+    "successChance": 0.29,
+    "prerequisites": [
+      "stellar-engine"
+    ],
+    "modifiers": {
+      "productionPercent": 52
+    },
+    "row": 9,
+    "col": 2,
+    "branch": "modules",
+    "researchDataCost": 5
   },
   {
     "id": "transcendence",
     "name": "Transcendence",
     "description": "Beyond matter. Pure potential.",
-    "cost": 47000000,
-    "successChance": 0.26,
-    "prerequisites": ["cosmic-mind", "singularity-core"],
-    "modifiers": { "productionPercent": 36, "clickPercent": 50 },
-    "row": 8,
-    "col": 1
+    "cost": 44000000,
+    "successChance": 0.27,
+    "prerequisites": [
+      "cosmic-mind"
+    ],
+    "modifiers": {
+      "productionPercent": 34,
+      "clickPercent": 48
+    },
+    "row": 9,
+    "col": 3,
+    "branch": "modules"
   },
   {
     "id": "omega-theory",
     "name": "Omega Theory",
     "description": "The final equation. All bonuses combined.",
-    "cost": 43000000,
-    "successChance": 0.27,
-    "prerequisites": ["infinity-loop", "cosmic-mind", "singularity-core"],
-    "modifiers": { "productionPercent": 50, "clickPercent": 38 },
-    "secret": true,
+    "cost": 40000000,
+    "successChance": 0.28,
+    "prerequisites": [
+      "infinity-loop"
+    ],
+    "modifiers": {
+      "productionPercent": 48,
+      "clickPercent": 36
+    },
+    "row": 9,
+    "col": 4,
+    "branch": "modules",
+    "secret": true
+  },
+  {
+    "id": "morale-boost",
+    "name": "Morale Boost",
+    "description": "Better rest cycles. Slight production and housing.",
+    "cost": 11000,
+    "successChance": 0.76,
+    "prerequisites": [
+      "crew-quarters"
+    ],
+    "modifiers": {
+      "productionPercent": 2,
+      "housingCapacityBonus": 1
+    },
+    "row": 4,
+    "col": 1,
+    "branch": "crew"
+  },
+  {
+    "id": "cross-training",
+    "name": "Cross-Training",
+    "description": "Multi-skill personnel. Flexibility and efficiency.",
+    "cost": 26000,
+    "successChance": 0.72,
+    "prerequisites": [
+      "efficiency"
+    ],
+    "modifiers": {
+      "productionPercent": 3
+    },
+    "row": 5,
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "habitat-expansion",
+    "name": "Habitat Expansion",
+    "description": "More living space per module.",
+    "cost": 42000,
+    "successChance": 0.7,
+    "prerequisites": [
+      "precision-drilling"
+    ],
+    "modifiers": {
+      "housingCapacityBonus": 2
+    },
+    "row": 5,
+    "col": 1,
+    "branch": "crew"
+  },
+  {
+    "id": "leadership",
+    "name": "Leadership",
+    "description": "Crew coordination. Steady gains.",
+    "cost": 58000,
+    "successChance": 0.68,
+    "prerequisites": [
+      "crew-retraining"
+    ],
+    "modifiers": {
+      "productionPercent": 4
+    },
+    "row": 6,
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "ergonomics",
+    "name": "Ergonomics",
+    "description": "Workstation design. Less fatigue, more output.",
+    "cost": 75000,
+    "successChance": 0.66,
+    "prerequisites": [
+      "veteran-protocols"
+    ],
+    "modifiers": {
+      "productionPercent": 5
+    },
+    "row": 6,
+    "col": 1,
+    "branch": "crew"
+  },
+  {
+    "id": "veteran-support",
+    "name": "Veteran Support",
+    "description": "Care for expedition survivors. Capacity and morale.",
+    "cost": 92000,
+    "successChance": 0.65,
+    "prerequisites": [
+      "veteran-protocols"
+    ],
+    "modifiers": {
+      "housingCapacityBonus": 1,
+      "productionPercent": 2
+    },
+    "row": 7,
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "specialist-logistics",
+    "name": "Specialist Logistics",
+    "description": "Optimal crew assignment. Fewer crew needed on Gas Siphon.",
+    "cost": 140000,
+    "successChance": 0.63,
+    "prerequisites": [
+      "ergonomics"
+    ],
+    "modifiers": {
+      "crewReduction": {
+        "gas-siphon": 1
+      }
+    },
+    "row": 7,
+    "col": 1,
+    "branch": "crew"
+  },
+  {
+    "id": "crew-sync",
+    "name": "Crew Sync",
+    "description": "Synchronized shifts. Production bump.",
+    "cost": 180000,
+    "successChance": 0.62,
+    "prerequisites": [
+      "veteran-support"
+    ],
+    "modifiers": {
+      "productionPercent": 6
+    },
     "row": 8,
-    "col": 2
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "fatigue-resistance",
+    "name": "Fatigue Resistance",
+    "description": "Extended ops. More housing.",
+    "cost": 250000,
+    "successChance": 0.6,
+    "prerequisites": [
+      "specialist-logistics"
+    ],
+    "modifiers": {
+      "housingCapacityBonus": 2
+    },
+    "row": 8,
+    "col": 1,
+    "branch": "crew"
+  },
+  {
+    "id": "elite-recruitment",
+    "name": "Elite Recruitment",
+    "description": "Top-tier hires. Capacity and output.",
+    "cost": 380000,
+    "successChance": 0.57,
+    "prerequisites": [
+      "crew-sync"
+    ],
+    "modifiers": {
+      "productionPercent": 4,
+      "housingCapacityBonus": 1
+    },
+    "row": 9,
+    "col": 0,
+    "branch": "crew"
+  },
+  {
+    "id": "solar-optics",
+    "name": "Solar Optics",
+    "description": "Concentrated sunlight. Solar Collector no longer uses a slot.",
+    "cost": 6200,
+    "successChance": 0.79,
+    "prerequisites": [
+      "mining-theory"
+    ],
+    "modifiers": {
+      "productionPercent": 3,
+      "slotFreeUpgrades": [
+        "solar-collector"
+      ]
+    },
+    "row": 1,
+    "col": 5,
+    "branch": "modules"
+  },
+  {
+    "id": "core-drilling",
+    "name": "Core Drilling",
+    "description": "Deeper bore. More yield.",
+    "cost": 11000,
+    "successChance": 0.76,
+    "prerequisites": [
+      "heavy-equipment"
+    ],
+    "modifiers": {
+      "productionPercent": 5
+    },
+    "row": 2,
+    "col": 7,
+    "branch": "modules"
+  },
+  {
+    "id": "machine-learning",
+    "name": "Machine Learning",
+    "description": "Predictive clicks. Better manual yield.",
+    "cost": 13000,
+    "successChance": 0.75,
+    "prerequisites": [
+      "automation"
+    ],
+    "modifiers": {
+      "clickPercent": 8
+    },
+    "row": 2,
+    "col": 8,
+    "branch": "modules"
+  },
+  {
+    "id": "cryo-handling",
+    "name": "Cryo Handling",
+    "description": "Safe ice extraction. Cryo Extractor no longer uses a slot.",
+    "cost": 24000,
+    "successChance": 0.71,
+    "prerequisites": [
+      "catalytic-cracking"
+    ],
+    "modifiers": {
+      "productionPercent": 4,
+      "slotFreeUpgrades": [
+        "cryo-extractor"
+      ]
+    },
+    "row": 3,
+    "col": 6,
+    "branch": "modules"
+  },
+  {
+    "id": "magma-containment",
+    "name": "Magma Containment",
+    "description": "Lava harvesting. Magma Pump slot-free.",
+    "cost": 38000,
+    "successChance": 0.69,
+    "prerequisites": [
+      "deep-extraction"
+    ],
+    "modifiers": {
+      "productionPercent": 5,
+      "slotFreeUpgrades": [
+        "magma-pump"
+      ]
+    },
+    "row": 3,
+    "col": 7,
+    "branch": "modules"
+  },
+  {
+    "id": "gas-processing",
+    "name": "Gas Processing",
+    "description": "Atmosphere extraction. Gas Siphon uses one less crew.",
+    "cost": 95000,
+    "successChance": 0.64,
+    "prerequisites": [
+      "refinery-core"
+    ],
+    "modifiers": {
+      "productionPercent": 6,
+      "crewReduction": {
+        "gas-siphon": 1
+      }
+    },
+    "row": 4,
+    "col": 6,
+    "branch": "modules"
+  },
+  {
+    "id": "geo-thermal",
+    "name": "Geo-Thermal",
+    "description": "Geothermal taps. Geo Drill slot-free.",
+    "cost": 120000,
+    "successChance": 0.63,
+    "prerequisites": [
+      "stellar-harvester"
+    ],
+    "modifiers": {
+      "productionPercent": 7,
+      "slotFreeUpgrades": [
+        "geo-drill"
+      ]
+    },
+    "row": 5,
+    "col": 6,
+    "branch": "modules"
+  },
+  {
+    "id": "high-throughput",
+    "name": "High Throughput",
+    "description": "Bulk processing. Steady production.",
+    "cost": 52000,
+    "successChance": 0.68,
+    "prerequisites": [
+      "automation"
+    ],
+    "modifiers": {
+      "productionPercent": 8
+    },
+    "row": 3,
+    "col": 8,
+    "branch": "modules"
+  },
+  {
+    "id": "precision-tools",
+    "name": "Precision Tools",
+    "description": "Fine control. Click and production.",
+    "cost": 44000,
+    "successChance": 0.69,
+    "prerequisites": [
+      "ai-assist"
+    ],
+    "modifiers": {
+      "productionPercent": 4,
+      "clickPercent": 10
+    },
+    "row": 3,
+    "col": 9,
+    "branch": "modules"
+  },
+  {
+    "id": "thermal-regulation",
+    "name": "Thermal Regulation",
+    "description": "Heat management. Refining boost.",
+    "cost": 82000,
+    "successChance": 0.65,
+    "prerequisites": [
+      "plasma-smelting"
+    ],
+    "modifiers": {
+      "productionPercent": 10
+    },
+    "row": 4,
+    "col": 7,
+    "branch": "modules"
+  },
+  {
+    "id": "flux-compression",
+    "name": "Flux Compression",
+    "description": "Denser output. Major production.",
+    "cost": 160000,
+    "successChance": 0.62,
+    "prerequisites": [
+      "dimensional-mining"
+    ],
+    "modifiers": {
+      "productionPercent": 14
+    },
+    "row": 5,
+    "col": 8,
+    "branch": "modules"
+  },
+  {
+    "id": "subspace-tap",
+    "name": "Subspace Tap",
+    "description": "Alternate-dimension harvest. Production and click.",
+    "cost": 290000,
+    "successChance": 0.55,
+    "prerequisites": [
+      "nexus-research"
+    ],
+    "modifiers": {
+      "productionPercent": 10,
+      "clickPercent": 12
+    },
+    "row": 5,
+    "col": 9,
+    "branch": "modules"
+  },
+  {
+    "id": "matter-recycler",
+    "name": "Matter Recycler",
+    "description": "Zero waste. Production gain.",
+    "cost": 195000,
+    "successChance": 0.61,
+    "prerequisites": [
+      "exo-forging"
+    ],
+    "modifiers": {
+      "productionPercent": 12
+    },
+    "row": 5,
+    "col": 10,
+    "branch": "modules"
+  },
+  {
+    "id": "hyper-drill",
+    "name": "Hyper Drill",
+    "description": "Ultra-fast penetration. Huge production.",
+    "cost": 550000,
+    "successChance": 0.52,
+    "prerequisites": [
+      "singularity-drill"
+    ],
+    "modifiers": {
+      "productionPercent": 18
+    },
+    "row": 6,
+    "col": 6,
+    "branch": "modules"
+  },
+  {
+    "id": "reality-weave",
+    "name": "Reality Weave",
+    "description": "Stabilize extraction. Big gains.",
+    "cost": 620000,
+    "successChance": 0.51,
+    "prerequisites": [
+      "void-forge"
+    ],
+    "modifiers": {
+      "productionPercent": 16,
+      "clickPercent": 6
+    },
+    "row": 6,
+    "col": 7,
+    "branch": "modules"
+  },
+  {
+    "id": "temporal-loop",
+    "name": "Temporal Loop",
+    "description": "Time-split mining. Production and click.",
+    "cost": 780000,
+    "successChance": 0.5,
+    "prerequisites": [
+      "chrono-extraction"
+    ],
+    "modifiers": {
+      "productionPercent": 14,
+      "clickPercent": 10
+    },
+    "row": 6,
+    "col": 8,
+    "branch": "modules"
+  },
+  {
+    "id": "exotic-alloys",
+    "name": "Exotic Alloys",
+    "description": "New materials. Steady boost.",
+    "cost": 680000,
+    "successChance": 0.51,
+    "prerequisites": [
+      "exo-core"
+    ],
+    "modifiers": {
+      "productionPercent": 15
+    },
+    "row": 6,
+    "col": 9,
+    "branch": "modules"
+  },
+  {
+    "id": "quantum-coherence",
+    "name": "Quantum Coherence",
+    "description": "Aligned extraction. Massive production.",
+    "cost": 2100000,
+    "successChance": 0.45,
+    "prerequisites": [
+      "reality-anchor"
+    ],
+    "modifiers": {
+      "productionPercent": 22
+    },
+    "row": 7,
+    "col": 6,
+    "branch": "modules"
+  },
+  {
+    "id": "parallel-mining",
+    "name": "Parallel Mining",
+    "description": "Multi-stream harvest. Scale.",
+    "cost": 2400000,
+    "successChance": 0.44,
+    "prerequisites": [
+      "multiverse-tap"
+    ],
+    "modifiers": {
+      "productionPercent": 20,
+      "clickPercent": 8
+    },
+    "row": 7,
+    "col": 7,
+    "branch": "modules"
+  },
+  {
+    "id": "cognitive-grid",
+    "name": "Cognitive Grid",
+    "description": "Crew–machine fusion. Click and production.",
+    "cost": 2200000,
+    "successChance": 0.45,
+    "prerequisites": [
+      "neural-network"
+    ],
+    "modifiers": {
+      "productionPercent": 12,
+      "clickPercent": 22
+    },
+    "row": 7,
+    "col": 8,
+    "branch": "modules"
+  },
+  {
+    "id": "omega-catalyst",
+    "name": "Omega Catalyst",
+    "description": "Final-stage boost. Huge output.",
+    "cost": 2500000,
+    "successChance": 0.44,
+    "prerequisites": [
+      "omega-refinery"
+    ],
+    "modifiers": {
+      "productionPercent": 24
+    },
+    "row": 7,
+    "col": 9,
+    "branch": "modules"
+  },
+  {
+    "id": "stellar-tap",
+    "name": "Stellar Tap",
+    "description": "Star-energy harvest. God-tier production.",
+    "cost": 8500000,
+    "successChance": 0.37,
+    "prerequisites": [
+      "stellar-engine"
+    ],
+    "modifiers": {
+      "productionPercent": 28
+    },
+    "row": 8,
+    "col": 6,
+    "branch": "modules"
+  },
+  {
+    "id": "cascade-reactor",
+    "name": "Cascade Reactor",
+    "description": "Self-amplifying loop. Exponential output.",
+    "cost": 9200000,
+    "successChance": 0.36,
+    "prerequisites": [
+      "infinity-loop"
+    ],
+    "modifiers": {
+      "productionPercent": 26,
+      "clickPercent": 10
+    },
+    "row": 8,
+    "col": 7,
+    "branch": "modules"
+  },
+  {
+    "id": "cosmic-array",
+    "name": "Cosmic Array",
+    "description": "System-wide cognition. Huge bonuses.",
+    "cost": 8800000,
+    "successChance": 0.36,
+    "prerequisites": [
+      "cosmic-mind"
+    ],
+    "modifiers": {
+      "productionPercent": 18,
+      "clickPercent": 28
+    },
+    "row": 8,
+    "col": 8,
+    "branch": "modules"
+  },
+  {
+    "id": "singularity-node",
+    "name": "Singularity Node",
+    "description": "Peak extraction. All bonuses.",
+    "cost": 9500000,
+    "successChance": 0.35,
+    "prerequisites": [
+      "singularity-core"
+    ],
+    "modifiers": {
+      "productionPercent": 24,
+      "clickPercent": 14
+    },
+    "row": 8,
+    "col": 9,
+    "branch": "modules"
+  },
+  {
+    "id": "void-conduit",
+    "name": "Void Conduit",
+    "description": "Channel the void. Massive production.",
+    "cost": 28000000,
+    "successChance": 0.32,
+    "prerequisites": [
+      "architect"
+    ],
+    "modifiers": {
+      "productionPercent": 35
+    },
+    "row": 9,
+    "col": 6,
+    "branch": "modules"
+  },
+  {
+    "id": "infinity-core",
+    "name": "Infinity Core",
+    "description": "Unlimited potential. Ultimate output.",
+    "cost": 32000000,
+    "successChance": 0.31,
+    "prerequisites": [
+      "transcendence"
+    ],
+    "modifiers": {
+      "productionPercent": 30,
+      "clickPercent": 35
+    },
+    "row": 9,
+    "col": 7,
+    "branch": "modules"
+  },
+  {
+    "id": "omega-matrix",
+    "name": "Omega Matrix",
+    "description": "The final grid. All equations solved.",
+    "cost": 35000000,
+    "successChance": 0.3,
+    "prerequisites": [
+      "omega-theory"
+    ],
+    "modifiers": {
+      "productionPercent": 38,
+      "clickPercent": 25
+    },
+    "row": 9,
+    "col": 8,
+    "branch": "modules"
+  },
+  {
+    "id": "pulse-extraction",
+    "name": "Pulse Extraction",
+    "description": "Rhythmic drilling. Steady gain.",
+    "cost": 33000,
+    "successChance": 0.7,
+    "prerequisites": [
+      "deep-extraction"
+    ],
+    "modifiers": {
+      "productionPercent": 6
+    },
+    "row": 3,
+    "col": 10,
+    "branch": "modules"
+  },
+  {
+    "id": "neural-link",
+    "name": "Neural Link",
+    "description": "Direct interface. Click bonus.",
+    "cost": 36000,
+    "successChance": 0.69,
+    "prerequisites": [
+      "neural-boost"
+    ],
+    "modifiers": {
+      "clickPercent": 12
+    },
+    "row": 4,
+    "col": 8,
+    "branch": "modules"
+  },
+  {
+    "id": "plasma-containment",
+    "name": "Plasma Containment",
+    "description": "Controlled fusion. Production.",
+    "cost": 115000,
+    "successChance": 0.63,
+    "prerequisites": [
+      "plasma-catalysis"
+    ],
+    "modifiers": {
+      "productionPercent": 14
+    },
+    "row": 5,
+    "col": 11,
+    "branch": "modules"
+  },
+  {
+    "id": "sensor-fusion",
+    "name": "Sensor Fusion",
+    "description": "Multi-band detection. Efficiency.",
+    "cost": 132000,
+    "successChance": 0.62,
+    "prerequisites": [
+      "quantum-sensors"
+    ],
+    "modifiers": {
+      "productionPercent": 8,
+      "clickPercent": 10
+    },
+    "row": 5,
+    "col": 12,
+    "branch": "modules"
+  },
+  {
+    "id": "dark-matter-tap",
+    "name": "Dark Matter Tap",
+    "description": "Exotic matter harvest. Huge production.",
+    "cost": 4800000,
+    "successChance": 0.4,
+    "prerequisites": [
+      "stellar-engine"
+    ],
+    "modifiers": {
+      "productionPercent": 32
+    },
+    "row": 8,
+    "col": 10,
+    "branch": "modules"
+  },
+  {
+    "id": "reality-drill",
+    "name": "Reality Drill",
+    "description": "Pierce the veil. Legendary output.",
+    "cost": 5200000,
+    "successChance": 0.39,
+    "prerequisites": [
+      "infinity-loop"
+    ],
+    "modifiers": {
+      "productionPercent": 30,
+      "clickPercent": 12
+    },
+    "row": 8,
+    "col": 11,
+    "branch": "modules"
+  },
+  {
+    "id": "signal-boost",
+    "name": "Signal Boost",
+    "description": "Stronger comms. Faster expedition return.",
+    "cost": 12000,
+    "successChance": 0.76,
+    "prerequisites": [
+      "survey-systems"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -6
+    },
+    "row": 2,
+    "col": 9,
+    "branch": "expeditions"
+  },
+  {
+    "id": "life-support",
+    "name": "Life Support",
+    "description": "Better life support. Safer expeditions.",
+    "cost": 15000,
+    "successChance": 0.75,
+    "prerequisites": [
+      "survey-systems"
+    ],
+    "modifiers": {
+      "expeditionDeathChancePercent": -4
+    },
+    "row": 2,
+    "col": 10,
+    "branch": "expeditions"
+  },
+  {
+    "id": "nav-computer",
+    "name": "Nav Computer",
+    "description": "Optimal routes. Shorter duration.",
+    "cost": 35000,
+    "successChance": 0.71,
+    "prerequisites": [
+      "faster-probes"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -8
+    },
+    "row": 4,
+    "col": 9,
+    "branch": "expeditions"
+  },
+  {
+    "id": "hazard-suits",
+    "name": "Hazard Suits",
+    "description": "Better protection. Lower death chance.",
+    "cost": 42000,
+    "successChance": 0.7,
+    "prerequisites": [
+      "survival-training"
+    ],
+    "modifiers": {
+      "expeditionDeathChancePercent": -6
+    },
+    "row": 4,
+    "col": 10,
+    "branch": "expeditions"
+  },
+  {
+    "id": "deep-range-scans",
+    "name": "Deep-Range Scans",
+    "description": "See farther. Faster missions.",
+    "cost": 78000,
+    "successChance": 0.66,
+    "prerequisites": [
+      "expedition-ai"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -7
+    },
+    "row": 5,
+    "col": 9,
+    "branch": "expeditions"
+  },
+  {
+    "id": "rescue-protocols",
+    "name": "Rescue Protocols",
+    "description": "Stranded-crew recovery. Safer runs.",
+    "cost": 85000,
+    "successChance": 0.65,
+    "prerequisites": [
+      "expedition-ai"
+    ],
+    "modifiers": {
+      "expeditionDeathChancePercent": -5
+    },
+    "row": 5,
+    "col": 10,
+    "branch": "expeditions"
+  },
+  {
+    "id": "mining-protocols",
+    "name": "Mining Protocols",
+    "description": "Expedition mining efficiency. Duration and safety.",
+    "cost": 125000,
+    "successChance": 0.63,
+    "prerequisites": [
+      "deep-range-scans"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -5,
+      "expeditionDeathChancePercent": -4
+    },
+    "row": 6,
+    "col": 9,
+    "branch": "expeditions"
+  },
+  {
+    "id": "scout-network",
+    "name": "Scout Network",
+    "description": "Coordinated scouting. Much faster return.",
+    "cost": 180000,
+    "successChance": 0.61,
+    "prerequisites": [
+      "mining-protocols"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -10
+    },
+    "row": 6,
+    "col": 10,
+    "branch": "expeditions"
+  },
+  {
+    "id": "emergency-beacon",
+    "name": "Emergency Beacon",
+    "description": "Faster rescue. Much safer.",
+    "cost": 220000,
+    "successChance": 0.6,
+    "prerequisites": [
+      "mining-protocols"
+    ],
+    "modifiers": {
+      "expeditionDeathChancePercent": -8
+    },
+    "row": 6,
+    "col": 11,
+    "branch": "expeditions"
+  },
+  {
+    "id": "interstellar-comms",
+    "name": "Interstellar Comms",
+    "description": "Cross-system link. Expeditions faster.",
+    "cost": 380000,
+    "successChance": 0.55,
+    "prerequisites": [
+      "scout-network"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -9
+    },
+    "row": 7,
+    "col": 9,
+    "branch": "expeditions"
+  },
+  {
+    "id": "field-surgery",
+    "name": "Field Surgery",
+    "description": "On-site care. Safer expeditions.",
+    "cost": 420000,
+    "successChance": 0.54,
+    "prerequisites": [
+      "emergency-beacon"
+    ],
+    "modifiers": {
+      "expeditionDeathChancePercent": -7
+    },
+    "row": 7,
+    "col": 10,
+    "branch": "expeditions"
+  },
+  {
+    "id": "expedition-mastery",
+    "name": "Expedition Mastery",
+    "description": "Peak mission design. Fast and safe.",
+    "cost": 750000,
+    "successChance": 0.48,
+    "prerequisites": [
+      "interstellar-comms"
+    ],
+    "modifiers": {
+      "expeditionDurationPercent": -12,
+      "expeditionDeathChancePercent": -10
+    },
+    "row": 8,
+    "col": 9,
+    "branch": "expeditions"
   }
 ]
