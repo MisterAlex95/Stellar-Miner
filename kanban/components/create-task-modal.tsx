@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -80,6 +80,16 @@ export function CreateTaskModal({ isOpen, onClose, onCreateTask }: CreateTaskMod
     setError("")
   }
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose()
+    }
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape)
+      return () => document.removeEventListener("keydown", handleEscape)
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return (
@@ -93,8 +103,11 @@ export function CreateTaskModal({ isOpen, onClose, onCreateTask }: CreateTaskMod
         onClick={handleClose}
       />
 
-      {/* Modal */}
+      {/* Modal - click inside does not close */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-modal-title"
         className={cn(
           "fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2",
           "w-[90vw] max-w-2xl max-h-[80vh] bg-[#0B0E14]/95 backdrop-blur-[24px]",
@@ -102,6 +115,7 @@ export function CreateTaskModal({ isOpen, onClose, onCreateTask }: CreateTaskMod
           "flex flex-col overflow-hidden",
           isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none",
         )}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
@@ -110,7 +124,7 @@ export function CreateTaskModal({ isOpen, onClose, onCreateTask }: CreateTaskMod
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white">
+              <h2 id="create-modal-title" className="text-xl font-semibold text-white">
                 {step === "input" ? "Create New Task" : "Review Generated Task"}
               </h2>
               <p className="text-sm text-white/60">

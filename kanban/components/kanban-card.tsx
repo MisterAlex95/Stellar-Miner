@@ -60,9 +60,11 @@ export function KanbanCard({
       case "inbox":
         return "border-l-white/20"
       case "next-up":
-        return "border-l-warning"
+        return "border-l-amber-400"
       case "running":
         return "border-l-primary"
+      case "blocked":
+        return "border-l-orange-400"
       case "done":
         return "border-l-success"
       default:

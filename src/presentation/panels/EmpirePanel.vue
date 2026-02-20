@@ -29,14 +29,10 @@
         </div>
       </div>
       <div class="crew-summary" aria-live="polite">{{ crew?.summary ?? '' }}</div>
-      <div
-        class="empty-state"
-        :aria-hidden="!(crew?.showEmpty ?? true)"
+      <EmptyState
+        :message="t('emptyCrewText')"
         :hidden="!(crew?.showEmpty ?? true)"
-      >
-        <span class="empty-state-icon" aria-hidden="true"></span>
-        <p class="empty-state-text">{{ t('emptyCrewText') }}</p>
-      </div>
+      />
       <div class="crew-role-cards">
         <div
           v-for="card in crew?.roleCards ?? []"
@@ -128,10 +124,7 @@
       <p class="planets-hint">{{ t('planetsHint') }}</p>
       <div ref="planetListRef" class="planet-list">
         <template v-if="!planetSystems?.length">
-          <div class="empty-state">
-            <span class="empty-state-icon" aria-hidden="true"></span>
-            <p class="empty-state-text">{{ t('emptyPlanetsText') }}</p>
-          </div>
+          <EmptyState :message="t('emptyPlanetsText')" />
         </template>
         <template v-else>
           <section
@@ -305,6 +298,7 @@ import { openPlanetDetail } from '../modals/planetDetail.js';
 import { renderPlanetThumbnails } from '../canvas/planetThumbnail3D.js';
 import { useEmpireData } from '../composables/useEmpireData.js';
 import EmpireSection from '../components/EmpireSection.vue';
+import EmptyState from '../components/EmptyState.vue';
 import type { CrewRole } from '../../domain/constants.js';
 
 const { crew, planetSystems, prestige, expedition, unlockedBlocks } = useEmpireData();

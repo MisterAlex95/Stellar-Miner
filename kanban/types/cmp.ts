@@ -1,9 +1,12 @@
+/** Column/status ids are driven by board config. Defaults: inbox, next-up, running, blocked, done. Custom columns allowed. */
+export type CPMTaskStatus = "inbox" | "next-up" | "running" | "blocked" | "done" | (string & {})
+
 export interface CPMTask {
   id: string
   title: string
   summary: string
   labels: string[]
-  status: "inbox" | "next-up" | "running" | "done"
+  status: CPMTaskStatus
   checklist: ChecklistItem[]
   description?: string
   filePath: string
@@ -19,7 +22,7 @@ export interface ChecklistItem {
 }
 
 export interface CPMColumn {
-  id: "inbox" | "next-up" | "running" | "done"
+  id: string
   title: string
   tasks: CPMTask[]
 }

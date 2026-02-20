@@ -23,7 +23,11 @@ export type Quest = {
   storyHook?: string;
 };
 
-export type QuestState = { quest: Quest | null };
+export type QuestState = {
+  quest: Quest | null;
+  /** When the current quest was first completed (for 5-min claim window). Cleared on claim or new quest. */
+  completedAt?: number;
+};
 
 export function loadQuestState(): QuestState {
   if (typeof localStorage === 'undefined') return { quest: null };
@@ -31,7 +35,9 @@ export function loadQuestState(): QuestState {
     const raw = localStorage.getItem(QUEST_STORAGE_KEY);
     if (!raw) return { quest: null };
     const data = JSON.parse(raw) as QuestState;
-    return data.quest ? { quest: data.quest } : { quest: null };
+    const quest = data.quest ?? null;
+    const completedAt = typeof data.completedAt === 'number' ? data.completedAt : undefined;
+    return quest ? { quest, ...(completedAt !== undefined ? { completedAt } : {}) } : { quest: null };
   } catch {
     return { quest: null };
   }
@@ -39,6 +45,8 @@ export function loadQuestState(): QuestState {
 
 export function saveQuestState(state: QuestState): void {
   if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(QUEST_STORAGE_KEY, JSON.stringify(state));
+    const toSave: QuestState = { quest: state.quest };
+    if (typeof state.completedAt === 'number') toSave.completedAt = state.completedAt;
+    localStorage.setItem(QUEST_STORAGE_KEY, JSON.stringify(toSave));
   }
 }

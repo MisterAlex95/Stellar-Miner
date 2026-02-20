@@ -218,6 +218,7 @@ export const stringsEn = {
   percentSuccess: '{pct}% success',
   researchScientistBonus: '(+{pct}% scientist)',
   claimRewardFormat: 'Claim {reward} ⬡',
+  claimWithinFormat: 'Claim within {time}',
   completeQuestToClaim: 'Complete the quest to claim the reward',
   questStreakKeep: 'Streak ×{n} · claim next within 5 min to keep it',
   streakExpired: 'Streak expired. Claim a quest to start a new streak.',

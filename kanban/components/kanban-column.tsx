@@ -38,9 +38,11 @@ export function KanbanColumn({
       case "inbox":
         return "text-white/60"
       case "next-up":
-        return "text-warning"
+        return "text-amber-400"
       case "running":
         return "text-primary"
+      case "blocked":
+        return "text-orange-400"
       case "done":
         return "text-success"
       default:

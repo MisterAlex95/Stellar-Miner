@@ -41,8 +41,7 @@
     @apply text-background bg-white/25 border-white/40;
   }
   .app-tab:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    @apply outline-2 outline-primary outline-offset-2;
   }
   .app-tab > span:not(.app-tab-key) {
     @apply whitespace-nowrap overflow-hidden text-ellipsis;
@@ -91,8 +90,7 @@
   }
 
   .app-tabs-menu {
-    @apply absolute top-full right-0 mt-1 min-w-40 p-1.5 flex flex-col gap-0.5 bg-surface border border-border rounded-sm z-40;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    @apply absolute top-full right-0 mt-1 min-w-40 p-1.5 flex flex-col gap-0.5 bg-surface border border-border rounded-sm z-40 shadow-[0_8px_24px_rgba(0,0,0,0.35)];
   }
   .app-tabs-menu[hidden] {
     @apply !hidden;
@@ -117,8 +115,7 @@
     text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
   }
   .app-tabs-menu-item:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    @apply outline-2 outline-primary outline-offset-2;
   }
 
   .app-tabs-menu-item {
@@ -256,9 +253,8 @@
     @apply !hidden;
   }
   .app-tabs-bottom {
-    @apply flex fixed bottom-0 left-0 right-0 z-50 p-2 gap-2 items-center bg-card border-t border-border;
+    @apply flex fixed bottom-0 left-0 right-0 z-50 p-2 gap-2 items-center bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.2)];
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
   }
   .app-tab-bottom {
     @apply flex-1 min-h-12 font-display text-base font-semibold tracking-wide py-2.5 px-2.5 border-none rounded-sm cursor-pointer transition-colors duration-200 bg-surface text-foreground-muted;
@@ -294,8 +290,7 @@
     @apply text-success;
   }
   .app-tab-bottom:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    @apply outline-2 outline-primary outline-offset-2;
   }
   .app-tabs-bottom-more-wrap {
     @apply relative shrink-0;
@@ -304,8 +299,7 @@
     @apply !hidden;
   }
   .app-tabs-bottom-menu {
-    @apply absolute bottom-full right-0 mb-1 min-w-40 p-1.5 flex flex-col gap-0.5 bg-surface border border-border rounded-sm z-[51];
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    @apply absolute bottom-full right-0 mb-1 min-w-40 p-1.5 flex flex-col gap-0.5 bg-surface border border-border rounded-sm z-[51] shadow-[0_8px_24px_rgba(0,0,0,0.35)];
   }
   .app-tabs-bottom-menu[hidden] {
     @apply !hidden;
@@ -328,8 +322,7 @@
     @apply text-success bg-card;
   }
   .app-tabs-bottom-menu-item:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    @apply outline-2 outline-primary outline-offset-2;
   }
   #app {
     padding-bottom: calc(72px + env(safe-area-inset-bottom));

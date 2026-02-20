@@ -2,15 +2,26 @@
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Package, Settings } from "lucide-react"
+import { Package, Settings, Plus, RefreshCw } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface NavbarProps {
   onToggleContextPack: () => void
   onOpenSettings: () => void
+  onAddTask?: () => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
   contextPackCount?: number
 }
 
-export function Navbar({ onToggleContextPack, onOpenSettings, contextPackCount = 0 }: NavbarProps) {
+export function Navbar({
+  onToggleContextPack,
+  onOpenSettings,
+  onAddTask,
+  onRefresh,
+  isRefreshing = false,
+  contextPackCount = 0,
+}: NavbarProps) {
   return (
     <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0B0E14]/80 backdrop-blur-[12px]">
       {/* Logo */}
@@ -23,6 +34,32 @@ export function Navbar({ onToggleContextPack, onOpenSettings, contextPackCount =
 
       {/* Right Section */}
       <div className="flex items-center gap-2">
+        {onRefresh && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white/60 hover:text-white hover:bg-white/10"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            title="Refresh board (R)"
+          >
+            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+          </Button>
+        )}
+
+        {onAddTask && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white/60 hover:text-white hover:bg-white/10"
+            onClick={onAddTask}
+            title="Add task"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add task
+          </Button>
+        )}
+
         <Button
           variant="ghost"
           size="sm"

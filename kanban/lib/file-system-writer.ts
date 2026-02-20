@@ -1,52 +1,42 @@
 import type { CPMTask } from "@/types/cmp"
 import { promises as fs } from 'fs'
 import path from 'path'
+import { getTaskDirectoryPath } from './board-config'
 
 /**
- * Convert a CPMTask back to markdown format
+ * Convert a CPMTask back to markdown format (used for create and full update).
  */
 function taskToMarkdown(task: CPMTask): string {
   const lines: string[] = []
-  
-  // Title
+
   lines.push(`# ${task.title}`)
   lines.push('')
-  
-  // Frontmatter-style metadata
-  if (task.labels.includes('feature') || task.labels.includes('enhancement') || task.labels.includes('bugfix')) {
-    const type = task.labels.find(label => ['feature', 'enhancement', 'bugfix', 'testing', 'docs'].includes(label)) || 'feature'
-    lines.push(`**Type:** ${type}`)
+
+  const typeLabel = task.labels.find((l) =>
+    ['feature', 'enhancement', 'bugfix', 'testing', 'docs', 'research', 'design'].includes(l)
+  )
+  lines.push(`**Type:** ${typeLabel || 'feature'}`)
+
+  const epicLabel = task.labels.find((l) => l.includes(' - '))
+  if (epicLabel) {
+    lines.push(`**Epic:** ${epicLabel}`)
   }
-  
-  // Add labels as metadata (limit to 2 as specified)
+
   if (task.labels.length > 0) {
-    const displayLabels = task.labels.slice(0, 2) // Show at most 2 labels
-    lines.push(`**Labels:** ${displayLabels.join(', ')}`)
+    lines.push(`**Labels:** ${task.labels.join(', ')}`)
   }
-  
-  // Calculate effort from progress or default
+
   const effort = Math.ceil(task.checklist.length / 3) || 1
   lines.push(`**Effort:** ${effort} points`)
-  
-  // Status (though this will be overridden by file location)
   lines.push(`**Status:** ${task.status}`)
   lines.push('')
-  
-  // UI review flag if needed
-  if (task.labels.includes('ui') || task.labels.includes('design')) {
-    lines.push('design-stop: pending')
-    lines.push('')
-  }
-  
-  // Description
+
   lines.push('## Description')
-  lines.push(task.description || task.summary)
+  lines.push(task.description || task.summary || '')
   lines.push('')
-  
-  // Acceptance Criteria (derived from first part of checklist if available)
+
   if (task.checklist.length > 0) {
     lines.push('## Acceptance Criteria')
-    // Take first few checklist items as acceptance criteria
     const criteriaCount = Math.min(5, Math.ceil(task.checklist.length / 2))
     for (let i = 0; i < criteriaCount; i++) {
       if (task.checklist[i]) {
@@ -56,52 +46,35 @@ function taskToMarkdown(task: CPMTask): string {
     }
     lines.push('')
   }
-  
-  // Dependencies (placeholder)
+
   lines.push('## Dependencies')
   lines.push('None')
   lines.push('')
-  
-  // Checklist
+
   if (task.checklist.length > 0) {
     lines.push('## Checklist')
-    task.checklist.forEach(item => {
+    task.checklist.forEach((item) => {
       const checked = item.completed ? 'x' : ' '
       lines.push(`- [${checked}] ${item.text}`)
     })
     lines.push('')
   }
-  
-  // Notes
+
   lines.push('## Notes')
   lines.push(`Task progress: ${task.progress}% complete`)
   if (task.filePath) {
     lines.push(`File path: ${task.filePath}`)
   }
   lines.push('')
-  
+
   return lines.join('\n')
 }
 
 /**
- * Get the directory path for a task based on its status
+ * Get the directory path for a task based on its status (uses board config).
  */
 function getTaskDirectory(status: CPMTask['status']): string {
-  const projectRoot = process.cwd().replace('/kanban', '')
-  const tasksDir = path.join(projectRoot, 'project', 'tasks')
-  
-  switch (status) {
-    case 'inbox':
-      return path.join(tasksDir, 'backlog')
-    case 'next-up':
-      return path.join(tasksDir, 'todo')
-    case 'running':
-      return path.join(tasksDir, 'in_progress')
-    case 'done':
-      return path.join(tasksDir, 'done')
-    default:
-      return path.join(tasksDir, 'backlog')
-  }
+  return getTaskDirectoryPath(status)
 }
 
 /**
@@ -172,57 +145,24 @@ export async function moveTaskFile(taskId: string, oldStatus: CPMTask['status'],
 }
 
 /**
- * Update a task file with new checklist state
+ * Update a task file with full task content (title, description, checklist, labels).
+ * Overwrites the file so all editable fields are persisted.
  */
 export async function updateTaskFile(task: CPMTask): Promise<void> {
   try {
     const targetDir = getTaskDirectory(task.status)
     const fileName = `${task.id}.md`
     const filePath = path.join(targetDir, fileName)
-    
-    // Read existing file
-    let content: string
+
     try {
-      content = await fs.readFile(filePath, 'utf-8')
-    } catch (error) {
-      // File doesn't exist, create new one
+      await fs.access(filePath)
+    } catch {
       await writeTaskFile(task)
       return
     }
-    
-    // Update checklist items in the content
-    const lines = content.split('\n')
-    let inChecklistSection = false
-    let checklistIndex = 0
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      
-      if (line === '## Checklist') {
-        inChecklistSection = true
-        continue
-      } else if (line.startsWith('## ') && inChecklistSection) {
-        inChecklistSection = false
-        continue
-      }
-      
-      if (inChecklistSection && line.startsWith('- [')) {
-        if (checklistIndex < task.checklist.length) {
-          const item = task.checklist[checklistIndex]
-          const checked = item.completed ? 'x' : ' '
-          console.log(`📝 Updating checklist item ${checklistIndex}: "${item.text}" -> ${checked ? 'CHECKED' : 'UNCHECKED'}`)
-          // Update the line regardless of the original text - just match the checkbox pattern
-          lines[i] = `- [${checked}] ${item.text}`
-          checklistIndex++
-        }
-      }
-    }
-    
-    console.log(`Updated ${checklistIndex} checklist items for task ${task.id}`)
-    
-    // Write updated content
-    await fs.writeFile(filePath, lines.join('\n'), 'utf-8')
-    
+
+    const markdown = taskToMarkdown(task)
+    await fs.writeFile(filePath, markdown, 'utf-8')
     console.log(`Task ${task.id} updated in ${filePath}`)
   } catch (error) {
     console.error(`Error updating task file for ${task.id}:`, error)

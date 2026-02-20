@@ -125,7 +125,7 @@
         </p>
         <span
           id="quest-claim-wrap"
-          class="btn-tooltip-wrap"
+          class="btn-tooltip-wrap quest-claim-row"
         >
           <button
             ref="questClaimBtnRef"
@@ -138,6 +138,14 @@
           >
             {{ store.quest.claimLabel }}
           </button>
+          <span
+            v-if="questClaimCountdownText"
+            id="quest-claim-countdown"
+            class="quest-claim-countdown"
+            aria-live="polite"
+          >
+            {{ questClaimCountdownText }}
+          </span>
         </span>
       </div>
     </section>
@@ -419,7 +427,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { t } from '../../application/strings.js';
+import { t, tParam } from '../../application/strings.js';
 import { useGameStateStore } from '../stores/gameState.js';
 import { handleClaimQuest } from '../../application/handlers.js';
 import { openSectionRulesModal } from '../modals/mount.js';
@@ -441,12 +449,36 @@ const { label: researchDataDisplayLabel } = useResearchDataDisplay();
 const appUI = useAppUIStore();
 const questClaimBtnRef = ref<HTMLButtonElement | null>(null);
 const mineZoneRef = ref<HTMLElement | null>(null);
+const questClaimCountdownText = ref('');
+
+function formatClaimCountdown(claimWindowEndMs: number): string {
+  const now = Date.now();
+  if (now >= claimWindowEndMs) return '';
+  const totalSec = Math.ceil((claimWindowEndMs - now) / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return tParam('claimWithinFormat', { time: `${m}:${s.toString().padStart(2, '0')}` });
+}
+
+function tickQuestClaimCountdown(): void {
+  const q = store.quest;
+  if (!q.sectionComplete || q.claimWindowEndMs <= 0) {
+    questClaimCountdownText.value = '';
+    return;
+  }
+  questClaimCountdownText.value = formatClaimCountdown(q.claimWindowEndMs);
+}
+
+let questCountdownIntervalId: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
   if (questClaimBtnRef.value) appUI.setQuestClaimAnchor(questClaimBtnRef.value);
   if (mineZoneRef.value) appUI.setMineZoneElement(mineZoneRef.value);
+  tickQuestClaimCountdown();
+  questCountdownIntervalId = setInterval(tickQuestClaimCountdown, 1000);
 });
 onBeforeUnmount(() => {
+  if (questCountdownIntervalId) clearInterval(questCountdownIntervalId);
   appUI.setQuestClaimAnchor(null);
   appUI.setMineZoneElement(null);
 });
@@ -1299,6 +1331,22 @@ function onRulesClick(rulesKey: string, titleKey: string): void {
 
 .quest-claim-btn:active:not(:disabled) {
   transform: scale(0.97);
+}
+
+.quest-claim-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.quest-claim-countdown {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.quest-section--complete .quest-claim-countdown {
+  color: var(--success);
 }
 
 .quest-section--complete {

@@ -3,10 +3,7 @@
     <p v-if="nextRecommendedText" class="upgrade-list-next-recommended" id="upgrades-next-recommended">
       {{ nextRecommendedText }}
     </p>
-    <div v-if="cards.length === 0" class="empty-state" id="upgrades-empty-state">
-      <span class="empty-state-icon" aria-hidden="true"></span>
-      <p class="empty-state-text">{{ emptyText }}</p>
-    </div>
+    <EmptyState v-if="cards.length === 0" :message="emptyText" id="upgrades-empty-state" />
     <div v-else class="upgrade-list-cards">
       <UpgradeCard
         v-for="item in cards"
@@ -21,6 +18,7 @@
 import { useUpgradeList } from '../composables/useUpgradeList.js';
 import { useUpgradeActions } from '../composables/useUpgradeActions.js';
 import UpgradeCard from '../components/UpgradeCard.vue';
+import EmptyState from '../components/EmptyState.vue';
 
 const { cards, emptyText, nextRecommendedText } = useUpgradeList();
 const { onUpgradeClick } = useUpgradeActions();

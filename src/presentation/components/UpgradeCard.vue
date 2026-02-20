@@ -244,6 +244,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@reference "../../styles/index.css";
+
 .upgrade-card {
   position: relative;
   background: var(--bg-card);
@@ -684,139 +686,56 @@ onUnmounted(() => {
 }
 
 .upgrade-buttons {
-  display: flex;
-  flex-direction: row;
-  gap: 0.25rem;
-  align-items: center;
-  flex-shrink: 0;
+  @apply flex flex-row gap-1 items-center flex-shrink-0;
 }
 
 .upgrade-btn--buy,
 .upgrade-btn--max {
-  min-width: 3.5rem;
-  padding: 0.32rem 0.55rem;
-  font-size: 0.78rem;
-  box-sizing: border-box;
-  text-align: center;
-  line-height: 1.3;
+  @apply min-w-14 py-1.5 px-2 text-[0.78rem] box-border text-center leading-tight;
 }
 
 .upgrade-btn--max {
-  opacity: 0.9;
+  @apply opacity-90;
 }
 
 .upgrade-btn--max:hover:not(:disabled) {
-  opacity: 1;
+  @apply opacity-100;
 }
 
 .upgrade-uninstall-line {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.3rem;
-  font-size: 0.76rem;
-  color: var(--text-dim);
-  line-height: 1.35;
+  @apply flex items-center gap-1.5 mt-1 text-[0.76rem] text-foreground-muted leading-tight;
 }
 
 .upgrade-uninstall-line .upgrade-uninstall-planet-select {
-  font-size: 0.75rem;
-  padding: 0.22rem 0.4rem;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
-  color: var(--text);
-  max-width: 6rem;
-  min-height: 1.6rem;
+  @apply text-[0.75rem] py-0.5 px-1.5 rounded border border-border bg-surface text-foreground max-w-24 min-h-[1.6rem];
 }
 
 .upgrade-uninstall-sep {
-  color: var(--text-dim);
-  opacity: 0.6;
-  user-select: none;
+  @apply text-foreground-muted opacity-60 select-none;
 }
 
 .upgrade-uninstall-refund {
-  font-variant-numeric: tabular-nums;
+  @apply tabular-nums;
 }
 
 .upgrade-uninstall-btn {
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  min-width: auto;
-  width: auto;
-  background: rgba(42, 47, 61, 0.5);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text-dim);
-}
-
-.upgrade-uninstall-btn:hover:not(:disabled) {
-  background: rgba(42, 47, 61, 0.9);
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-.upgrade-uninstall-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  @apply text-[0.75rem] font-medium py-1 px-2 min-w-0 w-auto rounded border border-border text-foreground-muted bg-black/20 hover:bg-black/40 hover:text-foreground hover:border-white/10 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 disabled:opacity-50;
 }
 
 .upgrade-planet-label {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  white-space: nowrap;
+  @apply text-[0.75rem] text-foreground-muted whitespace-nowrap;
 }
 
 .upgrade-planet-select {
-  font-size: 0.76rem;
-  padding: 0.24rem 0.4rem;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
-  color: var(--text);
-  max-width: 6rem;
+  @apply text-[0.76rem] py-0.5 px-1.5 rounded border border-border bg-surface text-foreground max-w-24;
 }
 
 .upgrade-btn {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.38rem 0.65rem;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
-  line-height: 1.25;
-}
-
-.upgrade-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: var(--bg-dark);
-  border-color: var(--accent);
-}
-
-.upgrade-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.upgrade-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.upgrade-btn:active:not(:disabled) {
-  transform: scale(0.97);
+  @apply font-display text-[0.78rem] font-semibold py-1.5 px-2.5 rounded-md border border-border bg-surface text-foreground cursor-pointer transition-colors duration-150 leading-tight hover:bg-primary hover:text-background hover:border-primary focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97];
 }
 
 .count-badge {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  margin-left: 0.5rem;
+  @apply text-[0.75rem] text-foreground-muted ml-2;
 }
 
 @media (max-width: 360px) {

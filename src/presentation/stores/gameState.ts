@@ -99,6 +99,7 @@ const defaultQuest: QuestSnapshot = {
   streakHint: '',
   streakHintVisible: false,
   sectionComplete: false,
+  claimWindowEndMs: 0,
 };
 
 const defaultCombo: ComboSnapshot = {

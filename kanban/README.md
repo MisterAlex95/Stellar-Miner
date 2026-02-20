@@ -63,6 +63,34 @@ npm run dev
 
 ## 🔧 Core Components
 
+### Board columns (configurable)
+Columns are driven by **`project/tasks/board-config.json`** in the project root. Default columns:
+
+| Column   | Folder        | Purpose                |
+|----------|----------------|------------------------|
+| Inbox    | `backlog/`     | New / unprioritized    |
+| Next Up   | `todo/`        | Ready to start        |
+| Running  | `in_progress/` | In progress           |
+| Blocked  | `blocked/`     | Blocked / waiting     |
+| Done     | `done/`        | Completed             |
+
+To **add or reorder columns**, edit `project/tasks/board-config.json`:
+
+```json
+{
+  "columns": [
+    { "id": "inbox", "title": "Inbox", "folder": "backlog" },
+    { "id": "next-up", "title": "Next Up", "folder": "todo" },
+    { "id": "running", "title": "Running", "folder": "in_progress" },
+    { "id": "blocked", "title": "Blocked", "folder": "blocked" },
+    { "id": "review", "title": "Review", "folder": "review" },
+    { "id": "done", "title": "Done", "folder": "done" }
+  ]
+}
+```
+
+Create the matching folder under `project/tasks/` (e.g. `project/tasks/review/`) so tasks can be moved there. The board and file move/read logic use this config automatically.
+
 ### AI Automation Engine
 ```typescript
 // Background service that powers autonomous task management

@@ -28,7 +28,7 @@ import { Navbar } from "./navbar"
 import { ContextPack } from "./context-pack"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Activity, Clock, Pencil } from "lucide-react"
+import { Activity, Clock, Pencil, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface KanbanBoardProps {
@@ -45,10 +45,21 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
   const [isContextPackOpen, setIsContextPackOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const [contextPackCount, setContextPackCount] = useState(0)
-  
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastMoveToast, setLastMoveToast] = useState<string | null>(null)
+
   // Editable project name state
   const [projectName, setProjectName] = useState("CPM Project Board")
   const [isEditingName, setIsEditingName] = useState(false)
+
+  const refreshBoard = () => {
+    setIsRefreshing(true)
+    taskApi
+      .fetchTasks()
+      .then(setBoard)
+      .catch(console.error)
+      .finally(() => setIsRefreshing(false))
+  }
 
 
 
@@ -74,9 +85,9 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
       return closestCorners(args)
     }
     
-    // First, check for column droppables (inbox, next-up, running, done)
-    const columnIds = ['inbox', 'next-up', 'running', 'done']
-    const columnDroppables = droppableContainers.filter(container => 
+    // Use column ids from board (inbox, next-up, running, blocked, done, or custom)
+    const columnIds = board?.columns.map((c) => c.id) ?? []
+    const columnDroppables = droppableContainers.filter((container) =>
       columnIds.includes(container.id as string)
     )
     
@@ -108,17 +119,26 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
   }
 
   useEffect(() => {
-    taskApi.fetchTasks().then(setBoard).catch(console.error)
-    
-    // Optional: Refresh when tab becomes visible (user returns to app)
+    refreshBoard()
+  }, [])
+
+  useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        taskApi.fetchTasks().then(setBoard).catch(console.error)
-      }
+      if (!document.hidden) refreshBoard()
     }
-    
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'r' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        refreshBoard()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
 
@@ -140,7 +160,7 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
 
     const totalTasks = board.columns.reduce((sum, col) => sum + col.tasks.length, 0)
     const activeTasks = board.columns
-      .filter((col) => col.id === "running" || col.id === "next-up")
+      .filter((col) => col.id === 'running' || col.id === 'next-up')
       .reduce((sum, col) => sum + col.tasks.length, 0)
     const completedTasks = board.columns.find((col) => col.id === "done")?.tasks.length || 0
     const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
@@ -275,7 +295,9 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
             taskApi.fetchTasks().then(setBoard)
           })
 
-        // Fire status change callback
+        setLastMoveToast(`Moved to ${targetColumn.title}`)
+        setTimeout(() => setLastMoveToast(null), 2000)
+
         if (onStatusChange) {
           onStatusChange(activeId, targetColumn.id as CPMTask["status"])
         }
@@ -311,7 +333,7 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
       if (!prev) return prev
 
       const newColumns = [...prev.columns]
-      const inboxIndex = newColumns.findIndex((col) => col.id === "inbox")
+      const inboxIndex = newColumns.findIndex((col) => col.id === 'inbox')
 
       if (inboxIndex !== -1) {
         newColumns[inboxIndex] = {
@@ -405,10 +427,94 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
     }
   }
 
+  const handleSaveTask = async (updatedTask: CPMTask) => {
+    try {
+      await taskApi.updateTask(updatedTask)
+      setBoard((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          columns: prev.columns.map((col) => ({
+            ...col,
+            tasks: col.tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
+          })),
+        }
+      })
+      setSelectedTask(updatedTask)
+    } catch (error) {
+      console.error('Failed to save task:', error)
+      const freshBoard = await taskApi.fetchTasks()
+      if (freshBoard) setBoard(freshBoard)
+    }
+  }
+
   if (!board) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#10141C] to-[#0B0E14] flex items-center justify-center">
-        <div className="text-white/60">Loading CPM tasks...</div>
+      <div className="min-h-screen bg-gradient-to-br from-[#10141C] to-[#0B0E14] flex flex-col">
+        <Navbar
+          onToggleContextPack={() => setIsContextPackOpen(!isContextPackOpen)}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
+          onAddTask={() => setIsCreateModalOpen(true)}
+          onRefresh={refreshBoard}
+          isRefreshing={isRefreshing}
+          contextPackCount={contextPackCount}
+        />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="flex flex-col items-center gap-6 max-w-md">
+            <div className="flex gap-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="w-[280px] h-[420px] rounded-[18px] bg-white/5 border border-white/10 animate-pulse"
+                />
+              ))}
+            </div>
+            <p className="text-white/60 text-sm">Loading board…</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const totalTasks = board.columns.reduce((sum, col) => sum + col.tasks.length, 0)
+
+  if (totalTasks === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#10141C] to-[#0B0E14] flex flex-col">
+        <Navbar
+          onToggleContextPack={() => setIsContextPackOpen(!isContextPackOpen)}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
+          onAddTask={() => setIsCreateModalOpen(true)}
+          onRefresh={refreshBoard}
+          isRefreshing={isRefreshing}
+          contextPackCount={contextPackCount}
+        />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="flex flex-col items-center gap-6 max-w-md text-center">
+            <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center">
+              <Activity className="h-10 w-10 text-white/40" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-white mb-2">No tasks yet</h2>
+              <p className="text-white/60 text-sm mb-6">
+                Create your first task from the Inbox column or use the button above.
+              </p>
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-[#5B8EFF] hover:bg-[#5B8EFF]/80 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create first task
+              </Button>
+            </div>
+          </div>
+        </div>
+        <CreateTaskModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreateTask={handleCreateTask}
+        />
+        <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
       </div>
     )
   }
@@ -418,6 +524,9 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
       <Navbar
         onToggleContextPack={() => setIsContextPackOpen(!isContextPackOpen)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onAddTask={() => setIsCreateModalOpen(true)}
+        onRefresh={refreshBoard}
+        isRefreshing={isRefreshing}
         contextPackCount={contextPackCount}
       />
 
@@ -475,6 +584,11 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
                 {projectMetrics.totalTasks} total tasks
               </Badge>
             </div>
+            {lastMoveToast && (
+              <span className="text-xs text-primary/90 transition-opacity">
+                {lastMoveToast}
+              </span>
+            )}
           </div>
         </div>
 
@@ -521,6 +635,7 @@ export function KanbanBoard({ onStatusChange }: KanbanBoardProps) {
           setSelectedTask(null)
         }}
         onToggleChecklistItem={handleToggleChecklistItem}
+        onSaveTask={handleSaveTask}
       />
 
       <CreateTaskModal

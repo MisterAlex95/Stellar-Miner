@@ -6,6 +6,7 @@
   - `project/tasks/backlog/` → **Inbox** column (new/unassigned tasks)
   - `project/tasks/todo/` → **Next Up** column (ready to start)
   - `project/tasks/in_progress/` → **Running** column (actively worked on)
+  - `project/tasks/blocked/` → **Blocked** column (optional; configurable via `project/tasks/board-config.json`)
   - `project/tasks/done/` → **Done** column (completed tasks)
 
 ## Required Format
@@ -16,7 +17,7 @@
 **Epic:** <EpicName>
 **Type:** feature | bug | test | research | design
 **Effort:** 1 | 2 | 3 points
-**Status:** inbox | next-up | running | done
+**Status:** inbox | next-up | running | blocked | done
 
 ## Description
 <Brief description of what needs to be accomplished>
@@ -132,7 +133,7 @@ When creating tasks:
 
 ## Status Flow
 ```
-backlog/ (Inbox) → todo/ (Next Up) → in_progress/ (Running) → done/ (Done)
+backlog/ (Inbox) → todo/ (Next Up) → in_progress/ (Running) → [blocked/ (Blocked)] → done/ (Done). Columns are configurable via `project/tasks/board-config.json`.
 ```
 
 Tasks move through directories as they progress through the workflow.

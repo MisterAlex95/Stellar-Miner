@@ -1,0 +1,9 @@
+{
+  "columns": [
+    { "id": "inbox", "title": "Inbox", "folder": "backlog" },
+    { "id": "next-up", "title": "Next Up", "folder": "todo" },
+    { "id": "running", "title": "Running", "folder": "in_progress" },
+    { "id": "blocked", "title": "Blocked", "folder": "blocked" },
+    { "id": "done", "title": "Done", "folder": "done" }
+  ]
+}

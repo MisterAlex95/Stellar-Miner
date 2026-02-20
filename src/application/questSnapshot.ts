@@ -18,6 +18,8 @@ export type QuestSnapshot = {
   streakHint: string;
   streakHintVisible: boolean;
   sectionComplete: boolean;
+  /** End of 5-min claim window (timestamp). 0 when not in window. Used for "Claim within M:SS" countdown. */
+  claimWindowEndMs: number;
 };
 
 function ensureQuest(): void {
@@ -44,6 +46,7 @@ export function getQuestSnapshot(): QuestSnapshot {
     streakHint: '',
     streakHintVisible: false,
     sectionComplete: false,
+    claimWindowEndMs: 0,
   };
   if (!q || !p) return defaultSnapshot;
   const settings = getSettings();
@@ -61,6 +64,19 @@ export function getQuestSnapshot(): QuestSnapshot {
   const lastClaim = getQuestLastClaimAt();
   const withinWindow = Date.now() - lastClaim <= QUEST_STREAK_WINDOW_MS;
   const streakHint = streak > 0 && withinWindow ? tParam('questStreakKeep', { n: streak }) : streak > 0 ? t('streakExpired') : '';
+
+  let claimWindowEndMs = 0;
+  if (p.done) {
+    let state = getQuestState();
+    if (typeof state.completedAt !== 'number') {
+      state = { ...state, completedAt: Date.now() };
+      setQuestState(state);
+      saveQuestState(state);
+    }
+    const end = state.completedAt! + QUEST_STREAK_WINDOW_MS;
+    if (end > Date.now()) claimWindowEndMs = end;
+  }
+
   return {
     progressPct,
     progressText,
@@ -71,5 +87,6 @@ export function getQuestSnapshot(): QuestSnapshot {
     streakHint,
     streakHintVisible: streak > 0,
     sectionComplete: p.done,
+    claimWindowEndMs,
   };
 }

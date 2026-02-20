@@ -217,6 +217,7 @@ export const stringsFr: Record<StringKey, string> = {
   percentSuccess: '{pct} % de succès',
   researchScientistBonus: '(+{pct}% scientifique)',
   claimRewardFormat: 'Récupérer {reward} ⬡',
+  claimWithinFormat: 'Réclamer avant {time}',
   completeQuestToClaim: 'Terminez la quête pour récupérer la récompense.',
   questStreakKeep: 'Série ×{n} · réclamez la prochaine sous 5 min pour la garder.',
   streakExpired: 'Série expirée. Réclamez une quête pour en commencer une nouvelle.',

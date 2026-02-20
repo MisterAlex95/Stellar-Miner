@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.29",
+    "date": "2026-02",
+    "changes": [
+      "CSS migration to Tailwind: layout.css outline/box-shadow use @apply; UpgradeCard button and uninstall styles converted to Tailwind @apply; EmptyState reusable component added and used in EmpirePanel and UpgradesPanel."
+    ]
+  },
+  {
+    "version": "0.5.28",
+    "date": "2026-02",
+    "changes": [
+      "Quest claim countdown: when a quest is complete and unclaimed, UI shows « Claim within M:SS » next to the Claim button, using the 5-min streak window; countdown updates every second."
+    ]
+  },
+  {
     "version": "0.5.27",
     "date": "2026-02",
     "changes": [

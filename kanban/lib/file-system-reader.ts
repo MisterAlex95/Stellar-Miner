@@ -1,6 +1,7 @@
 import type { CPMTask, CPMBoard, ChecklistItem } from "@/types/cmp"
 import { promises as fs } from 'fs'
 import path from 'path'
+import { loadBoardConfig, getBoardColumns, getTaskFolders, folderToTaskStatus } from './board-config'
 
 interface TaskFrontMatter {
   epic?: string
@@ -85,19 +86,11 @@ function parseTaskFile(content: string, filePath: string): CPMTask | null {
       }
     }
     
-    // Determine status from file location
+    // Determine status from file location (folder name under project/tasks/)
     const pathParts = filePath.split(path.sep)
-    let status: CPMTask['status'] = 'inbox'
-    
-    if (pathParts.includes('in_progress')) {
-      status = 'running'
-    } else if (pathParts.includes('done')) {
-      status = 'done'
-    } else if (pathParts.includes('todo')) {
-      status = 'next-up'
-    } else if (pathParts.includes('backlog')) {
-      status = 'inbox'
-    }
+    const tasksIndex = pathParts.indexOf('tasks')
+    const folderName = tasksIndex >= 0 && tasksIndex < pathParts.length - 1 ? pathParts[tasksIndex + 1] : 'backlog'
+    const status = folderToTaskStatus(folderName) as CPMTask['status']
     
     // Generate summary from description or title
     const summary = description.trim() 
@@ -138,39 +131,39 @@ function parseTaskFile(content: string, filePath: string): CPMTask | null {
 }
 
 /**
- * Read all task files from the project/tasks directory structure
+ * Read all task files from the project/tasks directory structure.
+ * Uses board config for folder list (backlog, todo, in_progress, blocked, done by default).
  */
 export async function readTaskFiles(): Promise<CPMTask[]> {
   const tasks: CPMTask[] = []
-  const projectRoot = process.cwd().replace('/kanban', '') // Adjust for running from kanban directory
+  const projectRoot = process.cwd().replace(/\/kanban$/, '') || process.cwd()
   const tasksDir = path.join(projectRoot, 'project', 'tasks')
-  
+  const subdirs = getTaskFolders()
+
   try {
-    // Read from all subdirectories: todo, in_progress, done, backlog
-    const subdirs = ['todo', 'in_progress', 'done', 'backlog']
-    
     for (const subdir of subdirs) {
       const subdirPath = path.join(tasksDir, subdir)
-      
+
       try {
         const files = await fs.readdir(subdirPath)
-        
+
         for (const file of files) {
-          if (file.endsWith('.md')) {
+          if (file.endsWith('.md') && !file.startsWith('.')) {
             const filePath = path.join(subdirPath, file)
             const content = await fs.readFile(filePath, 'utf-8')
             const task = parseTaskFile(content, filePath)
-            
+
             if (task) {
               tasks.push(task)
             }
           }
         }
       } catch (error) {
+        // Directory may not exist yet (e.g. blocked)
         console.warn(`Could not read directory ${subdirPath}:`, error)
       }
     }
-    
+
     return tasks
   } catch (error) {
     console.error('Error reading task files:', error)
@@ -179,39 +172,24 @@ export async function readTaskFiles(): Promise<CPMTask[]> {
 }
 
 /**
- * Parse tasks into board structure
+ * Parse tasks into board structure. Loads board config first so columns match project/tasks/board-config.json (or defaults).
  */
 export async function parseCPMTasksFromFiles(): Promise<CPMBoard> {
+  await loadBoardConfig()
   const tasks = await readTaskFiles()
-  
+  const columnDefs = getBoardColumns()
+
   const board: CPMBoard = {
-    columns: [
-      {
-        id: "inbox",
-        title: "Inbox",
-        tasks: tasks.filter(task => task.status === "inbox")
-      },
-      {
-        id: "next-up", 
-        title: "Next Up",
-        tasks: tasks.filter(task => task.status === "next-up")
-      },
-      {
-        id: "running",
-        title: "Running", 
-        tasks: tasks.filter(task => task.status === "running")
-      },
-      {
-        id: "done",
-        title: "Done",
-        tasks: tasks.filter(task => task.status === "done")
-      }
-    ],
+    columns: columnDefs.map((col) => ({
+      id: col.id as CPMTask['status'],
+      title: col.title,
+      tasks: tasks.filter((task) => task.status === col.id),
+    })),
     projectStatus: {
-      phase: "Development",
-      health: tasks.length > 0 ? "good" : "warning"
-    }
+      phase: 'Development',
+      health: tasks.length > 0 ? 'good' : 'warning',
+    },
   }
-  
+
   return board
 } 
