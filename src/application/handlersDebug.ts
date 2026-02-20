@@ -28,6 +28,7 @@ export function triggerRandomEvent(): void {
   incrementRunEventsTriggered();
   addDiscoveredEvent(event.id);
   getPresentationPort().showEventToast(event, { firstTime });
+  if (event.effect.multiplier < 1) tryShowNarrator('first_negative_event');
   checkCodexUnlocks();
   notifyRefresh();
 }

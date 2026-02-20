@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.21",
+    "date": "2026-02",
+    "changes": [
+      "First discovery narratives: one-off toasts for first negative event, first gas giant discovered, and first lost expedition; tracked in narratorShown (save)."
+    ]
+  },
+  {
     "version": "0.5.20",
     "date": "2026-02",
     "changes": [

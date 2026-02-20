@@ -16,7 +16,7 @@
   "prestigeCoinThreshold": 5000000,
   "defaultBaseSlots": 6,
   "addSlotBaseMultiplier": 25000,
-  "addSlotExponent": 1.38,
+  "addSlotExponent": 1.48,
   "addSlotFirstExpansionDiscount": 0.82,
   "planetNames": [],
   "astronautProductionBonus": 0.015,

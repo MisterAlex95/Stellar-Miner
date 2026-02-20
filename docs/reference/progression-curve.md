@@ -102,7 +102,7 @@ Unlocks are gated by **current coins** (wallet), not total coins ever. Values fr
 
 ### 4.3 Add slot (per planet)
 
-- **Formula**: `floor(25,000 × maxSlots^1.38)`, first expansion ×0.82. Base slots = 6.
+- **Formula**: `floor(25,000 × maxSlots^1.48)`, first expansion ×0.82. Base slots = 6.
 - Example: 6 → 7 slots ≈ 209,000; 7 → 8 ≈ 293,000.
 
 ### 4.4 Housing (per planet)

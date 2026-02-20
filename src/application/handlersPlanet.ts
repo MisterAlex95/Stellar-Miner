@@ -18,6 +18,7 @@ import { getPresentationPort } from './uiBridge.js';
 import { checkAchievements } from './achievements.js';
 import { checkCodexUnlocks } from './codex.js';
 import { getDiscoveryFlavorForPlanetName } from './discoveryFlavor.js';
+import { getPlanetType } from './planetAffinity.js';
 import { tryShowNarrator } from './narrator.js';
 import { t, tParam } from './strings.js';
 
@@ -110,7 +111,10 @@ export function completeExpeditionIfDue(): void {
       }
       tryShowNarrator('first_planet');
     }
+    if (outcome.planetName && getPlanetType(outcome.planetName) === 'gas') tryShowNarrator('first_gas_giant');
+    if (outcome.deaths > 0) tryShowNarrator('first_expedition_casualties');
   } else {
+    tryShowNarrator('first_lost_expedition');
     ui.showMiniMilestoneToast(tParam('expeditionFailed', { n: outcome.totalSent }));
   }
   refreshAfterPlanetAction({ achievements: true });
@@ -146,6 +150,7 @@ export function handleAddSlot(planetId: string): void {
   const planet = session.player.planets.find((p) => p.id === planetId);
   if (!planet || !planetService.canAddSlot(session.player, planet)) return;
   planetService.addSlot(session.player, planet);
+  tryShowNarrator('first_slot_added');
   refreshAfterPlanetAction();
 }
 
@@ -155,6 +160,7 @@ export function handleBuildHousing(planetId: string): void {
   const planet = session.player.planets.find((p) => p.id === planetId);
   if (!planet || !planetService.canBuildHousing(session.player, planet, hasEffectiveFreeSlot)) return;
   planetService.buildHousing(session.player, planet, hasEffectiveFreeSlot);
+  tryShowNarrator('first_housing');
   refreshAfterPlanetAction();
 }
 

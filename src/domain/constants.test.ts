@@ -41,16 +41,16 @@ describe('constants', () => {
   });
 
   it('getAddSlotCost gives first expansion discount when at base slots (6)', () => {
-    const raw6 = Math.floor(25000 * Math.pow(6, 1.38));
+    const raw6 = Math.floor(25000 * Math.pow(6, 1.48));
     const atBase = getAddSlotCost(6).toNumber();
     const next = getAddSlotCost(7).toNumber();
     expect(atBase).toBe(Math.floor(raw6 * 0.82));
     expect(atBase).toBeLessThan(raw6);
-    expect(next).toBe(Math.floor(25000 * Math.pow(7, 1.38)));
+    expect(next).toBe(Math.floor(25000 * Math.pow(7, 1.48)));
   });
 
   it('getAddSlotCost with custom baseSlots uses it for first-expansion check', () => {
-    const raw8 = Math.floor(25000 * Math.pow(8, 1.38));
+    const raw8 = Math.floor(25000 * Math.pow(8, 1.48));
     const atCustomBase = getAddSlotCost(8, 8).toNumber();
     const notBase = getAddSlotCost(8, 6).toNumber();
     expect(atCustomBase).toBe(Math.floor(raw8 * 0.82));

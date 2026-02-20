@@ -77,14 +77,14 @@ Each planet has a **max upgrade slots** (upgrades + housing each use one). Base 
 
 **Cost to add one slot**: `floor(baseMultiplier × currentMaxSlots^exponent)`, with **first expansion** (6 → 7) multiplied by `addSlotFirstExpansionDiscount`.
 
-- Config: `addSlotBaseMultiplier: 25000`, `addSlotExponent: 1.38`, `addSlotFirstExpansionDiscount: 0.82`, `defaultBaseSlots: 6`.
+- Config: `addSlotBaseMultiplier: 25000`, `addSlotExponent: 1.48`, `addSlotFirstExpansionDiscount: 0.82`, `defaultBaseSlots: 6`.
 
 | Current max slots | Cost for +1 slot (⬡) | Note   |
 |-------------------|------------------------|--------|
-| 6 → 7             | ~209,000               | First expansion ×0.82 |
-| 7 → 8             | ~293,000               |         |
-| 8 → 9             | ~387,000               |         |
-| 9 → 10            | ~491,000               |         |
+| 6 → 7             | ~286,000               | First expansion ×0.82 |
+| 7 → 8             | ~435,000               |         |
+| 8 → 9             | ~529,000               |         |
+| 9 → 10            | ~631,000               |         |
 
 ---
 

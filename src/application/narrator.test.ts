@@ -54,4 +54,32 @@ describe('narrator', () => {
     expect(mockAddNarratorShown).not.toHaveBeenCalled();
     expect(mockShowToast).not.toHaveBeenCalled();
   });
+
+  it('shows first discovery narratives when trigger not yet shown', () => {
+    tryShowNarrator('first_negative_event');
+    expect(mockAddNarratorShown).toHaveBeenCalledWith('first_negative_event');
+    expect(mockShowToast).toHaveBeenCalledWith(
+      'Ship log: First negative anomaly. The belt does not always reward.',
+      'milestone',
+      { duration: 4000 }
+    );
+
+    mockGetNarratorShown.mockReturnValue([]);
+    tryShowNarrator('first_gas_giant');
+    expect(mockAddNarratorShown).toHaveBeenCalledWith('first_gas_giant');
+    expect(mockShowToast).toHaveBeenCalledWith(
+      'Mission control: First gas giant charted. The fleet has reached the giants.',
+      'milestone',
+      { duration: 4000 }
+    );
+
+    mockGetNarratorShown.mockReturnValue([]);
+    tryShowNarrator('first_lost_expedition');
+    expect(mockAddNarratorShown).toHaveBeenCalledWith('first_lost_expedition');
+    expect(mockShowToast).toHaveBeenCalledWith(
+      'Comms: Expedition lost. The void takes its due. Honour them.',
+      'milestone',
+      { duration: 4000 }
+    );
+  });
 });

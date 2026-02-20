@@ -226,7 +226,7 @@ describe('PlanetService', () => {
   it('getAddSlotCost returns cost for planet max slots', () => {
     const service = new PlanetService();
     const planet = Planet.create('p1', 'Titan', 6);
-    const raw = Math.floor(25000 * Math.pow(6, 1.38));
+    const raw = Math.floor(25000 * Math.pow(6, 1.48));
     expect(service.getAddSlotCost(planet).toNumber()).toBe(Math.floor(raw * 0.82));
   });
 

@@ -20,6 +20,7 @@ import {
 } from './handlersPlanet.js';
 import { getNewPlanetCost, getRetrainCost } from '../domain/constants.js';
 import * as research from './research.js';
+import { tryShowNarrator } from './narrator.js';
 
 vi.mock('../presentation/lib/upgradeList.js', () => ({ renderUpgradeList: vi.fn() }));
 vi.mock('../presentation/toasts/index.js', () => ({ showMiniMilestoneToast: vi.fn() }));
@@ -27,10 +28,11 @@ vi.mock('./achievements.js', () => ({ checkAchievements: vi.fn() }));
 vi.mock('./codex.js', () => ({ checkCodexUnlocks: vi.fn() }));
 vi.mock('./handlersSave.js', () => ({ saveSession: vi.fn() }));
 vi.mock('./eventBus.js', () => ({ emit: vi.fn() }));
+vi.mock('./narrator.js', () => ({ tryShowNarrator: vi.fn() }));
 vi.mock('./research.js', () => ({
   hasEffectiveFreeSlot: (p: { hasFreeSlot: () => boolean }) => p.hasFreeSlot(),
   getResearchExpeditionDurationPercent: () => 0,
-  getResearchExpeditionDeathChancePercent: () => 0,
+  getResearchExpeditionDeathChancePercent: vi.fn(() => 0),
   getResearchHousingCapacityBonus: () => 0,
   addResearchData: () => {},
   isCrewRetrainUnlocked: vi.fn(() => true),
@@ -115,6 +117,25 @@ describe('handlersPlanet', () => {
       completeExpeditionIfDue();
 
       expect(player.planets.length).toBe(planetCountBefore);
+    });
+
+    it('calls first_lost_expedition narrator when expedition fails (all crew lost)', () => {
+      const session = getSession();
+      const player = session.player;
+      const cost = getNewPlanetCost(player.planets.length);
+      player.addCoins(cost.toNumber() + 10000);
+      player.addAstronauts(3, 'miner');
+      handleBuyNewPlanet();
+      const composition = getExpeditionComposition();
+      expect(composition).not.toBeNull();
+      setExpeditionInProgress(Date.now() - 1, composition!, 1);
+      vi.mocked(research.getResearchExpeditionDeathChancePercent).mockReturnValue(1);
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+
+      completeExpeditionIfDue();
+
+      expect(player.planets.length).toBe(1);
+      expect(tryShowNarrator).toHaveBeenCalledWith('first_lost_expedition');
     });
   });
 

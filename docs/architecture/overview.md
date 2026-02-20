@@ -281,7 +281,7 @@ Mine coins (click or idle), buy upgrades and hire crew, expand to new planets, c
 ### Upgrades
 
 - **Catalog**: **data/modules.json** (tiers 1–10, multiple modules per tier). Each module has cost, coins/s, and required astronauts. Many have planet-type affinity (bonus on Rocky, Desert, Ice, Volcanic, Gas). Cost for the next copy: **baseCost × 1.19^ownedCount**.
-- **Slots**: Each planet has a limited number of slots (default **6**). Most upgrades and each housing module use one slot. Add slots per planet at scaling cost (**25,000 × slots^1.38**, first expansion **×0.82**).
+- **Slots**: Each planet has a limited number of slots (default **6**). Most upgrades and each housing module use one slot. Add slots per planet at scaling cost (**25,000 × slots^1.48**, first expansion **×0.82**).
 
 ### Crew (astronauts)
 

@@ -27,7 +27,7 @@ Economy and game balance constants.
 | prestigeCoinThreshold | number | Coins required to prestige (e.g. 5000000) |
 | defaultBaseSlots | number | Base upgrade slots per planet (e.g. 6) |
 | addSlotBaseMultiplier | number | Cost base for add-slot (e.g. 25000) |
-| addSlotExponent | number | Cost exponent (e.g. 1.38) |
+| addSlotExponent | number | Cost exponent (e.g. 1.48) |
 | addSlotFirstExpansionDiscount | number | Multiplier for first expansion 6→7 (e.g. 0.82) |
 | planetNames | string[] | First N planet names (e.g. Titan, Nova Prime, …) |
 | astronautProductionBonus | number | +% production per astronaut (e.g. 0.015 = +1.5%) |
