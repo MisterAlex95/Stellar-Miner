@@ -32,7 +32,9 @@ describe('quests', () => {
 
   it('generateQuest returns quest with valid shape', () => {
     const q = generateQuest();
-    expect(q.type).toMatch(/^(coins|production|upgrade|astronauts|combo_tier|events_triggered|tier1_set|prestige_today)$/);
+    expect(q.type).toMatch(
+      /^(coins|production|upgrade|astronauts|combo_tier|events_triggered|tier1_set|prestige_today|mega_combo|discover_new_system_planet|survive_negative_events)$/
+    );
     expect(q.target).toBeGreaterThan(0);
     expect(q.reward).toBeGreaterThan(0);
     expect(typeof q.description).toBe('string');
@@ -76,7 +78,7 @@ describe('quests', () => {
   });
 
   it('generateQuest can return astronauts quest when random in range', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.75);
+    vi.spyOn(Math, 'random').mockReturnValue(0.55);
     const q = generateQuest();
     vi.restoreAllMocks();
     expect(q.type).toBe('astronauts');
@@ -94,7 +96,7 @@ describe('quests', () => {
 
   it('generateQuest can return prestige_today quest when random in range and player has prestiged once', () => {
     setSession(new GameSession('s1', Player.createAfterPrestige(Player.create('p1'), 1, 0)));
-    vi.spyOn(Math, 'random').mockReturnValue(0.85);
+    vi.spyOn(Math, 'random').mockReturnValue(0.7);
     const q = generateQuest();
     vi.restoreAllMocks();
     expect(q.type).toBe('prestige_today');
@@ -106,7 +108,7 @@ describe('quests', () => {
     setSession(new GameSession('s1', player));
     const today = new Date().toISOString().slice(0, 10);
     storage['stellar-miner-prestiges-today'] = JSON.stringify({ date: today, count: 0 });
-    vi.spyOn(Math, 'random').mockReturnValue(0.85);
+    vi.spyOn(Math, 'random').mockReturnValue(0.7);
     const q = generateQuest();
     vi.restoreAllMocks();
     expect(q.type).toBe('prestige_today');
@@ -114,7 +116,7 @@ describe('quests', () => {
   });
 
   it('generateQuest can return combo_tier quest when random in range', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.9);
+    vi.spyOn(Math, 'random').mockReturnValue(0.82);
     const q = generateQuest();
     vi.restoreAllMocks();
     expect(q.type).toBe('combo_tier');
@@ -136,7 +138,7 @@ describe('quests', () => {
       0
     );
     setSession(new GameSession('s1', player));
-    vi.spyOn(Math, 'random').mockReturnValue(0.95);
+    vi.spyOn(Math, 'random').mockReturnValue(0.88);
     const q = generateQuest();
     vi.restoreAllMocks();
     expect(q.type).toBe('events_triggered');
@@ -145,7 +147,7 @@ describe('quests', () => {
 
   it('generateQuest can return tier1_set quest when random in last bucket (player has not completed tier-1 set)', () => {
     setSession(new GameSession('s1', Player.create('p1')));
-    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    vi.spyOn(Math, 'random').mockReturnValue(0.93);
     const q = generateQuest();
     vi.restoreAllMocks();
     expect(q.type).toBe('tier1_set');
@@ -240,6 +242,40 @@ describe('quests', () => {
     const p = getQuestProgress();
     expect(p).not.toBeNull();
     expect(typeof p!.current).toBe('number');
+  });
+
+  it('getQuestProgress returns progress for mega_combo quest when target reached', () => {
+    setSession(new GameSession('s1', Player.create('p1')));
+    setRunStatsFromPayload({ runMaxComboMult: 1.55 });
+    setQuestState({ quest: { type: 'mega_combo', target: 155, reward: 1800, description: 'Reach ×1.55 Mega combo' } });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.current).toBe(155);
+    expect(p!.done).toBe(true);
+  });
+
+  it('getQuestProgress returns progress for discover_new_system_planet quest', () => {
+    setSession(new GameSession('s1', Player.create('p1')));
+    setRunStatsFromPayload({ runNewSystemDiscoveries: 1 });
+    setQuestState({
+      quest: { type: 'discover_new_system_planet', target: 1, reward: 2200, description: 'Discover a planet in a new star system' },
+    });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.current).toBe(1);
+    expect(p!.done).toBe(true);
+  });
+
+  it('getQuestProgress returns progress for survive_negative_events quest', () => {
+    setSession(new GameSession('s1', Player.create('p1')));
+    setRunStatsFromPayload({ runMaxConsecutiveNegativeSurvived: 3 });
+    setQuestState({
+      quest: { type: 'survive_negative_events', target: 3, reward: 1700, description: 'Survive 3 consecutive negative events' },
+    });
+    const p = getQuestProgress();
+    expect(p).not.toBeNull();
+    expect(p!.current).toBe(3);
+    expect(p!.done).toBe(true);
   });
 
   it('getQuestProgress returns progress for prestige_today quest when storage has count', () => {

@@ -74,7 +74,7 @@
     { "label": "Endgame", "minTier": 11, "maxTier": 15 }
   ],
   "questGeneration": {
-    "typeWeights": [0.22, 0.48, 0.68, 0.82, 0.88, 0.93, 0.97, 1],
+    "typeWeights": [0.18, 0.36, 0.52, 0.66, 0.78, 0.85, 0.91, 0.95, 0.97, 0.99, 1],
     "coins": {
       "targets": [2000, 20000, 200000, 2000000, 20000000, 100000000, 500000000],
       "rewardMult": 0.35,
@@ -108,6 +108,9 @@
       "rewardBase": 600,
       "rewardPerEvent": 350
     },
-    "tier1_set": { "reward": 2000 }
+    "tier1_set": { "reward": 2000 },
+    "mega_combo": { "reward": 1800 },
+    "discover_new_system_planet": { "reward": 2200 },
+    "survive_negative_events": { "targets": [2, 3, 5], "rewardBase": 500, "rewardPerTarget": 400 }
   }
 }

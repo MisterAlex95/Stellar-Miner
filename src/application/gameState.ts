@@ -47,6 +47,9 @@ export type RunStats = {
   runQuestsClaimed: number;
   runEventsTriggered: number;
   runMaxComboMult: number;
+  runNewSystemDiscoveries: number;
+  runConsecutiveNegativeSurvived: number;
+  runMaxConsecutiveNegativeSurvived: number;
 };
 
 let session: GameSession;
@@ -66,6 +69,9 @@ let runStats: RunStats = {
   runQuestsClaimed: 0,
   runEventsTriggered: 0,
   runMaxComboMult: 0,
+  runNewSystemDiscoveries: 0,
+  runConsecutiveNegativeSurvived: 0,
+  runMaxConsecutiveNegativeSurvived: 0,
 };
 /** Event IDs the player has ever seen (persisted with save). Only these appear in the events hint. */
 let discoveredEventIds: string[] = [];
@@ -233,6 +239,9 @@ export function setRunStatsFromPayload(data: Partial<RunStats> | null): void {
       runQuestsClaimed: 0,
       runEventsTriggered: 0,
       runMaxComboMult: 0,
+      runNewSystemDiscoveries: 0,
+      runConsecutiveNegativeSurvived: 0,
+      runMaxConsecutiveNegativeSurvived: 0,
     };
     return;
   }
@@ -242,6 +251,9 @@ export function setRunStatsFromPayload(data: Partial<RunStats> | null): void {
     runQuestsClaimed: data.runQuestsClaimed ?? 0,
     runEventsTriggered: data.runEventsTriggered ?? 0,
     runMaxComboMult: data.runMaxComboMult ?? 0,
+    runNewSystemDiscoveries: data.runNewSystemDiscoveries ?? 0,
+    runConsecutiveNegativeSurvived: data.runConsecutiveNegativeSurvived ?? 0,
+    runMaxConsecutiveNegativeSurvived: data.runMaxConsecutiveNegativeSurvived ?? 0,
   };
 }
 
@@ -252,6 +264,9 @@ export function resetRunStatsOnPrestige(): void {
     runQuestsClaimed: 0,
     runEventsTriggered: 0,
     runMaxComboMult: 0,
+    runNewSystemDiscoveries: 0,
+    runConsecutiveNegativeSurvived: 0,
+    runMaxConsecutiveNegativeSurvived: 0,
   };
 }
 
@@ -342,6 +357,22 @@ export function addNarratorShown(triggerId: string): void {
 
 export function updateRunMaxComboMult(mult: number): void {
   if (mult > runStats.runMaxComboMult) runStats.runMaxComboMult = mult;
+}
+
+export function incrementRunNewSystemDiscoveries(): void {
+  runStats.runNewSystemDiscoveries += 1;
+}
+
+/** Call when a choice event is resolved. If the outcome was negative (cost or prod penalty), streak increases; otherwise it resets. */
+export function recordEventChoiceOutcome(wasNegative: boolean): void {
+  if (wasNegative) {
+    runStats.runConsecutiveNegativeSurvived += 1;
+    if (runStats.runConsecutiveNegativeSurvived > runStats.runMaxConsecutiveNegativeSurvived) {
+      runStats.runMaxConsecutiveNegativeSurvived = runStats.runConsecutiveNegativeSurvived;
+    }
+  } else {
+    runStats.runConsecutiveNegativeSurvived = 0;
+  }
 }
 
 export function getPrestigesToday(): number {

@@ -1,7 +1,7 @@
 /**
  * Handlers for choice-based events: apply selected choice (spend crew/coins/modules if needed, push effect, toast).
  */
-import { getSession, getPendingChoiceEvent, setPendingChoiceEvent, pushActiveEventInstance, incrementRunEventsTriggered, addDiscoveredEvent, getDiscoveredEventIds } from './gameState.js';
+import { getSession, getPendingChoiceEvent, setPendingChoiceEvent, pushActiveEventInstance, incrementRunEventsTriggered, addDiscoveredEvent, getDiscoveredEventIds, recordEventChoiceOutcome } from './gameState.js';
 import { getPresentationPort } from './uiBridge.js';
 import { CHOICE_EVENT_CATALOG } from './catalogs.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
@@ -90,6 +90,13 @@ export function applyEventChoice(choiceEventId: string, choiceId: string): void 
         ? choice.effect
         : choice.failureEffect
       : choice.effect;
+
+  const wasNegative =
+    choice.costAstronauts > 0 ||
+    choice.costUpgrade > 0 ||
+    choice.costCoins > 0 ||
+    (effectiveEffect != null && effectiveEffect.multiplier < 1);
+  recordEventChoiceOutcome(wasNegative);
 
   if (effectiveEffect != null && effectiveEffect.durationMs > 0) {
     const syntheticEvent = new GameEvent(

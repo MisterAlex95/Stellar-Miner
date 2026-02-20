@@ -7,6 +7,9 @@ export type RunStatsPayload = {
   runQuestsClaimed: number;
   runEventsTriggered: number;
   runMaxComboMult: number;
+  runNewSystemDiscoveries?: number;
+  runConsecutiveNegativeSurvived?: number;
+  runMaxConsecutiveNegativeSurvived?: number;
 };
 
 /** Port for persistence: save and load game state (implemented in infrastructure). */

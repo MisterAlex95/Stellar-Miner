@@ -1,6 +1,17 @@
 import { QUEST_STORAGE_KEY } from './catalogs.js';
 
-export type QuestType = 'coins' | 'production' | 'upgrade' | 'astronauts' | 'prestige_today' | 'combo_tier' | 'events_triggered' | 'tier1_set';
+export type QuestType =
+  | 'coins'
+  | 'production'
+  | 'upgrade'
+  | 'astronauts'
+  | 'prestige_today'
+  | 'combo_tier'
+  | 'events_triggered'
+  | 'tier1_set'
+  | 'mega_combo'
+  | 'discover_new_system_planet'
+  | 'survive_negative_events';
 
 export type Quest = {
   type: QuestType;

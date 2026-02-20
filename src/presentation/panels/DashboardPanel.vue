@@ -72,7 +72,7 @@
       />
 
       <div
-        v-if="liveData.events.length || liveData.expeditionRemaining != null || liveData.nextEventIn != null || liveData.showResearch"
+        v-if="liveData.events.length || liveData.expeditionRemaining != null || liveData.showResearch"
         class="dashboard-live"
       >
         <div
@@ -94,12 +94,6 @@
           class="dashboard-live-pill dashboard-live-pill--expedition"
         >
           {{ t('dashboardExpeditionInProgress') }} — {{ liveData.expeditionRemaining }}s
-        </span>
-        <span
-          v-if="liveData.nextEventIn != null"
-          class="dashboard-live-pill dashboard-live-pill--next"
-        >
-          {{ tParam('nextEventInFormat', { time: liveData.nextEventIn + 's' }) }}
         </span>
         <button
           v-if="liveData.showResearch"
@@ -235,12 +229,6 @@ const { onDashboardClick } = useDashboardActions();
   color: var(--crew-pilot);
   border-color: rgba(167, 139, 250, 0.3);
   background: var(--crew-pilot-bg);
-}
-
-.dashboard-live-pill--next {
-  border-color: rgba(56, 189, 248, 0.3);
-  background: var(--crew-scientist-bg);
-  color: var(--crew-scientist);
 }
 
 .dashboard-live-pill--research {

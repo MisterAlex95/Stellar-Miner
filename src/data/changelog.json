@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.26",
+    "date": "2026-02",
+    "changes": [
+      "Three new skill-based quest types: Achieve Mega Combo (×1.55), Discover a planet in a new star system, Survive X consecutive negative events. Run stats and progress tracking added; integrated into quest generation and rewards."
+    ]
+  },
+  {
     "version": "0.5.25",
     "date": "2026-02",
     "changes": [

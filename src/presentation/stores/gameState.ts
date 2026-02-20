@@ -58,6 +58,9 @@ const defaultRunStats: RunStats = {
   runQuestsClaimed: 0,
   runEventsTriggered: 0,
   runMaxComboMult: 0,
+  runNewSystemDiscoveries: 0,
+  runConsecutiveNegativeSurvived: 0,
+  runMaxConsecutiveNegativeSurvived: 0,
 };
 
 const defaultStats: StatsSnapshot = {

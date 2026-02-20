@@ -63,6 +63,9 @@ export type SavedRunStats = {
   runQuestsClaimed: number;
   runEventsTriggered: number;
   runMaxComboMult: number;
+  runNewSystemDiscoveries?: number;
+  runConsecutiveNegativeSurvived?: number;
+  runMaxConsecutiveNegativeSurvived?: number;
 };
 
 export type SavedExpedition = {

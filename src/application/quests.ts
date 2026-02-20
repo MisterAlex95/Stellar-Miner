@@ -20,6 +20,8 @@ export type { QuestState, Quest };
 
 const Q = (gameConfig as { questGeneration: QuestGenerationConfig }).questGeneration;
 
+const MEGA_COMBO_MULT = 1.55;
+
 type QuestGenerationConfig = {
   typeWeights: number[];
   coins: { targets: number[]; rewardMult: number; rewardBase: number };
@@ -30,6 +32,9 @@ type QuestGenerationConfig = {
   combo_tier?: { multTargets: number[]; rewardBase: number };
   events_triggered?: { targets: number[]; rewardBase: number; rewardPerEvent: number };
   tier1_set?: { reward: number };
+  mega_combo?: { reward: number };
+  discover_new_system_planet?: { reward: number };
+  survive_negative_events?: { targets: number[]; rewardBase: number; rewardPerTarget: number };
 };
 
 const TIER1_UPGRADE_IDS = UPGRADE_CATALOG.filter((d) => d.tier === 1).map((d) => d.id);
@@ -78,6 +83,9 @@ function getAllowableTargets(): {
   combo_tier: number[];
   events_triggered: number[];
   tier1_set: boolean;
+  mega_combo: boolean;
+  discover_new_system_planet: boolean;
+  survive_negative_events: number[];
 } {
   const session = getSession();
   const run = getRunStats();
@@ -96,6 +104,8 @@ function getAllowableTargets(): {
     session ? TIER1_UPGRADE_IDS.filter((id) => session.player.upgrades.some((u) => u.id === id)).length : 0;
   const runComboMult = run.runMaxComboMult;
   const runEvents = run.runEventsTriggered;
+  const runNewSystemDiscoveries = run.runNewSystemDiscoveries ?? 0;
+  const runMaxConsecutiveNegative = run.runMaxConsecutiveNegativeSurvived ?? 0;
 
   const hasCrewRelevant = totalCoinsEverNum >= 1500 || currentAstronauts > 0;
   const hasEventsUnlocked = totalCoinsEverNum >= 120_000;
@@ -154,6 +164,18 @@ function getAllowableTargets(): {
 
   const tier1SetAllowed = currentTier1Owned < TIER1_UPGRADE_IDS.length;
 
+  const megaComboAllowed = runComboMult < MEGA_COMBO_MULT;
+  const discoverNewSystemAllowed = runNewSystemDiscoveries < 1;
+  const cfgSurvive = Q.survive_negative_events ?? { targets: [2, 3, 5], rewardBase: 500, rewardPerTarget: 400 };
+  const surviveTargets = hasEventsUnlocked
+    ? cfgSurvive.targets.filter((t) => {
+        if (t <= runMaxConsecutiveNegative) return false;
+        const idx = cfgSurvive.targets.indexOf(t);
+        const currentIdx = cfgSurvive.targets.findIndex((e) => e > runMaxConsecutiveNegative);
+        return currentIdx === -1 || idx <= currentIdx + EVENTS_STEPS_AHEAD;
+      })
+    : [];
+
   return {
     coins: coinsTargets.length > 0 ? coinsTargets : Q.coins.targets.filter((t) => t > currentCoins),
     production:
@@ -167,6 +189,9 @@ function getAllowableTargets(): {
     combo_tier: comboTargets,
     events_triggered: eventsTargets,
     tier1_set: tier1SetAllowed,
+    mega_combo: megaComboAllowed,
+    discover_new_system_planet: discoverNewSystemAllowed,
+    survive_negative_events: surviveTargets,
   };
 }
 
@@ -181,7 +206,10 @@ export function generateQuest(): Quest {
     { weightEnd: typeWeights[4], key: 'prestige_today' },
     { weightEnd: typeWeights[5], key: 'combo_tier' },
     { weightEnd: typeWeights[6], key: 'events_triggered' },
-    { weightEnd: 1, key: 'tier1_set' },
+    { weightEnd: typeWeights[7], key: 'tier1_set' },
+    { weightEnd: typeWeights[8], key: 'mega_combo' },
+    { weightEnd: typeWeights[9], key: 'discover_new_system_planet' },
+    { weightEnd: typeWeights[10] ?? 1, key: 'survive_negative_events' },
   ];
   const roll = Math.random();
   let chosenKey: string | null = null;
@@ -195,7 +223,10 @@ export function generateQuest(): Quest {
       (key === 'prestige_today' && allowed.prestige_today.length > 0) ||
       (key === 'combo_tier' && allowed.combo_tier.length > 0) ||
       (key === 'events_triggered' && allowed.events_triggered.length > 0) ||
-      (key === 'tier1_set' && allowed.tier1_set);
+      (key === 'tier1_set' && allowed.tier1_set) ||
+      (key === 'mega_combo' && allowed.mega_combo) ||
+      (key === 'discover_new_system_planet' && allowed.discover_new_system_planet) ||
+      (key === 'survive_negative_events' && allowed.survive_negative_events.length > 0);
     if (hasTargets) {
       chosenKey = key;
       break;
@@ -294,6 +325,38 @@ export function generateQuest(): Quest {
       storyHook: pickRandomStoryHook('events_triggered'),
     };
   }
+  if (chosenKey === 'mega_combo' && allowed.mega_combo) {
+    const cfg = Q.mega_combo ?? { reward: 1800 };
+    const target = Math.round(MEGA_COMBO_MULT * 100);
+    return {
+      type: 'mega_combo',
+      target,
+      reward: cfg.reward,
+      description: `Reach ×${MEGA_COMBO_MULT} Mega combo`,
+      storyHook: pickRandomStoryHook('mega_combo'),
+    };
+  }
+  if (chosenKey === 'discover_new_system_planet' && allowed.discover_new_system_planet) {
+    const cfg = Q.discover_new_system_planet ?? { reward: 2200 };
+    return {
+      type: 'discover_new_system_planet',
+      target: 1,
+      reward: cfg.reward,
+      description: 'Discover a planet in a new star system',
+      storyHook: pickRandomStoryHook('discover_new_system_planet'),
+    };
+  }
+  if (chosenKey === 'survive_negative_events' && allowed.survive_negative_events.length > 0) {
+    const cfg = Q.survive_negative_events ?? { targets: [2, 3, 5], rewardBase: 500, rewardPerTarget: 400 };
+    const target = allowed.survive_negative_events[Math.floor(Math.random() * allowed.survive_negative_events.length)];
+    return {
+      type: 'survive_negative_events',
+      target,
+      reward: cfg.rewardBase + target * cfg.rewardPerTarget,
+      description: `Survive ${target} consecutive negative event${target > 1 ? 's' : ''}`,
+      storyHook: pickRandomStoryHook('survive_negative_events'),
+    };
+  }
   const cfg = Q.tier1_set ?? { reward: 1500 };
   return {
     type: 'tier1_set',
@@ -323,6 +386,11 @@ export function getQuestProgress(): { current: number | Decimal; target: number;
   else if (q.type === 'events_triggered') current = getRunStats().runEventsTriggered;
   else if (q.type === 'tier1_set')
     current = TIER1_UPGRADE_IDS.filter((id) => session.player.upgrades.some((u) => u.id === id)).length;
+  else if (q.type === 'mega_combo') {
+    const runMult = getRunStats().runMaxComboMult;
+    current = runMult >= MEGA_COMBO_MULT ? Math.round(MEGA_COMBO_MULT * 100) : Math.round(runMult * 100);
+  } else if (q.type === 'discover_new_system_planet') current = getRunStats().runNewSystemDiscoveries ?? 0;
+  else if (q.type === 'survive_negative_events') current = getRunStats().runMaxConsecutiveNegativeSurvived ?? 0;
   const done = typeof current === 'number' ? current >= q.target : current.gte(q.target);
   return { current, target: q.target, done };
 }

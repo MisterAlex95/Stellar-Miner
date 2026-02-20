@@ -8,8 +8,9 @@ import {
   getExpeditionDurationMs,
   clearExpedition,
   setExpeditionInProgress,
+  incrementRunNewSystemDiscoveries,
 } from './gameState.js';
-import { getMaxAstronauts, getAstronautCost, getRetrainCost, getResearchDataForExpeditionSuccess, type CrewRole } from '../domain/constants.js';
+import { getMaxAstronauts, getAstronautCost, getRetrainCost, getResearchDataForExpeditionSuccess, isNextExpeditionNewSystem, type CrewRole } from '../domain/constants.js';
 import type { ExpeditionComposition, ExpeditionTierId, ExpeditionTypeId } from '../domain/constants.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { hasEffectiveFreeSlot, isCrewRetrainUnlocked, getResearchExpeditionDurationPercent, getResearchExpeditionDeathChancePercent, getResearchHousingCapacityBonus, addResearchData } from './research.js';
@@ -107,6 +108,8 @@ export function completeExpeditionIfDue(): void {
   const ui = getPresentationPort();
 
   if (outcome.success && typeId === 'scout' && outcome.planetName) {
+    const planetCountBefore = player.planets.length - 1;
+    if (isNextExpeditionNewSystem(planetCountBefore)) incrementRunNewSystemDiscoveries();
     addResearchData(getResearchDataForExpeditionSuccess(typeId));
     emit('planet_bought', { planetCount: player.planets.length });
     const lastPlanet = player.planets[player.planets.length - 1];
