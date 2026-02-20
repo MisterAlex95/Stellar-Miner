@@ -20,6 +20,7 @@
     <UpgradeChoosePlanetModal />
     <PlanetDetailModal />
     <ExpeditionModal />
+    <EventChoiceModal />
     <IntroModal />
     <ToastContainer />
     <FloatingFeedback />
@@ -46,6 +47,7 @@ import SectionRulesModal from './components/SectionRulesModal.vue';
 import UpgradeChoosePlanetModal from './components/UpgradeChoosePlanetModal.vue';
 import PlanetDetailModal from './components/PlanetDetailModal.vue';
 import ExpeditionModal from './components/ExpeditionModal.vue';
+import EventChoiceModal from './components/EventChoiceModal.vue';
 import IntroModal from './components/IntroModal.vue';
 import DebugPanel from './components/DebugPanel.vue';
 import GlobalTooltip from './components/GlobalTooltip.vue';

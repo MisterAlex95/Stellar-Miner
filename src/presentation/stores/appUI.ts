@@ -78,6 +78,21 @@ export const useAppUIStore = defineStore('appUI', {
     mineZoneElement: null as HTMLElement | null,
     /** Quest claim button element for floating reward anchor (set by PanelsShell). */
     questClaimAnchor: null as HTMLElement | null,
+    /** Event choice modal: when set, modal is open; Vue renders event name + choice buttons. */
+    eventChoice: null as {
+      eventId: string;
+      eventName: string;
+      flavor?: string;
+      choices: {
+        id: string;
+        label: string;
+        effectSummary: string;
+        costAstronauts?: number;
+        costCoins?: number;
+        costUpgrade?: number;
+        successChance?: number;
+      }[];
+    } | null,
     /** Planet detail modal: when set, modal is open; Vue renders stats and upgrades; 3D scene mounted in Vue. */
     planetDetail: null as {
       planetId: string;
@@ -211,6 +226,12 @@ export const useAppUIStore = defineStore('appUI', {
     },
     clearExpedition(): void {
       this.expedition = null;
+    },
+    setEventChoiceData(data: typeof this.eventChoice): void {
+      this.eventChoice = data;
+    },
+    clearEventChoice(): void {
+      this.eventChoice = null;
     },
     setPlanetDetailData(data: typeof this.planetDetail): void {
       this.planetDetail = data;

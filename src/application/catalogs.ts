@@ -1,11 +1,14 @@
 import { toDecimal, Decimal } from '../domain/bigNumber.js';
 import { Upgrade } from '../domain/entities/Upgrade.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
+import { ChoiceEvent } from '../domain/entities/ChoiceEvent.js';
 import { UpgradeEffect } from '../domain/value-objects/UpgradeEffect.js';
 import { EventEffect } from '../domain/value-objects/EventEffect.js';
+import { EventChoice } from '../domain/value-objects/EventChoice.js';
 import gameConfig from '../data/gameConfig.json';
 import modulesData from '../data/modules.json';
 import eventsData from '../data/events.json';
+import choiceEventsData from '../data/choiceEvents.json';
 
 const MODULES_LIST = (modulesData as { modules: unknown[] }).modules;
 const T = gameConfig.timing;
@@ -21,6 +24,8 @@ export const MIN_EVENT_DELAY_MS = T.minEventDelayMs;
 export const FIRST_EVENT_DELAY_MS = (T as { firstEventDelayMs?: number }).firstEventDelayMs ?? 18000;
 /** After this many events triggered in the run, negative events can appear. Before that, only positive. */
 export const EVENT_NEGATIVE_UNLOCK_AFTER = (gameConfig as { events?: { negativeUnlockAfterTriggers?: number } }).events?.negativeUnlockAfterTriggers ?? 3;
+/** Chance (0–1) that an event is a choice event instead of a random auto event. */
+export const CHOICE_EVENT_CHANCE = (gameConfig as { events?: { choiceChance?: number } }).events?.choiceChance ?? 0.15;
 export const STATS_HISTORY_INTERVAL_MS = T.statsHistoryIntervalMs;
 export const STATS_HISTORY_MAX_POINTS = T.statsHistoryMaxPoints;
 export const STATS_LONG_TERM_INTERVAL_MS = T.statsLongTermIntervalMs;
@@ -168,6 +173,45 @@ export const EVENT_CATALOG: GameEvent[] = (eventsData as RawEvent[]).map(
 export function getEventPoolForRun(runEventsTriggered: number): GameEvent[] {
   if (runEventsTriggered >= EVENT_NEGATIVE_UNLOCK_AFTER) return EVENT_CATALOG;
   return EVENT_CATALOG.filter((e) => e.effect.multiplier >= 1);
+}
+
+type RawChoice = {
+  id: string;
+  name: string;
+  flavor?: string;
+  choices: {
+    id: string;
+    labelKey: string;
+    effect: { multiplier: number; durationMs: number };
+    costAstronauts?: number;
+    costCoins?: number;
+    costUpgrade?: number;
+    successChance?: number;
+    failureEffect?: { multiplier: number; durationMs: number };
+  }[];
+};
+export const CHOICE_EVENT_CATALOG: ChoiceEvent[] = (choiceEventsData as RawChoice[]).map((e) => {
+  const choices = e.choices.map((c) => {
+    const effect = new EventEffect(c.effect.multiplier, c.effect.durationMs);
+    const failureEffect = c.failureEffect
+      ? new EventEffect(c.failureEffect.multiplier, c.failureEffect.durationMs)
+      : undefined;
+    return new EventChoice(
+      c.id,
+      c.labelKey,
+      effect,
+      c.costAstronauts ?? 0,
+      c.costCoins ?? 0,
+      c.costUpgrade ?? 0,
+      c.successChance,
+      failureEffect
+    );
+  });
+  return new ChoiceEvent(e.id, e.name, choices, e.flavor);
+});
+
+export function getChoiceEventById(id: string): ChoiceEvent | undefined {
+  return CHOICE_EVENT_CATALOG.find((e) => e.id === id);
 }
 
 export const UPGRADE_GROUPS: { label: string; minTier: number; maxTier: number }[] = gameConfig.upgradeGroups;

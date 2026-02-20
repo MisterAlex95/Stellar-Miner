@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { tryShowNarrator } from './narrator.js';
+import { tryShowNarrator, checkPlayTimeNarrators } from './narrator.js';
 
 const mockShowToast = vi.fn();
 const mockGetNarratorShown = vi.fn();
@@ -11,6 +11,9 @@ vi.mock('./gameState.js', () => ({
 }));
 vi.mock('./uiBridge.js', () => ({
   getPresentationPort: () => ({ showToast: mockShowToast }),
+}));
+vi.mock('./playTimeStats.js', () => ({
+  getPlayTimeStats: () => ({ totalPlayTimeMs: 2 * 60 * 60 * 1000 }),
 }));
 
 describe('narrator', () => {
@@ -53,6 +56,13 @@ describe('narrator', () => {
 
     expect(mockAddNarratorShown).not.toHaveBeenCalled();
     expect(mockShowToast).not.toHaveBeenCalled();
+  });
+
+  it('checkPlayTimeNarrators shows at most one toast per call', () => {
+    mockGetNarratorShown.mockReturnValue([]);
+    checkPlayTimeNarrators();
+    expect(mockShowToast).toHaveBeenCalledTimes(1);
+    expect(mockAddNarratorShown).toHaveBeenCalledWith('play_10min');
   });
 
   it('shows first discovery narratives when trigger not yet shown', () => {

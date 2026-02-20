@@ -1,8 +1,8 @@
-import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered, addDiscoveredEvent, getDiscoveredEventIds } from './gameState.js';
+import { getSession, getNextEventAt, getActiveEventInstances, setActiveEventInstances, incrementRunEventsTriggered, addDiscoveredEvent, getDiscoveredEventIds, setPendingChoiceEvent } from './gameState.js';
 import { getEventMultiplier } from './gameState.js';
 import { getResearchProductionMultiplier } from './research.js';
 import { getSetBonusMultiplier } from './moduleSetBonuses.js';
-import { getEventPoolForRun } from './catalogs.js';
+import { getEventPoolForRun, CHOICE_EVENT_CATALOG, CHOICE_EVENT_CHANCE } from './catalogs.js';
 import { getRunStats } from './gameState.js';
 import { pushActiveEventInstance } from './gameState.js';
 import { t } from './strings.js';
@@ -10,6 +10,7 @@ import { notifyRefresh } from './refreshSignal.js';
 import { getPresentationPort } from './uiBridge.js';
 import { checkCodexUnlocks } from './codex.js';
 import { tryShowNarrator } from './narrator.js';
+import { canShowChoiceEvent } from './handlersEventChoice.js';
 import { Planet } from '../domain/entities/Planet.js';
 import { generatePlanetName } from '../domain/constants.js';
 
@@ -21,6 +22,32 @@ function refreshAfterDebugAction(): void {
 export function triggerRandomEvent(): void {
   const runStats = getRunStats();
   if (runStats.runEventsTriggered === 0) tryShowNarrator('first_event');
+  const session = getSession();
+  const astronautCount = session?.player.astronautCount ?? 0;
+  const coins = session?.player.coins.toNumber() ?? 0;
+  const upgradeCount = session?.player.planets.reduce((s, p) => s + p.upgrades.length, 0) ?? 0;
+  const useChoiceEvent =
+    CHOICE_EVENT_CATALOG.length > 0 &&
+    Math.random() < CHOICE_EVENT_CHANCE &&
+    canShowChoiceEvent(astronautCount, coins, upgradeCount);
+  if (useChoiceEvent) {
+    const pool = CHOICE_EVENT_CATALOG.filter((ce) =>
+      ce.choices.some(
+        (c) =>
+          (c.costAstronauts === 0 || astronautCount >= c.costAstronauts) &&
+          (c.costCoins === 0 || coins >= c.costCoins) &&
+          (c.costUpgrade === 0 || upgradeCount >= c.costUpgrade)
+      )
+    );
+    if (pool.length > 0) {
+      const choiceEvent = pool[Math.floor(Math.random() * pool.length)];
+      setPendingChoiceEvent(choiceEvent);
+      incrementRunEventsTriggered();
+      getPresentationPort().showEventChoice(choiceEvent);
+      notifyRefresh();
+      return;
+    }
+  }
   const pool = getEventPoolForRun(runStats.runEventsTriggered);
   const event = pool[Math.floor(Math.random() * pool.length)];
   const firstTime = !getDiscoveredEventIds().includes(event.id);
@@ -79,11 +106,19 @@ export function updateDebugPanel(): void {
 }
 
 export function handleDebugAction(action: string): void {
+  if (action === 'open-balance') {
+    if (typeof window !== 'undefined') {
+      const url = new URL('balance.html', window.location.origin).href;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    return;
+  }
   const session = getSession();
   if (!session) return;
   if (action === 'coins-1k') session.player.addCoins(1000);
   else if (action === 'coins-50k') session.player.addCoins(50_000);
   else if (action === 'trigger-event') triggerRandomEvent();
+  else if (action === 'spawn-event') triggerRandomEvent();
   else if (action === 'clear-events') setActiveEventInstances([]);
   else if (action === 'add-planet') {
     const n = session.player.planets.length + 1;

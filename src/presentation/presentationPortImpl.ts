@@ -2,11 +2,16 @@
  * Concrete implementation of the presentation port. Wires application UI bridge to real UI.
  */
 import type { PresentationPort } from '../application/uiBridge.js';
+import type { ChoiceEvent } from '../domain/entities/ChoiceEvent.js';
+import { t, tParam, type StringKey } from '../application/strings.js';
 import * as toasts from './toasts/index.js';
 import { openOverlay, closeOverlay } from './lib/overlay.js';
 import { showToast } from './toasts/index.js';
 import { getPinia } from './piniaInstance.js';
 import { useAppUIStore } from './stores/appUI.js';
+
+const EVENT_CHOICE_OVERLAY_ID = 'event-choice-modal-overlay';
+const EVENT_CHOICE_OPEN_CLASS = 'event-choice-modal-overlay--open';
 
 function addQuestClaimedAnimation(): void {
   const pinia = getPinia();
@@ -112,6 +117,51 @@ function clearExpedition(): void {
   if (pinia) useAppUIStore(pinia).clearExpedition();
 }
 
+function showEventChoice(choiceEvent: ChoiceEvent): void {
+  const pinia = getPinia();
+  if (!pinia) return;
+  const choices = choiceEvent.choices.map((c) => {
+    const sec = c.effect.durationMs / 1000;
+    const mult = c.effect.multiplier;
+    const isRiskWithParams =
+      c.labelKey === 'eventChoiceRiskAstronaut' || c.labelKey === 'eventChoiceRisk2Astronauts';
+    const label = isRiskWithParams
+      ? tParam(c.labelKey as 'eventChoiceRiskAstronaut' | 'eventChoiceRisk2Astronauts', {
+          mult: String(mult),
+          sec: String(sec),
+        })
+      : t(c.labelKey as StringKey);
+    const effectSummary =
+      c.effect.durationMs > 0
+        ? tParam('eventChoiceEffectSummary', { mult: String(mult), sec: String(sec) })
+        : t('eventChoiceEffectNone');
+    return {
+      id: c.id,
+      label,
+      effectSummary,
+      costAstronauts: c.costAstronauts || undefined,
+      costCoins: c.costCoins || undefined,
+      costUpgrade: c.costUpgrade || undefined,
+      successChance: c.successChance,
+    };
+  });
+  useAppUIStore(pinia).setEventChoiceData({
+    eventId: choiceEvent.id,
+    eventName: choiceEvent.name,
+    flavor: choiceEvent.flavor,
+    choices,
+  });
+  document.body.style.overflow = 'hidden';
+  openOverlay(EVENT_CHOICE_OVERLAY_ID, EVENT_CHOICE_OPEN_CLASS, { focusId: 'event-choice-modal-title' });
+}
+
+function clearEventChoice(): void {
+  const pinia = getPinia();
+  if (pinia) useAppUIStore(pinia).clearEventChoice();
+  document.body.style.overflow = '';
+  closeOverlay(EVENT_CHOICE_OVERLAY_ID, EVENT_CHOICE_OPEN_CLASS);
+}
+
 function setPlanetDetailData(data: Parameters<PresentationPort['setPlanetDetailData']>[0]): void {
   const pinia = getPinia();
   if (pinia) useAppUIStore(pinia).setPlanetDetailData(data);
@@ -173,6 +223,8 @@ export function createPresentationPort(): PresentationPort {
     setDebugStats,
     setExpeditionData,
     clearExpedition,
+    showEventChoice,
+    clearEventChoice,
     setPlanetDetailData,
   };
 }

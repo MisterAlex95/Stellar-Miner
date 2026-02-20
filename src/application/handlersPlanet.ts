@@ -109,10 +109,14 @@ export function completeExpeditionIfDue(): void {
         localStorage.setItem(key, '1');
         ui.showMiniMilestoneToast(t('firstNewPlanetToast'));
       }
-      tryShowNarrator('first_planet');
     }
-    if (outcome.planetName && getPlanetType(outcome.planetName) === 'gas') tryShowNarrator('first_gas_giant');
-    if (outcome.deaths > 0) tryShowNarrator('first_expedition_casualties');
+    if (wasFirstPlanet && tryShowNarrator('first_planet')) {
+      /* one narrator per completion */
+    } else if (outcome.planetName && getPlanetType(outcome.planetName) === 'gas' && tryShowNarrator('first_gas_giant')) {
+      /* one narrator per completion */
+    } else if (outcome.deaths > 0) {
+      tryShowNarrator('first_expedition_casualties');
+    }
   } else {
     tryShowNarrator('first_lost_expedition');
     ui.showMiniMilestoneToast(tParam('expeditionFailed', { n: outcome.totalSent }));

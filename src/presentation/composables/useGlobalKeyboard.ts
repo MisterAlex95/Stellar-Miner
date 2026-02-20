@@ -11,6 +11,7 @@ import {
 import { closePlanetDetail, PLANET_DETAIL_OVERLAY_ID, PLANET_DETAIL_OPEN_CLASS } from '../modals/planetDetail.js';
 import { closeUpgradeChoosePlanetModal } from '../modals/upgradeChoosePlanet.js';
 import { closeExpeditionModal } from '../modals/expedition.js';
+import { closeEventChoiceModal } from '../modals/eventChoice.js';
 import { isIntroOverlayOpen, dismissIntroModal } from '../modals/intro.js';
 import { useOverlay } from './useOverlay.js';
 
@@ -51,6 +52,7 @@ const OVERLAY_CLOSERS: Record<string, () => void> = {
   [PLANET_DETAIL_OVERLAY_ID]: closePlanetDetail,
   'upgrade-choose-planet-overlay': closeUpgradeChoosePlanetModal,
   'expedition-modal-overlay': closeExpeditionModal,
+  'event-choice-modal-overlay': closeEventChoiceModal,
   'settings-overlay': closeSettings,
 };
 

@@ -97,7 +97,7 @@ export function unlockAchievement(id: string): void {
   if (typeof localStorage !== 'undefined') localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify([...set]));
   const a = ACHIEVEMENTS.find((x) => x.id === id);
   if (a) getPresentationPort().showAchievementToast(a.name, a.flavor);
-  tryShowNarrator(`achievement:${id}`);
+  setTimeout(() => tryShowNarrator(`achievement:${id}`), 1800);
   checkCodexUnlocks();
 }
 

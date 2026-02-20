@@ -2,6 +2,7 @@ import Decimal from 'break_infinity.js';
 import { Player } from '../domain/entities/Player.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { GameEvent } from '../domain/entities/GameEvent.js';
+import type { ChoiceEvent } from '../domain/entities/ChoiceEvent.js';
 import { SaveLoadService } from '../infrastructure/SaveLoadService.js';
 import { UpgradeService } from '../domain/services/UpgradeService.js';
 import { PlanetService } from '../domain/services/PlanetService.js';
@@ -78,6 +79,9 @@ let codexUnlocks: CodexUnlockRecord[] = [];
 /** Narrator trigger IDs already shown (persisted with save). One-off ship/mission toasts. */
 let narratorShown: string[] = [];
 
+/** When set, a choice event is waiting for player input; cleared when choice is applied or on load. */
+let pendingChoiceEvent: ChoiceEvent | null = null;
+
 let expeditionEndsAt: number | null = null;
 let expeditionComposition: ExpeditionComposition | null = null;
 let expeditionDurationMs = 0;
@@ -138,6 +142,14 @@ export function getNextEventAt(): number {
 
 export function setNextEventAt(n: number): void {
   nextEventAt = n;
+}
+
+export function getPendingChoiceEvent(): ChoiceEvent | null {
+  return pendingChoiceEvent;
+}
+
+export function setPendingChoiceEvent(ce: ChoiceEvent | null): void {
+  pendingChoiceEvent = ce;
 }
 
 export function getGameStartTime(): number {
@@ -444,6 +456,7 @@ export async function getOrCreateSession(): Promise<GameSession> {
   emit('session_loaded', { fromStorage: !!result });
   if (result) {
     setSession(result.session);
+    setPendingChoiceEvent(null);
     setRunStatsFromPayload(result.runStats ?? null);
     setDiscoveredEventIds(result.discoveredEventIds ?? []);
     setDiscoveredSetIds(result.discoveredSetIds ?? []);

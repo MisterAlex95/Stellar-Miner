@@ -20,7 +20,7 @@ import {
 import { formatNumber } from './format.js';
 import { getAssignedAstronauts } from './crewHelpers.js';
 import { getMaxAstronauts, CREW_ROLES, type CrewRole, type CrewJobRole } from '../domain/constants.js';
-import { EVENT_INTERVAL_MS, EVENT_CATALOG } from './catalogs.js';
+import { EVENT_INTERVAL_MS, EVENT_CATALOG, getChoiceEventById } from './catalogs.js';
 import { getNextMilestone, getUnlockedBlocks } from './progression.js';
 import {
   getResearchProductionMultiplier,
@@ -257,12 +257,20 @@ export function getStatsSnapshot(): StatsSnapshot {
     const items = discovered
       .map((id) => {
         const ev = EVENT_CATALOG.find((e) => e.id === id);
-        if (!ev) return '';
-        const name = getCatalogEventName(ev.id);
-        const mult = ev.effect.multiplier;
-        const secs = ev.effect.durationMs / 1000;
-        const modClass = mult >= 1 ? 'events-hint-item--positive' : 'events-hint-item--negative';
-        return `<div class="events-hint-item ${modClass}"><span class="events-hint-item__name">${escapeHtml(name)}</span> <span class="events-hint-item__effect">×${mult}</span> <span class="events-hint-item__dur">${secs}s</span></div>`;
+        const choiceEv = getChoiceEventById(id);
+        if (ev) {
+          const name = getCatalogEventName(ev.id);
+          const mult = ev.effect.multiplier;
+          const secs = ev.effect.durationMs / 1000;
+          const modClass = mult >= 1 ? 'events-hint-item--positive' : 'events-hint-item--negative';
+          return `<div class="events-hint-item ${modClass}"><span class="events-hint-item__name">${escapeHtml(name)}</span> <span class="events-hint-item__effect">×${mult}</span> <span class="events-hint-item__dur">${secs}s</span></div>`;
+        }
+        if (choiceEv) {
+          const name = getCatalogEventName(id);
+          const choiceLabel = t('eventsHintChoiceEvent');
+          return `<div class="events-hint-item events-hint-item--choice"><span class="events-hint-item__name">${escapeHtml(name)}</span> <span class="events-hint-item__effect">${escapeHtml(choiceLabel)}</span></div>`;
+        }
+        return '';
       })
       .filter(Boolean);
     eventsHintBodyHtml = explanation + unlockLine + `<p class="events-hint-heading">${t('eventsHintHeading')}</p><div class="events-hint-list">${items.join('')}</div>`;

@@ -30,16 +30,23 @@ const COINS_1M = 1_000_000;
 const COINS_10M = 10_000_000;
 const COINS_1B = 1_000_000_000;
 
+const COIN_NARRATOR_ORDER: { threshold: number; trigger: string }[] = [
+  { threshold: COINS_25K, trigger: 'coins_25k' },
+  { threshold: COINS_100K, trigger: 'coins_100k' },
+  { threshold: COINS_500K, trigger: 'coins_500k' },
+  { threshold: COINS_1M, trigger: 'coins_1m' },
+  { threshold: COINS_10M, trigger: 'coins_10m' },
+  { threshold: COINS_1B, trigger: 'coins_1b' },
+];
+
+/** At most one coin narrator + one milestone toast per call to avoid notification flood. */
 export function checkAndShowMilestones(): void {
   const session = getSession();
   if (!session) return;
   const total = toDecimal(session.player.totalCoinsEver);
-  if (total.gte(COINS_25K)) tryShowNarrator('coins_25k');
-  if (total.gte(COINS_100K)) tryShowNarrator('coins_100k');
-  if (total.gte(COINS_500K)) tryShowNarrator('coins_500k');
-  if (total.gte(COINS_1M)) tryShowNarrator('coins_1m');
-  if (total.gte(COINS_10M)) tryShowNarrator('coins_10m');
-  if (total.gte(COINS_1B)) tryShowNarrator('coins_1b');
+  for (const { threshold, trigger } of COIN_NARRATOR_ORDER) {
+    if (total.gte(threshold) && tryShowNarrator(trigger)) break;
+  }
   const reached = getReachedMilestones();
   for (const m of MILESTONES) {
     if (total.gte(m) && !reached.includes(m)) {

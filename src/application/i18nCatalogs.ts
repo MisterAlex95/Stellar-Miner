@@ -3,7 +3,7 @@
  * Used with getSettings().language. Keys match catalog ids.
  */
 import { getSettings } from './gameState.js';
-import { UPGRADE_CATALOG, EVENT_CATALOG } from './catalogs.js';
+import { UPGRADE_CATALOG, EVENT_CATALOG, getChoiceEventById } from './catalogs.js';
 import { RESEARCH_CATALOG } from './research.js';
 import { ACHIEVEMENTS } from './achievements.js';
 import { generatePlanetName } from '../domain/constants.js';
@@ -256,14 +256,34 @@ const eventNamesEn: Record<string, string> = {
   'solar-wind': 'Solar Wind',
   'comet-tail': 'Comet Tail',
   'nebula-bloom': 'Nebula Bloom',
+  'mining-bonanza': 'Mining Bonanza',
+  'plasma-surge': 'Plasma Surge',
+  'ore-storm': 'Ore Storm',
+  'gravity-well': 'Gravity Well',
+  'crystal-shower': 'Crystal Shower',
+  'magnetic-flux': 'Magnetic Flux',
+  'supernova-echo': 'Supernova Echo',
+  'asteroid-cluster': 'Asteroid Cluster',
+  'solar-maximum': 'Solar Maximum',
+  'ice-harvest': 'Ice Harvest',
+  'gas-pocket': 'Gas Pocket',
+  'cosmic-ray-burst': 'Cosmic Ray Burst',
   'dust-storm': 'Dust Storm',
   'solar-eclipse': 'Solar Eclipse',
   'equipment-malfunction': 'Equipment Malfunction',
   'power-drain': 'Power Drain',
   'communications-blackout': 'Communications Blackout',
   'debris-field': 'Debris Field',
-  'mining-bonanza': 'Mining Bonanza',
   'ion-storm': 'Ion Storm',
+  'micrometeorite-swarm': 'Micrometeorite Swarm',
+  'radiation-spike': 'Radiation Spike',
+  'coolant-leak': 'Coolant Leak',
+  'sensor-glitch': 'Sensor Glitch',
+  'gravity-fluctuation': 'Gravity Fluctuation',
+  'electromagnetic-pulse': 'Electromagnetic Pulse',
+  'heat-wave': 'Heat Wave',
+  'vacuum-drag': 'Vacuum Drag',
+  'coronal-mass-ejection': 'Coronal Mass Ejection',
 };
 
 const eventNamesFr: Record<string, string> = {
@@ -276,14 +296,34 @@ const eventNamesFr: Record<string, string> = {
   'solar-wind': 'Vent solaire',
   'comet-tail': 'Queue de comète',
   'nebula-bloom': 'Floraison nébuleuse',
+  'mining-bonanza': 'Bonne mine',
+  'plasma-surge': 'Surge de plasma',
+  'ore-storm': 'Tempête de minerai',
+  'gravity-well': 'Puits gravitationnel',
+  'crystal-shower': 'Pluie de cristaux',
+  'magnetic-flux': 'Flux magnétique',
+  'supernova-echo': 'Écho de supernova',
+  'asteroid-cluster': 'Amas d’astéroïdes',
+  'solar-maximum': 'Maximum solaire',
+  'ice-harvest': 'Récolte de glace',
+  'gas-pocket': 'Poche de gaz',
+  'cosmic-ray-burst': 'Salve de rayons cosmiques',
   'dust-storm': 'Tempête de poussière',
   'solar-eclipse': 'Éclipse solaire',
   'equipment-malfunction': 'Panne d’équipement',
   'power-drain': 'Drainage d’énergie',
   'communications-blackout': 'Black-out des communications',
   'debris-field': 'Champ de débris',
-  'mining-bonanza': 'Bonne mine',
   'ion-storm': 'Tempête ionique',
+  'micrometeorite-swarm': 'Nuée de micrométéorites',
+  'radiation-spike': 'Pic de radiation',
+  'coolant-leak': 'Fuite de refroidissant',
+  'sensor-glitch': 'Bug des capteurs',
+  'gravity-fluctuation': 'Fluctuation gravitationnelle',
+  'electromagnetic-pulse': 'Impulsion électromagnétique',
+  'heat-wave': 'Vague de chaleur',
+  'vacuum-drag': 'Traînée du vide',
+  'coronal-mass-ejection': 'Éjection de masse coronale',
 };
 
 const eventFlavorEn: Record<string, string> = {
@@ -297,6 +337,17 @@ const eventFlavorEn: Record<string, string> = {
   'comet-tail': 'Ices and dust in the wake. Processors and extractors love the extra feedstock.',
   'nebula-bloom': 'Strange particles drift through. The gear hums a little happier.',
   'mining-bonanza': 'Everything aligns: ore, gear, and crew. The kind of run the old hands tell stories about.',
+  'plasma-surge': 'Ionized gas floods the sector. Extractors run hot and happy.',
+  'ore-storm': 'Raw metal pelts the hull. The mother lode comes to you.',
+  'gravity-well': 'Local curvature concentrates debris. Easy pickings for the rigs.',
+  'crystal-shower': 'Fractal ice and mineral rain. Purity sensors go off the scale.',
+  'magnetic-flux': 'Field lines align. Conveyors and sorters work at peak efficiency.',
+  'supernova-echo': 'Ancient light and particles. A whisper of the old fire.',
+  'asteroid-cluster': 'Dense rock field. Slow going but rich once you are in.',
+  'solar-maximum': 'The star is restless. Panels and reactors drink it in.',
+  'ice-harvest': 'Frozen volatiles in abundance. Cryo extractors earn their keep.',
+  'gas-pocket': 'Trapped atmosphere. The siphons have a field day.',
+  'cosmic-ray-burst': 'High-energy particles from deep space. Odd but productive.',
   'dust-storm': 'Grit in the gears and static on the screens. Output drops until it blows past.',
   'solar-eclipse': 'The star slips behind something big. Power and morale dip in the dim.',
   'equipment-malfunction': 'Something blew—overload or bad luck. Reduced output until the bots patch it.',
@@ -304,6 +355,15 @@ const eventFlavorEn: Record<string, string> = {
   'communications-blackout': 'No telemetry, no sync with Mission Control. We go blind until the link comes back.',
   'debris-field': 'Navigating junk and old wreckage. Slower going, fewer clean passes.',
   'ion-storm': 'Electromagnetic hell. Systems stutter; we ride it out and hope nothing fries.',
+  'micrometeorite-swarm': 'Tiny impacts everywhere. Shielding holds but throughput suffers.',
+  'radiation-spike': 'Counters scream. Crew retreats to shelter; rigs throttle down.',
+  'coolant-leak': 'Something is dripping. Heat builds until the fix is in.',
+  'sensor-glitch': 'Ghosts in the data. Autopilots hesitate; yield drops.',
+  'gravity-fluctuation': 'Local gravity goes wobbly. Everything runs a bit wrong.',
+  'electromagnetic-pulse': 'Lights flicker. Systems reboot. Lost time and lost ore.',
+  'heat-wave': 'Radiators can not keep up. Throttle back or cook the gear.',
+  'vacuum-drag': 'Thin residue pulls at the hull. Slower passes, lower yield.',
+  'coronal-mass-ejection': 'The star spits. We batten down and ride it out.',
 };
 
 const eventFlavorFr: Record<string, string> = {
@@ -317,6 +377,17 @@ const eventFlavorFr: Record<string, string> = {
   'comet-tail': 'Glaces et poussière dans le sillage. Les processeurs adorent la matière en plus.',
   'nebula-bloom': "Des particules étranges dérivent. L'équipement ronronne un peu plus.",
   'mining-bonanza': "Tout s'aligne: minerai, équipement, équipage. Le genre de run dont on parle.",
+  'plasma-surge': 'Gaz ionisé en flux. Les extracteurs tournent à fond.',
+  'ore-storm': 'Métal brut sur le blindage. Le filon vient à vous.',
+  'gravity-well': 'La courbure locale concentre les débris. Moisson facile.',
+  'crystal-shower': 'Pluie de glace et de minéraux. Les senseurs de pureté s\'affolent.',
+  'magnetic-flux': 'Lignes de champ alignées. Convoyeurs et trieurs au maximum.',
+  'supernova-echo': 'Lumière et particules anciennes. Un souffle du feu d\'antan.',
+  'asteroid-cluster': 'Champ de roche dense. Lent mais riche.',
+  'solar-maximum': "L'étoile s'agite. Panneaux et réacteurs en profitent.",
+  'ice-harvest': 'Volatils gelés en abondance. Les extracteurs cryo font le job.',
+  'gas-pocket': 'Atmosphère piégée. Les siphonneurs s\'en donnent à cœur joie.',
+  'cosmic-ray-burst': 'Particules de haute énergie. Bizarre mais productif.',
   'dust-storm': "Grains dans les engrenages et neige sur les écrans. Baisse de rendement jusqu'à ce que ça passe.",
   'solar-eclipse': "L'étoile passe derrière quelque chose de gros. Énergie et moral en baisse.",
   'equipment-malfunction': "Quelque chose a lâché—surcharge ou malchance. Rendement réduit jusqu'au dépannage.",
@@ -324,6 +395,15 @@ const eventFlavorFr: Record<string, string> = {
   'communications-blackout': "Plus de télémétrie, plus de sync avec le centre. On est aveugles jusqu'au retour du lien.",
   'debris-field': "Navigation dans les débris et l'épave. Moins vite, moins de passes propres.",
   'ion-storm': 'Enfer électromagnétique. Les systèmes hoquettent; on tient bon et on espère que rien ne grille.',
+  'micrometeorite-swarm': 'Micro-impacts partout. Boucliers tiennent mais le débit souffre.',
+  'radiation-spike': 'Les compteurs hurlent. Équipage à l\'abri, rigs au ralenti.',
+  'coolant-leak': 'Quelque chose fuit. La chaleur monte jusqu\'au dépannage.',
+  'sensor-glitch': 'Fantômes dans les données. Pilotes auto hésitent, rendement baisse.',
+  'gravity-fluctuation': 'La gravité locale déraille. Tout tourne un peu de travers.',
+  'electromagnetic-pulse': 'Lumières qui clignotent. Systèmes en redémarrage. Temps et minerai perdus.',
+  'heat-wave': 'Les radiateurs ne suivent plus. Ralentir ou griller le matos.',
+  'vacuum-drag': 'Résidu ténu tire sur la coque. Passes plus lentes, moins de rendement.',
+  'coronal-mass-ejection': "L'étoile crache. On se barricade et on tient.",
 };
 
 const achievementNamesEn: Record<string, string> = {
@@ -621,7 +701,8 @@ export function getCatalogResearchLore(id: string): string {
 
 export function getCatalogEventName(id: string): string {
   const names = lang() === 'fr' ? eventNamesFr : eventNamesEn;
-  const fallback = EVENT_CATALOG.find((e) => e.id === id)?.name ?? id;
+  const fallback =
+    EVENT_CATALOG.find((e) => e.id === id)?.name ?? getChoiceEventById(id)?.name ?? id;
   return names[id] ?? fallback;
 }
 

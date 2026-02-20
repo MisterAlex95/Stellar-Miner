@@ -58,6 +58,13 @@
             <button
               type="button"
               class="debug-btn"
+              data-debug="spawn-event"
+            >
+              {{ t('debugSpawnPlus') }}
+            </button>
+            <button
+              type="button"
+              class="debug-btn"
               data-debug="clear-events"
             >
               {{ t('debugClearEvents') }}
@@ -68,6 +75,13 @@
               data-debug="add-planet"
             >
               {{ t('debugAddPlanet') }}
+            </button>
+            <button
+              type="button"
+              class="debug-btn"
+              data-debug="open-balance"
+            >
+              {{ t('debugOpenBalance') }}
             </button>
           </div>
         </div>

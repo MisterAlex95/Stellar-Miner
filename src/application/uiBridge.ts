@@ -4,6 +4,7 @@
  */
 
 import type { GameEvent } from '../domain/entities/GameEvent.js';
+import type { ChoiceEvent } from '../domain/entities/ChoiceEvent.js';
 
 export interface OpenOverlayOptions {
   focusId?: string;
@@ -17,6 +18,9 @@ export interface PresentationPort {
   showPrestigeMilestoneToast(level: number, pct?: number): void;
   showQuestStreakToast(streak: number, mult: number): void;
   showEventToast(gameEvent: GameEvent, options?: { firstTime?: boolean }): void;
+  /** Show event choice modal; user picks one option. Call clearEventChoice when done. */
+  showEventChoice(choiceEvent: ChoiceEvent): void;
+  clearEventChoice(): void;
   showFloatingReward(amount: number, anchor: HTMLElement): void;
   /** Quest claim button element for floating reward (Vue sets via store). */
   getQuestClaimAnchor(): HTMLElement | null;
@@ -94,6 +98,8 @@ export interface PresentationPort {
   } | null): void;
 }
 
+function noopChoiceEvent(_: ChoiceEvent): void {}
+
 function noop(): void {}
 function noopStr(_: string): void {}
 function noopNum(_: number): void {}
@@ -115,6 +121,8 @@ const defaultPort: PresentationPort = {
   showPrestigeMilestoneToast: noopNumNum,
   showQuestStreakToast: noopNumNum,
   showEventToast: noopEvent,
+  showEventChoice: noopChoiceEvent,
+  clearEventChoice: noop,
   showFloatingReward: noopNumEl,
   getQuestClaimAnchor: () => null,
   getAppRoot: () => null,

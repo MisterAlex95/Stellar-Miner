@@ -66,7 +66,7 @@
     "installDurationTierExponent": 1.4,
     "installDurationLog10Cap": 8
   },
-  "events": { "negativeUnlockAfterTriggers": 4 },
+  "events": { "negativeUnlockAfterTriggers": 4, "choiceChance": 0.15 },
   "upgradeGroups": [
     { "label": "Early", "minTier": 1, "maxTier": 3 },
     { "label": "Mid", "minTier": 4, "maxTier": 6 },

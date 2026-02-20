@@ -25,24 +25,26 @@ const PLAY_TIME_TRIGGERS: { trigger: string; ms: number }[] = [
  * If the trigger is defined in narrator.json and not yet in narratorShown,
  * shows the message as a toast and marks the trigger as shown.
  * No-op if already shown or unknown trigger.
+ * @returns true if a toast was shown, false otherwise.
  */
-export function tryShowNarrator(triggerId: string): void {
-  if (typeof triggerId !== 'string') return;
+export function tryShowNarrator(triggerId: string): boolean {
+  if (typeof triggerId !== 'string') return false;
   const shown = getNarratorShown();
-  if (shown.includes(triggerId)) return;
+  if (shown.includes(triggerId)) return false;
   const entry = entries.find((e) => e.trigger === triggerId);
-  if (!entry?.message) return;
+  if (!entry?.message) return false;
   addNarratorShown(triggerId);
   getPresentationPort().showToast(entry.message, 'milestone', { duration: 4000 });
+  return true;
 }
 
 /**
  * Checks total play time and shows one-off narrator toasts for time milestones (10 min, 1 h, etc.).
- * Call from game loop or on click; only one toast per threshold, persisted in narratorShown.
+ * At most one toast per call to avoid notification flood; next call will show the next threshold.
  */
 export function checkPlayTimeNarrators(): void {
   const { totalPlayTimeMs } = getPlayTimeStats();
   for (const { trigger, ms } of PLAY_TIME_TRIGGERS) {
-    if (totalPlayTimeMs >= ms) tryShowNarrator(trigger);
+    if (totalPlayTimeMs >= ms && tryShowNarrator(trigger)) return;
   }
 }
