@@ -32,7 +32,8 @@ import {
 import { SAVE_INTERVAL_MS, EVENT_INTERVAL_MS, MIN_EVENT_DELAY_MS, FIRST_EVENT_DELAY_MS } from './application/catalogs.js';
 import { recordStatsIfDue, loadStatsHistory, getStatsHistory } from './application/statsHistory.js';
 import { getResearchProductionMultiplier } from './application/research.js';
-import { getSetBonusMultiplier, checkSetBonusNarrator } from './application/moduleSetBonuses.js';
+import { getSetBonusMultiplier, checkSetBonusNarrator, mergeDiscoveredSetBonuses } from './application/moduleSetBonuses.js';
+import { getDiscoveredSetIds } from './application/gameState.js';
 import { getStatsSnapshot } from './application/statsSnapshot.js';
 import { updateQuestProgressStore } from './application/questProgressStore.js';
 import { getQuestSnapshot } from './application/questSnapshot.js';
@@ -96,6 +97,8 @@ function runProductionTick(session: ReturnType<typeof getSession>, dt: number, n
 
 function runPanelUpdates(nowMs: number): void {
   runQuestIfDue(nowMs, () => true, updateQuestProgressStore);
+  const session = getSession();
+  if (session) mergeDiscoveredSetBonuses(session.player);
   checkSetBonusNarrator();
   // Dashboard, Research, Upgrades: Vue panels watch the bridge and update themselves
   // Empire panel is Vue; combo indicator is driven by bridge
@@ -177,6 +180,7 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
       combo: getComboSnapshot(),
       tabs: getTabsSnapshot(hasNewInstallableUpgrade()),
       progression: getProgressionSnapshot(),
+      discoveredSetIds: getDiscoveredSetIds(),
     };
   }
   const planetViews = session.player.planets.map((p, index) => {
@@ -206,6 +210,7 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
     combo: getComboSnapshot(),
     tabs: getTabsSnapshot(hasNewInstallableUpgrade()),
     progression: getProgressionSnapshot(),
+    discoveredSetIds: getDiscoveredSetIds(),
   };
 }
 

@@ -68,6 +68,9 @@ let runStats: RunStats = {
 /** Event IDs the player has ever seen (persisted with save). Only these appear in the events hint. */
 let discoveredEventIds: string[] = [];
 
+/** Module set bonus def ids the player has ever had active (persisted with save). Shown in Archive → Sets. */
+let discoveredSetIds: string[] = [];
+
 /** Codex entries unlocked with timestamp (persisted with save). */
 export type CodexUnlockRecord = { id: string; at: number };
 let codexUnlocks: CodexUnlockRecord[] = [];
@@ -263,6 +266,19 @@ export function addDiscoveredEvent(eventId: string): void {
   discoveredEventIds = [...discoveredEventIds, eventId];
 }
 
+export function getDiscoveredSetIds(): string[] {
+  return [...discoveredSetIds];
+}
+
+export function setDiscoveredSetIds(ids: string[]): void {
+  discoveredSetIds = Array.isArray(ids) ? ids.filter((id) => typeof id === 'string') : [];
+}
+
+export function addDiscoveredSetId(setId: string): void {
+  if (typeof setId !== 'string' || discoveredSetIds.includes(setId)) return;
+  discoveredSetIds = [...discoveredSetIds, setId];
+}
+
 export function getCodexUnlocks(): string[] {
   return codexUnlocks.map((r) => r.id);
 }
@@ -430,6 +446,7 @@ export async function getOrCreateSession(): Promise<GameSession> {
     setSession(result.session);
     setRunStatsFromPayload(result.runStats ?? null);
     setDiscoveredEventIds(result.discoveredEventIds ?? []);
+    setDiscoveredSetIds(result.discoveredSetIds ?? []);
     setCodexUnlocks(result.codexUnlocks ?? []);
     setNarratorShown(result.narratorShown ?? []);
     setExpeditionFromPayload(result.expedition ?? null);
@@ -439,6 +456,7 @@ export async function getOrCreateSession(): Promise<GameSession> {
   player.addCoins(0);
   setRunStatsFromPayload(null);
   setDiscoveredEventIds([]);
+  setDiscoveredSetIds([]);
   setCodexUnlocks([]);
   setNarratorShown([]);
   return new GameSession('session-1', player);

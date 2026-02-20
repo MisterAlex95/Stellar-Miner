@@ -3,6 +3,10 @@ import {
   getCompletedSetBonusesForPlanet,
   getPotentialSetBonusesForPlanet,
   getSetBonusMultiplier,
+  getSetDefId,
+  getSetBonusCatalog,
+  getActiveSetDefIds,
+  getDiscoveredSetsDisplay,
 } from './moduleSetBonuses.js';
 import { Planet } from '../domain/entities/Planet.js';
 import { Player } from '../domain/entities/Player.js';
@@ -77,5 +81,37 @@ describe('moduleSetBonuses', () => {
     expect(drillSet).toBeDefined();
     expect(drillSet?.current).toBe(2);
     expect(drillSet?.required).toBe(3);
+  });
+
+  it('getSetDefId returns stable ids', () => {
+    expect(getSetDefId(0)).toBe('set-0');
+    expect(getSetDefId(5)).toBe('set-5');
+  });
+
+  it('getSetBonusCatalog returns entries with id and moduleName', () => {
+    const catalog = getSetBonusCatalog();
+    expect(catalog.length).toBeGreaterThan(0);
+    expect(catalog[0]).toHaveProperty('id', 'set-0');
+    expect(catalog[0]).toHaveProperty('moduleName');
+    expect(catalog[0]).toHaveProperty('productionBonusPercent');
+  });
+
+  it('getActiveSetDefIds returns ids for completed sets on any planet', () => {
+    const player = Player.create('p1');
+    const planet = player.planets[0];
+    for (let i = 0; i < 3; i++) {
+      planet.addUpgrade(new Upgrade('mining-robot', 'Mining Robot', new Decimal(0), new UpgradeEffect(1), false));
+    }
+    const ids = getActiveSetDefIds(player);
+    expect(ids.length).toBeGreaterThanOrEqual(1);
+    expect(ids[0]).toMatch(/^set-\d+$/);
+  });
+
+  it('getDiscoveredSetsDisplay returns display list for discovered ids', () => {
+    const catalog = getSetBonusCatalog();
+    const ids = [catalog[0].id, catalog[2]?.id].filter(Boolean);
+    const display = getDiscoveredSetsDisplay(ids);
+    expect(display.length).toBe(ids.length);
+    expect(display[0]).toMatchObject({ id: ids[0], bonusPercent: expect.any(Number), moduleName: expect.any(String) });
   });
 });

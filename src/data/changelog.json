@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.20",
+    "date": "2026-02",
+    "changes": [
+      "Archive: Module sets sub-tab lists discovered set bonuses (name, bonus %, planet condition); discovered sets persisted in save."
+    ]
+  },
+  {
     "version": "0.5.19",
     "date": "2026-02",
     "changes": [

@@ -4,12 +4,14 @@ import {
   getRunStats,
   setRunStatsFromPayload,
   getDiscoveredEventIds,
+  getDiscoveredSetIds,
   getCodexUnlocksWithTime,
   getNarratorShown,
   getExpeditionForSave,
   setExpeditionFromPayload,
   setCodexUnlocks,
   setNarratorShown,
+  setDiscoveredSetIds,
   saveLoad,
   type SavedExpedition,
 } from './gameState.js';
@@ -17,13 +19,14 @@ import {
 function getSavePayload(): {
   session: ReturnType<typeof getSession>;
   runStats: ReturnType<typeof getRunStats>;
-  extras: { discoveredEventIds: string[]; codexUnlocks: Array<{ id: string; at: number }>; narratorShown: string[]; expedition: SavedExpedition | null };
+  extras: { discoveredEventIds: string[]; discoveredSetIds: string[]; codexUnlocks: Array<{ id: string; at: number }>; narratorShown: string[]; expedition: SavedExpedition | null };
 } {
   return {
     session: getSession(),
     runStats: getRunStats(),
     extras: {
       discoveredEventIds: getDiscoveredEventIds(),
+      discoveredSetIds: getDiscoveredSetIds(),
       codexUnlocks: getCodexUnlocksWithTime(),
       narratorShown: getNarratorShown(),
       expedition: getExpeditionForSave(),
@@ -52,9 +55,9 @@ export function handleExportSave(): void {
 }
 
 export async function handleImportSave(json: string): Promise<boolean> {
-  let parsed: { codexUnlocks?: unknown; narratorShown?: unknown } | null = null;
+  let parsed: { codexUnlocks?: unknown; narratorShown?: string[]; discoveredSetIds?: string[] } | null = null;
   try {
-    parsed = JSON.parse(json) as { codexUnlocks?: unknown; narratorShown?: unknown };
+    parsed = JSON.parse(json) as { codexUnlocks?: unknown; narratorShown?: string[]; discoveredSetIds?: string[] };
   } catch {
     // importSession will fail too
   }
@@ -63,6 +66,9 @@ export async function handleImportSave(json: string): Promise<boolean> {
   setSession(session);
   setRunStatsFromPayload(null);
   setExpeditionFromPayload(null);
+  if (Array.isArray(parsed?.discoveredSetIds)) {
+    setDiscoveredSetIds((parsed.discoveredSetIds as string[]).filter((id) => typeof id === 'string'));
+  }
   if (Array.isArray(parsed?.codexUnlocks)) {
     const list = parsed.codexUnlocks as unknown[];
     const normalized = list

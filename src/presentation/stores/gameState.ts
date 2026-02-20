@@ -49,6 +49,7 @@ export type GameStateSnapshot = {
   combo: ComboSnapshot;
   tabs: TabsSnapshot;
   progression: ProgressionSnapshot;
+  discoveredSetIds: string[];
 };
 
 const defaultRunStats: RunStats = {
@@ -105,8 +106,8 @@ const defaultCombo: ComboSnapshot = {
 };
 
 const defaultTabs: TabsSnapshot = {
-  visible: { mine: true, dashboard: true, empire: true, research: true, upgrades: true, stats: true },
-  badges: { mine: false, dashboard: false, empire: false, research: false, upgrades: false, stats: false },
+  visible: { mine: true, dashboard: true, empire: true, research: true, upgrades: true, stats: true, archive: true },
+  badges: { mine: false, dashboard: false, empire: false, research: false, upgrades: false, stats: false, archive: false },
 };
 
 const defaultProgression: ProgressionSnapshot = {
@@ -128,6 +129,7 @@ export const useGameStateStore = defineStore('gameState', {
     combo: { ...defaultCombo },
     tabs: { ...defaultTabs },
     progression: { ...defaultProgression },
+    discoveredSetIds: [],
     hydratedPanels: [],
   }),
   actions: {
@@ -148,6 +150,7 @@ export const useGameStateStore = defineStore('gameState', {
       this.combo = payload.combo ?? { ...defaultCombo };
       this.tabs = payload.tabs ?? { ...defaultTabs };
       this.progression = payload.progression ?? { ...defaultProgression };
+      this.discoveredSetIds = payload.discoveredSetIds ?? [];
     },
     setActiveTab(tabId: string): void {
       this.activeTab = tabId;

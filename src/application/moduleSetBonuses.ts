@@ -8,8 +8,7 @@ import type { Planet } from '../domain/entities/Planet.js';
 import type { Player } from '../domain/entities/Player.js';
 import { UPGRADE_CATALOG } from './catalogs.js';
 import { getPlanetType } from './planetAffinity.js';
-import { getSession } from './gameState.js';
-import { getNarratorShown } from './gameState.js';
+import { getSession, getNarratorShown, addDiscoveredSetId } from './gameState.js';
 import { tryShowNarrator } from './narrator.js';
 import moduleSetBonusesData from '../data/moduleSetBonuses.json';
 
@@ -65,8 +64,26 @@ const CONFIG: NormalizedDef[] = (moduleSetBonusesData as ModuleSetBonusDef[])
   .map(normalizeDef)
   .filter((d): d is NormalizedDef => d !== null);
 
+const SET_DEF_ID_PREFIX = 'set-';
+
 function getConfig(): NormalizedDef[] {
   return CONFIG;
+}
+
+/** Stable id for a set bonus def (index-based). Used for persistence and Archive display. */
+export function getSetDefId(index: number): string {
+  return `${SET_DEF_ID_PREFIX}${index}`;
+}
+
+export type SetBonusCatalogEntry = NormalizedDef & { id: string; moduleName: string };
+
+/** All set bonus defs with stable id and display name for UI. */
+export function getSetBonusCatalog(): SetBonusCatalogEntry[] {
+  return CONFIG.map((def, i) => ({
+    ...def,
+    id: getSetDefId(i),
+    moduleName: getModuleDisplayName(def.moduleIds),
+  }));
 }
 
 function getModuleName(moduleId: string): string {
@@ -177,6 +194,58 @@ const SET_BONUS_PCT_NARRATOR_THRESHOLDS: { trigger: string; pctMin: number }[] =
   { trigger: 'set_bonus_30pct', pctMin: 30 },
   { trigger: 'set_bonus_50pct', pctMin: 50 },
 ];
+
+/** Set def ids that are currently completed on at least one planet. */
+export function getActiveSetDefIds(player: Player): string[] {
+  const ids: string[] = [];
+  for (let i = 0; i < CONFIG.length; i++) {
+    const def = CONFIG[i];
+    for (const planet of player.planets) {
+      if (!planetMatchesType(planet, def.planetTypes)) continue;
+      const counts = countModulesOnPlanet(planet);
+      const count = getCombinedCount(counts, def.moduleIds);
+      if (count >= def.requiredCount) {
+        ids.push(getSetDefId(i));
+        break;
+      }
+    }
+  }
+  return ids;
+}
+
+/** Merge currently active set bonuses into discovered set ids (persisted). Call from game loop. */
+export function mergeDiscoveredSetBonuses(player: Player): void {
+  for (const id of getActiveSetDefIds(player)) {
+    addDiscoveredSetId(id);
+  }
+}
+
+export type DiscoveredSetDisplay = {
+  id: string;
+  moduleName: string;
+  bonusPercent: number;
+  requiredCount: number;
+  planetTypes: string[] | null;
+};
+
+/** Display list for discovered set ids (for Archive → Sets). Preserves discovery order. */
+export function getDiscoveredSetsDisplay(discoveredIds: string[]): DiscoveredSetDisplay[] {
+  const catalog = getSetBonusCatalog();
+  const byId = new Map(catalog.map((c) => [c.id, c]));
+  const result: DiscoveredSetDisplay[] = [];
+  for (const id of discoveredIds) {
+    const entry = byId.get(id);
+    if (!entry) continue;
+    result.push({
+      id: entry.id,
+      moduleName: entry.moduleName,
+      bonusPercent: entry.productionBonusPercent,
+      requiredCount: entry.requiredCount,
+      planetTypes: entry.planetTypes,
+    });
+  }
+  return result;
+}
 
 /** If set bonuses are active, show one narrator toast per call for first-time and count/percent milestones. Call from game loop. */
 export function checkSetBonusNarrator(): void {
