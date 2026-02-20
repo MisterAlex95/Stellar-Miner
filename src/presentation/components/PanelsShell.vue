@@ -426,7 +426,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue';
 import { t, tParam } from '../../application/strings.js';
 import { useGameStateStore } from '../stores/gameState.js';
 import { handleClaimQuest } from '../../application/handlers.js';
@@ -435,13 +435,14 @@ import { useSectionCollapse } from '../composables/useSectionCollapse.js';
 import { useResearchDataDisplay } from '../composables/useResearchDataDisplay.js';
 import { useAppUIStore } from '../stores/appUI.js';
 import MineZoneCanvas from './MineZoneCanvas.vue';
-import DashboardPanel from '../panels/DashboardPanel.vue';
-import EmpirePanel from '../panels/EmpirePanel.vue';
-import ResearchPanel from '../panels/ResearchPanel.vue';
-import UpgradesPanel from '../panels/UpgradesPanel.vue';
-import StatisticsPanel from '../panels/StatisticsPanel.vue';
-import ArchivePanel from '../panels/ArchivePanel.vue';
 import { handleMineClick } from '../../application/handlers.js';
+
+const DashboardPanel = defineAsyncComponent(() => import('../panels/DashboardPanel.vue'));
+const EmpirePanel = defineAsyncComponent(() => import('../panels/EmpirePanel.vue'));
+const ResearchPanel = defineAsyncComponent(() => import('../panels/ResearchPanel.vue'));
+const UpgradesPanel = defineAsyncComponent(() => import('../panels/UpgradesPanel.vue'));
+const StatisticsPanel = defineAsyncComponent(() => import('../panels/StatisticsPanel.vue'));
+const ArchivePanel = defineAsyncComponent(() => import('../panels/ArchivePanel.vue'));
 
 const store = useGameStateStore();
 const sectionCollapse = useSectionCollapse();

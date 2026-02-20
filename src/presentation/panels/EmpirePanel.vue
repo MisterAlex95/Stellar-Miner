@@ -236,17 +236,13 @@
           </div>
         </template>
         <template v-else>
-          <span class="btn-tooltip-wrap">
-            <button
-              type="button"
-              class="buy-planet-btn"
-              :disabled="!expedition?.canLaunch"
-              :title="expeditionTooltip"
-              @click="openExpeditionModal"
-            >
-              {{ t('sendExpeditionBtnLabel') }}
-            </button>
-          </span>
+          <button
+            type="button"
+            class="buy-planet-btn"
+            @click="openExpeditionModal"
+          >
+            {{ t('sendExpeditionBtnLabel') }}
+          </button>
           <p v-if="expedition?.isNewSystem" class="expedition-new-system-hint" aria-live="polite">
             {{ t('expeditionNextNewSystemLabel') }}
           </p>
@@ -311,14 +307,6 @@ const retrainTo = ref<CrewRole | ''>('');
 const planetSummary = computed(() => {
   const n = planetSystems.value?.flatMap((s) => s.planets).length ?? 0;
   return n > 0 ? `${n} planet${n !== 1 ? 's' : ''}` : '';
-});
-
-const expeditionTooltip = computed(() => {
-  const exp = expedition.value;
-  if (!exp) return '';
-  return exp.canLaunch
-    ? tParam('sendExpeditionTooltip', { n: exp.astronautsRequired, cost: exp.costStr })
-    : tParam('needForExpedition', { cost: exp.costStr, n: exp.astronautsRequired });
 });
 
 const canRetrain = computed(() => {

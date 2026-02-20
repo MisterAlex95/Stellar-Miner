@@ -29,16 +29,8 @@ export function openExpeditionModal(): void {
   if (getExpeditionEndsAt() != null) return;
   const player = session.player;
   const required = planetService.getExpeditionAstronautsRequired(player);
-  const hasCrew = player.astronautCount >= required;
-  if (!hasCrew) return;
-  const costScout = planetService.getExpeditionCost(player, 'scout');
-  const canAffordAny =
-    player.coins.gte(costScout) ||
-    player.coins.gte(planetService.getExpeditionCost(player, 'mining')) ||
-    player.coins.gte(planetService.getExpeditionCost(player, 'rescue'));
-  if (!canAffordAny) return;
-
   const settings = getSettings();
+  const costScout = planetService.getExpeditionCost(player, 'scout');
   const costFormatted = `${formatNumber(costScout.toNumber(), settings.compactNumbers)} ⬡`;
   const isNewSystem = isNextExpeditionNewSystem(player.planets.length);
   const newSystemText = t('expeditionNewSolarSystem');

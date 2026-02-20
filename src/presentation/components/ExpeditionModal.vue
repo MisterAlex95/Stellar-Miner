@@ -193,21 +193,30 @@
         </div>
       </div>
       <div class="expedition-modal-actions">
-        <button
-          type="button"
-          class="expedition-modal-cancel"
-          @click="handleClose"
+        <p
+          v-if="expeditionNeedMessage"
+          class="expedition-modal-need"
+          aria-live="polite"
         >
-          {{ t('cancel') }}
-        </button>
-        <button
-          type="button"
-          class="expedition-modal-launch"
-          :disabled="!canLaunch"
-          @click="handleLaunch"
-        >
-          {{ t('expeditionLaunch') }}
-        </button>
+          {{ expeditionNeedMessage }}
+        </p>
+        <div class="expedition-modal-actions-btns">
+          <button
+            type="button"
+            class="expedition-modal-cancel"
+            @click="handleClose"
+          >
+            {{ t('cancel') }}
+          </button>
+          <button
+            type="button"
+            class="expedition-modal-launch"
+            :disabled="!canLaunch"
+            @click="handleLaunch"
+          >
+            {{ t('expeditionLaunch') }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -298,6 +307,16 @@ const costFormattedForType = computed(() => {
   const cost = planetService.getExpeditionCost(session.player, typeId);
   const settings = getSettings();
   return `${formatNumber(cost.toNumber(), settings.compactNumbers)} ⬡`;
+});
+
+const costStrForNeed = computed(() => {
+  const exp = expedition.value;
+  const session = getSession();
+  if (!exp || !session) return '';
+  const typeId = exp.selectedType && ['scout', 'mining', 'rescue'].includes(exp.selectedType) ? exp.selectedType : 'scout';
+  const cost = planetService.getExpeditionCost(session.player, typeId);
+  const settings = getSettings();
+  return formatNumber(cost.toNumber(), settings.compactNumbers);
 });
 
 const selectedTypeForTiers = computed(() => {
@@ -405,10 +424,27 @@ const crewRows = computed(() => {
 
 const canLaunch = computed(() => {
   const exp = expedition.value;
-  if (!exp) return false;
+  const session = getSession();
+  if (!exp || !session) return false;
   const total = CREW_ROLES.reduce((s, r) => s + (exp.composition[r] ?? 0), 0);
   const typeOk = exp.selectedType && ['scout', 'mining', 'rescue'].includes(exp.selectedType);
-  return exp.selectedTier !== '' && typeOk && total === exp.required;
+  if (exp.selectedTier === '' || !typeOk || total !== exp.required) return false;
+  const typeId = (exp.selectedType || 'scout') as ExpeditionTypeId;
+  const composition = {
+    astronaut: exp.composition.astronaut ?? 0,
+    miner: exp.composition.miner ?? 0,
+    scientist: exp.composition.scientist ?? 0,
+    pilot: exp.composition.pilot ?? 0,
+    medic: exp.composition.medic ?? 0,
+    engineer: exp.composition.engineer ?? 0,
+  };
+  return planetService.canLaunchExpedition(session.player, composition, typeId);
+});
+
+const expeditionNeedMessage = computed(() => {
+  const exp = expedition.value;
+  if (!exp || canLaunch.value) return '';
+  return tParam('needForExpedition', { cost: costStrForNeed.value, n: exp.required });
 });
 
 function selectType(typeId: string): void {
@@ -934,12 +970,25 @@ function handleLaunch(): void {
 
 .expedition-modal-actions {
   display: flex;
-  justify-content: stretch;
+  flex-direction: column;
   gap: 0.75rem;
   flex-shrink: 0;
   padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--border);
   background: rgba(0, 0, 0, 0.12);
+}
+
+.expedition-modal-need {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.expedition-modal-actions-btns {
+  display: flex;
+  justify-content: stretch;
+  gap: 0.75rem;
 }
 
 .expedition-modal-cancel {

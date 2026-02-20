@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.5.31",
+    "date": "2026-02",
+    "changes": [
+      "Game loop: single buildPlanetViews() per frame (no duplicate planetViews work), skip MineZone 3D update/draw when active tab is not mine to save CPU/GPU."
+    ]
+  },
+  {
+    "version": "0.5.30",
+    "date": "2026-02",
+    "changes": [
+      "Build and runtime optimizations: Vite manualChunks (vendor, three, break-infinity), lazy-loaded panels and modals via defineAsyncComponent, fixed reduced-motion CSS selector warning."
+    ]
+  },
+  {
     "version": "0.5.29",
     "date": "2026-02",
     "changes": [

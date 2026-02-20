@@ -29,28 +29,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue';
 import AppHeader from './AppHeader.vue';
 import AppTabs from './AppTabs.vue';
 import ToastContainer from './ToastContainer.vue';
 import FloatingFeedback from './components/FloatingFeedback.vue';
 import SettingsModal from './components/SettingsModal.vue';
 import InfoModal from './components/InfoModal.vue';
-import AchievementsModal from './components/AchievementsModal.vue';
 import ResetConfirmModal from './components/ResetConfirmModal.vue';
 import PrestigeConfirmModal from './components/PrestigeConfirmModal.vue';
 import EventsHintModal from './components/EventsHintModal.vue';
-import ChartHelpModal from './components/ChartHelpModal.vue';
-import SectionRulesModal from './components/SectionRulesModal.vue';
-import UpgradeChoosePlanetModal from './components/UpgradeChoosePlanetModal.vue';
-import PlanetDetailModal from './components/PlanetDetailModal.vue';
-import ExpeditionModal from './components/ExpeditionModal.vue';
-import EventChoiceModal from './components/EventChoiceModal.vue';
-import IntroModal from './components/IntroModal.vue';
 import DebugPanel from './components/DebugPanel.vue';
 import GlobalTooltip from './components/GlobalTooltip.vue';
 import StatsBlock from './components/StatsBlock.vue';
 import PanelsShell from './components/PanelsShell.vue';
+
+const AchievementsModal = defineAsyncComponent(() => import('./components/AchievementsModal.vue'));
+const ChartHelpModal = defineAsyncComponent(() => import('./components/ChartHelpModal.vue'));
+const SectionRulesModal = defineAsyncComponent(() => import('./components/SectionRulesModal.vue'));
+const UpgradeChoosePlanetModal = defineAsyncComponent(() => import('./components/UpgradeChoosePlanetModal.vue'));
+const PlanetDetailModal = defineAsyncComponent(() => import('./components/PlanetDetailModal.vue'));
+const ExpeditionModal = defineAsyncComponent(() => import('./components/ExpeditionModal.vue'));
+const EventChoiceModal = defineAsyncComponent(() => import('./components/EventChoiceModal.vue'));
+const IntroModal = defineAsyncComponent(() => import('./components/IntroModal.vue'));
 import { useGameStateStore } from './stores/gameState.js';
 import { useAppUIStore } from './stores/appUI.js';
 import { useGlobalKeyboard } from './composables/useGlobalKeyboard.js';

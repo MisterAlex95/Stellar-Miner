@@ -55,9 +55,26 @@ import { isPanelHydrated } from './application/lazyPanels.js';
 import { PANEL_IDS, getPanelElementId, type PanelId } from './application/panelConfig.js';
 import { updateGameStateBridge, getGameStateBridge } from './presentation/gameStateBridge.js';
 import { getPinia } from './presentation/piniaInstance.js';
-import { useGameStateStore } from './presentation/stores/gameState.js';
+import { useGameStateStore, type PlanetViewItem } from './presentation/stores/gameState.js';
 
 let lastTime = performance.now();
+
+function buildPlanetViews(session: NonNullable<ReturnType<typeof getSession>>): PlanetViewItem[] {
+  return session.player.planets.map((p, index) => {
+    const upgradeCounts: Record<string, number> = {};
+    for (const u of p.upgrades) upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
+    return {
+      id: p.id,
+      name: p.name,
+      displayName: getPlanetDisplayName(p.name, index),
+      usedSlots: p.usedSlots,
+      maxUpgrades: p.maxUpgrades,
+      upgradeCounts,
+      visualSeed: p.visualSeed ?? 0,
+    };
+  });
+}
+
 const QUEST_RENDER_INTERVAL_MS = 80;
 const DASHBOARD_UPDATE_INTERVAL_MS = 500;
 const RESEARCH_UPDATE_INTERVAL_MS = 1500;
@@ -108,23 +125,16 @@ function runPanelUpdates(nowMs: number): void {
   if (getPresentationPort().getDebugOpen()) updateDebugPanel();
 }
 
-function runCanvasUpdates(session: ReturnType<typeof getSession>, canvasDt: number): void {
+function runCanvasUpdates(
+  session: ReturnType<typeof getSession>,
+  canvasDt: number,
+  planetViews: PlanetViewItem[],
+  activeTab: string,
+): void {
   if (document.visibilityState === 'hidden') return;
-  const planetViews = session.player.planets.map((p, index) => {
-    const upgradeCounts: Record<string, number> = {};
-    for (const u of p.upgrades) upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
-    return {
-      id: p.id,
-      name: p.name,
-      displayName: getPlanetDisplayName(p.name, index),
-      usedSlots: p.usedSlots,
-      maxUpgrades: p.maxUpgrades,
-      upgradeCounts,
-      visualSeed: p.visualSeed,
-    };
-  });
   starfieldApi?.update(canvasDt);
   starfieldApi?.draw();
+  if (activeTab !== 'mine') return;
   mineZoneCanvasApi?.setPlanets(planetViews);
   mineZoneCanvasApi?.update(canvasDt);
   mineZoneCanvasApi?.draw();
@@ -152,8 +162,11 @@ function gameLoop(now: number): void {
 
   runProductionTick(session, dt, nowMs);
   runPanelUpdates(nowMs);
-  runCanvasUpdates(session, canvasDt);
-  updateGameStateBridge(getBridgeSnapshot());
+  const pinia = getPinia();
+  const activeTab = (pinia ? useGameStateStore(pinia).activeTab : undefined) ?? 'mine';
+  const planetViews = buildPlanetViews(session);
+  runCanvasUpdates(session, canvasDt, planetViews, activeTab);
+  updateGameStateBridge(getBridgeSnapshot(planetViews, activeTab));
 
   requestAnimationFrame(gameLoop);
 }
@@ -161,13 +174,16 @@ function gameLoop(now: number): void {
 // All tab panels (dashboard, empire, research, upgrades, stats) are Vue; they watch the bridge.
 const PANEL_REFRESH_ACTIONS: Partial<Record<PanelId, () => void>> = {};
 
-function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
+function getBridgeSnapshot(
+  planetViews?: PlanetViewItem[],
+  activeTab?: string,
+): Parameters<typeof updateGameStateBridge>[0] {
   const session = getSession();
   const pinia = getPinia();
-  const activeTab = (pinia && useGameStateStore(pinia).activeTab) ?? 'mine';
+  const tab = activeTab ?? (pinia ? useGameStateStore(pinia).activeTab : undefined) ?? 'mine';
   if (!session) {
     return {
-      activeTab,
+      activeTab: tab,
       layout: getSettings().layout,
       coins: 0,
       production: 0,
@@ -183,25 +199,13 @@ function getBridgeSnapshot(): Parameters<typeof updateGameStateBridge>[0] {
       discoveredSetIds: getDiscoveredSetIds(),
     };
   }
-  const planetViews = session.player.planets.map((p, index) => {
-    const upgradeCounts: Record<string, number> = {};
-    for (const u of p.upgrades) upgradeCounts[u.id] = (upgradeCounts[u.id] ?? 0) + 1;
-    return {
-      id: p.id,
-      name: p.name,
-      displayName: getPlanetDisplayName(p.name, index),
-      usedSlots: p.usedSlots,
-      maxUpgrades: p.maxUpgrades,
-      upgradeCounts,
-      visualSeed: p.visualSeed ?? 0,
-    };
-  });
+  const views = planetViews ?? buildPlanetViews(session);
   return {
-    activeTab,
+    activeTab: tab,
     layout: getSettings().layout,
     coins: session.player.coins.toNumber(),
     production: session.player.effectiveProductionRate.mul(getSetBonusMultiplier(session.player)).toNumber(),
-    planets: planetViews,
+    planets: views,
     statsHistoryRecent: getStatsHistory('recent'),
     statsHistoryLongTerm: getStatsHistory('longTerm'),
     runStats: getRunStats(),

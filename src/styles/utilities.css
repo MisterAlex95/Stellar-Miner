@@ -123,7 +123,10 @@ html[data-reduced-motion="true"] .combo-indicator--fading {
   25% { opacity: 1; }
   100% { opacity: 0; }
 }
-html[data-reduced-motion="true"] #app.achievement-unlock-celebration::before,
+html[data-reduced-motion="true"] #app.achievement-unlock-celebration::before {
+  animation: none;
+  opacity: 0.4;
+}
 @media (prefers-reduced-motion: reduce) {
   #app.achievement-unlock-celebration::before {
     animation: none;

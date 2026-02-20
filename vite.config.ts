@@ -11,8 +11,18 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: 'es2022',
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       input: ['index.html', 'balance.html'],
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('three')) return 'three';
+            if (id.includes('vue') || id.includes('pinia') || id.includes('vue-i18n')) return 'vendor';
+            if (id.includes('break_infinity')) return 'break-infinity';
+          }
+        },
+      },
     },
   },
   test: {
