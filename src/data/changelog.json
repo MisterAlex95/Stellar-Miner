@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.27",
+    "date": "2026-02",
+    "changes": [
+      "Dashboard: next goal ETA display — shows « Prochain upgrade dans ~X min » or « Prochaine planète dans ~Y min » based on production rate and cost of next upgrade or planet."
+    ]
+  },
+  {
     "version": "0.5.26",
     "date": "2026-02",
     "changes": [

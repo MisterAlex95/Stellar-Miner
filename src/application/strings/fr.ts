@@ -71,6 +71,8 @@ export const stringsFr: Record<StringKey, string> = {
   dashboardKeepMining: 'Continue à miner — onglet Mine pour gagner plus vite',
   dashboardStartResearch: 'Tenter une recherche : {name}',
   dashboardTimeToExpedition: '~{min} min pour l’expédition',
+  dashboardNextGoalUpgrade: 'Prochain upgrade dans ~{min} min',
+  dashboardNextGoalPlanet: 'Prochaine planète dans ~{min} min',
   dashboardNeedCrewExpedition: 'Il faut {n} astronaute(s) pour l’expédition — engagez dans l’Empire',
   dashboardAddSlot: 'Ajouter un emplacement pour placer plus d’modules',
   dashboardHireCrew: 'Engager des astronautes pour la prochain module',

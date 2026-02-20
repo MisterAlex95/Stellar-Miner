@@ -2,7 +2,10 @@
  * Dashboard helper functions: upgrade goals, research, time estimates.
  */
 import Decimal from 'break_infinity.js';
-import { getSession, getSettings, planetService } from '../../application/gameState.js';
+import { getSession, getSettings, getEventMultiplier, getExpeditionEndsAt, planetService } from '../../application/gameState.js';
+import { getUnlockedBlocks } from '../../application/progression.js';
+import { getResearchProductionMultiplier } from '../../application/research.js';
+import { getSetBonusMultiplier } from '../../application/moduleSetBonuses.js';
 import { UPGRADE_CATALOG, getUnlockedUpgradeTiers, getUpgradeCost } from '../../application/catalogs.js';
 import { getUpgradeCardState } from '../../application/upgradeCardState.js';
 import { getCatalogUpgradeName } from '../../application/i18nCatalogs.js';
@@ -281,4 +284,47 @@ export function minutesUntil(coinsNeeded: Decimal, ratePerSec: Decimal): number 
   const secs = coinsNeeded.div(ratePerSec);
   const num = secs.toNumber();
   return Number.isFinite(num) && num >= 0 ? Math.ceil(num / 60) : Infinity;
+}
+
+export type NextGoalEta = { type: 'upgrade' | 'planet'; minutes: number; labelKey: 'dashboardNextGoalUpgrade' | 'dashboardNextGoalPlanet' };
+
+/**
+ * Next significant progression goal ETA: either next upgrade or next planet, whichever is sooner.
+ * Based on current production rate and cost. Returns null when no session, no rate, or no reachable goal.
+ */
+export function getNextGoalEta(): NextGoalEta | null {
+  const session = getSession();
+  if (!session) return null;
+  const player = session.player;
+  const eventMult = getEventMultiplier();
+  const researchMult = getResearchProductionMultiplier();
+  const setBonusMult = getSetBonusMultiplier(player);
+  const effectiveRate = player.effectiveProductionRate.mul(eventMult * researchMult * setBonusMult);
+  if (effectiveRate.lte(0)) return null;
+  const unlocked = getUnlockedBlocks(session);
+  const expeditionEndsAt = getExpeditionEndsAt();
+  const expeditionActive = expeditionEndsAt != null && expeditionEndsAt > Date.now();
+
+  let upgradeMinutes = Infinity;
+  if (unlocked.has('upgrades')) {
+    const nextUpgrade = getBestNextUpgradeGoalCoinOnly();
+    if (nextUpgrade) {
+      const remaining = nextUpgrade.cost.sub(player.coins.value);
+      if (remaining.gt(0)) upgradeMinutes = minutesUntil(remaining, effectiveRate);
+    }
+  }
+
+  let planetMinutes = Infinity;
+  if (unlocked.has('planets') && !expeditionActive) {
+    const expeditionCost = planetService.getNewPlanetCost(player);
+    const hasCoinsForExpedition = player.coins.gte(expeditionCost);
+    if (!hasCoinsForExpedition) {
+      const remaining = expeditionCost.sub(player.coins.value);
+      if (remaining.gt(0)) planetMinutes = minutesUntil(remaining, effectiveRate);
+    }
+  }
+
+  if (upgradeMinutes === Infinity && planetMinutes === Infinity) return null;
+  if (planetMinutes < upgradeMinutes) return { type: 'planet', minutes: planetMinutes, labelKey: 'dashboardNextGoalPlanet' };
+  return { type: 'upgrade', minutes: upgradeMinutes, labelKey: 'dashboardNextGoalUpgrade' };
 }

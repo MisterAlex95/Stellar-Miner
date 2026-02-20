@@ -31,6 +31,8 @@
         />
       </div>
 
+      <p v-if="nextGoalEta" class="dashboard-next-goal-eta">{{ nextGoalEta.text }}</p>
+
       <HeroBlock
         theme="dashboard"
         :badge="t('dashboardRecommended')"
@@ -132,8 +134,10 @@ import { useDashboardQuestCard } from '../composables/useDashboardQuestCard.js';
 import { useDashboardLive } from '../composables/useDashboardLive.js';
 import { useDashboardShortcuts } from '../composables/useDashboardShortcuts.js';
 import { useDashboardActions } from '../composables/useDashboardActions.js';
+import { useNextGoalEta } from '../composables/useNextGoalEta.js';
 
 const session = computed(() => getSession());
+const nextGoalEta = useNextGoalEta();
 
 const stats = useDashboardStats();
 const hero = useDashboardHero();
@@ -195,6 +199,12 @@ const { onDashboardClick } = useDashboardActions();
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
+}
+
+.dashboard-next-goal-eta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
 }
 
 .dashboard-empty {

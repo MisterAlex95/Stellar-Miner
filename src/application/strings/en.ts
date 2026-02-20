@@ -72,6 +72,8 @@ export const stringsEn = {
   dashboardKeepMining: 'Keep mining — tap Mine to earn faster',
   dashboardStartResearch: 'Try research: {name}',
   dashboardTimeToExpedition: '~{min} min to afford expedition',
+  dashboardNextGoalUpgrade: 'Next upgrade in ~{min} min',
+  dashboardNextGoalPlanet: 'Next planet in ~{min} min',
   dashboardNeedCrewExpedition: 'Need {n} astronaut(s) for expedition — hire in Empire',
   dashboardAddSlot: 'Add a slot to place more modules',
   dashboardHireCrew: 'Hire astronauts to buy next module',
