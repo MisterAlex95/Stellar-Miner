@@ -1,6 +1,6 @@
 import Decimal from 'break_infinity.js';
 import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs.js';
-import { getSession } from './gameState.js';
+import { getSession, getClickTimestamps } from './gameState.js';
 import { getQuestStreak, getQuestLastClaimAt } from './quests.js';
 import { getUnlockedResearch } from './research.js';
 import { getPresentationPort } from './uiBridge.js';
@@ -41,6 +41,14 @@ function buildCheck(def: AchievementDef): () => boolean {
     case 'shootingStarClicked':
       /* Unlocked only by explicit unlockAchievement in handler when user clicks the star */
       return () => false;
+    case 'clicksIn10s': {
+      const windowMs = 10_000;
+      return () => {
+        const now = Date.now();
+        const count = getClickTimestamps().filter((t) => now - t <= windowMs).length;
+        return count >= value;
+      };
+    }
     default:
       return () => false;
   }

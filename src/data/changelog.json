@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.18",
+    "date": "2026-02",
+    "changes": [
+      "Secret easter-egg achievement: non-obvious unlock, shows ??? until unlocked."
+    ]
+  },
+  {
     "version": "0.5.17",
     "date": "2026-02",
     "changes": [

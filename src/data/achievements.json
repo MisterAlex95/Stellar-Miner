@@ -34,5 +34,6 @@
   {"id":"research-15","name":"Lead scientist","type":"researchNodesUnlocked","value":15},
   {"id":"research-20","name":"Lab director","type":"researchNodesUnlocked","value":20},
   {"id":"research-full","name":"Lab complete","type":"researchNodesUnlocked","value":38,"secret":true},
-  {"id":"shooting-star","name":"Wish upon a star","type":"shootingStarClicked","value":1,"flavor":"Some say the belt answers those who look up."}
+  {"id":"shooting-star","name":"Wish upon a star","type":"shootingStarClicked","value":1,"flavor":"Some say the belt answers those who look up."},
+  {"id":"burst-miner","name":"Rapid fire","type":"clicksIn10s","value":100,"secret":true,"flavor":"The belt rewards speed."}
 ]

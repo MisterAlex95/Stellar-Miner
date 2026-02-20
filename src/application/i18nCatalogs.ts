@@ -363,6 +363,7 @@ const achievementNamesEn: Record<string, string> = {
   'research-20': 'Lab director',
   'research-full': 'Lab complete',
   'shooting-star': 'Wish upon a star',
+  'burst-miner': 'Rapid fire',
 };
 
 const achievementNamesFr: Record<string, string> = {
@@ -402,6 +403,7 @@ const achievementNamesFr: Record<string, string> = {
   'research-20': 'Directeur de labo',
   'research-full': 'Labo complet',
   'shooting-star': 'Un vœu sur une étoile',
+  'burst-miner': 'Rafale',
 };
 
 const achievementDescsEn: Record<string, string> = {
@@ -441,6 +443,7 @@ const achievementDescsEn: Record<string, string> = {
   'research-20': 'Unlock 20 research nodes.',
   'research-full': 'Unlock all research nodes (secret).',
   'shooting-star': 'Click a shooting star in the mine zone.',
+  'burst-miner': 'Perform 100 clicks within 10 seconds.',
 };
 
 const achievementDescsFr: Record<string, string> = {
@@ -480,6 +483,7 @@ const achievementDescsFr: Record<string, string> = {
   'research-20': 'Débloquez 20 nœuds de recherche.',
   'research-full': 'Débloquez tous les nœuds de recherche (secret).',
   'shooting-star': 'Cliquez sur une étoile filante dans la zone de mine.',
+  'burst-miner': 'Effectuez 100 clics en 10 secondes.',
 };
 
 const comboNamesEn: Record<string, string> = {

@@ -7,7 +7,7 @@ import {
   checkAchievements,
   ACHIEVEMENTS,
 } from './achievements.js';
-import { setSession } from './gameState.js';
+import { setSession, setClickTimestamps } from './gameState.js';
 import { GameSession } from '../domain/aggregates/GameSession.js';
 import { Player } from '../domain/entities/Player.js';
 import { TOTAL_CLICKS_KEY, ACHIEVEMENTS_KEY, COMBO_MASTER_KEY } from './catalogs.js';
@@ -163,5 +163,20 @@ describe('achievements', () => {
     storage[COMBO_MASTER_KEY] = '1';
     const comboMaster = ACHIEVEMENTS.find((a) => a.id === 'combo-master');
     expect(comboMaster?.check()).toBe(true);
+  });
+
+  it('burst-miner check passes when recent clicks meet threshold', () => {
+    const now = Date.now();
+    const recent = Array.from({ length: 100 }, (_, i) => now - i * 50);
+    setClickTimestamps(recent);
+    const burst = ACHIEVEMENTS.find((a) => a.id === 'burst-miner');
+    expect(burst?.check()).toBe(true);
+  });
+
+  it('burst-miner check fails when recent clicks below threshold', () => {
+    const now = Date.now();
+    setClickTimestamps(Array.from({ length: 50 }, (_, i) => now - i * 50));
+    const burst = ACHIEVEMENTS.find((a) => a.id === 'burst-miner');
+    expect(burst?.check()).toBe(false);
   });
 });
